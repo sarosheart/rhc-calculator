@@ -672,6 +672,20 @@
       </div>
 
       <div class="input-row">
+        <label>LV</label>
+        <div class="input-group">
+          <span class="label-sm">sys</span>
+          <input type="number" id="lv_sys" step="1" oninput="calc()">
+          <span class="sep">/</span>
+          <span class="label-sm">dia</span>
+          <input type="number" id="lv_dia" step="1" oninput="calc()">
+          <span class="sep">/</span>
+          <span class="label-sm">EDP</span>
+          <input type="number" id="lv_edp" step="1" oninput="calc()">
+        </div>
+      </div>
+
+      <div class="input-row">
         <label>Aorta</label>
         <div class="input-group">
           <span class="label-sm">sys</span>
@@ -1226,6 +1240,29 @@
     </div>
   </div>
 
+  <!-- LV PRESSURES & AORTIC VALVE -->
+  <div class="section" id="lvResultsSection" style="display:none;">
+    <div class="section-head">LV Pressures &amp; Aortic Pullback</div>
+    <div class="section-body">
+      <div class="result-row">
+        <span class="result-label">LVEDP</span>
+        <span class="result-value" id="r_lvedp">—</span>
+        <span class="result-unit">mmHg</span>
+        <span class="result-range">normal: ≤ 12</span>
+        <span class="result-flag" id="f_lvedp"></span>
+      </div>
+      <div class="result-row">
+        <span class="result-label">LV–Ao Peak-to-Peak Gradient</span>
+        <span class="result-value" id="r_lv_ao_gradient">—</span>
+        <span class="result-unit">mmHg</span>
+        <span class="result-range">≥ 30 significant; ≥ 50 severe</span>
+        <span class="result-flag" id="f_lv_ao_gradient"></span>
+      </div>
+      <div id="lvedpPcwpCheck" style="display:none;"></div>
+      <div id="lvAoSysCheck" style="display:none;"></div>
+    </div>
+  </div>
+
   <!-- GORLIN VALVE AREA RESULTS -->
   <div class="section" id="gorlinResultsSection" style="display:none;">
     <div class="section-head">Gorlin Valve Areas <span style="font-weight:400; text-transform:none; font-size:11px;" id="gorlinCoLabel">(using Fick CO)</span></div>
@@ -1630,10 +1667,11 @@ function calc() {
   const pa_sys = v('pa_sys'), pa_dia = v('pa_dia'), pa_mean = v('pa_mean');
   const pcwp_a = v('pcwp_a'), pcwp_v = v('pcwp_v'), pcwp_mean = v('pcwp_mean');
   const ao_sys = v('ao_sys'), ao_dia = v('ao_dia'), ao_mean = v('ao_mean');
+  const lv_sys = v('lv_sys'), lv_dia = v('lv_dia'), lv_edp = v('lv_edp');
 
   const sao2_pct = v('sao2'), svo2_pct = v('svo2');
-  const sao2 = sao2_pct !== null ? sao2_pct / 100 : null;
-  const svo2 = svo2_pct !== null ? svo2_pct / 100 : null;
+  const sao2 = (sao2_pct !== null && sao2_pct <= 100) ? sao2_pct / 100 : null;
+  const svo2 = (svo2_pct !== null && svo2_pct <= 100) ? svo2_pct / 100 : null;
   const pao2 = v('pao2'), pvo2 = v('pvo2');
 
   const vo2 = v('vo2');
@@ -1775,6 +1813,59 @@ function calc() {
   flagValue('f_rvswi', rvswi, 5, 10, 'RVSWI');
   flagCPO('f_cpo', cpo);
   flagCPI('f_cpi', cpi);
+
+  // --- LV Pressures & Aortic Pullback ---
+  const lvSection = document.getElementById('lvResultsSection');
+  const hasLV = lv_sys !== null || lv_dia !== null || lv_edp !== null;
+  lvSection.style.display = hasLV ? 'block' : 'none';
+
+  let lv_ao_gradient = null;
+  if (hasLV) {
+    // LVEDP
+    setText('r_lvedp', lv_edp !== null ? fmt(lv_edp, 0) : '—');
+    if (lv_edp !== null) {
+      if (lv_edp > 20) setFlag('f_lvedp', 'Elevated', 'flag-severe');
+      else if (lv_edp > 12) setFlag('f_lvedp', 'Borderline', 'flag-high');
+      else setFlag('f_lvedp', 'Normal', 'flag-normal');
+    } else { clearFlag('f_lvedp'); }
+
+    // LV-Ao peak-to-peak gradient
+    if (lv_sys !== null && ao_sys !== null) {
+      lv_ao_gradient = lv_sys - ao_sys;
+      setText('r_lv_ao_gradient', fmt(lv_ao_gradient, 0));
+      if (lv_ao_gradient >= 50) setFlag('f_lv_ao_gradient', 'Severe AS', 'flag-severe');
+      else if (lv_ao_gradient >= 30) setFlag('f_lv_ao_gradient', 'Significant', 'flag-high');
+      else if (lv_ao_gradient > 0) setFlag('f_lv_ao_gradient', 'Mild', 'flag-normal');
+      else setFlag('f_lv_ao_gradient', 'No gradient', 'flag-normal');
+    } else {
+      setText('r_lv_ao_gradient', '—');
+      clearFlag('f_lv_ao_gradient');
+    }
+
+    // LVEDP vs PCWP discordance
+    const lvedpPcwpEl = document.getElementById('lvedpPcwpCheck');
+    if (lv_edp !== null && pcwp_mean !== null) {
+      const diff = lv_edp - pcwp_mean;
+      if (diff > 5) {
+        lvedpPcwpEl.innerHTML = `<div class="warning-box">LVEDP–PCWP discordance: LVEDP ${lv_edp} − PCWP ${pcwp_mean} = ${diff} mmHg (> 5). Consider stiff LA, mitral stenosis, or non-compliant LV.</div>`;
+        lvedpPcwpEl.style.display = 'block';
+      } else {
+        lvedpPcwpEl.innerHTML = `<div class="info-box">LVEDP–PCWP concordant (difference ${diff} mmHg ≤ 5).</div>`;
+        lvedpPcwpEl.style.display = 'block';
+      }
+    } else {
+      lvedpPcwpEl.style.display = 'none';
+    }
+
+    // LV sys < Ao sys check
+    const lvAoSysEl = document.getElementById('lvAoSysCheck');
+    if (lv_sys !== null && ao_sys !== null && lv_sys < ao_sys) {
+      lvAoSysEl.innerHTML = `<div class="info-box">LV sys (${lv_sys}) < Ao sys (${ao_sys}): Peripheral systolic amplification — normal finding when Ao measured peripherally. Use central aortic pressure for accurate gradient.</div>`;
+      lvAoSysEl.style.display = 'block';
+    } else {
+      lvAoSysEl.style.display = 'none';
+    }
+  }
 
   // --- Gorlin Valve Areas ---
   const isAfib = document.getElementById('afibToggle').checked;
@@ -1933,10 +2024,11 @@ function calc() {
   gorlinSection.style.display = showGorlin ? 'block' : 'none';
 
   // --- Quality Checks ---
-  buildQualityChecks(hb, sao2, svo2, avo2, fickCO, td_co, vo2, ra_mean, papi);
+  buildQualityChecks(hb, sao2, svo2, avo2, fickCO, td_co, vo2, ra_mean, papi,
+    sao2_pct, svo2_pct, pa_sys, pa_dia, pcwp_mean, ao_mean, lv_edp, lv_sys, ao_sys);
 
   // --- Interpretation ---
-  buildRhcInterpretation(ci, fickCI, tdCI, useFick, ra_mean, pcwp_mean, pa_mean, pvr, papi, rvswi, cpo, cpi, avo2, fickCO, td_co, ava, mva);
+  buildRhcInterpretation(ci, fickCI, tdCI, useFick, ra_mean, pcwp_mean, pa_mean, pvr, papi, rvswi, cpo, cpi, avo2, fickCO, td_co, ava, mva, lv_edp, lv_sys, ao_sys, lv_ao_gradient);
 
 
   // --- Copy text ---
@@ -1951,7 +2043,8 @@ function calc() {
     cao2, cvo2, avo2, vo2, fickCO, fickCI, sv, svi,
     td_co, tdCI, tpg, dpg, pvr, pvrDyn, pvri, svr, svrDyn, svri,
     papi, rvswi, cpo, cpi, useFick,
-    ava, mva, _ava_gradient, _ava_sep, _mva_gradient, _mva_dfp, isAfib);
+    ava, mva, _ava_gradient, _ava_sep, _mva_gradient, _mva_dfp, isAfib,
+    lv_sys, lv_dia, lv_edp, lv_ao_gradient);
 
   if (currentTab === 'shunt') {
     calcShunt();
@@ -1980,6 +2073,7 @@ function flagSVR(id, val) {
 }
 function flagPAPi(id, val, rap) {
   if (val === null) { clearFlag(id); return; }
+  if (val < 0) { setFlag(id, 'Check PA pressures (sys < dia?)', 'flag-severe'); return; }
   if (rap !== null && rap < 3) { setFlag(id, 'Unreliable (low RAP)', 'flag-high'); return; }
   if (val < 0.9) setFlag(id, 'RV failure risk', 'flag-severe');
   else if (val < 1.0) setFlag(id, 'Borderline', 'flag-high');
@@ -2446,21 +2540,51 @@ function copyShuntResults() {
 }
 
 // ===================== QUALITY CHECKS =====================
-function buildQualityChecks(hb, sao2, svo2, avo2, fickCO, td_co, vo2, ra_mean, papi) {
+function buildQualityChecks(hb, sao2, svo2, avo2, fickCO, td_co, vo2, ra_mean, papi,
+    sao2_pct, svo2_pct, pa_sys, pa_dia, pcwp_mean, ao_mean, lv_edp, lv_sys, ao_sys) {
   const el = document.getElementById('qualityChecks');
   const checks = [];
 
-  if (sao2 !== null && sao2 > 1) {
-    checks.push({type:'error', msg:'SaO₂ > 100% — check input. Did you enter as fraction instead of percentage?'});
+  // Decimal entry detection (Bug 1)
+  if (sao2_pct !== null && sao2_pct < 20) {
+    checks.push({type:'error', msg:`SaO₂ entered as ${sao2_pct} — did you enter as a decimal (e.g. 0.97) instead of percentage (97)?`});
   }
-  if (svo2 !== null && svo2 > 1) {
-    checks.push({type:'error', msg:'SvO₂ > 100% — check input.'});
+  if (svo2_pct !== null && svo2_pct < 20) {
+    checks.push({type:'error', msg:`SvO₂ entered as ${svo2_pct} — did you enter as a decimal instead of percentage?`});
+  }
+
+  // >100% detection (uses raw pct since sao2 is now nulled at >100)
+  if (sao2_pct !== null && sao2_pct > 100) {
+    checks.push({type:'error', msg:'SaO₂ > 100% — check input. Calculations suspended for this value.'});
+  }
+  if (svo2_pct !== null && svo2_pct > 100) {
+    checks.push({type:'error', msg:'SvO₂ > 100% — check input. Calculations suspended for this value.'});
   }
   if (sao2 !== null && svo2 !== null && svo2 >= sao2) {
     checks.push({type:'error', msg:'SvO₂ ≥ SaO₂ — mixed venous sat cannot exceed arterial. Check samples.'});
   }
+
+  // Negative pressures (Bug 2)
+  if (ra_mean !== null && ra_mean < 0) {
+    checks.push({type:'warn', msg:`Negative RA mean (${ra_mean} mmHg) — unusual. Confirm zeroing and transducer level.`});
+  }
+  if (pcwp_mean !== null && pcwp_mean < 0) {
+    checks.push({type:'warn', msg:`Negative PCWP (${pcwp_mean} mmHg) — unusual. Confirm zeroing and transducer level. Inflates TPG/PVR.`});
+  }
+  if (pa_sys !== null && pa_sys < 0) {
+    checks.push({type:'warn', msg:`Negative PA systolic (${pa_sys} mmHg) — check transducer.`});
+  }
+  if (ao_mean !== null && ao_mean < 0) {
+    checks.push({type:'warn', msg:`Negative Ao mean (${ao_mean} mmHg) — check transducer.`});
+  }
+
+  // PA sys < PA dia (Bug 3 companion)
+  if (pa_sys !== null && pa_dia !== null && pa_sys < pa_dia) {
+    checks.push({type:'error', msg:`PA systolic (${pa_sys}) < PA diastolic (${pa_dia}) — check values. PAPi will be negative.`});
+  }
   if (avo2 !== null) {
-    if (avo2 > 5.5) checks.push({type:'warn', msg:`Wide a-vO₂ difference (${fmt(avo2)}) — suggests low cardiac output.`});
+    if (avo2 < 0) checks.push({type:'error', msg:`Negative a-vO₂ difference (${fmt(avo2)}) — impossible. SvO₂ > SaO₂? Check sampling sites.`});
+    else if (avo2 > 5.5) checks.push({type:'warn', msg:`Wide a-vO₂ difference (${fmt(avo2)}) — suggests low cardiac output.`});
     else if (avo2 < 3.5) checks.push({type:'warn', msg:`Narrow a-vO₂ difference (${fmt(avo2)}) — high output state, shunt, or sampling error?`});
     else checks.push({type:'ok', msg:`a-vO₂ difference (${fmt(avo2)}) is in normal range.`});
   }
@@ -2500,7 +2624,8 @@ function buildCopyText(bsa, hb, hr, o2k, useDissolved,
   cao2, cvo2, avo2, vo2, fickCO, fickCI, sv, svi,
   td_co, tdCI, tpg, dpg, pvr, pvrDyn, pvri, svr, svrDyn, svri,
   papi, rvswi, cpo, cpi, useFick,
-  ava, mva, ava_gradient, ava_sep, mva_gradient, mva_dfp, isAfib) {
+  ava, mva, ava_gradient, ava_sep, mva_gradient, mva_dfp, isAfib,
+  lv_sys, lv_dia, lv_edp, lv_ao_gradient) {
 
   const vo2src = document.getElementById('vo2source');
   const vo2label = vo2src.options[vo2src.selectedIndex].text;
@@ -2537,6 +2662,8 @@ function buildCopyText(bsa, hb, hr, o2k, useDissolved,
     t += `PA ${n(pa_sys,0)}/${n(pa_dia,0)} mean ${n(pa_mean,0)} mmHg\n`;
   if (pcwp_a !== null || pcwp_mean !== null)
     t += `PCWP ${n(pcwp_a,0)}/${n(pcwp_v,0)} mean ${n(pcwp_mean,0)} mmHg\n`;
+  if (lv_sys !== null || lv_edp !== null)
+    t += `LV ${n(lv_sys,0)}/${n(lv_dia,0)}/${n(lv_edp,0)} mmHg\n`;
   if (ao_sys !== null)
     t += `AO ${n(ao_sys,0)}/${n(ao_dia,0)} mean ${n(ao_mean,0)} mmHg\n`;
   if (hr !== null) t += `HR ${n(hr,0)} bpm\n`;
@@ -2595,6 +2722,19 @@ function buildCopyText(bsa, hb, hr, o2k, useDissolved,
   if (rvswi !== null) t += `RVSWI = (${n(pa_mean,0)} - ${n(ra_mean,0)}) × ${n(svi,1)} × 0.0136 = ${n(rvswi)} g·m/m²/beat\n`;
   if (cpo !== null) t += `CPO = ${n(ao_mean,0)} × ${useFick ? n(fickCO) : n(td_co)} / 451 = ${n(cpo)} W\n`;
   if (cpi !== null) t += `CPI = ${n(ao_mean,0)} × ${useFick ? n(fickCI) : n(tdCI)} / 451 = ${n(cpi)} W/m²\n`;
+
+  // --- LV Pressures & Aortic Pullback ---
+  if (lv_sys !== null || lv_edp !== null) {
+    t += '\nLV PRESSURES & AORTIC PULLBACK\n';
+    if (lv_edp !== null) t += `LVEDP ${n(lv_edp,0)} mmHg\n`;
+    if (lv_ao_gradient !== null) t += `LV–Ao peak-to-peak gradient = ${n(lv_sys,0)} − ${n(ao_sys,0)} = ${n(lv_ao_gradient,0)} mmHg\n`;
+    if (lv_edp !== null && pcwp_mean !== null) {
+      const diff = lv_edp - pcwp_mean;
+      t += `LVEDP–PCWP comparison: ${n(lv_edp,0)} − ${n(pcwp_mean,0)} = ${diff} mmHg`;
+      if (diff > 5) t += ` (discordant > 5 mmHg)`;
+      t += '\n';
+    }
+  }
 
   // --- Gorlin Valve Areas ---
   const coUsed = useFick ? fickCO : td_co;
@@ -2746,6 +2886,9 @@ function loadExample() {
   document.getElementById('ao_sys').value = '121';
   document.getElementById('ao_dia').value = '77';
   document.getElementById('ao_mean').value = '96';
+  document.getElementById('lv_sys').value = '140';
+  document.getElementById('lv_dia').value = '12';
+  document.getElementById('lv_edp').value = '18';
   document.getElementById('sao2').value = '92.8';
   document.getElementById('svo2').value = '53.6';
   document.getElementById('vo2source').value = 'lafarge';
@@ -2828,7 +2971,7 @@ try {
 } catch(e) {}
 
 // ===================== RHC INTERPRETATION =====================
-function buildRhcInterpretation(ci, fickCI, tdCI, useFick, ra_mean, pcwp_mean, pa_mean, pvr, papi, rvswi, cpo, cpi, avo2, fickCO, td_co, ava, mva) {
+function buildRhcInterpretation(ci, fickCI, tdCI, useFick, ra_mean, pcwp_mean, pa_mean, pvr, papi, rvswi, cpo, cpi, avo2, fickCO, td_co, ava, mva, lv_edp, lv_sys, ao_sys, lv_ao_gradient) {
   const el = document.getElementById('rhcInterpretation');
   const bullets = [];
 
@@ -2947,7 +3090,31 @@ function buildRhcInterpretation(ci, fickCI, tdCI, useFick, ra_mean, pcwp_mean, p
     bullets.push({type: mva_type, text:`MVA ${mva.toFixed(2)} cm\xB2 \u2014 ${mva_sev}.`});
   }
 
-  // 10. AFib note
+  // 10. LV pressures
+  if (lv_edp !== null) {
+    if (lv_edp > 20) {
+      bullets.push({type:'error', text:`Elevated LVEDP: ${lv_edp} mmHg (> 20). Significant LV diastolic dysfunction or volume overload.`});
+    } else if (lv_edp > 12) {
+      bullets.push({type:'warn', text:`Borderline LVEDP: ${lv_edp} mmHg (13\u201320). Mildly elevated LV filling pressure.`});
+    } else {
+      bullets.push({type:'info', text:`Normal LVEDP: ${lv_edp} mmHg (\u2264 12).`});
+    }
+    if (pcwp_mean !== null) {
+      const diff = lv_edp - pcwp_mean;
+      if (diff > 5) {
+        bullets.push({type:'warn', text:`LVEDP\u2013PCWP discordance: ${lv_edp} \u2212 ${pcwp_mean} = ${diff} mmHg (> 5). Consider stiff LA, mitral stenosis, or non-compliant LV.`});
+      }
+    }
+  }
+  if (lv_ao_gradient !== null) {
+    if (lv_ao_gradient >= 50) {
+      bullets.push({type:'error', text:`Severe LV\u2013Ao peak-to-peak gradient: ${lv_ao_gradient} mmHg (\u2265 50). Hemodynamically significant aortic stenosis.`});
+    } else if (lv_ao_gradient >= 30) {
+      bullets.push({type:'warn', text:`Significant LV\u2013Ao peak-to-peak gradient: ${lv_ao_gradient} mmHg (\u2265 30). Consider aortic stenosis in clinical context.`});
+    }
+  }
+
+  // 11. AFib note
   if (document.getElementById('afibToggle').checked && (ava !== null || mva !== null)) {
     bullets.push({type:'info', text:'Gorlin valve areas computed by beat-to-beat averaging (AFib method).'});
   }
