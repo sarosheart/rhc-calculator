@@ -1,0 +1,1568 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PV Loop Simulator — CathMath</title>
+<style>
+  :root {
+    --navy: #0d2240;
+    --navy-deep: #091a33;
+    --blue: #1565c0;
+    --blue-light: #4a90d9;
+    --light-bg: #f0f2f6;
+    --card-bg: #ffffff;
+    --border: #d0d8e0;
+    --green: #2e7d32;
+    --red: #c62828;
+    --amber: #ef6c00;
+    --text: #1a1a1a;
+    --text-secondary: #5a6a7a;
+    --text-dim: #8a95a5;
+    --canvas-bg: #fafbfd;
+    --slider-track: #dce2ea;
+    --slider-thumb: #1565c0;
+    --espvr-color: #2e7d32;
+    --edpvr-color: #7b1fa2;
+    --ea-color: #78909c;
+    --loop-color: #0d2240;
+    --ghost-color: rgba(13,34,64,0.18);
+    --dot-color: #c62828;
+    --grid-color: rgba(0,0,0,0.04);
+    --grid-major: rgba(0,0,0,0.08);
+    --section-radius: 10px;
+    --shadow-sm: 0 1px 3px rgba(0,0,0,0.06);
+    --shadow-md: 0 2px 8px rgba(0,0,0,0.08);
+    --shadow-lg: 0 4px 16px rgba(0,0,0,0.1);
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: -apple-system, "Helvetica Neue", Helvetica, Arial, sans-serif;
+    font-size: 14px;
+    line-height: 1.4;
+    color: var(--text);
+    background: var(--light-bg);
+    overflow: hidden;
+    height: 100vh;
+  }
+
+  /* HEADER */
+  .header {
+    background: var(--navy);
+    color: #fff;
+    padding: 10px 24px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    z-index: 100;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.2);
+    position: relative;
+  }
+  .header-left { display: flex; align-items: center; gap: 16px; }
+  .header-brand {
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    opacity: 0.5;
+  }
+  .header-brand a { color: #fff; text-decoration: none; }
+  .header-brand a:hover { opacity: 0.8; }
+  .header h1 {
+    font-size: 17px;
+    font-weight: 700;
+    letter-spacing: 0.2px;
+  }
+  .header-sub {
+    font-size: 11px;
+    opacity: 0.55;
+    font-weight: 400;
+    margin-top: 1px;
+  }
+  .header-btns { display: flex; gap: 6px; align-items: center; }
+  .header-btns button {
+    background: rgba(255,255,255,0.08);
+    color: #fff;
+    border: 1px solid rgba(255,255,255,0.18);
+    padding: 5px 14px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 11px;
+    font-weight: 600;
+    transition: all 0.2s;
+    letter-spacing: 0.2px;
+  }
+  .header-btns button:hover {
+    background: rgba(255,255,255,0.18);
+    border-color: rgba(255,255,255,0.35);
+  }
+  .header-btns button.active {
+    background: rgba(74,144,217,0.3);
+    border-color: rgba(74,144,217,0.5);
+  }
+
+  /* LAYOUT */
+  .container {
+    display: flex;
+    height: calc(100vh - 48px);
+    gap: 0;
+  }
+
+  /* LEFT PANEL */
+  .panel-left {
+    width: 340px;
+    min-width: 340px;
+    overflow-y: auto;
+    padding: 12px;
+    background: #fff;
+    border-right: 1px solid var(--border);
+  }
+  .panel-left::-webkit-scrollbar { width: 5px; }
+  .panel-left::-webkit-scrollbar-track { background: transparent; }
+  .panel-left::-webkit-scrollbar-thumb { background: #ccc; border-radius: 3px; }
+
+  /* RIGHT PANEL */
+  .panel-right {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    background: var(--light-bg);
+    overflow: hidden;
+  }
+
+  /* SECTIONS */
+  .section {
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    border-radius: var(--section-radius);
+    margin-bottom: 10px;
+    overflow: hidden;
+    box-shadow: var(--shadow-sm);
+    transition: box-shadow 0.2s;
+  }
+  .section:hover { box-shadow: var(--shadow-md); }
+  .section-head {
+    background: var(--navy);
+    color: #fff;
+    font-size: 10px;
+    font-weight: 700;
+    padding: 6px 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .section-head .icon { font-size: 12px; opacity: 0.6; }
+  .section-body { padding: 10px 12px; }
+
+  /* SLIDER ROWS */
+  .slider-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 8px;
+  }
+  .slider-row:last-child { margin-bottom: 0; }
+  .slider-label {
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--navy);
+    min-width: 32px;
+    text-align: right;
+  }
+  .slider-label sub { font-size: 9px; }
+  .slider-wrap {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  input[type="range"] {
+    flex: 1;
+    -webkit-appearance: none;
+    appearance: none;
+    height: 4px;
+    background: var(--slider-track);
+    border-radius: 2px;
+    outline: none;
+    cursor: pointer;
+    transition: background 0.15s;
+  }
+  input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    background: var(--slider-thumb);
+    cursor: pointer;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.2);
+    transition: transform 0.15s, box-shadow 0.15s;
+  }
+  input[type="range"]::-webkit-slider-thumb:hover {
+    transform: scale(1.15);
+    box-shadow: 0 2px 8px rgba(21,101,192,0.3);
+  }
+  input[type="range"]::-webkit-slider-thumb:active {
+    transform: scale(1.2);
+  }
+  input[type="range"]::-moz-range-thumb {
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    background: var(--slider-thumb);
+    cursor: pointer;
+    border: none;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.2);
+  }
+  .slider-value {
+    font-family: "SF Mono", "Menlo", "Consolas", monospace;
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--navy);
+    min-width: 42px;
+    text-align: right;
+  }
+  .slider-unit {
+    font-size: 9px;
+    color: var(--text-dim);
+    min-width: 38px;
+  }
+  .slider-info {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 15px;
+    height: 15px;
+    border-radius: 50%;
+    background: rgba(21,101,192,0.08);
+    color: var(--blue);
+    font-size: 11px;
+    font-weight: 600;
+    cursor: help;
+    flex-shrink: 0;
+    position: relative;
+    border: 1px solid rgba(21,101,192,0.15);
+    transition: all 0.15s;
+    line-height: 1;
+  }
+  .slider-info:hover {
+    background: rgba(21,101,192,0.15);
+    border-color: rgba(21,101,192,0.3);
+  }
+  .slider-info .tooltip {
+    display: none;
+  }
+  /* Global fixed tooltip */
+  .global-tooltip {
+    position: fixed;
+    z-index: 9999;
+    background: var(--navy);
+    color: #fff;
+    font-size: 12px;
+    font-weight: 500;
+    padding: 10px 14px;
+    border-radius: 8px;
+    box-shadow: 0 6px 20px rgba(0,0,0,0.3);
+    pointer-events: none;
+    line-height: 1.5;
+    max-width: 280px;
+    opacity: 0;
+    transition: opacity 0.15s;
+  }
+  .global-tooltip.visible { opacity: 1; }
+  .global-tooltip::before {
+    content: '';
+    position: absolute;
+    left: -6px;
+    top: 50%;
+    transform: translateY(-50%);
+    border: 6px solid transparent;
+    border-right-color: var(--navy);
+  }
+  body.dark .slider-info { background: rgba(74,144,217,0.12); color: #6eb0f7; border-color: rgba(74,144,217,0.2); }
+  body.dark .slider-info:hover { background: rgba(74,144,217,0.2); }
+  body.dark .global-tooltip { background: #2a3548; }
+  body.dark .global-tooltip::before { border-right-color: #2a3548; }
+
+  /* BUTTONS */
+  .btn-row {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+    margin-bottom: 6px;
+  }
+  .btn-row:last-child { margin-bottom: 0; }
+
+  .btn-snapshot {
+    background: var(--navy);
+    color: #fff;
+    border: none;
+    padding: 6px 14px;
+    border-radius: 6px;
+    font-size: 11px;
+    font-weight: 700;
+    cursor: pointer;
+    letter-spacing: 0.3px;
+    transition: all 0.2s;
+    flex: 1;
+  }
+  .btn-snapshot:hover { background: #163050; }
+  .btn-snapshot:active { transform: scale(0.97); }
+  .btn-snapshot.btn-clear {
+    background: transparent;
+    color: var(--red);
+    border: 1px solid rgba(198,40,40,0.3);
+  }
+  .btn-snapshot.btn-clear:hover {
+    background: rgba(198,40,40,0.06);
+    border-color: rgba(198,40,40,0.5);
+  }
+  .btn-snapshot.btn-reset {
+    background: transparent;
+    color: var(--text-secondary);
+    border: 1px solid var(--border);
+  }
+  .btn-snapshot.btn-reset:hover {
+    background: rgba(0,0,0,0.03);
+  }
+
+  /* CANVAS AREA */
+  .canvas-container {
+    flex: 1;
+    position: relative;
+    margin: 12px 12px 0 12px;
+    background: var(--canvas-bg);
+    border-radius: var(--section-radius);
+    border: 1px solid var(--border);
+    box-shadow: var(--shadow-md);
+    overflow: hidden;
+  }
+  #pvCanvas {
+    display: block;
+    width: 100%;
+    height: 100%;
+  }
+
+  /* LEGEND on canvas */
+  .canvas-legend {
+    position: absolute;
+    top: 10px;
+    right: 12px;
+    font-size: 10px;
+    line-height: 1.7;
+    pointer-events: none;
+  }
+  .legend-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .legend-line {
+    width: 20px;
+    height: 2px;
+    border-radius: 1px;
+    flex-shrink: 0;
+  }
+  .legend-line.dashed {
+    background: repeating-linear-gradient(90deg, currentColor 0, currentColor 4px, transparent 4px, transparent 7px);
+    height: 2px;
+  }
+  .legend-line.dotted {
+    background: repeating-linear-gradient(90deg, currentColor 0, currentColor 2px, transparent 2px, transparent 5px);
+  }
+  .legend-text { color: var(--text-dim); font-weight: 600; }
+
+  /* DERIVED VALUES STRIP */
+  .values-strip {
+    display: flex;
+    gap: 0;
+    margin: 8px 12px 14px 12px;
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    border-radius: var(--section-radius);
+    box-shadow: var(--shadow-sm);
+    flex-shrink: 0;
+  }
+  .val-cell {
+    flex: 1;
+    padding: 10px 6px 12px 6px;
+    text-align: center;
+    border-right: 1px solid var(--border);
+    transition: background 0.15s;
+  }
+  .val-cell:last-child { border-right: none; }
+  .val-cell:hover { background: rgba(21,101,192,0.02); }
+  .val-cell-label {
+    font-size: 9px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: var(--text-dim);
+    margin-bottom: 2px;
+  }
+  .val-cell-num {
+    font-family: "SF Mono", "Menlo", "Consolas", monospace;
+    font-size: 15px;
+    font-weight: 800;
+    color: var(--navy);
+  }
+  .val-cell-unit {
+    font-size: 9px;
+    color: var(--text-dim);
+    margin-top: 3px;
+    padding-bottom: 0;
+  }
+  .val-normal { color: var(--green); }
+  .val-abnormal { color: var(--red); }
+  .val-borderline { color: var(--amber); }
+
+  /* PHASE ANNOTATION TOGGLE */
+  .toggle-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 12px;
+    margin-bottom: 6px;
+  }
+  .toggle-switch {
+    position: relative;
+    width: 34px;
+    height: 18px;
+    flex-shrink: 0;
+  }
+  .toggle-switch input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+  }
+  .toggle-slider {
+    position: absolute;
+    cursor: pointer;
+    inset: 0;
+    background: var(--slider-track);
+    border-radius: 9px;
+    transition: background 0.2s;
+  }
+  .toggle-slider::before {
+    content: '';
+    position: absolute;
+    width: 14px;
+    height: 14px;
+    left: 2px;
+    bottom: 2px;
+    background: #fff;
+    border-radius: 50%;
+    transition: transform 0.2s;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.15);
+  }
+  .toggle-switch input:checked + .toggle-slider { background: var(--blue); }
+  .toggle-switch input:checked + .toggle-slider::before { transform: translateX(16px); }
+  .toggle-label { font-weight: 600; color: var(--text-secondary); cursor: pointer; }
+
+  /* DARK MODE */
+  body.dark {
+    --light-bg: #12151c;
+    --card-bg: #1c2029;
+    --border: #2e3340;
+    --text: #d0d5de;
+    --text-secondary: #8a95a8;
+    --text-dim: #5e6878;
+    --canvas-bg: #161a22;
+    --slider-track: #2e3340;
+    --grid-color: rgba(255,255,255,0.03);
+    --grid-major: rgba(255,255,255,0.06);
+    --loop-color: #ff6b6b;
+    --ghost-color: rgba(255,107,107,0.18);
+    --dot-color: #ffeb3b;
+    --espvr-color: #66bb6a;
+    --edpvr-color: #ba68c8;
+    --ea-color: #78909c;
+  }
+  body.dark .header { background: #0a0e16; box-shadow: 0 2px 12px rgba(0,0,0,0.5); }
+  body.dark .panel-left { background: #161a22; border-right-color: #2e3340; }
+  body.dark .section { border-color: #2e3340; background: #1c2029; }
+  body.dark .section-head { background: #141824; }
+  body.dark .slider-label { color: #7aadee; }
+  body.dark .slider-value { color: #b0c8e8; }
+  body.dark input[type="range"] { background: #2e3340; }
+  body.dark input[type="range"]::-webkit-slider-thumb { background: #4a90d9; }
+  body.dark .canvas-container { background: #161a22; border-color: #2e3340; }
+  body.dark .values-strip { background: #1c2029; border-color: #2e3340; }
+  body.dark .val-cell { border-right-color: #2e3340; }
+  body.dark .val-cell-num { color: #b0c8e8; }
+  body.dark .val-normal { color: #66bb6a; }
+  body.dark .val-abnormal { color: #ef5350; }
+  body.dark .val-borderline { color: #ffa726; }
+  body.dark .btn-snapshot { background: #2a3548; }
+  body.dark .btn-snapshot:hover { background: #354560; }
+  body.dark .btn-snapshot.btn-reset { background: transparent; color: var(--text-dim); border-color: #2e3340; }
+  body.dark .btn-snapshot.btn-clear { color: #ef5350; border-color: rgba(239,83,80,0.3); }
+  body.dark .panel-left::-webkit-scrollbar-thumb { background: #3a4050; }
+
+  /* RESPONSIVE */
+  @media (max-width: 960px) {
+    .container { flex-direction: column; overflow-y: auto; }
+    .panel-left { width: 100%; min-width: unset; border-right: none; border-bottom: 1px solid var(--border); max-height: 45vh; }
+    .panel-right { min-height: 55vh; }
+    body { overflow: auto; height: auto; }
+  }
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<div class="header">
+  <div class="header-left">
+    <div>
+      <div class="header-brand"><a href="/">CathMath</a></div>
+      <h1>PV Loop Simulator</h1>
+      <div class="header-sub">Interactive Pressure-Volume Loop Education</div>
+    </div>
+  </div>
+  <div class="header-btns">
+    <button onclick="resetToBaseline()" title="Reset all parameters">Reset</button>
+    <button id="darkToggle" onclick="toggleDark()">Dark Mode</button>
+  </div>
+</div>
+
+<div class="container">
+
+<!-- LEFT PANEL -->
+<div class="panel-left">
+
+  <!-- PARAMETERS -->
+  <div class="section">
+    <div class="section-head"><span class="icon">&#9881;</span> Hemodynamic Parameters</div>
+    <div class="section-body">
+
+      <div class="slider-row">
+        <span class="slider-label">E<sub>es</sub></span>
+        <span class="slider-info">ⓘ<span class="tooltip"><b>End-Systolic Elastance (Contractility)</b><br>Slope of the ESPVR line. Reflects intrinsic LV contractility independent of loading conditions. Higher = stronger contraction.</span></span>
+        <div class="slider-wrap">
+          <input type="range" id="slEes" min="0.3" max="5.0" step="0.1" value="2.5" oninput="onParamChange()">
+          <span class="slider-value" id="valEes">2.0</span>
+          <span class="slider-unit">mmHg/mL</span>
+        </div>
+      </div>
+
+      <div class="slider-row">
+        <span class="slider-label">E<sub>a</sub></span>
+        <span class="slider-info">ⓘ<span class="tooltip"><b>Arterial Elastance (Afterload)</b><br>Lumped measure of total arterial load on the LV. Integrates SVR, arterial compliance, and heart rate. Higher = more afterload.</span></span>
+        <div class="slider-wrap">
+          <input type="range" id="slEa" min="0.3" max="6.0" step="0.1" value="1.8" oninput="onParamChange()">
+          <span class="slider-value" id="valEa">2.2</span>
+          <span class="slider-unit">mmHg/mL</span>
+        </div>
+      </div>
+
+      <div class="slider-row">
+        <span class="slider-label">EDV</span>
+        <span class="slider-info">ⓘ<span class="tooltip"><b>End-Diastolic Volume (Preload)</b><br>LV volume at end of diastole. Determined by venous return and LV compliance. Higher = more preload (Frank-Starling mechanism).</span></span>
+        <div class="slider-wrap">
+          <input type="range" id="slEDV" min="60" max="250" step="1" value="125" oninput="onParamChange()">
+          <span class="slider-value" id="valEDV">120</span>
+          <span class="slider-unit">mL</span>
+        </div>
+      </div>
+
+      <div class="slider-row">
+        <span class="slider-label">B</span>
+        <span class="slider-info">ⓘ<span class="tooltip"><b>Chamber Stiffness (Diastolic)</b><br>Exponent of the EDPVR curve. Higher = stiffer ventricle = steeper diastolic pressure rise. Elevated in HFpEF, concentric LVH, constriction.</span></span>
+        <div class="slider-wrap">
+          <input type="range" id="slB" min="0.005" max="0.10" step="0.001" value="0.025" oninput="onParamChange()">
+          <span class="slider-value" id="valB">0.025</span>
+          <span class="slider-unit">mL<sup>-1</sup></span>
+        </div>
+      </div>
+
+      <div class="slider-row">
+        <span class="slider-label">HR</span>
+        <span class="slider-info">ⓘ<span class="tooltip"><b>Heart Rate</b><br>Affects cardiac output (CO = SV x HR) and contributes to arterial elastance. Does not change the PV loop shape directly but alters CO and Ea.</span></span>
+        <div class="slider-wrap">
+          <input type="range" id="slHR" min="40" max="150" step="1" value="70" oninput="onParamChange()">
+          <span class="slider-value" id="valHR">70</span>
+          <span class="slider-unit">bpm</span>
+        </div>
+      </div>
+
+      <div class="slider-row">
+        <span class="slider-label">V<sub>0</sub></span>
+        <span class="slider-info">ⓘ<span class="tooltip"><b>Unstressed Volume</b><br>Volume-axis intercept of the ESPVR. The theoretical LV volume at zero pressure. Shifts the entire PV loop left or right. Increased in DCM/eccentric remodeling.</span></span>
+        <div class="slider-wrap">
+          <input type="range" id="slV0" min="0" max="50" step="1" value="10" oninput="onParamChange()">
+          <span class="slider-value" id="valV0">10</span>
+          <span class="slider-unit">mL</span>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- DISPLAY OPTIONS -->
+  <div class="section">
+    <div class="section-head"><span class="icon">&#9673;</span> Display</div>
+    <div class="section-body">
+      <div class="toggle-row">
+        <label class="toggle-switch">
+          <input type="checkbox" id="togESPVR" checked onchange="requestDraw()">
+          <span class="toggle-slider"></span>
+        </label>
+        <label class="toggle-label" for="togESPVR" style="color:var(--espvr-color)">ESPVR line</label>
+      </div>
+      <div class="toggle-row">
+        <label class="toggle-switch">
+          <input type="checkbox" id="togEDPVR" checked onchange="requestDraw()">
+          <span class="toggle-slider"></span>
+        </label>
+        <label class="toggle-label" for="togEDPVR" style="color:var(--edpvr-color)">EDPVR curve</label>
+      </div>
+      <div class="toggle-row">
+        <label class="toggle-switch">
+          <input type="checkbox" id="togEa" checked onchange="requestDraw()">
+          <span class="toggle-slider"></span>
+        </label>
+        <label class="toggle-label" for="togEa" style="color:var(--ea-color)">E<sub>a</sub> line</label>
+      </div>
+      <div class="toggle-row">
+        <label class="toggle-switch">
+          <input type="checkbox" id="togPhase" checked onchange="requestDraw()">
+          <span class="toggle-slider"></span>
+        </label>
+        <label class="toggle-label" for="togPhase">Phase labels</label>
+      </div>
+      <div class="toggle-row">
+        <label class="toggle-switch">
+          <input type="checkbox" id="togAnimate" checked onchange="toggleAnimation()">
+          <span class="toggle-slider"></span>
+        </label>
+        <label class="toggle-label" for="togAnimate">Animate tracing</label>
+      </div>
+    </div>
+  </div>
+
+  <!-- SNAPSHOT / COMPARE -->
+  <div class="section">
+    <div class="section-head"><span class="icon">&#10697;</span> Compare</div>
+    <div class="section-body">
+      <div class="btn-row">
+        <button class="btn-snapshot" onclick="takeSnapshot()" id="btnSnapshot">Snapshot Current Loop</button>
+      </div>
+      <div class="btn-row">
+        <button class="btn-snapshot btn-clear" onclick="clearSnapshot()" id="btnClearSnap" style="display:none;">Clear Ghost</button>
+        <button class="btn-snapshot btn-reset" onclick="resetToBaseline()">Reset Baseline</button>
+      </div>
+    </div>
+  </div>
+
+</div><!-- /panel-left -->
+
+<!-- RIGHT PANEL -->
+<div class="panel-right">
+
+  <!-- CANVAS -->
+  <div class="canvas-container" id="canvasContainer">
+    <canvas id="pvCanvas"></canvas>
+  </div>
+
+  <!-- DERIVED VALUES -->
+  <div class="values-strip" id="valuesStrip">
+    <div class="val-cell">
+      <div class="val-cell-label">SV</div>
+      <div class="val-cell-num" id="outSV">—</div>
+      <div class="val-cell-unit">mL</div>
+    </div>
+    <div class="val-cell">
+      <div class="val-cell-label">EF</div>
+      <div class="val-cell-num" id="outEF">—</div>
+      <div class="val-cell-unit">%</div>
+    </div>
+    <div class="val-cell">
+      <div class="val-cell-label">CO</div>
+      <div class="val-cell-num" id="outCO">—</div>
+      <div class="val-cell-unit">L/min</div>
+    </div>
+    <div class="val-cell">
+      <div class="val-cell-label">ESP</div>
+      <div class="val-cell-num" id="outESP">—</div>
+      <div class="val-cell-unit">mmHg</div>
+    </div>
+    <div class="val-cell">
+      <div class="val-cell-label">EDP</div>
+      <div class="val-cell-num" id="outEDP">—</div>
+      <div class="val-cell-unit">mmHg</div>
+    </div>
+    <div class="val-cell">
+      <div class="val-cell-label">SW</div>
+      <div class="val-cell-num" id="outSW">—</div>
+      <div class="val-cell-unit">mmHg·mL</div>
+    </div>
+    <div class="val-cell">
+      <div class="val-cell-label">E<sub>a</sub>/E<sub>es</sub></div>
+      <div class="val-cell-num" id="outCoupling">—</div>
+      <div class="val-cell-unit">ratio</div>
+    </div>
+  </div>
+
+</div><!-- /panel-right -->
+
+</div><!-- /container -->
+
+<div class="global-tooltip" id="globalTooltip"></div>
+
+<script>
+// ============================================================
+// CathMath PV Loop Simulator — Phase 1 Core Engine
+// Mathematical model: Time-varying elastance (Suga-Sagawa)
+// ============================================================
+
+// ---- CONSTANTS ----
+const A_EDPVR = 0.03; // EDPVR scaling constant (mmHg)
+
+// ---- STATE ----
+let params = {
+  Ees: 2.5, Ea: 1.8, EDV: 125, B: 0.025, HR: 70, V0: 10
+};
+let ghostLoop = null; // stored snapshot for comparison
+let ghostValues = null;
+let animProgress = 0; // 0-1 for loop trace animation
+let animRunning = true;
+let animFrameId = null;
+let drawPending = false;
+
+// ---- DOM REFS ----
+const canvas = document.getElementById('pvCanvas');
+const ctx = canvas.getContext('2d');
+let W, H; // canvas dimensions (px)
+let dpr = window.devicePixelRatio || 1;
+
+// ---- COORDINATE SYSTEM ----
+// PV space: X = Volume (mL), Y = Pressure (mmHg)
+// Viewport: V range [0, vMax], P range [0, pMax]
+const MARGIN = { top: 28, right: 28, bottom: 54, left: 56 };
+let vMax = 260; // mL
+let pMax = 200; // mmHg
+
+function vToX(v) {
+  const plotW = W / dpr - MARGIN.left - MARGIN.right;
+  return MARGIN.left + (v / vMax) * plotW;
+}
+function pToY(p) {
+  const plotH = H / dpr - MARGIN.top - MARGIN.bottom;
+  return MARGIN.top + (1 - p / pMax) * plotH;
+}
+function xToV(x) {
+  const plotW = W / dpr - MARGIN.left - MARGIN.right;
+  return ((x - MARGIN.left) / plotW) * vMax;
+}
+function yToP(y) {
+  const plotH = H / dpr - MARGIN.top - MARGIN.bottom;
+  return (1 - (y - MARGIN.top) / plotH) * pMax;
+}
+
+// ---- MATHEMATICAL MODEL ----
+
+function espvr(V, Ees, V0) {
+  return Ees * (V - V0);
+}
+
+function edpvr(V, B, V0) {
+  return A_EDPVR * (Math.exp(B * (V - V0)) - 1);
+}
+
+function computeLoop(p) {
+  const { Ees, Ea, EDV, B, HR, V0 } = p;
+
+  // End-systolic point: intersection of ESPVR and Ea line
+  // Ea line from (EDV, 0) with slope -Ea: P = Ea*(EDV - V)
+  // ESPVR: P = Ees*(V - V0)
+  // Ees*(V - V0) = Ea*(EDV - V)
+  // V*(Ees + Ea) = Ees*V0 + Ea*EDV
+  // ESV = (Ees*V0 + Ea*EDV) / (Ees + Ea)
+  const ESV = (Ees * V0 + Ea * EDV) / (Ees + Ea);
+  const ESP = Ees * (ESV - V0);
+  const EDP = edpvr(EDV, B, V0);
+  const SV = EDV - ESV;
+  const EF = SV / EDV * 100;
+  const CO = SV * HR / 1000;
+  const coupling = Ea / Ees;
+
+  // Pressure at ESV on EDPVR (for IVR bottom)
+  const P_esv_edpvr = edpvr(ESV, B, V0);
+
+  // Build loop points (clockwise: ED → IVC → Ejection → ES → IVR → Filling → ED)
+  const pts = [];
+  const N_IVC = 30;
+  const N_EJ = 50;
+  const N_IVR = 30;
+  const N_FILL = 40;
+
+  // Phase 1: Isovolumic Contraction (V = EDV, P rises from EDP to ~ESP level)
+  // P rises from EDP to the Ea line at EDV: P_aov_open = Ea*(EDV - ESV) ... actually
+  // More accurate: IVC goes from EDP up to the pressure where AV opens
+  // AV opens when LV pressure = Aortic diastolic ≈ we approximate this
+  // For simplicity: IVC from (EDV, EDP) to (EDV, P_top) where P_top is the Ea line at EDV
+  // Ea line: P = Ea*(EDV - V), at V=EDV, P=0... that's wrong
+  // Ea line goes from (EDV, 0) to (ESV, ESP), so at V=EDV, P=0
+  // Actually the top of IVC connects to the ejection curve which starts near (EDV, ~diastolic Ao pressure)
+  // For the standard PV loop: IVC from (EDV, EDP) straight up to (EDV, P_ivc_top)
+  // P_ivc_top ≈ the pressure on the Ea line would be 0 at EDV, which is wrong
+  //
+  // CORRECT approach: The Ea line represents the end-systolic operating point.
+  // The ejection phase traces a curve from AV opening to AV closing (ES point).
+  // IVC: P goes from EDP up to ~aortic diastolic pressure (we estimate as 0.6*ESP)
+  // Then ejection follows a curved path from (EDV, P_ao_dia) to (ESV, ESP)
+  // IVR: P drops from ESP down to EDPVR at ESV
+
+  const P_ao_dia = Math.max(ESP * 0.55, EDP + 5); // rough Ao diastolic
+  const P_ivr_bottom = P_esv_edpvr;
+
+  // IVC: vertical line at EDV from EDP up to P_ao_dia
+  for (let i = 0; i <= N_IVC; i++) {
+    const t = i / N_IVC;
+    // Smooth acceleration (ease-in)
+    const tt = t * t * (3 - 2 * t); // smoothstep
+    const P = EDP + (P_ao_dia - EDP) * tt;
+    pts.push({ V: EDV, P, phase: 'IVC' });
+  }
+
+  // EJECTION: from (EDV, P_ao_dia) to (ESV, ESP)
+  // The ejection curve rises to peak then comes back down
+  // Model as: V decreases linearly, P follows a parabolic arc above the Ea line
+  for (let i = 1; i <= N_EJ; i++) {
+    const t = i / N_EJ;
+    const V = EDV + (ESV - EDV) * t;
+    // Base pressure from Ea line: P_ea = Ea * (EDV - V) — but this gives 0 at EDV
+    // Actually linear interpolation on the Ea line: from (EDV,0) to (ESV, ESP)
+    // We want the ejection to bulge upward above a simple line
+    // Peak pressure occurs roughly 1/3 into ejection
+    const P_start = P_ao_dia;
+    const P_end = ESP;
+    // Linear baseline
+    const P_linear = P_start + (P_end - P_start) * t;
+    // Add a bulge (peak systolic pressure overshoot)
+    const bulge = Math.sin(Math.PI * t) * (ESP - P_ao_dia) * 0.2;
+    const P = P_linear + bulge;
+    pts.push({ V, P, phase: 'Ejection' });
+  }
+
+  // IVR: vertical line at ESV from ESP down to P_ivr_bottom
+  for (let i = 1; i <= N_IVR; i++) {
+    const t = i / N_IVR;
+    const tt = t * t * (3 - 2 * t);
+    const P = ESP + (P_ivr_bottom - ESP) * tt;
+    pts.push({ V: ESV, P, phase: 'IVR' });
+  }
+
+  // FILLING: from (ESV, P_ivr_bottom) along EDPVR back to (EDV, EDP)
+  for (let i = 1; i <= N_FILL; i++) {
+    const t = i / N_FILL;
+    const V = ESV + (EDV - ESV) * t;
+    const P = edpvr(V, B, V0);
+    pts.push({ V, P, phase: 'Filling' });
+  }
+
+  // Stroke Work ≈ area of the loop (shoelace formula)
+  let SW = 0;
+  for (let i = 0; i < pts.length; i++) {
+    const j = (i + 1) % pts.length;
+    SW += (pts[i].V * pts[j].P - pts[j].V * pts[i].P);
+  }
+  SW = Math.abs(SW) / 2;
+
+  return {
+    pts,
+    values: {
+      SV: Math.round(SV),
+      EF: EF.toFixed(1),
+      CO: CO.toFixed(1),
+      ESP: Math.round(ESP),
+      EDP: EDP.toFixed(1),
+      SW: Math.round(SW),
+      coupling: coupling.toFixed(2),
+      ESV: Math.round(ESV),
+      EDV: Math.round(EDV)
+    }
+  };
+}
+
+// ---- RENDERING ----
+
+function resizeCanvas() {
+  const container = document.getElementById('canvasContainer');
+  const rect = container.getBoundingClientRect();
+  if (rect.width === 0 || rect.height === 0) return;
+  W = rect.width * dpr;
+  H = rect.height * dpr;
+  canvas.width = W;
+  canvas.height = H;
+  canvas.style.width = rect.width + 'px';
+  canvas.style.height = rect.height + 'px';
+  // Reset transform then scale (canvas.width assignment resets transform)
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+
+  // Auto-scale axes based on parameters
+  autoScaleAxes();
+  requestDraw();
+}
+
+function autoScaleAxes() {
+  const { Ees, Ea, EDV, B, V0 } = params;
+  const ESV = (Ees * V0 + Ea * EDV) / (Ees + Ea);
+  const ESP = Ees * (ESV - V0);
+
+  // Volume axis: show from 0 to a bit beyond EDV
+  vMax = Math.max(180, Math.ceil((EDV + 30) / 20) * 20);
+  // Pressure axis: show from 0 to a bit beyond ESP
+  pMax = Math.max(150, Math.ceil((ESP * 1.3) / 20) * 20);
+  // Clamp
+  if (vMax > 300) vMax = 300;
+  if (pMax > 300) pMax = 300;
+}
+
+function drawGrid() {
+  const isDark = document.body.classList.contains('dark');
+  const plotW = W / dpr - MARGIN.left - MARGIN.right;
+  const plotH = H / dpr - MARGIN.top - MARGIN.bottom;
+
+  // Grid lines
+  ctx.lineWidth = 0.5;
+
+  // Vertical grid (Volume)
+  const vStep = vMax <= 200 ? 20 : 40;
+  for (let v = 0; v <= vMax; v += vStep) {
+    const x = vToX(v);
+    ctx.strokeStyle = (v % (vStep * 2) === 0) ? getCSS('--grid-major') : getCSS('--grid-color');
+    ctx.beginPath();
+    ctx.moveTo(x, MARGIN.top);
+    ctx.lineTo(x, MARGIN.top + plotH);
+    ctx.stroke();
+  }
+
+  // Horizontal grid (Pressure)
+  const pStep = pMax <= 200 ? 20 : 40;
+  for (let p = 0; p <= pMax; p += pStep) {
+    const y = pToY(p);
+    ctx.strokeStyle = (p % (pStep * 2) === 0) ? getCSS('--grid-major') : getCSS('--grid-color');
+    ctx.beginPath();
+    ctx.moveTo(MARGIN.left, y);
+    ctx.lineTo(MARGIN.left + plotW, y);
+    ctx.stroke();
+  }
+
+  // Axes
+  ctx.strokeStyle = isDark ? '#3a4050' : '#b0b8c4';
+  ctx.lineWidth = 1.5;
+  // X axis
+  ctx.beginPath();
+  ctx.moveTo(MARGIN.left, MARGIN.top + plotH);
+  ctx.lineTo(MARGIN.left + plotW, MARGIN.top + plotH);
+  ctx.stroke();
+  // Y axis
+  ctx.beginPath();
+  ctx.moveTo(MARGIN.left, MARGIN.top);
+  ctx.lineTo(MARGIN.left, MARGIN.top + plotH);
+  ctx.stroke();
+
+  // Tick labels
+  ctx.font = '10px -apple-system, Helvetica, sans-serif';
+  ctx.textAlign = 'center';
+  ctx.fillStyle = getCSS('--text-dim');
+
+  for (let v = 0; v <= vMax; v += vStep) {
+    if (v % (vStep * 2) === 0 || vStep >= 40) {
+      ctx.fillText(v, vToX(v), MARGIN.top + plotH + 16);
+    }
+  }
+
+  ctx.textAlign = 'right';
+  for (let p = 0; p <= pMax; p += pStep) {
+    if (p % (pStep * 2) === 0 || pStep >= 40) {
+      ctx.fillText(p, MARGIN.left - 8, pToY(p) + 3);
+    }
+  }
+
+  // Axis labels
+  ctx.font = '11px -apple-system, Helvetica, sans-serif';
+  ctx.fillStyle = getCSS('--text-secondary');
+  ctx.textAlign = 'center';
+  ctx.fillText('LV Volume (mL)', MARGIN.left + plotW / 2, MARGIN.top + plotH + 38);
+
+  ctx.save();
+  ctx.translate(14, MARGIN.top + plotH / 2);
+  ctx.rotate(-Math.PI / 2);
+  ctx.fillText('LV Pressure (mmHg)', 0, 0);
+  ctx.restore();
+}
+
+function drawESPVR() {
+  if (!document.getElementById('togESPVR').checked) return;
+  const { Ees, V0 } = params;
+  const color = getCSS('--espvr-color');
+
+  ctx.save();
+  ctx.strokeStyle = color;
+  ctx.lineWidth = 1.5;
+  ctx.setLineDash([6, 4]);
+  ctx.globalAlpha = 0.7;
+
+  ctx.beginPath();
+  // ESPVR: P = Ees * (V - V0), draw from V0 to where P = pMax
+  const V_at_pMax = V0 + pMax / Ees;
+  ctx.moveTo(vToX(V0), pToY(0));
+  ctx.lineTo(vToX(Math.min(V_at_pMax, vMax)), pToY(Math.min(Ees * (Math.min(V_at_pMax, vMax) - V0), pMax)));
+  ctx.stroke();
+  ctx.setLineDash([]);
+  ctx.globalAlpha = 1;
+
+  // Label
+  ctx.font = 'bold 9px -apple-system, Helvetica, sans-serif';
+  ctx.fillStyle = color;
+  const labelV = V0 + (pMax * 0.9) / Ees;
+  if (labelV < vMax - 20) {
+    ctx.save();
+    const lx = vToX(labelV);
+    const ly = pToY(pMax * 0.9);
+    ctx.translate(lx, ly);
+    const angle = -Math.atan(Ees * (pToY(0) - pToY(pMax)) / (vToX(vMax) - vToX(0)) * vMax / pMax);
+    ctx.rotate(angle);
+    ctx.fillText('ESPVR', 4, -4);
+    ctx.restore();
+  }
+  ctx.restore();
+}
+
+function drawEDPVR() {
+  if (!document.getElementById('togEDPVR').checked) return;
+  const { B, V0 } = params;
+  const color = getCSS('--edpvr-color');
+
+  ctx.save();
+  ctx.strokeStyle = color;
+  ctx.lineWidth = 1.5;
+  ctx.setLineDash([4, 3]);
+  ctx.globalAlpha = 0.6;
+
+  ctx.beginPath();
+  let started = false;
+  for (let v = V0; v <= vMax; v += 1) {
+    const p = edpvr(v, B, V0);
+    if (p > pMax) break;
+    if (!started) {
+      ctx.moveTo(vToX(v), pToY(p));
+      started = true;
+    } else {
+      ctx.lineTo(vToX(v), pToY(p));
+    }
+  }
+  ctx.stroke();
+  ctx.setLineDash([]);
+  ctx.globalAlpha = 1;
+
+  // Label — place on the curve past EDV to avoid crowding the loop area
+  ctx.font = 'bold 9px -apple-system, Helvetica, sans-serif';
+  ctx.fillStyle = color;
+  const labelV = Math.min(params.EDV + 25, vMax - 20);
+  const labelP = edpvr(labelV, B, V0);
+  if (labelP < pMax * 0.5 && labelP > 2) {
+    ctx.textAlign = 'left';
+    ctx.fillText('EDPVR', vToX(labelV) + 4, pToY(labelP) - 5);
+  }
+  ctx.restore();
+}
+
+function drawEaLine(loop) {
+  if (!document.getElementById('togEa').checked) return;
+  const { Ea, EDV } = params;
+  const ESV = parseFloat(loop.values.ESV);
+  const ESP = parseFloat(loop.values.ESP);
+  const color = getCSS('--ea-color');
+
+  ctx.save();
+  ctx.strokeStyle = color;
+  ctx.lineWidth = 1.2;
+  ctx.setLineDash([3, 3]);
+  ctx.globalAlpha = 0.5;
+
+  // Ea line from (EDV, 0) to (ESV, ESP) and slightly beyond
+  ctx.beginPath();
+  ctx.moveTo(vToX(EDV), pToY(0));
+  // Extend slightly past ESP
+  const extV = ESV - (EDV - ESV) * 0.1;
+  const extP = ESP + ESP * 0.1;
+  ctx.lineTo(vToX(Math.max(extV, 0)), pToY(Math.min(extP, pMax)));
+  ctx.stroke();
+  ctx.setLineDash([]);
+  ctx.globalAlpha = 1;
+
+  // Label
+  ctx.font = 'bold 9px -apple-system, Helvetica, sans-serif';
+  ctx.fillStyle = color;
+  const midV = (EDV + ESV) / 2;
+  const midP = Ea * (EDV - midV);
+  ctx.fillText('Ea', vToX(midV) + 6, pToY(midP) - 4);
+  ctx.restore();
+}
+
+function drawLoopPath(pts, color, lineWidth, alpha, dashEnd) {
+  if (pts.length < 2) return;
+
+  ctx.save();
+  ctx.strokeStyle = color;
+  ctx.lineWidth = lineWidth;
+  ctx.globalAlpha = alpha;
+  ctx.lineJoin = 'round';
+  ctx.lineCap = 'round';
+
+  const end = dashEnd !== undefined ? Math.floor(dashEnd * pts.length) : pts.length;
+
+  ctx.beginPath();
+  ctx.moveTo(vToX(pts[0].V), pToY(pts[0].P));
+  for (let i = 1; i < end; i++) {
+    ctx.lineTo(vToX(pts[i].V), pToY(pts[i].P));
+  }
+  ctx.stroke();
+
+  // Fill the loop area with subtle color
+  if (end >= pts.length && alpha > 0.3) {
+    ctx.globalAlpha = 0.06;
+    ctx.fillStyle = color;
+    ctx.beginPath();
+    ctx.moveTo(vToX(pts[0].V), pToY(pts[0].P));
+    for (let i = 1; i < pts.length; i++) {
+      ctx.lineTo(vToX(pts[i].V), pToY(pts[i].P));
+    }
+    ctx.closePath();
+    ctx.fill();
+  }
+
+  ctx.restore();
+}
+
+function drawAnimDot(pts, progress) {
+  if (!animRunning) return;
+  const idx = Math.floor(progress * pts.length) % pts.length;
+  const pt = pts[idx];
+  if (!pt) return;
+
+  const x = vToX(pt.V);
+  const y = pToY(pt.P);
+  const dotColor = getCSS('--dot-color');
+
+  // Glow
+  ctx.save();
+  ctx.beginPath();
+  ctx.arc(x, y, 8, 0, Math.PI * 2);
+  ctx.fillStyle = dotColor;
+  ctx.globalAlpha = 0.15;
+  ctx.fill();
+
+  // Dot
+  ctx.beginPath();
+  ctx.arc(x, y, 4, 0, Math.PI * 2);
+  ctx.fillStyle = dotColor;
+  ctx.globalAlpha = 1;
+  ctx.fill();
+
+  // White center
+  ctx.beginPath();
+  ctx.arc(x, y, 1.5, 0, Math.PI * 2);
+  ctx.fillStyle = '#fff';
+  ctx.fill();
+  ctx.restore();
+}
+
+function drawPhaseLabels(pts) {
+  if (!document.getElementById('togPhase').checked) return;
+
+  const isDark = document.body.classList.contains('dark');
+  const labelColor = isDark ? '#8a95a8' : '#6a7a8a';
+  const valveColor = isDark ? '#ffa726' : '#d84315';
+
+  // Phase labels
+  ctx.font = 'bold 9px -apple-system, Helvetica, sans-serif';
+  ctx.fillStyle = labelColor;
+  ctx.textAlign = 'center';
+
+  const phases = ['IVC', 'Ejection', 'IVR', 'Filling'];
+  const arrows = { 'IVC': '\u2191', 'Ejection': '\u2190', 'IVR': '\u2193', 'Filling': '\u2192' };
+
+  phases.forEach(phase => {
+    const phasePts = pts.filter(p => p.phase === phase);
+    if (phasePts.length < 2) return;
+    const mid = phasePts[Math.floor(phasePts.length / 2)];
+    let x = vToX(mid.V);
+    let y = pToY(mid.P);
+
+    const offsets = { 'IVC': [20, 0], 'Ejection': [0, -14], 'IVR': [-20, 0], 'Filling': [0, 16] };
+    const [ox, oy] = offsets[phase];
+    x += ox;
+    y += oy;
+
+    ctx.globalAlpha = 0.65;
+    ctx.fillStyle = labelColor;
+    ctx.fillText(arrows[phase] + ' ' + phase, x, y);
+    ctx.globalAlpha = 1;
+  });
+
+  // Valve event markers at phase transitions
+  ctx.font = 'bold 8px -apple-system, Helvetica, sans-serif';
+  ctx.fillStyle = valveColor;
+  ctx.globalAlpha = 0.8;
+
+  // Find transition points
+  // AV opens: end of IVC (transition IVC → Ejection)
+  const ivcPts = pts.filter(p => p.phase === 'IVC');
+  const ejPts = pts.filter(p => p.phase === 'Ejection');
+  const ivrPts = pts.filter(p => p.phase === 'IVR');
+  const fillPts = pts.filter(p => p.phase === 'Filling');
+
+  if (ivcPts.length > 0 && ejPts.length > 0) {
+    // AV opens: last IVC point (top-right corner of loop)
+    const avOpen = ivcPts[ivcPts.length - 1];
+    const x1 = vToX(avOpen.V);
+    const y1 = pToY(avOpen.P);
+    drawDiamond(x1, y1, 3, valveColor);
+    ctx.textAlign = 'left';
+    ctx.fillText('AV opens', x1 + 6, y1 + 3);
+  }
+
+  if (ejPts.length > 0 && ivrPts.length > 0) {
+    // AV closes: last ejection point = ES point (top-left corner)
+    const avClose = ejPts[ejPts.length - 1];
+    const x2 = vToX(avClose.V);
+    const y2 = pToY(avClose.P);
+    drawDiamond(x2, y2, 3, valveColor);
+    ctx.textAlign = 'left';
+    ctx.fillText('AV closes', x2 + 10, y2 - 2);
+  }
+
+  if (ivrPts.length > 0 && fillPts.length > 0) {
+    // MV opens: last IVR point (bottom-left corner)
+    const mvOpen = ivrPts[ivrPts.length - 1];
+    const x3 = vToX(mvOpen.V);
+    const y3 = pToY(mvOpen.P);
+    drawDiamond(x3, y3, 3, valveColor);
+    ctx.textAlign = 'right';
+    ctx.fillText('MV opens', x3 - 6, y3 - 5);
+  }
+
+  if (fillPts.length > 0 && ivcPts.length > 0) {
+    // MV closes: last filling point = ED point (bottom-right corner)
+    const mvClose = fillPts[fillPts.length - 1];
+    const x4 = vToX(mvClose.V);
+    const y4 = pToY(mvClose.P);
+    drawDiamond(x4, y4, 3, valveColor);
+    ctx.textAlign = 'left';
+    ctx.fillText('MV closes', x4 + 6, y4 - 5);
+  }
+
+  ctx.globalAlpha = 1;
+}
+
+function drawDiamond(cx, cy, r, color) {
+  ctx.save();
+  ctx.fillStyle = color;
+  ctx.beginPath();
+  ctx.moveTo(cx, cy - r);
+  ctx.lineTo(cx + r, cy);
+  ctx.lineTo(cx, cy + r);
+  ctx.lineTo(cx - r, cy);
+  ctx.closePath();
+  ctx.fill();
+  ctx.restore();
+}
+
+function drawESEDPoints(loop) {
+  const { V0 } = params;
+  const ESV = parseFloat(loop.values.ESV);
+  const ESP = parseFloat(loop.values.ESP);
+  const EDV = parseFloat(loop.values.EDV);
+  const EDP = parseFloat(loop.values.EDP);
+  const isDark = document.body.classList.contains('dark');
+
+  // ES point
+  ctx.save();
+  ctx.beginPath();
+  ctx.arc(vToX(ESV), pToY(ESP), 3.5, 0, Math.PI * 2);
+  ctx.fillStyle = isDark ? '#ff6b6b' : var_navy();
+  ctx.fill();
+  ctx.font = 'bold 9px -apple-system, Helvetica, sans-serif';
+  ctx.fillStyle = isDark ? '#ff8a80' : '#1565c0';
+  ctx.textAlign = 'left';
+  ctx.fillText('ES', vToX(ESV) - 18, pToY(ESP) + 4);
+
+  // ED point
+  ctx.beginPath();
+  ctx.arc(vToX(EDV), pToY(EDP), 3.5, 0, Math.PI * 2);
+  ctx.fillStyle = isDark ? '#ff6b6b' : var_navy();
+  ctx.fill();
+  ctx.fillStyle = isDark ? '#ff8a80' : '#1565c0';
+  ctx.textAlign = 'right';
+  ctx.fillText('ED', vToX(EDV) - 6, pToY(EDP) + 4);
+  ctx.restore();
+}
+
+function var_navy() { return getCSS('--loop-color'); }
+
+function getCSS(prop) {
+  return getComputedStyle(document.body).getPropertyValue(prop).trim();
+}
+
+// ---- MAIN DRAW ----
+function draw() {
+  drawPending = false;
+  autoScaleAxes();
+
+  const w = W / dpr;
+  const h = H / dpr;
+  ctx.clearRect(0, 0, w, h);
+
+  drawGrid();
+
+  // Compute current loop
+  const loop = computeLoop(params);
+
+  // Draw ghost if exists
+  if (ghostLoop) {
+    drawLoopPath(ghostLoop.pts, getCSS('--ghost-color'), 2, 0.3);
+  }
+
+  // Draw reference lines
+  drawEDPVR();
+  drawESPVR();
+  drawEaLine(loop);
+
+  // Draw main loop
+  const loopColor = getCSS('--loop-color');
+  if (animRunning) {
+    drawLoopPath(loop.pts, loopColor, 2.5, 1, animProgress);
+    drawAnimDot(loop.pts, animProgress);
+  } else {
+    drawLoopPath(loop.pts, loopColor, 2.5, 1);
+  }
+
+  // Phase labels and points
+  drawPhaseLabels(loop.pts);
+  drawESEDPoints(loop);
+
+  // Update derived values
+  updateValues(loop.values);
+}
+
+function requestDraw() {
+  if (!drawPending) {
+    drawPending = true;
+    requestAnimationFrame(draw);
+  }
+}
+
+// ---- ANIMATION LOOP ----
+function animate() {
+  if (!animRunning) return;
+  const speed = 0.008; // loops per frame (~2 seconds per loop at 60fps)
+  animProgress += speed;
+  if (animProgress >= 1) animProgress -= 1;
+  draw();
+  animFrameId = requestAnimationFrame(animate);
+}
+
+function toggleAnimation() {
+  animRunning = document.getElementById('togAnimate').checked;
+  if (animRunning) {
+    animProgress = 0;
+    animate();
+  } else {
+    if (animFrameId) cancelAnimationFrame(animFrameId);
+    requestDraw();
+  }
+}
+
+// ---- UI HANDLERS ----
+
+function readSliders() {
+  params.Ees = parseFloat(document.getElementById('slEes').value);
+  params.Ea = parseFloat(document.getElementById('slEa').value);
+  params.EDV = parseFloat(document.getElementById('slEDV').value);
+  params.B = parseFloat(document.getElementById('slB').value);
+  params.HR = parseFloat(document.getElementById('slHR').value);
+  params.V0 = parseFloat(document.getElementById('slV0').value);
+}
+
+function updateSliderDisplays() {
+  document.getElementById('valEes').textContent = params.Ees.toFixed(1);
+  document.getElementById('valEa').textContent = params.Ea.toFixed(1);
+  document.getElementById('valEDV').textContent = Math.round(params.EDV);
+  document.getElementById('valB').textContent = params.B.toFixed(3);
+  document.getElementById('valHR').textContent = Math.round(params.HR);
+  document.getElementById('valV0').textContent = Math.round(params.V0);
+}
+
+function setSliders(p) {
+  document.getElementById('slEes').value = p.Ees;
+  document.getElementById('slEa').value = p.Ea;
+  document.getElementById('slEDV').value = p.EDV;
+  document.getElementById('slB').value = p.B;
+  document.getElementById('slHR').value = p.HR;
+  document.getElementById('slV0').value = p.V0;
+}
+
+function onParamChange() {
+  readSliders();
+  updateSliderDisplays();
+  if (!animRunning) requestDraw();
+}
+
+function updateValues(v) {
+  document.getElementById('outSV').textContent = v.SV;
+  document.getElementById('outEF').textContent = v.EF;
+  document.getElementById('outCO').textContent = v.CO;
+  document.getElementById('outESP').textContent = v.ESP;
+  document.getElementById('outEDP').textContent = v.EDP;
+  document.getElementById('outSW').textContent = v.SW;
+  document.getElementById('outCoupling').textContent = v.coupling;
+
+  // Color coding
+  colorVal('outEF', parseFloat(v.EF), 55, 40, 70, 100);
+  colorVal('outCO', parseFloat(v.CO), 4.0, 2.0, 8.0, 12.0);
+  colorCoupling(parseFloat(v.coupling));
+}
+
+function colorVal(id, val, lowWarn, lowBad, hiWarn, hiBad) {
+  const el = document.getElementById(id);
+  el.className = 'val-cell-num';
+  if (val < lowBad || val > hiBad) el.classList.add('val-abnormal');
+  else if (val < lowWarn || val > hiWarn) el.classList.add('val-borderline');
+  else el.classList.add('val-normal');
+}
+
+function colorCoupling(ratio) {
+  const el = document.getElementById('outCoupling');
+  el.className = 'val-cell-num';
+  if (ratio >= 0.5 && ratio <= 1.3) el.classList.add('val-normal');
+  else if (ratio > 1.3 && ratio <= 1.5) el.classList.add('val-borderline');
+  else el.classList.add('val-abnormal');
+}
+
+// ---- SNAPSHOT ----
+function takeSnapshot() {
+  const loop = computeLoop(params);
+  ghostLoop = { pts: [...loop.pts] };
+  ghostValues = { ...loop.values };
+  document.getElementById('btnClearSnap').style.display = '';
+  document.getElementById('btnSnapshot').textContent = 'Update Snapshot';
+  requestDraw();
+}
+
+function clearSnapshot() {
+  ghostLoop = null;
+  ghostValues = null;
+  document.getElementById('btnClearSnap').style.display = 'none';
+  document.getElementById('btnSnapshot').textContent = 'Snapshot Current Loop';
+  requestDraw();
+}
+
+// ---- RESET ----
+function resetToBaseline() {
+  params = { Ees: 2.0, Ea: 2.2, EDV: 120, B: 0.025, HR: 70, V0: 10 };
+  setSliders(params);
+  updateSliderDisplays();
+  clearSnapshot();
+  requestDraw();
+}
+
+// ---- DARK MODE ----
+function toggleDark() {
+  document.body.classList.toggle('dark');
+  const isDark = document.body.classList.contains('dark');
+  document.getElementById('darkToggle').textContent = isDark ? 'Light Mode' : 'Dark Mode';
+  if (isDark) document.getElementById('darkToggle').classList.add('active');
+  else document.getElementById('darkToggle').classList.remove('active');
+  localStorage.setItem('pvloop_dark', isDark ? '1' : '0');
+  requestDraw();
+}
+
+// ---- INIT ----
+function init() {
+  // Restore dark mode
+  if (localStorage.getItem('pvloop_dark') === '1') {
+    document.body.classList.add('dark');
+    document.getElementById('darkToggle').textContent = 'Light Mode';
+    document.getElementById('darkToggle').classList.add('active');
+  }
+
+  updateSliderDisplays();
+  resizeCanvas();
+
+  // Start animation
+  if (animRunning) animate();
+
+  // Resize handler
+  window.addEventListener('resize', () => {
+    dpr = window.devicePixelRatio || 1;
+    resizeCanvas();
+  });
+
+  // Handle canvas hover for point info
+  canvas.addEventListener('mousemove', onCanvasHover);
+  canvas.addEventListener('mouseleave', () => {
+    canvas.style.cursor = 'default';
+  });
+
+  // Global tooltip for slider info buttons
+  const tip = document.getElementById('globalTooltip');
+  document.querySelectorAll('.slider-info').forEach(el => {
+    const content = el.querySelector('.tooltip');
+    if (!content) return;
+    el.addEventListener('mouseenter', (e) => {
+      tip.innerHTML = content.innerHTML;
+      tip.classList.add('visible');
+      const rect = el.getBoundingClientRect();
+      tip.style.left = (rect.right + 10) + 'px';
+      tip.style.top = (rect.top + rect.height / 2) + 'px';
+      tip.style.transform = 'translateY(-50%)';
+      // Keep tooltip on screen
+      requestAnimationFrame(() => {
+        const tipRect = tip.getBoundingClientRect();
+        if (tipRect.right > window.innerWidth - 10) {
+          tip.style.left = (rect.left - tipRect.width - 10) + 'px';
+        }
+        if (tipRect.bottom > window.innerHeight - 10) {
+          tip.style.top = (window.innerHeight - tipRect.height - 10) + 'px';
+          tip.style.transform = 'none';
+        }
+        if (tipRect.top < 10) {
+          tip.style.top = '10px';
+          tip.style.transform = 'none';
+        }
+      });
+    });
+    el.addEventListener('mouseleave', () => {
+      tip.classList.remove('visible');
+    });
+  });
+}
+
+function onCanvasHover(e) {
+  const rect = canvas.getBoundingClientRect();
+  const x = e.clientX - rect.left;
+  const y = e.clientY - rect.top;
+  const v = xToV(x);
+  const p = yToP(y);
+
+  // Check if within plot area
+  if (v >= 0 && v <= vMax && p >= 0 && p <= pMax) {
+    canvas.style.cursor = 'crosshair';
+    canvas.title = `V: ${Math.round(v)} mL, P: ${Math.round(p)} mmHg`;
+  } else {
+    canvas.style.cursor = 'default';
+    canvas.title = '';
+  }
+}
+
+document.addEventListener('DOMContentLoaded', init);
+</script>
+</body>
+</html>
