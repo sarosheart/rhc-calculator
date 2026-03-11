@@ -670,6 +670,13 @@ const PHASES = {
   chronic:    { st: 0.0, tMult: 0.5,  qW: 0.8, label: 'Chronic (Months)' },
 };
 
+// Vessels that support MI timeline evolution (have meaningful ST + T + Q changes across phases)
+// Excluded: LM (diffuse pattern, not survivable STEMI), D2 (too subtle), dLCx (ST-only, often ECG-silent)
+const TIMELINE_VESSELS = new Set([
+  'plad', 'mlad', 'dlad', 'd1', 'plcx', 'om1', 'om2',
+  'prca', 'mrca', 'drca', 'pda', 'plv'
+]);
+
 // ===== SPECIAL PATTERNS =====
 // These override normal waveform generation with pattern-specific modifications
 const SPECIAL_PATTERNS = {
@@ -1136,7 +1143,6 @@ function onCoronaryClick(e) {
   if (state.specialPattern) {
     state.specialPattern = null;
     document.querySelectorAll('.vessel-btn[data-pattern]').forEach(b => b.classList.remove('active'));
-    document.querySelectorAll('.phase-btn').forEach(b => { b.disabled = false; });
   }
 
   if (state.activeVessel === hit) {
@@ -1150,6 +1156,7 @@ function onCoronaryClick(e) {
     b.classList.toggle('active', b.dataset.vessel === state.activeVessel);
   });
 
+  updatePhaseButtons();
   updateClinicalInfo();
   updateStateBadge();
   renderCoronaryTree();
@@ -1660,7 +1667,6 @@ document.querySelectorAll('.vessel-btn[data-vessel]').forEach(btn => {
     if (state.specialPattern) {
       state.specialPattern = null;
       document.querySelectorAll('.vessel-btn[data-pattern]').forEach(b => b.classList.remove('active'));
-      document.querySelectorAll('.phase-btn').forEach(b => { b.disabled = false; });
     }
     if (state.activeVessel === vessel) {
       state.activeVessel = null;
@@ -1670,12 +1676,29 @@ document.querySelectorAll('.vessel-btn[data-vessel]').forEach(btn => {
       btn.classList.add('active');
       state.activeVessel = vessel;
     }
+    updatePhaseButtons();
     updateClinicalInfo();
     updateStateBadge();
     renderCoronaryTree();
     renderAllLeads();
   });
 });
+
+function updatePhaseButtons() {
+  const vessel = state.activeVessel;
+  const timelineEnabled = !state.specialPattern && vessel && TIMELINE_VESSELS.has(vessel);
+  const noVessel = !vessel && !state.specialPattern;
+  document.querySelectorAll('.phase-btn').forEach(b => {
+    b.disabled = !timelineEnabled && !noVessel;
+  });
+  // Force acute phase for vessels without timeline support
+  if (vessel && !TIMELINE_VESSELS.has(vessel) && !state.specialPattern) {
+    state.phase = 'acute';
+    document.querySelectorAll('.phase-btn').forEach(b => {
+      b.classList.toggle('active', b.dataset.phase === 'acute');
+    });
+  }
+}
 
 function setPhase(phase) {
   state.phase = phase;
@@ -1749,9 +1772,7 @@ function setSpecialPattern(key) {
   document.querySelectorAll('.vessel-btn[data-pattern]').forEach(b => {
     b.classList.toggle('active', b.dataset.pattern === state.specialPattern);
   });
-  // Disable phase selector when special pattern active (patterns don't use MI phases)
-  const phaseDisabled = !!state.specialPattern;
-  document.querySelectorAll('.phase-btn').forEach(b => { b.disabled = phaseDisabled; });
+  updatePhaseButtons();
   updateClinicalInfo();
   updateStateBadge();
   renderCoronaryTree();
@@ -1764,7 +1785,6 @@ function resetAll() {
   state.hr = 75;
 
   state.specialPattern = null;
-  document.querySelectorAll('.phase-btn').forEach(b => { b.disabled = false; });
 
   document.getElementById('hrSlider').value = 75;
   document.getElementById('hrValue').textContent = '75 bpm';
@@ -1774,6 +1794,7 @@ function resetAll() {
   });
   document.querySelector('input[name="dominance"][value="right"]').checked = true;
   setDominance('right'); // Restore default vessel tree/paths
+  updatePhaseButtons();
 
   updateClinicalInfo();
   updateStateBadge();
@@ -1835,7 +1856,7 @@ function updateStateBadge() {
   const occ = OCCLUSIONS[state.activeVessel];
   const ph = PHASES[state.phase];
   document.getElementById('badgeVessel').textContent = occ.name + ' Occlusion';
-  document.getElementById('badgePhase').textContent = ph.label;
+  document.getElementById('badgePhase').textContent = TIMELINE_VESSELS.has(state.activeVessel) ? ph.label : 'Acute';
   document.getElementById('badgeLeads').textContent = occ.leads;
 }
 
