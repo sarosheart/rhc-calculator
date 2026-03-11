@@ -48,39 +48,79 @@
     height: 100vh;
   }
 
-  /* HEADER */
-  .header {
+  /* SITE NAV */
+  .site-nav {
+    background: #0a1628;
+    color: #fff;
+    display: flex;
+    align-items: center;
+    padding: 0 24px;
+    height: 42px;
+    position: sticky;
+    top: 0;
+    z-index: 200;
+    border-bottom: 1px solid rgba(255,255,255,0.06);
+  }
+  .nav-brand {
+    font-size: 16px;
+    font-weight: 800;
+    letter-spacing: 0.5px;
+    margin-right: 32px;
+    color: #fff;
+  }
+  .nav-tabs { display: flex; gap: 0; height: 100%; }
+  .nav-tab {
+    display: flex;
+    align-items: center;
+    padding: 0 18px;
+    height: 42px;
+    font-size: 13px;
+    font-weight: 600;
+    color: rgba(255,255,255,0.5);
+    text-decoration: none;
+    border-bottom: 2px solid transparent;
+    transition: color 0.2s, border-color 0.2s;
+  }
+  .nav-tab:hover { color: rgba(255,255,255,0.85); }
+  .nav-tab.active { color: #fff; border-bottom-color: #4a90d9; }
+  .nav-right {
+    margin-left: auto;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+  .nav-credit {
+    font-size: 11px;
+    opacity: 0.5;
+    font-weight: 400;
+  }
+  .nav-right button {
+    background: rgba(255,255,255,0.1);
+    color: #fff;
+    border: 1px solid rgba(255,255,255,0.2);
+    padding: 4px 12px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 11px;
+    font-weight: 600;
+    transition: background 0.2s;
+  }
+  .nav-right button:hover { background: rgba(255,255,255,0.2); }
+
+  /* PAGE CONTROLS */
+  .page-controls {
     background: var(--navy);
     color: #fff;
-    padding: 5px 24px;
     display: flex;
     align-items: center;
     justify-content: space-between;
-    z-index: 100;
-    box-shadow: 0 2px 12px rgba(0,0,0,0.2);
-    position: relative;
+    padding: 6px 24px;
   }
-  .header-left { display: flex; align-items: center; gap: 16px; }
-  .header-brand {
-    font-size: 11px;
-    font-weight: 600;
-    letter-spacing: 1.5px;
-    text-transform: uppercase;
-    opacity: 0.5;
-  }
-  .header-brand a { color: #fff; text-decoration: none; }
-  .header-brand a:hover { opacity: 0.8; }
-  .header h1 {
-    font-size: 17px;
-    font-weight: 700;
-    letter-spacing: 0.2px;
-  }
-  .header-sub {
-    font-size: 11px;
-    opacity: 0.55;
-    font-weight: 400;
-    margin-top: 1px;
-  }
+  .page-title { display: flex; align-items: baseline; gap: 12px; }
+  .page-title h1 { font-size: 16px; font-weight: 700; }
+  .page-sub { font-size: 11px; opacity: 0.6; }
+
+  /* HEADER (legacy — page controls) */
   .header-btns { display: flex; gap: 6px; align-items: center; }
   .header-btns button {
     background: rgba(255,255,255,0.08);
@@ -106,7 +146,7 @@
   /* LAYOUT */
   .container {
     display: flex;
-    height: calc(100vh - 38px);
+    height: calc(100vh - 80px);
     gap: 0;
   }
 
@@ -737,7 +777,8 @@
     --edpvr-color: #ba68c8;
     --ea-color: #78909c;
   }
-  body.dark .header { background: #0a0e16; box-shadow: 0 2px 12px rgba(0,0,0,0.5); }
+  body.dark .site-nav { background: #060b14; }
+  body.dark .page-controls { background: #0a0e16; box-shadow: 0 2px 12px rgba(0,0,0,0.5); }
   body.dark .panel-left { background: #161a22; border-right-color: #2e3340; }
   body.dark .section { border-color: #2e3340; background: #1c2029; }
   body.dark .section-head { background: #141824; }
@@ -786,21 +827,30 @@
   }
 </style>
 </head>
-<body>
+<body class="dark">
 
-<!-- HEADER -->
-<div class="header">
-  <div class="header-left">
-    <div>
-      <div class="header-brand"><a href="/">CathMath</a></div>
-      <h1>PV Loop Simulator</h1>
-      <div class="header-sub">Interactive Pressure-Volume Loop Education</div>
-    </div>
+<!-- SITE NAV -->
+<div class="site-nav">
+  <div class="nav-brand">CathMath</div>
+  <div class="nav-tabs">
+    <a href="/" class="nav-tab">Hemodynamics</a>
+    <a href="/pvloop/" class="nav-tab active">PV Loops</a>
+  </div>
+  <div class="nav-right">
+    <div class="nav-credit">Dr. Saro Avedikian, MD, MPH</div>
+    <button id="darkToggle" onclick="toggleDark()">Light Mode</button>
+  </div>
+</div>
+
+<!-- PAGE CONTROLS -->
+<div class="page-controls">
+  <div class="page-title">
+    <h1>PV Loop Simulator</h1>
+    <span class="page-sub">Interactive Pressure-Volume Loop Education</span>
   </div>
   <div class="header-btns">
     <button onclick="loadExample()" id="btnExample" title="Load a clinical scenario">Example</button>
     <button onclick="resetToBaseline()" title="Reset all parameters">Reset</button>
-    <button id="darkToggle" onclick="toggleDark()">Dark Mode</button>
   </div>
 </div>
 
@@ -2497,8 +2547,14 @@ function toggleDark() {
 
 // ---- INIT ----
 function init() {
-  // Restore dark mode
-  if (localStorage.getItem('pvloop_dark') === '1') {
+  // Restore dark mode — default to dark if no preference saved
+  const darkPref = localStorage.getItem('pvloop_dark');
+  if (darkPref === '0') {
+    document.body.classList.remove('dark');
+    document.getElementById('darkToggle').textContent = 'Dark Mode';
+    document.getElementById('darkToggle').classList.remove('active');
+  } else {
+    // Default to dark (first visit or explicit '1')
     document.body.classList.add('dark');
     document.getElementById('darkToggle').textContent = 'Light Mode';
     document.getElementById('darkToggle').classList.add('active');

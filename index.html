@@ -27,20 +27,45 @@
     background: var(--light-bg);
   }
 
-  /* HEADER */
-  .header {
-    background: var(--navy);
+  /* SITE NAV */
+  .site-nav {
+    background: #0a1628;
     color: #fff;
-    padding: 12px 24px;
     display: flex;
     align-items: center;
-    justify-content: space-between;
+    padding: 0 24px;
+    height: 42px;
     position: sticky;
     top: 0;
-    z-index: 100;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+    z-index: 200;
+    border-bottom: 1px solid rgba(255,255,255,0.06);
   }
-  .header h1 { font-size: 18px; font-weight: 700; letter-spacing: 0.3px; }
+  .nav-brand { font-size: 16px; font-weight: 800; letter-spacing: 0.5px; margin-right: 32px; color: #fff; }
+  .nav-tabs { display: flex; gap: 0; height: 100%; }
+  .nav-tab {
+    display: flex; align-items: center; padding: 0 18px; height: 42px;
+    font-size: 13px; font-weight: 600; color: rgba(255,255,255,0.5);
+    text-decoration: none; border-bottom: 2px solid transparent; transition: color 0.2s, border-color 0.2s;
+  }
+  .nav-tab:hover { color: rgba(255,255,255,0.85); }
+  .nav-tab.active { color: #fff; border-bottom-color: #4a90d9; }
+  .nav-right { margin-left: auto; display: flex; align-items: center; gap: 16px; }
+  .nav-credit { font-size: 11px; opacity: 0.5; font-weight: 400; }
+  .nav-right button {
+    background: rgba(255,255,255,0.1); color: #fff; border: 1px solid rgba(255,255,255,0.2);
+    padding: 4px 12px; border-radius: 4px; cursor: pointer; font-size: 11px; font-weight: 600; transition: background 0.2s;
+  }
+  .nav-right button:hover { background: rgba(255,255,255,0.2); }
+
+  /* PAGE CONTROLS */
+  .page-controls {
+    background: var(--navy); color: #fff;
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 6px 24px;
+  }
+  .page-controls .page-title { display: flex; align-items: baseline; gap: 12px; }
+  .page-controls h1 { font-size: 16px; font-weight: 700; letter-spacing: 0.3px; }
+  .page-controls .page-sub { font-size: 11px; opacity: 0.6; }
   .header-btns { display: flex; gap: 8px; }
   .header-btns button {
     background: rgba(255,255,255,0.12);
@@ -59,7 +84,7 @@
   .container {
     display: flex;
     gap: 0;
-    height: calc(100vh - 84px);
+    height: calc(100vh - 120px);
   }
   .panel {
     overflow-y: auto;
@@ -87,6 +112,11 @@
     box-shadow: 0 1px 4px rgba(0,0,0,0.06);
     transition: box-shadow 0.2s;
   }
+  /* Collapsible sections */
+  .section-head.collapsible { cursor: pointer; display: flex; justify-content: space-between; align-items: center; }
+  .section-head.collapsible::after { content: '\25B2'; font-size: 9px; opacity: 0.6; transition: transform 0.2s; }
+  .section.collapsed .section-head.collapsible::after { transform: rotate(180deg); }
+  .section.collapsed > .section-body { display: none; }
   .section:hover { box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
   .section-head {
     background: var(--navy);
@@ -322,16 +352,13 @@
     background: #152238;
     padding: 0 24px;
     gap: 0;
-    position: sticky;
-    top: 48px;
-    z-index: 99;
   }
   .tab-btn {
     background: transparent;
     color: rgba(255,255,255,0.55);
     border: none;
-    padding: 9px 22px;
-    font-size: 13px;
+    padding: 8px 20px;
+    font-size: 12px;
     font-weight: 600;
     cursor: pointer;
     border-bottom: 2px solid transparent;
@@ -355,7 +382,8 @@
     --navy: #151b28;
     color: #d8dce4;
   }
-  body.dark .header { background: #101520; box-shadow: 0 2px 12px rgba(0,0,0,0.4); }
+  body.dark .site-nav { background: #060b14; }
+  body.dark .page-controls { background: #101520; }
   body.dark .panel-left { background: #1e2128; border-right-color: #3a3f4b; }
   body.dark .panel-right { background: #1a1d23; }
   body.dark .section { border-color: #3a3f4b; background: #23272e; }
@@ -391,8 +419,9 @@
   body.dark .val-normal { color: #66bb6a; }
   body.dark .val-abnormal { color: #ef5350; }
   body.dark .val-borderline { color: #ffa726; }
-  body.dark .tab-bar { background: #0d1117; }
+  body.dark .tab-bar { background: #0d1117; border-top: 1px solid rgba(255,255,255,0.04); }
   body.dark .tab-btn.active { border-bottom-color: #4a90d9; }
+  body.dark .section-head.collapsible::after { opacity: 0.4; }
   body.dark table.vals th { color: #8ab4f8; border-bottom-color: #3a3f4b; }
   body.dark table.vals td { border-bottom-color: #2e323c; }
   body.dark table.vals tr.severe td { color: #ef5350; }
@@ -506,22 +535,33 @@
 </head>
 <body>
 
-<div class="header">
-  <div>
-    <h1>CathMath</h1>
-    <div style="font-size:11px; font-weight:400; opacity:0.7; margin-top:1px;">Developed by Dr. Saro Avedikian, MD, MPH</div>
+<!-- SITE NAV -->
+<div class="site-nav">
+  <div class="nav-brand">CathMath</div>
+  <div class="nav-tabs">
+    <a href="/" class="nav-tab active">Hemodynamics</a>
+    <a href="/pvloop/" class="nav-tab">PV Loops</a>
+  </div>
+  <div class="nav-right">
+    <div class="nav-credit">Dr. Saro Avedikian, MD, MPH</div>
+    <button id="darkToggle" onclick="toggleDark()">Light Mode</button>
+  </div>
+</div>
+
+<!-- PAGE CONTROLS -->
+<div class="page-controls">
+  <div class="page-title">
+    <h1>RHC Hemodynamic Calculator</h1>
   </div>
   <div class="header-btns">
     <button onclick="loadExample()">Load Example</button>
     <button onclick="clearAll()">Clear All</button>
-    <button id="darkToggle" onclick="toggleDark()">Dark Mode</button>
   </div>
 </div>
 
 <div class="tab-bar">
   <button class="tab-btn active" id="tabRhc" onclick="switchTab('rhc')">RHC Hemodynamics</button>
   <button class="tab-btn" id="tabShunt" onclick="switchTab('shunt')">Shunts</button>
-  <button class="tab-btn" onclick="window.location.href='/pvloop/'">PV Loops</button>
 </div>
 
 <div class="container">
@@ -1325,16 +1365,16 @@
     </div>
   </div>
 
-  <!-- INTERPRETATION -->
-  <div class="section">
-    <div class="section-head">Interpretation</div>
+  <!-- INTERPRETATION (collapsible) -->
+  <div class="section" id="rhcInterpSection">
+    <div class="section-head collapsible" onclick="toggleInterpSection('rhcInterpSection')">Interpretation</div>
     <div class="section-body" id="rhcInterpretation">
       <div class="info-box">Enter hemodynamic data to generate interpretation.</div>
     </div>
   </div>
 
   <!-- COPY SECTION -->
-  <div class="copy-section">
+  <div class="copy-section" id="rhcCopySection">
     <div class="copy-head">
       <span>EVALUATION REPORT</span>
       <div style="display:flex; align-items:center; gap:12px;">
@@ -1467,16 +1507,16 @@
     </div>
   </div>
 
-  <!-- SHUNT INTERPRETATION -->
-  <div class="section">
-    <div class="section-head">Interpretation</div>
+  <!-- SHUNT INTERPRETATION (collapsible) -->
+  <div class="section" id="shuntInterpSection">
+    <div class="section-head collapsible" onclick="toggleInterpSection('shuntInterpSection')">Interpretation</div>
     <div class="section-body" id="shuntInterpretation">
       <div class="info-box">Enter oximetry data to generate interpretation.</div>
     </div>
   </div>
 
   <!-- SHUNT COPY SECTION -->
-  <div class="copy-section">
+  <div class="copy-section" id="shuntCopySection">
     <div class="copy-head">
       <span>EVALUATION REPORT</span>
       <div style="display:flex; align-items:center; gap:12px;">
@@ -2963,13 +3003,45 @@ function toggleDark() {
   try { localStorage.setItem('rhc_dark', isDark ? '1' : '0'); } catch(e) {}
   handleVo2Source();
 }
-// Restore preference
+// Default to dark mode (unless explicitly set to light)
 try {
-  if (localStorage.getItem('rhc_dark') === '1') {
+  const pref = localStorage.getItem('rhc_dark');
+  if (pref === '0') {
+    // User explicitly chose light mode
+    document.body.classList.remove('dark');
+    document.getElementById('darkToggle').textContent = 'Dark Mode';
+  } else {
+    // Default: dark mode (first visit or pref === '1')
     document.body.classList.add('dark');
     document.getElementById('darkToggle').textContent = 'Light Mode';
   }
-} catch(e) {}
+} catch(e) {
+  document.body.classList.add('dark');
+}
+
+// ===================== COLLAPSIBLE INTERPRETATION =====================
+function toggleInterpSection(sectionId) {
+  const section = document.getElementById(sectionId);
+  section.classList.toggle('collapsed');
+  // Expand report textarea when interpretation is collapsed
+  updateReportHeight();
+}
+function updateReportHeight() {
+  // RHC
+  const rhcInterp = document.getElementById('rhcInterpSection');
+  const rhcCopy = document.getElementById('rhcCopySection');
+  if (rhcInterp && rhcCopy) {
+    const ta = rhcCopy.querySelector('textarea');
+    if (ta) ta.style.minHeight = rhcInterp.classList.contains('collapsed') ? '65vh' : '';
+  }
+  // Shunt
+  const shuntInterp = document.getElementById('shuntInterpSection');
+  const shuntCopy = document.getElementById('shuntCopySection');
+  if (shuntInterp && shuntCopy) {
+    const ta = shuntCopy.querySelector('textarea');
+    if (ta) ta.style.minHeight = shuntInterp.classList.contains('collapsed') ? '65vh' : '';
+  }
+}
 
 // ===================== RHC INTERPRETATION =====================
 function buildRhcInterpretation(ci, fickCI, tdCI, useFick, ra_mean, pcwp_mean, pa_mean, pvr, papi, rvswi, cpo, cpi, avo2, fickCO, td_co, ava, mva, lv_edp, lv_sys, ao_sys, lv_ao_gradient) {
