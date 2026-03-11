@@ -1,0 +1,1886 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CathMath — 12-Lead EKG Simulator</title>
+<style>
+/* ===== RESET & BASE ===== */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  font-family: -apple-system, "Helvetica Neue", Helvetica, Arial, sans-serif;
+  font-size: 14px;
+  background: var(--light-bg);
+  color: #1a1a2e;
+  overflow: hidden;
+}
+
+/* ===== CSS VARIABLES ===== */
+:root {
+  --navy: #0d2240;
+  --blue: #1565c0;
+  --light-bg: #f4f6f9;
+  --card-bg: #ffffff;
+  --border: #d0d8e0;
+  --green: #2e7d32;
+  --red: #c62828;
+  --amber: #ef6c00;
+  --text: #1a1a2e;
+  --text-muted: #6b7280;
+  --ekg-bg: #fff5f5;
+  --ekg-minor: #fdd;
+  --ekg-major: #fbb;
+  --ekg-trace: #111;
+  --panel-left-bg: #ffffff;
+  --panel-right-bg: #f4f6f9;
+}
+
+/* ===== DARK MODE ===== */
+body.dark {
+  --light-bg: #1a1d23;
+  --card-bg: #23272e;
+  --border: #3a3f4b;
+  --navy: #151b28;
+  --text: #d8dce4;
+  --text-muted: #8892a0;
+  --ekg-bg: #1a1e24;
+  --ekg-minor: #252a32;
+  --ekg-major: #2e3440;
+  --ekg-trace: #00e676;
+  --panel-left-bg: #1e2128;
+  --panel-right-bg: #1a1d23;
+  color: #d8dce4;
+}
+
+/* ===== SITE NAV ===== */
+.site-nav {
+  background: #0a1628; color: #fff;
+  display: flex; align-items: center;
+  padding: 0 24px; height: 42px;
+  position: sticky; top: 0; z-index: 200;
+  border-bottom: 1px solid rgba(255,255,255,0.06);
+}
+.nav-brand { font-size: 16px; font-weight: 800; letter-spacing: 0.5px; margin-right: 32px; color: #fff; }
+.nav-tabs { display: flex; gap: 0; height: 100%; }
+.nav-tab {
+  display: flex; align-items: center; padding: 0 18px; height: 42px;
+  font-size: 13px; font-weight: 600; color: rgba(255,255,255,0.5);
+  text-decoration: none; border-bottom: 2px solid transparent;
+  transition: color 0.2s, border-color 0.2s;
+}
+.nav-tab:hover { color: rgba(255,255,255,0.85); }
+.nav-tab.active { color: #fff; border-bottom-color: #4a90d9; }
+.nav-right { margin-left: auto; display: flex; align-items: center; gap: 16px; }
+.nav-credit { font-size: 11px; opacity: 0.5; font-weight: 400; }
+.nav-right button {
+  background: rgba(255,255,255,0.1); color: #fff;
+  border: 1px solid rgba(255,255,255,0.2);
+  padding: 4px 12px; border-radius: 4px; cursor: pointer;
+  font-size: 11px; font-weight: 600; transition: background 0.2s;
+}
+.nav-right button:hover { background: rgba(255,255,255,0.2); }
+
+/* ===== PAGE CONTROLS ===== */
+.page-controls {
+  background: var(--navy); color: #fff;
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 6px 24px;
+}
+body.dark .site-nav { background: #060b14; }
+body.dark .page-controls { background: #101520; }
+.page-controls .page-title { display: flex; align-items: baseline; gap: 12px; }
+.page-controls h1 { font-size: 16px; font-weight: 700; }
+.page-controls .page-sub { font-size: 11px; opacity: 0.6; }
+.header-btns { display: flex; gap: 8px; }
+.header-btns button {
+  background: rgba(255,255,255,0.1); color: #fff;
+  border: 1px solid rgba(255,255,255,0.2);
+  padding: 4px 14px; border-radius: 4px; cursor: pointer;
+  font-size: 11px; font-weight: 600; transition: background 0.2s;
+}
+.header-btns button:hover { background: rgba(255,255,255,0.2); }
+
+/* ===== MAIN LAYOUT ===== */
+.main-container {
+  display: flex;
+  height: calc(100vh - 80px);
+}
+
+/* ===== LEFT PANEL ===== */
+.panel-left {
+  width: 320px; min-width: 320px;
+  background: var(--panel-left-bg);
+  border-right: 1px solid var(--border);
+  overflow-y: auto;
+  padding: 0;
+}
+
+.section { border-bottom: 1px solid var(--border); }
+.section-head {
+  background: var(--navy); color: #fff;
+  padding: 8px 14px;
+  font-size: 11px; font-weight: 700;
+  text-transform: uppercase; letter-spacing: 0.5px;
+}
+body.dark .section-head { background: #1a2236; }
+.section-head.collapsible {
+  cursor: pointer; display: flex;
+  justify-content: space-between; align-items: center;
+}
+.section-head.collapsible::after {
+  content: '\25B2'; font-size: 9px; opacity: 0.6;
+  transition: transform 0.2s;
+}
+.section.collapsed .section-head.collapsible::after { transform: rotate(180deg); }
+.section.collapsed > .section-body { display: none; }
+
+.section-body { padding: 12px 14px; }
+
+/* ===== CONTROLS ===== */
+.control-row {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 10px;
+}
+.control-row label {
+  font-size: 12px; font-weight: 600; color: var(--text);
+}
+.control-row .value {
+  font-size: 12px; font-weight: 700; color: var(--blue);
+  min-width: 50px; text-align: right;
+}
+body.dark .control-row .value { color: #64b5f6; }
+.control-row input[type="range"] {
+  width: 140px; margin: 0 8px;
+  accent-color: var(--blue);
+}
+
+/* Dominance radio */
+.radio-group { display: flex; flex-direction: column; gap: 6px; }
+.radio-group label {
+  font-size: 12px; display: flex; align-items: center; gap: 6px;
+  cursor: pointer; color: var(--text);
+}
+.radio-group input[type="radio"] { accent-color: var(--blue); }
+
+/* ===== VESSEL SELECT ===== */
+.vessel-grid {
+  display: flex; flex-direction: column; gap: 4px;
+}
+.vessel-group-label {
+  font-size: 10px; font-weight: 700; text-transform: uppercase;
+  letter-spacing: 0.5px; color: var(--text-muted);
+  margin-top: 6px; margin-bottom: 2px;
+}
+.vessel-btn {
+  display: block; width: 100%;
+  padding: 5px 10px; border-radius: 4px;
+  font-size: 11px; font-weight: 600;
+  cursor: pointer; text-align: left;
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+  color: var(--text);
+  transition: all 0.15s;
+}
+.vessel-btn:hover {
+  border-color: var(--blue);
+  background: rgba(21,101,192,0.06);
+}
+body.dark .vessel-btn:hover { background: rgba(100,181,246,0.1); }
+.vessel-btn.active {
+  border-color: #c62828;
+  background: rgba(198,40,40,0.08);
+  color: #c62828;
+  font-weight: 700;
+}
+body.dark .vessel-btn.active {
+  border-color: #ef5350;
+  background: rgba(239,83,80,0.12);
+  color: #ef5350;
+}
+
+/* ===== CLINICAL INFO ===== */
+.info-panel {
+  font-size: 12px; line-height: 1.6;
+  color: var(--text);
+}
+.info-panel .info-label {
+  font-weight: 700; color: var(--text-muted);
+  font-size: 10px; text-transform: uppercase;
+  letter-spacing: 0.3px;
+}
+.info-panel .info-value {
+  margin-bottom: 6px;
+}
+.info-panel .info-note {
+  font-style: italic; color: var(--amber);
+  font-size: 11px;
+}
+
+/* ===== PHASE SELECTOR ===== */
+.phase-selector {
+  display: flex; gap: 4px; flex-wrap: wrap;
+}
+.phase-btn {
+  padding: 4px 10px; border-radius: 4px;
+  font-size: 10px; font-weight: 600;
+  cursor: pointer; border: 1px solid var(--border);
+  background: var(--card-bg); color: var(--text);
+  transition: all 0.15s;
+}
+.phase-btn:hover:not(:disabled) { border-color: var(--blue); }
+.phase-btn:disabled {
+  opacity: 0.35; cursor: not-allowed;
+  border-color: var(--border); background: var(--card-bg);
+}
+.phase-btn.active {
+  background: var(--blue); color: #fff;
+  border-color: var(--blue);
+}
+
+/* ===== RIGHT PANEL — EKG ===== */
+.panel-right {
+  flex: 1;
+  background: var(--panel-right-bg);
+  padding: 8px;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+}
+
+.ekg-paper {
+  flex: 1;
+  position: relative;
+  border-radius: 4px;
+  overflow: hidden;
+}
+.ekg-paper canvas {
+  width: 100%; height: 100%;
+  display: block;
+}
+
+/* ===== STATE BADGE ===== */
+.state-badge {
+  position: absolute; top: 16px; right: 16px;
+  background: rgba(0,0,0,0.75); color: #fff;
+  padding: 8px 14px; border-radius: 6px;
+  font-size: 12px; font-weight: 600;
+  z-index: 50; backdrop-filter: blur(8px);
+  max-width: 260px;
+  display: none;
+}
+body.dark .state-badge { background: rgba(0,0,0,0.85); }
+.state-badge .badge-vessel { color: #ef5350; font-weight: 700; }
+.state-badge .badge-phase { color: #64b5f6; font-size: 11px; margin-top: 2px; }
+.state-badge .badge-leads { color: #81c784; font-size: 11px; margin-top: 2px; }
+
+/* ===== VESSEL TABS ===== */
+.vessel-tabs {
+  display: flex; gap: 0; margin-bottom: 10px;
+  border-bottom: 2px solid var(--border);
+}
+.vessel-tab {
+  flex: 1; padding: 7px 0; text-align: center;
+  font-size: 11px; font-weight: 700; text-transform: uppercase;
+  letter-spacing: 0.5px; cursor: pointer;
+  color: var(--text-muted); background: none;
+  border: none; border-bottom: 2px solid transparent;
+  margin-bottom: -2px; transition: all 0.15s;
+}
+.vessel-tab:hover { color: var(--text); }
+.vessel-tab.active { color: var(--blue); border-bottom-color: var(--blue); }
+body.dark .vessel-tab.active { color: #64b5f6; border-bottom-color: #64b5f6; }
+.vessel-tab-content { display: none; }
+.vessel-tab-content.active { display: block; }
+
+/* ===== CORONARY TREE ===== */
+.coronary-tree-wrap {
+  position: relative;
+  width: 100%;
+  height: 440px;
+  border-radius: 6px;
+  overflow: hidden;
+  background: var(--ekg-bg);
+  border: 1px solid var(--border);
+}
+.coronary-tree-wrap canvas {
+  width: 100%; height: 100%; display: block;
+  cursor: pointer;
+}
+.coronary-tooltip {
+  position: absolute; display: none;
+  background: rgba(0,0,0,0.88); color: #fff;
+  padding: 5px 12px; border-radius: 5px;
+  font-size: 11px; font-weight: 600;
+  pointer-events: none; white-space: nowrap;
+  z-index: 10; backdrop-filter: blur(4px);
+  border: 1px solid rgba(255,255,255,0.1);
+}
+
+/* ===== RESPONSIVE ===== */
+@media (max-width: 900px) {
+  .main-container { flex-direction: column; height: auto; }
+  .panel-left { width: 100%; min-width: auto; max-height: 40vh; border-right: none; border-bottom: 1px solid var(--border); }
+  .panel-right { min-height: 60vh; }
+}
+</style>
+</head>
+<body class="dark">
+
+<!-- SITE NAV -->
+<div class="site-nav">
+  <div class="nav-brand">CathMath</div>
+  <div class="nav-tabs">
+    <a href="/" class="nav-tab">Hemodynamics</a>
+    <a href="/pvloop/" class="nav-tab">PV Loops</a>
+    <a href="/ekg/" class="nav-tab active">EKG Simulator</a>
+  </div>
+  <div class="nav-right">
+    <div class="nav-credit">Dr. Saro Avedikian, MD, MPH</div>
+    <button id="darkToggle" onclick="toggleDark()">Light Mode</button>
+  </div>
+</div>
+
+<!-- PAGE CONTROLS -->
+<div class="page-controls">
+  <div class="page-title">
+    <h1>12-Lead EKG Simulator</h1>
+    <span class="page-sub">Interactive Coronary Occlusion &rarr; EKG Mapping</span>
+  </div>
+  <div class="header-btns">
+    <button onclick="resetAll()">Reset</button>
+  </div>
+</div>
+
+<!-- MAIN LAYOUT -->
+<div class="main-container">
+
+  <!-- LEFT PANEL -->
+  <div class="panel-left">
+
+    <!-- Vessel Selection -->
+    <div class="section">
+      <div class="section-head collapsible" onclick="toggleSection(this)">Select Vessel to Occlude</div>
+      <div class="section-body">
+        <div class="vessel-tabs">
+          <button class="vessel-tab active" data-tab="list" onclick="switchVesselTab('list')">List</button>
+          <button class="vessel-tab" data-tab="anatomy" onclick="switchVesselTab('anatomy')">Anatomy</button>
+        </div>
+        <div class="vessel-tab-content active" id="vesselTabList">
+          <div class="vessel-grid">
+            <div class="vessel-group-label">Left Main</div>
+            <button class="vessel-btn" data-vessel="lm">Left Main (LM)</button>
+
+            <div class="vessel-group-label">LAD Territory</div>
+            <button class="vessel-btn" data-vessel="plad">Proximal LAD</button>
+            <button class="vessel-btn" data-vessel="mlad">Mid LAD</button>
+            <button class="vessel-btn" data-vessel="dlad">Distal LAD (wrap-around)</button>
+            <button class="vessel-btn" data-vessel="d1">First Diagonal (D1)</button>
+            <button class="vessel-btn" data-vessel="d2">Second Diagonal (D2)</button>
+
+            <div class="vessel-group-label">LCx Territory</div>
+            <button class="vessel-btn" data-vessel="plcx">Proximal LCx</button>
+            <button class="vessel-btn" data-vessel="dlcx">Distal LCx</button>
+            <button class="vessel-btn" data-vessel="om1">First Obtuse Marginal (OM1)</button>
+            <button class="vessel-btn" data-vessel="om2">Second Obtuse Marginal (OM2)</button>
+
+            <div class="vessel-group-label">RCA Territory</div>
+            <button class="vessel-btn" data-vessel="prca">Proximal RCA</button>
+            <button class="vessel-btn" data-vessel="mrca">Mid RCA</button>
+            <button class="vessel-btn" data-vessel="drca">Distal RCA</button>
+            <button class="vessel-btn" data-vessel="pda">PDA</button>
+            <button class="vessel-btn" data-vessel="plv">PLV</button>
+          </div>
+        </div>
+        <div class="vessel-tab-content" id="vesselTabAnatomy">
+          <div class="coronary-tree-wrap">
+            <canvas id="coronaryCanvas"></canvas>
+            <div class="coronary-tooltip" id="coronaryTooltip"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Phase -->
+    <div class="section">
+      <div class="section-head collapsible" onclick="toggleSection(this)">MI Phase (Timeline)</div>
+      <div class="section-body">
+        <div class="phase-selector">
+          <button class="phase-btn active" data-phase="acute" onclick="setPhase('acute')">Acute</button>
+          <button class="phase-btn" data-phase="hyperacute" onclick="setPhase('hyperacute')">Hyperacute</button>
+          <button class="phase-btn" data-phase="evolving" onclick="setPhase('evolving')">Evolving</button>
+          <button class="phase-btn" data-phase="subacute" onclick="setPhase('subacute')">Subacute</button>
+          <button class="phase-btn" data-phase="chronic" onclick="setPhase('chronic')">Chronic</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Special Patterns -->
+    <div class="section">
+      <div class="section-head collapsible" onclick="toggleSection(this)">Special Patterns</div>
+      <div class="section-body">
+        <div class="vessel-grid">
+          <button class="vessel-btn" data-pattern="dewinter" onclick="setSpecialPattern('dewinter')">De Winter (Proximal LAD)</button>
+          <button class="vessel-btn" data-pattern="wellensA" onclick="setSpecialPattern('wellensA')">Wellens Type A (LAD)</button>
+          <button class="vessel-btn" data-pattern="wellensB" onclick="setSpecialPattern('wellensB')">Wellens Type B (LAD)</button>
+          <button class="vessel-btn" data-pattern="posteriorMI" onclick="setSpecialPattern('posteriorMI')">Posterior MI (LCx/RCA)</button>
+          <button class="vessel-btn" data-pattern="rvMI" onclick="setSpecialPattern('rvMI')">RV MI (Proximal RCA)</button>
+          <button class="vessel-btn" data-pattern="sgarbossa" onclick="setSpecialPattern('sgarbossa')">Sgarbossa (LBBB + MI)</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Controls -->
+    <div class="section">
+      <div class="section-head collapsible" onclick="toggleSection(this)">Parameters</div>
+      <div class="section-body">
+        <div class="control-row">
+          <label>Heart Rate</label>
+          <input type="range" id="hrSlider" min="40" max="150" value="75" oninput="setHR(this.value)">
+          <span class="value" id="hrValue">75 bpm</span>
+        </div>
+        <div class="control-row">
+          <label>Dominance</label>
+        </div>
+        <div class="radio-group">
+          <label><input type="radio" name="dominance" value="right" checked onchange="setDominance('right')"> Right-Dominant (85%)</label>
+          <label><input type="radio" name="dominance" value="left" onchange="setDominance('left')"> Left-Dominant (10%)</label>
+          <label><input type="radio" name="dominance" value="co" onchange="setDominance('co')"> Co-Dominant (5%)</label>
+        </div>
+      </div>
+    </div>
+
+    <!-- Clinical Info -->
+    <div class="section">
+      <div class="section-head collapsible" onclick="toggleSection(this)">Clinical Information</div>
+      <div class="section-body">
+        <div class="info-panel" id="clinicalInfo">
+          <div style="color: var(--text-muted); font-size: 12px; font-style: italic;">
+            Select a vessel to see clinical details.
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /panel-left -->
+
+  <!-- RIGHT PANEL — EKG -->
+  <div class="panel-right">
+    <div class="state-badge" id="stateBadge">
+      <div class="badge-vessel" id="badgeVessel"></div>
+      <div class="badge-phase" id="badgePhase"></div>
+      <div class="badge-leads" id="badgeLeads"></div>
+    </div>
+    <div class="ekg-paper">
+      <canvas id="ekgCanvas"></canvas>
+    </div>
+  </div><!-- /panel-right -->
+
+</div><!-- /main-container -->
+
+<script>
+// ========================================================
+// CATHMATH 12-LEAD EKG SIMULATOR — PHASE 1 + 2
+// ========================================================
+
+// ===== CONSTANTS =====
+const LEADS = ['I','II','III','aVR','aVL','aVF','V1','V2','V3','V4','V5','V6'];
+const LEAD_LAYOUT = [
+  ['I','aVR','V1','V4'],
+  ['II','aVL','V2','V5'],
+  ['III','aVF','V3','V6']
+];
+
+// ===== STATE =====
+let state = {
+  hr: 75,
+  activeVessel: null,
+  phase: 'acute',
+  dominance: 'right',
+  specialPattern: null, // active special pattern key
+};
+
+// ===== NORMAL WAVEFORM PARAMETERS =====
+// Each lead: array of components [amplitude(mV), center(fraction of beat), width(fraction)]
+// Fractions of beat: P~0.1, QRS~0.2, T~0.38
+// These are tuned to produce a realistic-looking baseline EKG
+
+const NORMAL = {
+  //        P:[amp, center, width]     Q:[amp, center, width]      R:[amp, center, width]       S:[amp, center, width]       T:[amp, center, width]    ST
+  // QRS total ~80-100ms. R width ~0.012-0.014, S width ~0.010-0.013. Visibly a waveform, not a spike.
+  'I':   { P:[0.06,0.105,0.026], Q:[-0.04,0.183,0.007], R:[0.80,0.195,0.013], S:[-0.06,0.210,0.010], T:[0.20,0.370,0.050], ST:0 },
+  'II':  { P:[0.12,0.105,0.026], Q:[-0.04,0.183,0.007], R:[1.10,0.195,0.013], S:[-0.10,0.210,0.010], T:[0.30,0.370,0.050], ST:0 },
+  'III': { P:[0.05,0.105,0.026], Q:[-0.08,0.183,0.008], R:[0.50,0.195,0.013], S:[-0.18,0.210,0.011], T:[0.10,0.370,0.048], ST:0 },
+  'aVR': { P:[-0.08,0.105,0.026], Q:[-0.15,0.183,0.008], R:[0.03,0.195,0.010], S:[-0.65,0.210,0.013], T:[-0.22,0.370,0.048], ST:0 },
+  'aVL': { P:[0.02,0.105,0.026], Q:[-0.03,0.183,0.007], R:[0.25,0.195,0.013], S:[-0.06,0.210,0.010], T:[0.06,0.370,0.048], ST:0 },
+  'aVF': { P:[0.08,0.105,0.026], Q:[-0.03,0.183,0.007], R:[0.70,0.195,0.013], S:[-0.10,0.210,0.010], T:[0.20,0.370,0.050], ST:0 },
+  'V1':  { P:[0.05,0.105,0.026], Pneg:[-0.04,0.125,0.018], Q:[0,0.183,0.007], R:[0.18,0.195,0.011], S:[-1.10,0.210,0.013], T:[-0.06,0.370,0.048], ST:0 },
+  'V2':  { P:[0.05,0.105,0.026], Q:[0,0.183,0.007],     R:[0.35,0.195,0.011], S:[-1.40,0.210,0.013], T:[0.42,0.370,0.055], ST:0 },
+  'V3':  { P:[0.05,0.105,0.026], Q:[0,0.183,0.007],     R:[0.65,0.195,0.012], S:[-0.85,0.210,0.012], T:[0.48,0.370,0.053], ST:0 },
+  'V4':  { P:[0.05,0.105,0.026], Q:[-0.03,0.183,0.007], R:[1.20,0.195,0.013], S:[-0.30,0.210,0.010], T:[0.38,0.370,0.050], ST:0 },
+  'V5':  { P:[0.05,0.105,0.026], Q:[-0.05,0.183,0.007], R:[1.50,0.195,0.013], S:[-0.12,0.210,0.009], T:[0.28,0.370,0.048], ST:0 },
+  'V6':  { P:[0.05,0.105,0.026], Q:[-0.05,0.183,0.007], R:[1.15,0.195,0.013], S:[-0.04,0.210,0.009], T:[0.20,0.370,0.046], ST:0 },
+};
+
+// ===== OCCLUSION MAP =====
+// st: ST shift in mV per lead, tMult: T wave amplitude multiplier, qW: pathological Q wave amplitude
+const OCCLUSIONS = {
+  'lm': {
+    name: 'Left Main (LM)', territory: 'Diffuse', aha: 5,
+    st: { aVR:+0.25, V1:+0.10, I:-0.20, II:-0.15, III:-0.08, aVF:-0.10, V2:-0.15, V3:-0.20, V4:-0.25, V5:-0.30, V6:-0.25 },
+    tMult: { V4:-0.5, V5:-0.5, V6:-0.4, I:-0.3 },
+    qW: {},
+    leads: 'aVR, V1 (STE) + diffuse STD',
+    notes: 'STE aVR >= STE V1 + diffuse ST depression. ~75% mortality without intervention. DDx: severe 3-vessel disease.',
+    conduction: 'New LBBB or RBBB possible'
+  },
+  'plad': {
+    name: 'Proximal LAD', territory: 'Anterior + Anteroseptal + High Lateral', aha: 6,
+    st: { V1:+0.30, V2:+0.40, V3:+0.45, V4:+0.35, aVL:+0.15, I:+0.10, II:-0.10, III:-0.15, aVF:-0.12 },
+    tMult: { V1:1.8, V2:2.2, V3:2.2, V4:1.8 },
+    qW: { V1:-0.12, V2:-0.18, V3:-0.18, V4:-0.12 },
+    leads: 'V1-V4, aVL, I (STE) + II, III, aVF (reciprocal)',
+    notes: 'Largest territory at risk. STE aVL/I + inferior reciprocal STD = proximal. New RBBB = septal perforator compromise.',
+    conduction: 'New RBBB possible'
+  },
+  'mlad': {
+    name: 'Mid LAD', territory: 'Anterior', aha: 7,
+    st: { V2:+0.35, V3:+0.40, V4:+0.35, V5:+0.20, III:-0.05, aVF:-0.05 },
+    tMult: { V2:2.0, V3:2.2, V4:2.0, V5:1.5 },
+    qW: { V2:-0.15, V3:-0.18, V4:-0.12 },
+    leads: 'V2-V5 (STE), minimal inferior reciprocal',
+    notes: 'Spares aVL/I (D1 territory intact). May mimic pericarditis if wrap-around (diffuse STE without reciprocal changes).',
+    conduction: null
+  },
+  'dlad': {
+    name: 'Distal LAD (Wrap-around)', territory: 'Anterior + Apical-Inferior', aha: 8,
+    st: { V3:+0.25, V4:+0.30, V5:+0.20, V6:+0.10, II:+0.10, III:+0.10, aVF:+0.10, aVL:-0.08 },
+    tMult: { V4:1.6, V5:1.3, II:1.3 },
+    qW: { V4:-0.10, V5:-0.08 },
+    leads: 'V3-V6 + II, III, aVF (STE), aVL (reciprocal)',
+    notes: 'Anterior + inferior STE without lateral involvement = distal LAD wrap-around. Smaller territory, better prognosis.',
+    conduction: null
+  },
+  'd1': {
+    name: 'First Diagonal (D1)', territory: 'High Lateral', aha: 9,
+    st: { aVL:+0.20, I:+0.12, V2:+0.08, III:-0.20, aVF:-0.12 },
+    tMult: { aVL:-1.2 },
+    qW: { aVL:-0.10 },
+    leads: 'aVL, I + subtle V2 (STE) + III, aVF (reciprocal)',
+    notes: 'STE V2 differentiates D1 from OM1 (which has STD V2). PPV 100% for this distinction.',
+    conduction: null
+  },
+  'd2': {
+    name: 'Second Diagonal (D2)', territory: 'High Lateral (small)', aha: 10,
+    st: { I:+0.05, aVL:+0.08, V2:+0.03, III:-0.05 },
+    tMult: {},
+    qW: {},
+    leads: 'Subtle: I, aVL, V2 (minimal STE)',
+    notes: 'Very subtle changes. Small territory — may be ECG-silent.',
+    conduction: null
+  },
+  'plcx': {
+    name: 'Proximal LCx', territory: 'Lateral + Posterolateral', aha: 11,
+    st: { I:+0.10, aVL:+0.12, V5:+0.12, V6:+0.10, V1:-0.15, V2:-0.20, V3:-0.15 },
+    tMult: { V1:1.5, V2:1.5 },
+    qW: { I:-0.08, aVL:-0.10 },
+    leads: 'I, aVL, V5-V6 (STE) + V1-V3 (reciprocal/posterior)',
+    notes: '30% of LCx occlusions have non-diagnostic ECG! Frequently missed. Consider posterior leads V7-V9.',
+    conduction: null
+  },
+  'dlcx': {
+    name: 'Distal LCx', territory: 'Lateral', aha: 12,
+    st: { V5:+0.10, V6:+0.08, V1:-0.10, V2:-0.12, V3:-0.08 },
+    tMult: {},
+    qW: {},
+    leads: 'V5-V6 (subtle STE) + V1-V3 (reciprocal)',
+    notes: 'Often ECG-silent. Highest rate of missed acute MI. Consider posterior leads.',
+    conduction: null
+  },
+  'om1': {
+    name: 'First Obtuse Marginal (OM1)', territory: 'High Lateral', aha: 13,
+    st: { aVL:+0.18, I:+0.10, V5:+0.08, V2:-0.12, III:-0.15, aVF:-0.10 },
+    tMult: { aVL:-1.2 },
+    qW: { aVL:-0.10 },
+    leads: 'aVL, I (STE) + V2 (STD!) + III, aVF (reciprocal)',
+    notes: 'STD in V2 differentiates OM1 from D1 (which has STE V2). STE aVL + STD V2 = OM1 (PPV 100%, NPV 98%).',
+    conduction: null
+  },
+  'om2': {
+    name: 'Second Obtuse Marginal (OM2)', territory: 'Lateral', aha: 14,
+    st: { V5:+0.12, V6:+0.10, I:+0.05, V1:-0.05, V2:-0.08, V3:-0.05 },
+    tMult: { V5:-1.0, V6:-1.0 },
+    qW: {},
+    leads: 'V5-V6 (STE) + V1-V3 (mild reciprocal)',
+    notes: 'Small territory. Less high-lateral involvement than OM1. May be ECG-silent.',
+    conduction: null
+  },
+  'prca': {
+    name: 'Proximal RCA', territory: 'Inferior + RV', aha: 1,
+    st: { III:+0.30, aVF:+0.25, II:+0.20, V1:+0.10, I:-0.12, aVL:-0.18 },
+    tMult: { III:1.8, aVF:1.5, II:1.5 },
+    qW: { III:-0.15, aVF:-0.12, II:-0.08 },
+    leads: 'III > II, aVF (STE) + V1 (RV) + I, aVL (reciprocal)',
+    notes: 'STE III > II = hallmark of RCA. STE V1 = RV involvement. AV block common. Avoid nitrates/preload reducers if RV.',
+    conduction: 'AV block possible (AV nodal artery)'
+  },
+  'mrca': {
+    name: 'Mid RCA', territory: 'Inferior', aha: 2,
+    st: { III:+0.25, aVF:+0.22, II:+0.18, I:-0.10, aVL:-0.15 },
+    tMult: { III:1.5, aVF:1.3, II:1.3 },
+    qW: { III:-0.12, aVF:-0.10, II:-0.06 },
+    leads: 'III > II, aVF (STE) + I, aVL (reciprocal)',
+    notes: 'Classic inferior STEMI without RV involvement (RV branches already given off). No V1 or V4R elevation.',
+    conduction: null
+  },
+  'drca': {
+    name: 'Distal RCA', territory: 'Inferior + Posterior (at crux)', aha: 3,
+    st: { III:+0.15, aVF:+0.12, II:+0.10, I:-0.06, aVL:-0.10, V1:-0.05, V2:-0.08, V3:-0.05 },
+    tMult: { V1:1.3, V2:1.3 },
+    qW: { III:-0.08, aVF:-0.06 },
+    leads: 'III, aVF, II (modest STE) + V1-V3 (posterior reciprocal)',
+    notes: 'Less STE than proximal/mid. May extend posterior at crux. If non-dominant RCA, minimal changes.',
+    conduction: null
+  },
+  'pda': {
+    name: 'PDA', territory: 'Inferior + Posterior', aha: 4,
+    st: { III:+0.20, aVF:+0.18, II:+0.15, V1:-0.15, V2:-0.20, V3:-0.15, I:-0.08, aVL:-0.10 },
+    tMult: { V1:1.5, V2:1.5 },
+    qW: { III:-0.10, aVF:-0.08 },
+    leads: 'II, III, aVF (STE) + V1-V3 (posterior reciprocal)',
+    notes: 'Inferior + posterior MI. Tall R waves V1-V2 develop (reciprocal Q waves). R/S > 1 in V2.',
+    conduction: null
+  },
+  'plv': {
+    name: 'PLV (Posterolateral)', territory: 'Posterolateral', aha: 15,
+    st: { V5:+0.08, V6:+0.06, V1:-0.12, V2:-0.15, V3:-0.10 },
+    tMult: { V1:1.3, V2:1.3 },
+    qW: {},
+    leads: 'V5-V6 (lateral STE) + V1-V3 (posterior reciprocal)',
+    notes: 'Posterolateral MI. Source depends on dominance: RCA (right-dominant) or LCx (left-dominant).',
+    conduction: null
+  }
+};
+
+// ===== PHASE MULTIPLIERS =====
+const PHASES = {
+  hyperacute: { st: 0.3, tMult: 2.0, qW: 0,   label: 'Hyperacute (Minutes)' },
+  acute:      { st: 1.0, tMult: 1.5, qW: 0.3,  label: 'Acute (Hours)' },
+  evolving:   { st: 0.6, tMult: -0.8, qW: 0.8, label: 'Evolving (Days)' },
+  subacute:   { st: 0.1, tMult: -1.0, qW: 1.0, label: 'Subacute (Weeks)' },
+  chronic:    { st: 0.0, tMult: 0.5,  qW: 0.8, label: 'Chronic (Months)' },
+};
+
+// ===== SPECIAL PATTERNS =====
+// These override normal waveform generation with pattern-specific modifications
+const SPECIAL_PATTERNS = {
+  dewinter: {
+    name: 'De Winter Pattern',
+    description: 'Proximal LAD occlusion variant (~2% of acute LAD). Upsloping STD + tall peaked T waves in V1-V6, slight STE aVR. Requires immediate cath despite no classic STE.',
+    territory: 'Proximal LAD',
+    // Per-lead modifications: stDep = ST depression, tAmp = T amplitude multiplier, stElev = ST elevation
+    mods: {
+      V1: { stDep: -0.10, tAmp: 2.5 },
+      V2: { stDep: -0.20, tAmp: 3.0 },
+      V3: { stDep: -0.25, tAmp: 3.0 },
+      V4: { stDep: -0.20, tAmp: 2.8 },
+      V5: { stDep: -0.15, tAmp: 2.2 },
+      V6: { stDep: -0.10, tAmp: 1.8 },
+      aVR: { stElev: 0.15, tAmp: 1.0 },
+    },
+    affectedLeads: ['V1','V2','V3','V4','V5','V6','aVR'],
+    upsloping: true, // ST depression is upsloping to peaked T (not horizontal)
+  },
+  wellensA: {
+    name: 'Wellens Type A',
+    description: 'Critical proximal LAD stenosis (24% of Wellens). Biphasic T waves (positive then negative) in V2-V3. Appears pain-free. 75% develop anterior MI without intervention.',
+    territory: 'Proximal LAD (critical stenosis)',
+    mods: {
+      V2: { biphasicT: true, tAmp: -0.6 },
+      V3: { biphasicT: true, tAmp: -0.5 },
+      V4: { biphasicT: true, tAmp: -0.3 },
+    },
+    affectedLeads: ['V2','V3','V4'],
+  },
+  wellensB: {
+    name: 'Wellens Type B',
+    description: 'Critical proximal LAD stenosis (76% of Wellens). Deep symmetric T inversions V2-V6. No STE, preserved R waves, no Q waves. Pain-free pattern. High risk of anterior MI.',
+    territory: 'Proximal LAD (critical stenosis)',
+    mods: {
+      V1: { tAmp: -1.5 },
+      V2: { tAmp: -3.0 },
+      V3: { tAmp: -3.0 },
+      V4: { tAmp: -2.5 },
+      V5: { tAmp: -1.8 },
+      V6: { tAmp: -1.2 },
+    },
+    affectedLeads: ['V1','V2','V3','V4','V5','V6'],
+  },
+  posteriorMI: {
+    name: 'Posterior MI',
+    description: 'Isolated posterior MI (LCx or RCA/PDA). Horizontal STD + tall R + upright T in V1-V3. Frequently missed — no STE on standard 12-lead. Confirm with V7-V9.',
+    territory: 'Posterolateral (LCx or RCA)',
+    mods: {
+      V1: { stDep: -0.15, tallR: 0.35, tAmp: 1.8 },
+      V2: { stDep: -0.25, tallR: 0.45, tAmp: 2.0 },
+      V3: { stDep: -0.15, tallR: 0.25, tAmp: 1.5 },
+      // Subtle lateral changes
+      V5: { stElev: 0.05, tAmp: 0.8 },
+      V6: { stElev: 0.05, tAmp: 0.8 },
+    },
+    affectedLeads: ['V1','V2','V3','V5','V6'],
+  },
+  rvMI: {
+    name: 'RV MI (Proximal RCA)',
+    description: 'Proximal RCA occlusion with RV involvement. STE III > II + STE V1 with STD V2. Preload-dependent — avoid nitrates, diuretics, morphine.',
+    territory: 'Inferior + Right Ventricle',
+    mods: {
+      III: { stElev: 0.35, tAmp: 2.0, qW: -0.15 },
+      aVF: { stElev: 0.28, tAmp: 1.8, qW: -0.12 },
+      II: { stElev: 0.22, tAmp: 1.6, qW: -0.08 },
+      V1: { stElev: 0.15, tAmp: 1.3 },
+      V2: { stDep: -0.10, tAmp: 0.8 },
+      I: { stDep: -0.12 },
+      aVL: { stDep: -0.20 },
+    },
+    affectedLeads: ['II','III','aVF','V1','V2','I','aVL'],
+  },
+  sgarbossa: {
+    name: 'Sgarbossa (LBBB + Acute MI)',
+    description: 'Acute MI superimposed on LBBB. Concordant STE ≥1mm in leads with positive QRS (I, aVL, V5-V6) is most specific (5 pts). Concordant STD ≥1mm in V1-V3 (3 pts). Score ≥3 = acute MI.',
+    territory: 'Anterior (LAD)',
+    lbbb: true,
+    mods: {
+      // Concordant STE in leads with positive QRS — ABNORMAL in LBBB (normally discordant STD)
+      I: { stElev: 0.25, tAmp: 0.3 },
+      aVL: { stElev: 0.20, tAmp: 0.3 },
+      V5: { stElev: 0.30, tAmp: 0.3 },
+      V6: { stElev: 0.25, tAmp: 0.3 },
+      // Concordant STD in V1-V3 — ABNORMAL in LBBB (normally discordant STE)
+      V1: { stDep: -0.25, tAmp: -0.5 },
+      V2: { stDep: -0.35, tAmp: -0.5 },
+      V3: { stDep: -0.25, tAmp: -0.3 },
+    },
+    affectedLeads: ['I','aVL','V1','V2','V3','V5','V6'],
+  },
+};
+
+// LBBB baseline morphology overrides
+// Wide QRS (~140ms), deep wide S in V1-V3, broad notched R in I/V5-V6, discordant ST/T
+const LBBB_PARAMS = {
+  'I':   { P:[0.06,0.105,0.026], Q:[0,0.183,0.007],     R:[0.55,0.190,0.028], R2:[0.60,0.220,0.028], S:[0,0.240,0.010],     T:[-0.22,0.380,0.058], ST:0 },
+  'II':  { P:[0.12,0.105,0.026], Q:[0,0.183,0.007],     R:[0.75,0.190,0.028], R2:[0.80,0.220,0.028], S:[-0.05,0.245,0.012], T:[-0.25,0.380,0.058], ST:0 },
+  'III': { P:[0.05,0.105,0.026], Q:[0,0.183,0.007],     R:[0.30,0.190,0.025], S:[-0.15,0.230,0.020], T:[-0.10,0.380,0.055], ST:0 },
+  'aVR': { P:[-0.08,0.105,0.026],Q:[-0.05,0.180,0.008], R:[0.03,0.195,0.010], S:[-0.55,0.215,0.032], T:[0.20,0.380,0.055], ST:0 },
+  'aVL': { P:[0.02,0.105,0.026], Q:[0,0.183,0.007],     R:[0.30,0.190,0.028], R2:[0.35,0.220,0.028], S:[0,0.240,0.010],     T:[-0.15,0.380,0.055], ST:0 },
+  'aVF': { P:[0.08,0.105,0.026], Q:[0,0.183,0.007],     R:[0.50,0.190,0.028], R2:[0.55,0.220,0.028], S:[-0.08,0.245,0.015], T:[-0.18,0.380,0.058], ST:0 },
+  // V1-V3: deep wide rS or QS, discordant positive T
+  'V1':  { P:[0.05,0.105,0.026], Pneg:[-0.04,0.125,0.018], Q:[-0.08,0.178,0.010], R:[0.06,0.190,0.012], S:[-1.50,0.215,0.035], T:[0.40,0.380,0.058], ST:0 },
+  'V2':  { P:[0.05,0.105,0.026], Q:[-0.05,0.178,0.010], R:[0.10,0.190,0.012], S:[-1.70,0.215,0.035], T:[0.45,0.380,0.058], ST:0 },
+  'V3':  { P:[0.05,0.105,0.026], Q:[0,0.183,0.007],     R:[0.25,0.190,0.020], S:[-1.20,0.220,0.032], T:[0.30,0.380,0.055], ST:0 },
+  // V4: transitional
+  'V4':  { P:[0.05,0.105,0.026], Q:[0,0.183,0.007],     R:[0.55,0.190,0.028], R2:[0.50,0.218,0.025], S:[-0.25,0.240,0.018], T:[-0.18,0.380,0.055], ST:0 },
+  // V5-V6: broad notched R (M-pattern), discordant negative T
+  'V5':  { P:[0.05,0.105,0.026], Q:[0,0.183,0.007],     R:[0.75,0.188,0.028], R2:[0.80,0.218,0.028], S:[0,0.240,0.010],     T:[-0.32,0.380,0.058], ST:0 },
+  'V6':  { P:[0.05,0.105,0.026], Q:[0,0.183,0.007],     R:[0.65,0.188,0.028], R2:[0.70,0.218,0.028], S:[0,0.240,0.010],     T:[-0.28,0.380,0.055], ST:0 },
+};
+
+// ===== CORONARY ARTERY TREE =====
+
+// Normalized (0-1) path points for each vessel segment — anterior view
+const VESSEL_PATHS = {
+  // Standard anterior view: LCA (right), RCA (left)
+  lm:    [[0.53, 0.08], [0.58, 0.11], [0.62, 0.15]],
+  plad:  [[0.62, 0.15], [0.63, 0.21], [0.64, 0.27], [0.65, 0.33]],
+  mlad:  [[0.65, 0.33], [0.66, 0.40], [0.67, 0.47], [0.67, 0.54]],
+  dlad:  [[0.67, 0.54], [0.66, 0.62], [0.64, 0.69], [0.60, 0.75]],
+  d1:    [[0.63, 0.23], [0.70, 0.28], [0.76, 0.34], [0.82, 0.40]],
+  d2:    [[0.66, 0.42], [0.73, 0.47], [0.79, 0.52], [0.84, 0.57]],
+  plcx:  [[0.62, 0.15], [0.57, 0.19], [0.52, 0.24], [0.47, 0.30]],
+  dlcx:  [[0.47, 0.30], [0.45, 0.37], [0.44, 0.44], [0.45, 0.51]],
+  om1:   [[0.53, 0.23], [0.50, 0.31], [0.48, 0.39], [0.49, 0.47]],
+  om2:   [[0.45, 0.38], [0.41, 0.46], [0.40, 0.54], [0.41, 0.62]],
+  prca:  [[0.47, 0.08], [0.40, 0.12], [0.33, 0.18], [0.27, 0.25]],
+  mrca:  [[0.27, 0.25], [0.24, 0.33], [0.23, 0.41], [0.24, 0.48]],
+  drca:  [[0.24, 0.48], [0.27, 0.54], [0.31, 0.60], [0.36, 0.65]],
+  pda:   [[0.36, 0.65], [0.44, 0.70], [0.52, 0.74], [0.58, 0.76]],
+  plv:   [[0.36, 0.65], [0.32, 0.72], [0.30, 0.79], [0.31, 0.85]],
+};
+
+// Parent → children for downstream detection
+const VESSEL_TREE = {
+  lm:   ['plad', 'plcx'],
+  plad: ['mlad', 'd1'],
+  mlad: ['dlad', 'd2'],
+  dlad: [],
+  d1:   [],
+  d2:   [],
+  plcx: ['dlcx', 'om1'],
+  dlcx: ['om2'],
+  om1:  [],
+  om2:  [],
+  prca: ['mrca'],
+  mrca: ['drca'],
+  drca: ['pda', 'plv'],
+  pda:  [],
+  plv:  [],
+};
+
+// Vessel display widths (proximal thicker, distal thinner)
+const VESSEL_WIDTH = {
+  lm: 5, plad: 4.5, mlad: 3.5, dlad: 3, d1: 3, d2: 2.5,
+  plcx: 4, dlcx: 3, om1: 3, om2: 2.5,
+  prca: 4.5, mrca: 3.5, drca: 3, pda: 3, plv: 2.5,
+};
+
+// Label positions (normalized)
+const VESSEL_LABEL_POS = {
+  lm:    [0.61, 0.07],
+  plad:  [0.72, 0.26],
+  mlad:  [0.74, 0.47],
+  dlad:  [0.70, 0.72],
+  d1:    [0.87, 0.36],
+  d2:    [0.89, 0.54],
+  plcx:  [0.53, 0.16],
+  dlcx:  [0.38, 0.44],
+  om1:   [0.42, 0.32],
+  om2:   [0.34, 0.54],
+  prca:  [0.30, 0.10],
+  mrca:  [0.16, 0.38],
+  drca:  [0.24, 0.58],
+  pda:   [0.52, 0.72],
+  plv:   [0.24, 0.78],
+};
+
+const VESSEL_SHORT_NAME = {
+  lm: 'LM', plad: 'pLAD', mlad: 'mLAD', dlad: 'dLAD',
+  d1: 'D1', d2: 'D2', plcx: 'pLCx', dlcx: 'dLCx',
+  om1: 'OM1', om2: 'OM2', prca: 'pRCA', mrca: 'mRCA',
+  drca: 'dRCA', pda: 'PDA', plv: 'PLV',
+};
+
+function getDownstream(vessel) {
+  const result = [];
+  const queue = VESSEL_TREE[vessel] ? [...VESSEL_TREE[vessel]] : [];
+  while (queue.length) {
+    const v = queue.shift();
+    result.push(v);
+    if (VESSEL_TREE[v]) queue.push(...VESSEL_TREE[v]);
+  }
+  return result;
+}
+
+let coronaryCanvas = null;
+let coronaryHovered = null;
+
+function initCoronaryTree() {
+  coronaryCanvas = document.getElementById('coronaryCanvas');
+  if (!coronaryCanvas) return;
+  coronaryCanvas.addEventListener('mousemove', onCoronaryMouseMove);
+  coronaryCanvas.addEventListener('mouseleave', onCoronaryMouseLeave);
+  coronaryCanvas.addEventListener('click', onCoronaryClick);
+}
+
+function resizeCoronaryCanvas() {
+  if (!coronaryCanvas) return;
+  const wrap = coronaryCanvas.parentElement;
+  const rect = wrap.getBoundingClientRect();
+  if (rect.width === 0 || rect.height === 0) return;
+  const dpr = window.devicePixelRatio;
+  coronaryCanvas.width = rect.width * dpr;
+  coronaryCanvas.height = rect.height * dpr;
+}
+
+function getCoronaryColors() {
+  const dark = document.body.classList.contains('dark');
+  return {
+    bg: dark ? '#1a1e24' : '#faf5f0',
+    heartFill: dark ? 'rgba(255,200,200,0.04)' : 'rgba(200,50,50,0.03)',
+    heartStroke: dark ? 'rgba(255,200,200,0.10)' : 'rgba(200,50,50,0.10)',
+    vessel: dark ? '#e53935' : '#c62828',
+    vesselHover: dark ? '#ff7043' : '#e53935',
+    vesselGlow: dark ? 'rgba(255,112,67,0.35)' : 'rgba(229,57,53,0.25)',
+    occluded: dark ? '#4a1515' : '#8b4545',
+    downstream: dark ? '#3a3a42' : '#aaa',
+    label: dark ? 'rgba(255,255,255,0.45)' : 'rgba(0,0,0,0.40)',
+    labelHover: dark ? '#ff7043' : '#e53935',
+    labelActive: '#ff1744',
+    aorta: dark ? 'rgba(255,200,200,0.20)' : 'rgba(180,60,60,0.15)',
+    aortaLabel: dark ? 'rgba(255,255,255,0.35)' : 'rgba(0,0,0,0.30)',
+  };
+}
+
+// Build a smooth canvas path through points
+function buildSmoothPath(ctx, pts) {
+  ctx.moveTo(pts[0][0], pts[0][1]);
+  if (pts.length === 2) {
+    ctx.lineTo(pts[1][0], pts[1][1]);
+    return;
+  }
+  for (let i = 0; i < pts.length - 1; i++) {
+    if (i === 0) {
+      const mx = (pts[0][0] + pts[1][0]) / 2;
+      const my = (pts[0][1] + pts[1][1]) / 2;
+      ctx.lineTo(mx, my);
+    } else if (i === pts.length - 2) {
+      ctx.quadraticCurveTo(pts[i][0], pts[i][1], pts[i+1][0], pts[i+1][1]);
+    } else {
+      const mx = (pts[i][0] + pts[i+1][0]) / 2;
+      const my = (pts[i][1] + pts[i+1][1]) / 2;
+      ctx.quadraticCurveTo(pts[i][0], pts[i][1], mx, my);
+    }
+  }
+}
+
+function renderCoronaryTree() {
+  if (!coronaryCanvas) return;
+  if (coronaryCanvas.width === 0) {
+    resizeCoronaryCanvas();
+    if (coronaryCanvas.width === 0) return;
+  }
+  const ctx = coronaryCanvas.getContext('2d');
+  const W = coronaryCanvas.width;
+  const H = coronaryCanvas.height;
+  const dpr = window.devicePixelRatio;
+  const colors = getCoronaryColors();
+
+  // Clear
+  ctx.fillStyle = colors.bg;
+  ctx.fillRect(0, 0, W, H);
+
+  // Heart silhouette
+  ctx.beginPath();
+  ctx.moveTo(W * 0.50, H * 0.03);
+  ctx.bezierCurveTo(W * 0.30, H * 0.00, W * 0.12, H * 0.12, W * 0.13, H * 0.33);
+  ctx.bezierCurveTo(W * 0.14, H * 0.54, W * 0.30, H * 0.74, W * 0.52, H * 0.92);
+  ctx.bezierCurveTo(W * 0.58, H * 0.94, W * 0.64, H * 0.90, W * 0.70, H * 0.82);
+  ctx.bezierCurveTo(W * 0.82, H * 0.66, W * 0.90, H * 0.48, W * 0.90, H * 0.32);
+  ctx.bezierCurveTo(W * 0.90, H * 0.12, W * 0.72, H * 0.00, W * 0.50, H * 0.03);
+  ctx.closePath();
+  ctx.fillStyle = colors.heartFill;
+  ctx.fill();
+  ctx.strokeStyle = colors.heartStroke;
+  ctx.lineWidth = 1.5 * dpr;
+  ctx.stroke();
+
+  // Aortic root
+  const aoCx = W * 0.50, aoCy = H * 0.045;
+  const aoRx = W * 0.055, aoRy = H * 0.022;
+  ctx.beginPath();
+  ctx.ellipse(aoCx, aoCy, aoRx, aoRy, 0, 0, Math.PI * 2);
+  ctx.fillStyle = colors.aorta;
+  ctx.fill();
+  ctx.strokeStyle = colors.aorta;
+  ctx.lineWidth = 1;
+  ctx.stroke();
+  ctx.fillStyle = colors.aortaLabel;
+  ctx.font = `bold ${8 * dpr}px -apple-system, sans-serif`;
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillText('Ao', aoCx, aoCy);
+
+  // Determine vessel states
+  const active = state.activeVessel;
+  const downstreamSet = active ? new Set(getDownstream(active)) : new Set();
+
+  // Draw all vessels
+  const vesselKeys = Object.keys(VESSEL_PATHS);
+  for (const v of vesselKeys) {
+    const pts = VESSEL_PATHS[v].map(p => [p[0] * W, p[1] * H]);
+    const baseW = (VESSEL_WIDTH[v] || 3) * dpr;
+
+    let color = colors.vessel;
+    let lw = baseW;
+
+    if (active === v) {
+      color = colors.occluded;
+    } else if (downstreamSet.has(v)) {
+      color = colors.downstream;
+      lw = baseW * 0.8;
+    } else if (coronaryHovered === v) {
+      // Glow
+      ctx.beginPath();
+      buildSmoothPath(ctx, pts);
+      ctx.strokeStyle = colors.vesselGlow;
+      ctx.lineWidth = baseW * 2.8;
+      ctx.lineCap = 'round';
+      ctx.lineJoin = 'round';
+      ctx.stroke();
+      color = colors.vesselHover;
+      lw = baseW * 1.15;
+    }
+
+    ctx.beginPath();
+    buildSmoothPath(ctx, pts);
+    ctx.strokeStyle = color;
+    ctx.lineWidth = lw;
+    ctx.lineCap = 'round';
+    ctx.lineJoin = 'round';
+    ctx.stroke();
+  }
+
+  // Occlusion marker (red circle with X)
+  if (active && VESSEL_PATHS[active]) {
+    const mp = VESSEL_PATHS[active][0];
+    const mx = mp[0] * W, my = mp[1] * H;
+    const r = 7 * dpr;
+    ctx.beginPath();
+    ctx.arc(mx, my, r, 0, Math.PI * 2);
+    ctx.fillStyle = '#ff1744';
+    ctx.fill();
+    ctx.strokeStyle = '#b71c1c';
+    ctx.lineWidth = 1.5 * dpr;
+    ctx.stroke();
+    ctx.strokeStyle = '#fff';
+    ctx.lineWidth = 2 * dpr;
+    const d = r * 0.45;
+    ctx.beginPath();
+    ctx.moveTo(mx - d, my - d); ctx.lineTo(mx + d, my + d);
+    ctx.moveTo(mx + d, my - d); ctx.lineTo(mx - d, my + d);
+    ctx.stroke();
+  }
+
+  // Labels — show major vessel names always, segment names only when hovered/active
+  const majorLabels = new Set(['lm', 'plad', 'plcx', 'prca']); // Show territory labels
+  const majorDisplayName = { lm: 'LM', plad: 'LAD', plcx: 'LCx', prca: 'RCA' };
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  for (const [v, pos] of Object.entries(VESSEL_LABEL_POS)) {
+    const isMajor = majorLabels.has(v);
+    const isActive = active === v;
+    const isHovered = coronaryHovered === v;
+    const isDown = downstreamSet.has(v);
+
+    // Only show minor labels if hovered or active
+    if (!isMajor && !isActive && !isHovered) continue;
+
+    let c = colors.label;
+    if (isActive) c = colors.labelActive;
+    else if (isDown) c = colors.downstream;
+    else if (isHovered) c = colors.labelHover;
+
+    ctx.fillStyle = c;
+    ctx.font = isMajor
+      ? `bold ${10 * dpr}px -apple-system, sans-serif`
+      : `bold ${9 * dpr}px -apple-system, sans-serif`;
+    const name = isMajor ? majorDisplayName[v] : (VESSEL_SHORT_NAME[v] || v);
+    ctx.fillText(name, pos[0] * W, pos[1] * H);
+  }
+}
+
+// Hit detection — check if mouse is near any vessel path
+function hitTestCoronary(cssX, cssY) {
+  if (!coronaryCanvas) return null;
+  const ctx = coronaryCanvas.getContext('2d');
+  const W = coronaryCanvas.width;
+  const H = coronaryCanvas.height;
+  const dpr = window.devicePixelRatio;
+  const px = cssX * dpr;
+  const py = cssY * dpr;
+
+  for (const v of Object.keys(VESSEL_PATHS)) {
+    const pts = VESSEL_PATHS[v].map(p => [p[0] * W, p[1] * H]);
+    ctx.beginPath();
+    buildSmoothPath(ctx, pts);
+    ctx.lineWidth = 16 * dpr; // generous hit area
+    if (ctx.isPointInStroke(px, py)) return v;
+  }
+  return null;
+}
+
+function onCoronaryMouseMove(e) {
+  const rect = coronaryCanvas.getBoundingClientRect();
+  const x = e.clientX - rect.left;
+  const y = e.clientY - rect.top;
+  const hit = hitTestCoronary(x, y);
+
+  if (hit !== coronaryHovered) {
+    coronaryHovered = hit;
+    renderCoronaryTree();
+    const tooltip = document.getElementById('coronaryTooltip');
+    if (hit && OCCLUSIONS[hit]) {
+      tooltip.textContent = OCCLUSIONS[hit].name;
+      tooltip.style.display = 'block';
+    } else {
+      tooltip.style.display = 'none';
+    }
+  }
+
+  if (hit) {
+    const tooltip = document.getElementById('coronaryTooltip');
+    let tx = x + 14, ty = y - 10;
+    const wrapRect = coronaryCanvas.parentElement.getBoundingClientRect();
+    tooltip.style.left = tx + 'px';
+    tooltip.style.top = ty + 'px';
+    // Nudge tooltip left if overflowing
+    requestAnimationFrame(() => {
+      const tr = tooltip.getBoundingClientRect();
+      if (tr.right > wrapRect.right - 4) {
+        tooltip.style.left = (x - (tr.width + 8)) + 'px';
+      }
+    });
+  }
+}
+
+function onCoronaryMouseLeave() {
+  coronaryHovered = null;
+  document.getElementById('coronaryTooltip').style.display = 'none';
+  renderCoronaryTree();
+}
+
+function onCoronaryClick(e) {
+  const rect = coronaryCanvas.getBoundingClientRect();
+  const hit = hitTestCoronary(e.clientX - rect.left, e.clientY - rect.top);
+  if (!hit) return;
+
+  // Clear special pattern when selecting a vessel
+  if (state.specialPattern) {
+    state.specialPattern = null;
+    document.querySelectorAll('.vessel-btn[data-pattern]').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.phase-btn').forEach(b => { b.disabled = false; });
+  }
+
+  if (state.activeVessel === hit) {
+    state.activeVessel = null;
+  } else {
+    state.activeVessel = hit;
+  }
+
+  // Sync vessel buttons
+  document.querySelectorAll('.vessel-btn[data-vessel]').forEach(b => {
+    b.classList.toggle('active', b.dataset.vessel === state.activeVessel);
+  });
+
+  updateClinicalInfo();
+  updateStateBadge();
+  renderCoronaryTree();
+  renderAllLeads();
+}
+
+function switchVesselTab(tab) {
+  document.querySelectorAll('.vessel-tab').forEach(t => t.classList.toggle('active', t.dataset.tab === tab));
+  document.getElementById('vesselTabList').classList.toggle('active', tab === 'list');
+  document.getElementById('vesselTabAnatomy').classList.toggle('active', tab === 'anatomy');
+  if (tab === 'anatomy') {
+    // Canvas needs sizing after becoming visible
+    setTimeout(() => {
+      resizeCoronaryCanvas();
+      renderCoronaryTree();
+    }, 10);
+  }
+}
+
+// ===== WAVEFORM ENGINE =====
+
+// Smooth Gaussian — used for P wave
+function gaussian(t, center, width, amplitude) {
+  const x = (t - center) / width;
+  return amplitude * Math.exp(-0.5 * x * x);
+}
+
+// QRS peak — sharper than Gaussian but still a visible waveform, not a needle
+function sharpPeak(t, center, width, amplitude) {
+  const x = Math.abs(t - center) / width;
+  if (x > 2.2) return 0;
+  // Moderate sharpness — between standard Gaussian (-0.5x²) and very sharp (-2.5x²)
+  return amplitude * Math.exp(-1.2 * x * x);
+}
+
+// Q wave — slightly rounder than R/S
+function qWavePulse(t, center, width, amplitude) {
+  const x = (t - center) / width;
+  if (Math.abs(x) > 2.5) return 0;
+  return amplitude * Math.exp(-1.0 * x * x);
+}
+
+// Asymmetric T wave: gradual upstroke, steeper downstroke
+function tWave(t, center, width, amplitude) {
+  const x = (t - center) / width;
+  if (Math.abs(x) > 3.5) return 0;
+  // Skewed shape: slower rise on left, faster fall on right
+  if (x <= 0) {
+    // Upstroke — gradual
+    return amplitude * Math.exp(-0.45 * x * x);
+  } else {
+    // Downstroke — steeper
+    return amplitude * Math.exp(-0.7 * x * x);
+  }
+}
+
+function generateBeat(lead, hr, vessel, phase, opts) {
+  opts = opts || {};
+  const rr = 60 / hr; // seconds per beat
+  const spKey = opts.useNormal ? null : state.specialPattern;
+  const sp = spKey ? SPECIAL_PATTERNS[spKey] : null;
+
+  // Use LBBB params if Sgarbossa pattern active
+  const params = (sp && sp.lbbb && !opts.useNormal) ? (LBBB_PARAMS[lead] || NORMAL[lead]) : NORMAL[lead];
+  if (!params) return [];
+
+  // QT correction (simplified Bazett)
+  const qtBase = 0.40;
+  const qtCorrected = qtBase * Math.sqrt(rr);
+  const qtFraction = qtCorrected / rr;
+  const tCenter = 0.195 + qtFraction * 0.55;
+
+  // Key timing landmarks (as fraction of beat)
+  const qrsStart = params.Q[1] - params.Q[2] * 1.5;
+  // Account for wider QRS (LBBB R2 or wide S)
+  const sEnd = params.S[1] + params.S[2] * 1.8;
+  const r2End = params.R2 ? params.R2[1] + params.R2[2] * 1.8 : 0;
+  const qrsEnd = Math.max(sEnd, r2End);
+  const tStart = tCenter - params.T[2] * 2.2;
+  const tEnd = tCenter + params.T[2] * 2.8;
+
+  const samples = Math.round(rr * 1000);
+  const data = new Float32Array(samples);
+
+  for (let i = 0; i < samples; i++) {
+    const t = i / samples;
+    let v = 0;
+
+    // P wave
+    v += gaussian(t, params.P[1], params.P[2], params.P[0]);
+    if (params.Pneg) {
+      v += gaussian(t, params.Pneg[1], params.Pneg[2], params.Pneg[0]);
+    }
+
+    // QRS complex
+    v += qWavePulse(t, params.Q[1], params.Q[2], params.Q[0]);
+    v += sharpPeak(t, params.R[1], params.R[2], params.R[0]);
+    // R2: second R peak for notched/M-pattern QRS (LBBB lateral leads)
+    if (params.R2) {
+      v += sharpPeak(t, params.R2[1], params.R2[2], params.R2[0]);
+    }
+    v += sharpPeak(t, params.S[1], params.S[2], params.S[0]);
+
+    // T wave
+    v += tWave(t, tCenter, params.T[2], params.T[0]);
+
+    // Baseline clamping
+    const pEnd = params.P[1] + params.P[2] * 2;
+    const prSegment = (t > pEnd && t < qrsStart);
+    const tpSegment = (t > tEnd && t < 1.0);
+    if (prSegment || tpSegment) {
+      if (Math.abs(v) < 0.02) v = 0;
+    }
+
+    data[i] = v;
+  }
+
+  // Apply standard occlusion changes (only if no special pattern active)
+  if (!sp && vessel && OCCLUSIONS[vessel]) {
+    const occ = OCCLUSIONS[vessel];
+    const ph = PHASES[phase];
+    const stShift = (occ.st[lead] || 0) * ph.st;
+    const tMultiplier = occ.tMult[lead] || 1;
+    const phaseTMult = ph.tMult;
+    const qAdd = (occ.qW[lead] || 0) * ph.qW;
+
+    for (let i = 0; i < samples; i++) {
+      const t = i / samples;
+      if (stShift !== 0) {
+        const jPoint = qrsEnd + 0.012;
+        const stRegionEnd = tEnd;
+        if (t > jPoint && t < stRegionEnd) {
+          const rampUp = Math.min((t - jPoint) / 0.025, 1);
+          const easedRamp = rampUp * rampUp;
+          const fadeOut = t > (tCenter + params.T[2]) ? Math.max((stRegionEnd - t) / (params.T[2] * 1.5), 0) : 1;
+          data[i] += stShift * easedRamp * fadeOut;
+        }
+      }
+      if (tMultiplier !== 1) {
+        const tVal = tWave(t, tCenter, params.T[2], params.T[0]);
+        if (Math.abs(tVal) > 0.005) {
+          let effectiveMult;
+          if (phaseTMult < 0) effectiveMult = phaseTMult;
+          else effectiveMult = tMultiplier * (phaseTMult - 1);
+          data[i] += tVal * effectiveMult * 0.5;
+        }
+      }
+      if (qAdd !== 0) {
+        data[i] += qWavePulse(t, params.Q[1], 0.014, qAdd);
+      }
+    }
+  }
+
+  // Apply special pattern modifications
+  if (sp && sp.mods && sp.mods[lead] && !opts.useNormal) {
+    const mod = sp.mods[lead];
+
+    for (let i = 0; i < samples; i++) {
+      const t = i / samples;
+
+      // ST elevation
+      if (mod.stElev) {
+        const jPoint = qrsEnd + 0.012;
+        const stRegionEnd = tEnd;
+        if (t > jPoint && t < stRegionEnd) {
+          const rampUp = Math.min((t - jPoint) / 0.025, 1);
+          const easedRamp = rampUp * rampUp;
+          const fadeOut = t > (tCenter + params.T[2]) ? Math.max((stRegionEnd - t) / (params.T[2] * 1.5), 0) : 1;
+          data[i] += mod.stElev * easedRamp * fadeOut;
+        }
+      }
+
+      // ST depression (horizontal or upsloping for De Winter)
+      if (mod.stDep) {
+        const jPoint = qrsEnd + 0.008;
+        if (sp && sp.upsloping) {
+          // De Winter: J-point depression that slopes UP smoothly into the peaked T wave
+          // Depression is maximal at J-point, gradually reduces as it approaches T peak
+          const stRegionEnd = tCenter - params.T[2] * 0.3; // merge into T wave upstroke
+          if (t > jPoint && t < stRegionEnd) {
+            const rampUp = Math.min((t - jPoint) / 0.015, 1);
+            const progress = (t - jPoint) / (stRegionEnd - jPoint);
+            // Cubic ease-out: steep at start, flattens toward T
+            const slope = 1 - progress * progress * progress;
+            data[i] += mod.stDep * rampUp * slope;
+          }
+        } else {
+          // Horizontal ST depression
+          const stRegionEnd = tStart + (tEnd - tStart) * 0.4;
+          if (t > jPoint && t < stRegionEnd) {
+            const rampUp = Math.min((t - jPoint) / 0.020, 1);
+            data[i] += mod.stDep * rampUp;
+          }
+        }
+      }
+
+      // T amplitude modification
+      if (mod.tAmp && mod.tAmp !== 1) {
+        const baseT = tWave(t, tCenter, params.T[2], params.T[0]);
+        if (Math.abs(baseT) > 0.003) {
+          // Replace T wave: subtract original, add scaled version
+          const newAmp = params.T[0] * mod.tAmp;
+          const newT = tWave(t, tCenter, params.T[2], newAmp);
+          data[i] += (newT - baseT);
+        }
+      }
+
+      // Biphasic T wave (Wellens Type A): initial positive deflection → terminal negative inversion
+      if (mod.biphasicT) {
+        const baseT = tWave(t, tCenter, params.T[2], params.T[0]);
+        // Replace T wave in the full T region
+        const tRegionStart = tCenter - params.T[2] * 2.5;
+        const tRegionEnd = tCenter + params.T[2] * 3.0;
+        if (t > tRegionStart && t < tRegionEnd) {
+          data[i] -= baseT; // Remove original T
+          // Positive initial component (smaller, earlier)
+          const posCenter = tCenter - params.T[2] * 0.6;
+          const posWidth = params.T[2] * 0.55;
+          data[i] += gaussian(t, posCenter, posWidth, Math.abs(params.T[0]) * 0.45);
+          // Negative terminal component (larger, later — the key diagnostic feature)
+          const negCenter = tCenter + params.T[2] * 0.5;
+          const negWidth = params.T[2] * 0.7;
+          data[i] += gaussian(t, negCenter, negWidth, -Math.abs(params.T[0]) * 1.5);
+        }
+      }
+
+      // Tall R wave (posterior MI reciprocal)
+      if (mod.tallR) {
+        data[i] += sharpPeak(t, params.R[1], params.R[2], mod.tallR);
+      }
+
+      // Pathological Q wave
+      if (mod.qW) {
+        data[i] += qWavePulse(t, params.Q[1], 0.014, mod.qW);
+      }
+    }
+  }
+
+  // Subtle baseline wander
+  for (let i = 0; i < samples; i++) {
+    const t = i / samples;
+    data[i] += 0.012 * Math.sin(2 * Math.PI * t * 0.25);
+  }
+
+  return data;
+}
+
+// ===== CANVAS RENDERING =====
+// Single continuous EKG paper — standard 12-lead printout format
+// 4 columns × 3 rows (2.5s each) + Lead II rhythm strip at bottom
+
+let ekgCanvas = null;
+
+function initCanvases() {
+  ekgCanvas = document.getElementById('ekgCanvas');
+  resizeCanvas();
+}
+
+function resizeCanvas() {
+  if (!ekgCanvas) return;
+  const rect = ekgCanvas.parentElement.getBoundingClientRect();
+  ekgCanvas.width = rect.width * window.devicePixelRatio;
+  ekgCanvas.height = rect.height * window.devicePixelRatio;
+}
+
+function getColors() {
+  const dark = document.body.classList.contains('dark');
+  return {
+    bg: dark ? '#1a1e24' : '#fff5f5',
+    minorGrid: dark ? '#252a32' : '#fdd',
+    majorGrid: dark ? '#2e3440' : '#fbb',
+    trace: dark ? '#00e676' : '#111111',
+    changed: dark ? '#ff5252' : '#c62828',          // affected leads: red trace
+    normalFaded: dark ? 'rgba(0,230,118,0.50)' : 'rgba(0,0,0,0.35)', // faded dashed original
+    label: dark ? 'rgba(255,255,255,0.55)' : 'rgba(0,0,0,0.5)',
+    separator: dark ? 'rgba(255,255,255,0.12)' : 'rgba(0,0,0,0.1)',
+  };
+}
+
+function renderAllLeads() {
+  if (!ekgCanvas) return;
+  const ctx = ekgCanvas.getContext('2d');
+  const W = ekgCanvas.width;
+  const H = ekgCanvas.height;
+  const dpr = window.devicePixelRatio;
+  const colors = getColors();
+
+  // ---- Layout constants ----
+  // 4 rows total: 3 lead rows + 1 rhythm strip
+  const rhythmRowFraction = 0.22; // rhythm strip gets ~22% of height
+  const leadRowsH = H * (1 - rhythmRowFraction);
+  const rhythmH = H * rhythmRowFraction;
+  const rowH = leadRowsH / 3;
+  const colW = W / 4;
+
+  // Scale: compute pxPerMm to fit nicely
+  // Standard: 25mm/s paper speed. Each column = 2.5s = 62.5mm
+  const pxPerMm = colW / 62.5;
+  const yScale = pxPerMm * 10; // 10mm = 1mV
+  const pxPerSec = pxPerMm * 25;
+  const beatDuration = 60 / state.hr;
+  const pxPerBeat = pxPerSec * beatDuration;
+
+  // ---- Draw continuous grid over entire canvas ----
+  ctx.fillStyle = colors.bg;
+  ctx.fillRect(0, 0, W, H);
+
+  // Minor grid (1mm)
+  ctx.strokeStyle = colors.minorGrid;
+  ctx.lineWidth = 0.5 * dpr;
+  ctx.beginPath();
+  for (let x = 0; x < W; x += pxPerMm) {
+    ctx.moveTo(Math.round(x) + 0.5, 0);
+    ctx.lineTo(Math.round(x) + 0.5, H);
+  }
+  for (let y = 0; y < H; y += pxPerMm) {
+    ctx.moveTo(0, Math.round(y) + 0.5);
+    ctx.lineTo(W, Math.round(y) + 0.5);
+  }
+  ctx.stroke();
+
+  // Major grid (5mm)
+  ctx.strokeStyle = colors.majorGrid;
+  ctx.lineWidth = 0.8 * dpr;
+  ctx.beginPath();
+  for (let x = 0; x < W; x += pxPerMm * 5) {
+    ctx.moveTo(Math.round(x) + 0.5, 0);
+    ctx.lineTo(Math.round(x) + 0.5, H);
+  }
+  for (let y = 0; y < H; y += pxPerMm * 5) {
+    ctx.moveTo(0, Math.round(y) + 0.5);
+    ctx.lineTo(W, Math.round(y) + 0.5);
+  }
+  ctx.stroke();
+
+  // ---- Draw row/column separators (thin lines between lead strips) ----
+  ctx.strokeStyle = colors.separator;
+  ctx.lineWidth = 1.5 * dpr;
+  // Horizontal separators between lead rows
+  for (let r = 1; r <= 3; r++) {
+    const y = r < 3 ? r * rowH : leadRowsH;
+    ctx.beginPath();
+    ctx.moveTo(0, y);
+    ctx.lineTo(W, y);
+    ctx.stroke();
+  }
+  // Separator above rhythm strip
+  ctx.beginPath();
+  ctx.moveTo(0, leadRowsH);
+  ctx.lineTo(W, leadRowsH);
+  ctx.stroke();
+
+  // Vertical separators between columns (only in lead rows, not rhythm strip)
+  for (let c = 1; c < 4; c++) {
+    const x = c * colW;
+    ctx.beginPath();
+    ctx.moveTo(x, 0);
+    ctx.lineTo(x, leadRowsH);
+    ctx.stroke();
+  }
+
+  // ---- Check if a lead is affected by the current occlusion ----
+  function isLeadAffected(lead) {
+    // Check special pattern
+    if (state.specialPattern && SPECIAL_PATTERNS[state.specialPattern]) {
+      const sp = SPECIAL_PATTERNS[state.specialPattern];
+      if (sp.affectedLeads && sp.affectedLeads.includes(lead)) return true;
+      if (sp.lbbb) return true; // LBBB changes all leads
+    }
+    if (!state.activeVessel || !OCCLUSIONS[state.activeVessel]) return false;
+    const occ = OCCLUSIONS[state.activeVessel];
+    return (occ.st[lead] && occ.st[lead] !== 0) ||
+           (occ.tMult[lead] && occ.tMult[lead] !== 1) ||
+           (occ.qW[lead] && occ.qW[lead] !== 0);
+  }
+
+  // ---- Helper: draw a trace in a region ----
+  function drawTraceInRegion(lead, x0, y0, regionW, regionH, traceColor, lineW, opts) {
+    opts = opts || {};
+    const baseline = y0 + regionH / 2;
+    let data;
+    if (opts.useNormal) {
+      // Force normal (no occlusion) for "before" comparison
+      data = generateBeat(lead, state.hr, null, state.phase, { useNormal: true });
+    } else {
+      data = generateBeat(lead, state.hr, state.activeVessel, state.phase);
+    }
+    if (!data || data.length === 0) return;
+
+    const samplesPerBeat = data.length;
+    const numBeats = Math.ceil(regionW / pxPerBeat) + 1;
+
+    ctx.save();
+    ctx.beginPath();
+    ctx.rect(x0, y0, regionW, regionH);
+    ctx.clip();
+
+    ctx.strokeStyle = traceColor;
+    ctx.lineWidth = (lineW || 1.5) * dpr;
+    ctx.lineJoin = 'round';
+    ctx.lineCap = 'round';
+
+    // Dashed line for "before" normal trace on affected leads
+    if (opts.dashed) {
+      ctx.setLineDash([6 * dpr, 4 * dpr]);
+    } else {
+      ctx.setLineDash([]);
+    }
+
+    ctx.beginPath();
+
+    let firstPoint = true;
+    for (let beat = 0; beat < numBeats; beat++) {
+      for (let i = 0; i < samplesPerBeat; i++) {
+        const xPos = x0 + beat * pxPerBeat + (i / samplesPerBeat) * pxPerBeat;
+        if (xPos > x0 + regionW) break;
+        const yPos = baseline - data[i] * yScale;
+        if (firstPoint) {
+          ctx.moveTo(xPos, yPos);
+          firstPoint = false;
+        } else {
+          ctx.lineTo(xPos, yPos);
+        }
+      }
+    }
+    ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.restore();
+  }
+
+  // ---- Helper: draw calibration pulse ----
+  function drawCal(x0, y0, regionH) {
+    const baseline = y0 + regionH / 2;
+    const calH = pxPerMm * 10; // 1mV = 10mm
+    const calW = pxPerMm * 3.5; // slightly wider for visibility
+    const leadIn = pxPerMm * 1.5; // baseline lead-in
+    ctx.strokeStyle = colors.trace;
+    ctx.lineWidth = 1.5 * dpr;
+    ctx.beginPath();
+    ctx.moveTo(x0 - leadIn, baseline);
+    ctx.lineTo(x0, baseline);
+    ctx.lineTo(x0, baseline - calH);
+    ctx.lineTo(x0 + calW, baseline - calH);
+    ctx.lineTo(x0 + calW, baseline);
+    ctx.lineTo(x0 + calW + leadIn, baseline);
+    ctx.stroke();
+  }
+
+  // ---- Helper: draw lead label ----
+  function drawLabel(text, x0, y0) {
+    ctx.fillStyle = colors.label;
+    ctx.font = `bold ${11 * dpr}px -apple-system, "Helvetica Neue", sans-serif`;
+    ctx.fillText(text, x0 + 4 * dpr, y0 + 14 * dpr);
+  }
+
+  // ---- Draw 12 leads: 3 rows × 4 columns ----
+  const calPad = pxPerMm * 5; // space for cal pulse
+  for (let row = 0; row < 3; row++) {
+    for (let col = 0; col < 4; col++) {
+      const lead = LEAD_LAYOUT[row][col];
+      const x0 = col * colW;
+      const y0 = row * rowH;
+      const affected = isLeadAffected(lead);
+
+      // Calibration pulse
+      drawCal(x0 + 2 * dpr, y0, rowH);
+
+      // Lead label
+      drawLabel(lead, x0 + calPad, y0);
+
+      if (affected) {
+        // Affected lead: draw normal as faded dashed, then changed trace in red
+        drawTraceInRegion(lead, x0 + calPad, y0, colW - calPad, rowH, colors.normalFaded, 1.2, { useNormal: true, dashed: true });
+        drawTraceInRegion(lead, x0 + calPad, y0, colW - calPad, rowH, colors.changed, 1.8, {});
+      } else {
+        // Unaffected lead: normal trace
+        drawTraceInRegion(lead, x0 + calPad, y0, colW - calPad, rowH, colors.trace, 1.5, {});
+      }
+    }
+  }
+
+  // ---- Draw rhythm strip (Lead II, full width) ----
+  const ry0 = leadRowsH;
+  const iiAffected = isLeadAffected('II');
+  drawLabel('II  (Rhythm Strip)', 0, ry0);
+  drawCal(2 * dpr, ry0, rhythmH);
+
+  if (iiAffected) {
+    drawTraceInRegion('II', calPad, ry0, W - calPad, rhythmH, colors.normalFaded, 1.0, { useNormal: true, dashed: true });
+    drawTraceInRegion('II', calPad, ry0, W - calPad, rhythmH, colors.changed, 1.5, {});
+  } else {
+    drawTraceInRegion('II', calPad, ry0, W - calPad, rhythmH, colors.trace, 1.5, {});
+  }
+
+  // ---- Speed/Gain annotation ----
+  ctx.fillStyle = colors.label;
+  ctx.font = `${9 * dpr}px -apple-system, "Helvetica Neue", sans-serif`;
+  ctx.fillText('25 mm/s    10 mm/mV', 8 * dpr, H - 6 * dpr);
+}
+
+// ===== UI INTERACTIONS =====
+
+// Vessel selection
+document.querySelectorAll('.vessel-btn[data-vessel]').forEach(btn => {
+  btn.addEventListener('click', () => {
+    const vessel = btn.dataset.vessel;
+    // Clear special pattern when selecting a vessel
+    if (state.specialPattern) {
+      state.specialPattern = null;
+      document.querySelectorAll('.vessel-btn[data-pattern]').forEach(b => b.classList.remove('active'));
+      document.querySelectorAll('.phase-btn').forEach(b => { b.disabled = false; });
+    }
+    if (state.activeVessel === vessel) {
+      state.activeVessel = null;
+      btn.classList.remove('active');
+    } else {
+      document.querySelectorAll('.vessel-btn[data-vessel]').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      state.activeVessel = vessel;
+    }
+    updateClinicalInfo();
+    updateStateBadge();
+    renderCoronaryTree();
+    renderAllLeads();
+  });
+});
+
+function setPhase(phase) {
+  state.phase = phase;
+  document.querySelectorAll('.phase-btn').forEach(b => {
+    b.classList.toggle('active', b.dataset.phase === phase);
+  });
+  updateStateBadge();
+  renderAllLeads();
+}
+
+function setHR(val) {
+  state.hr = parseInt(val);
+  document.getElementById('hrValue').textContent = val + ' bpm';
+  renderAllLeads();
+}
+
+function setDominance(d) {
+  state.dominance = d;
+  // Update coronary tree: PDA/PLV branch from RCA (right-dom) or LCx (left-dom)
+  if (d === 'left') {
+    // PDA and PLV originate from distal LCx instead of distal RCA
+    VESSEL_TREE.drca = [];
+    VESSEL_TREE.dlcx = ['om2', 'pda', 'plv'];
+    // Update paths to branch from dLCx endpoint
+    const lcxEnd = VESSEL_PATHS.dlcx[VESSEL_PATHS.dlcx.length - 1];
+    VESSEL_PATHS.pda[0] = [...lcxEnd];
+    VESSEL_PATHS.plv[0] = [...lcxEnd];
+    // Shift PDA path leftward to originate from LCx
+    VESSEL_PATHS.pda = [lcxEnd, [0.50, 0.56], [0.52, 0.64], [0.50, 0.72]];
+    VESSEL_PATHS.plv = [lcxEnd, [0.40, 0.58], [0.36, 0.66], [0.34, 0.74]];
+    // Update label positions to follow paths
+    VESSEL_LABEL_POS.pda = [0.50, 0.68];
+    VESSEL_LABEL_POS.plv = [0.28, 0.72];
+  } else {
+    // Right-dominant or co-dominant: PDA/PLV from distal RCA (default)
+    VESSEL_TREE.drca = ['pda', 'plv'];
+    VESSEL_TREE.dlcx = ['om2'];
+    // Restore default paths
+    VESSEL_PATHS.pda = [[0.36, 0.65], [0.44, 0.70], [0.52, 0.74], [0.58, 0.76]];
+    VESSEL_PATHS.plv = [[0.36, 0.65], [0.32, 0.72], [0.30, 0.79], [0.31, 0.85]];
+    // Restore default label positions
+    VESSEL_LABEL_POS.pda = [0.52, 0.72];
+    VESSEL_LABEL_POS.plv = [0.24, 0.78];
+  }
+  if (d === 'co') {
+    // Co-dominant: both RCA and LCx supply posterior
+    VESSEL_TREE.drca = ['pda'];
+    VESSEL_TREE.dlcx = ['om2', 'plv'];
+    const lcxEnd = VESSEL_PATHS.dlcx[VESSEL_PATHS.dlcx.length - 1];
+    VESSEL_PATHS.plv = [lcxEnd, [0.40, 0.58], [0.36, 0.66], [0.34, 0.74]];
+    VESSEL_PATHS.pda = [[0.36, 0.65], [0.44, 0.70], [0.52, 0.74], [0.58, 0.76]];
+    // PDA stays with RCA, PLV moves to LCx
+    VESSEL_LABEL_POS.pda = [0.52, 0.72];
+    VESSEL_LABEL_POS.plv = [0.28, 0.72];
+  }
+  renderCoronaryTree();
+  renderAllLeads();
+}
+
+function setSpecialPattern(key) {
+  if (state.specialPattern === key) {
+    // Deselect
+    state.specialPattern = null;
+  } else {
+    state.specialPattern = key;
+    // Clear vessel selection when special pattern is active
+    state.activeVessel = null;
+    document.querySelectorAll('.vessel-btn[data-vessel]').forEach(b => b.classList.remove('active'));
+  }
+  // Update pattern button states
+  document.querySelectorAll('.vessel-btn[data-pattern]').forEach(b => {
+    b.classList.toggle('active', b.dataset.pattern === state.specialPattern);
+  });
+  // Disable phase selector when special pattern active (patterns don't use MI phases)
+  const phaseDisabled = !!state.specialPattern;
+  document.querySelectorAll('.phase-btn').forEach(b => { b.disabled = phaseDisabled; });
+  updateClinicalInfo();
+  updateStateBadge();
+  renderCoronaryTree();
+  renderAllLeads();
+}
+
+function resetAll() {
+  state.activeVessel = null;
+  state.phase = 'acute';
+  state.hr = 75;
+
+  state.specialPattern = null;
+  document.querySelectorAll('.phase-btn').forEach(b => { b.disabled = false; });
+
+  document.getElementById('hrSlider').value = 75;
+  document.getElementById('hrValue').textContent = '75 bpm';
+  document.querySelectorAll('.vessel-btn').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('.phase-btn').forEach(b => {
+    b.classList.toggle('active', b.dataset.phase === 'acute');
+  });
+  document.querySelector('input[name="dominance"][value="right"]').checked = true;
+  setDominance('right'); // Restore default vessel tree/paths
+
+  updateClinicalInfo();
+  updateStateBadge();
+  renderCoronaryTree();
+  renderAllLeads();
+}
+
+
+function updateClinicalInfo() {
+  const panel = document.getElementById('clinicalInfo');
+
+  // Special pattern info
+  if (state.specialPattern && SPECIAL_PATTERNS[state.specialPattern]) {
+    const sp = SPECIAL_PATTERNS[state.specialPattern];
+    let html = '';
+    html += `<div class="info-label">Pattern</div><div class="info-value" style="font-weight:700; color:#ef5350;">${sp.name}</div>`;
+    html += `<div class="info-label">Territory</div><div class="info-value">${sp.territory}</div>`;
+    html += `<div class="info-label">Affected Leads</div><div class="info-value">${sp.affectedLeads.join(', ')}</div>`;
+    html += `<div class="info-label">Clinical Notes</div><div class="info-note">${sp.description}</div>`;
+    panel.innerHTML = html;
+    return;
+  }
+
+  if (!state.activeVessel) {
+    panel.innerHTML = '<div style="color: var(--text-muted); font-size: 12px; font-style: italic;">Select a vessel or special pattern to see clinical details.</div>';
+    return;
+  }
+
+  const occ = OCCLUSIONS[state.activeVessel];
+  let html = '';
+  html += `<div class="info-label">Vessel</div><div class="info-value" style="font-weight:700; color:#ef5350;">${occ.name}</div>`;
+  html += `<div class="info-label">Territory</div><div class="info-value">${occ.territory}</div>`;
+  html += `<div class="info-label">Affected Leads</div><div class="info-value">${occ.leads}</div>`;
+  if (occ.conduction) {
+    html += `<div class="info-label">Conduction</div><div class="info-value" style="color:var(--amber);">${occ.conduction}</div>`;
+  }
+  html += `<div class="info-label">Clinical Notes</div><div class="info-note">${occ.notes}</div>`;
+  panel.innerHTML = html;
+}
+
+function updateStateBadge() {
+  const badge = document.getElementById('stateBadge');
+
+  // Special pattern badge
+  if (state.specialPattern && SPECIAL_PATTERNS[state.specialPattern]) {
+    const sp = SPECIAL_PATTERNS[state.specialPattern];
+    badge.style.display = 'block';
+    document.getElementById('badgeVessel').textContent = sp.name;
+    document.getElementById('badgePhase').textContent = sp.territory;
+    document.getElementById('badgeLeads').textContent = sp.affectedLeads.join(', ');
+    return;
+  }
+
+  if (!state.activeVessel) {
+    badge.style.display = 'none';
+    return;
+  }
+  badge.style.display = 'block';
+  const occ = OCCLUSIONS[state.activeVessel];
+  const ph = PHASES[state.phase];
+  document.getElementById('badgeVessel').textContent = occ.name + ' Occlusion';
+  document.getElementById('badgePhase').textContent = ph.label;
+  document.getElementById('badgeLeads').textContent = occ.leads;
+}
+
+// ===== COLLAPSIBLE SECTIONS =====
+function toggleSection(el) {
+  el.parentElement.classList.toggle('collapsed');
+}
+
+// ===== DARK MODE =====
+function toggleDark() {
+  document.body.classList.toggle('dark');
+  const btn = document.getElementById('darkToggle');
+  const isDark = document.body.classList.contains('dark');
+  btn.textContent = isDark ? 'Light Mode' : 'Dark Mode';
+  try { localStorage.setItem('cathmath_dark', isDark ? '1' : '0'); } catch(e) {}
+  renderCoronaryTree();
+  renderAllLeads();
+}
+
+// Init dark mode
+try {
+  const pref = localStorage.getItem('cathmath_dark');
+  if (pref === '0') {
+    document.body.classList.remove('dark');
+    document.getElementById('darkToggle').textContent = 'Dark Mode';
+  } else {
+    document.body.classList.add('dark');
+    document.getElementById('darkToggle').textContent = 'Light Mode';
+  }
+} catch(e) { document.body.classList.add('dark'); }
+
+// ===== INIT =====
+function init() {
+  initCanvases();
+  initCoronaryTree();
+  renderAllLeads();
+  window.addEventListener('resize', () => {
+    resizeCanvas();
+    resizeCoronaryCanvas();
+    renderCoronaryTree();
+    renderAllLeads();
+  });
+}
+
+init();
+</script>
+</body>
+</html>
