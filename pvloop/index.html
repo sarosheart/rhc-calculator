@@ -26,7 +26,7 @@
     --edpvr-color: #7b1fa2;
     --ea-color: #78909c;
     --loop-color: #0d2240;
-    --ghost-color: rgba(13,34,64,0.18);
+    --ghost-color: rgba(70,140,220,0.55);
     --dot-color: #c62828;
     --grid-color: rgba(0,0,0,0.04);
     --grid-major: rgba(0,0,0,0.08);
@@ -52,7 +52,7 @@
   .header {
     background: var(--navy);
     color: #fff;
-    padding: 10px 24px;
+    padding: 5px 24px;
     display: flex;
     align-items: center;
     justify-content: space-between;
@@ -106,7 +106,7 @@
   /* LAYOUT */
   .container {
     display: flex;
-    height: calc(100vh - 48px);
+    height: calc(100vh - 38px);
     gap: 0;
   }
 
@@ -154,9 +154,23 @@
     display: flex;
     align-items: center;
     gap: 6px;
+    cursor: pointer;
+    user-select: none;
+    transition: background 0.15s;
   }
+  .section-head:hover { background: #163050; }
   .section-head .icon { font-size: 12px; opacity: 0.6; }
+  .section-head .chevron {
+    margin-left: auto;
+    font-size: 10px;
+    opacity: 0.5;
+    transition: transform 0.25s;
+  }
+  .section.collapsed .section-head .chevron { transform: rotate(-90deg); }
   .section-body { padding: 10px 12px; }
+  .section.collapsed .section-body {
+    display: none;
+  }
 
   /* SLIDER ROWS */
   .slider-row {
@@ -329,11 +343,186 @@
     background: rgba(0,0,0,0.03);
   }
 
+  /* DRUG BUTTONS */
+  .drug-category {
+    margin-bottom: 10px;
+  }
+  .drug-category:last-child { margin-bottom: 0; }
+  .drug-cat-label {
+    font-size: 9px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    color: var(--text-dim);
+    margin-bottom: 5px;
+    padding-left: 1px;
+  }
+  .drug-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+  }
+  .drug-btn {
+    padding: 4px 9px;
+    border-radius: 5px;
+    font-size: 10px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    border: 1px solid var(--border);
+    background: var(--card-bg);
+    color: var(--text);
+    line-height: 1.3;
+    white-space: nowrap;
+  }
+  .drug-btn:hover {
+    border-color: var(--blue-light);
+    background: rgba(21,101,192,0.04);
+  }
+  .drug-btn.active {
+    border-color: transparent;
+    color: #fff;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.15);
+  }
+  /* Category color coding for active state */
+  .drug-btn.cat-inotrope.active { background: #2e7d32; }
+  .drug-btn.cat-vasopressor.active { background: #c62828; }
+  .drug-btn.cat-vasodilator.active { background: #1565c0; }
+  .drug-btn.cat-blocker.active { background: #6a1b9a; }
+  .drug-btn.cat-volume.active { background: #ef6c00; }
+
+  .drug-clear-btn {
+    margin-top: 6px;
+    padding: 4px 12px;
+    border-radius: 5px;
+    font-size: 10px;
+    font-weight: 700;
+    cursor: pointer;
+    border: 1px solid rgba(198,40,40,0.25);
+    background: transparent;
+    color: var(--red);
+    transition: all 0.2s;
+    display: none;
+  }
+  .drug-clear-btn.visible { display: inline-block; }
+  .drug-clear-btn:hover { background: rgba(198,40,40,0.06); border-color: rgba(198,40,40,0.5); }
+
+  body.dark .drug-btn { background: #1c2029; border-color: #2e3340; color: var(--text); }
+  body.dark .drug-btn:hover { border-color: #4a90d9; background: rgba(74,144,217,0.08); }
+  body.dark .drug-clear-btn { border-color: rgba(239,83,80,0.3); }
+
+  /* MCS DEVICES */
+  .mcs-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+  }
+  .mcs-btn {
+    padding: 4px 9px;
+    border-radius: 5px;
+    font-size: 10px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    border: 1px solid var(--border);
+    background: var(--card-bg);
+    color: var(--text);
+    line-height: 1.3;
+    white-space: nowrap;
+  }
+  .mcs-btn:hover {
+    border-color: var(--blue-light);
+    background: rgba(21,101,192,0.04);
+  }
+  .mcs-btn.active {
+    border-color: transparent;
+    color: #fff;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.15);
+  }
+  .mcs-btn.cat-counterpulse.active { background: #00838f; }
+  .mcs-btn.cat-lvad.active { background: #e65100; }
+  .mcs-btn.cat-ecmo.active { background: #ad1457; }
+  .mcs-btn.cat-combo.active { background: #4527a0; }
+
+  .mcs-clear-btn {
+    margin-top: 6px;
+    padding: 4px 12px;
+    border-radius: 5px;
+    font-size: 10px;
+    font-weight: 700;
+    cursor: pointer;
+    border: 1px solid rgba(198,40,40,0.25);
+    background: transparent;
+    color: var(--red);
+    transition: all 0.2s;
+    display: none;
+  }
+  .mcs-clear-btn.visible { display: inline-block; }
+  .mcs-clear-btn:hover { background: rgba(198,40,40,0.06); border-color: rgba(198,40,40,0.5); }
+
+  body.dark .mcs-btn { background: #1c2029; border-color: #2e3340; color: var(--text); }
+  body.dark .mcs-btn:hover { border-color: #4a90d9; background: rgba(74,144,217,0.08); }
+  body.dark .mcs-clear-btn { border-color: rgba(239,83,80,0.3); }
+
+  /* DISEASE PRESETS */
+  .disease-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+  }
+  .disease-btn {
+    padding: 4px 9px;
+    border-radius: 5px;
+    font-size: 10px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    border: 1px solid var(--border);
+    background: var(--card-bg);
+    color: var(--text);
+    line-height: 1.3;
+    white-space: nowrap;
+  }
+  .disease-btn:hover {
+    border-color: var(--blue-light);
+    background: rgba(21,101,192,0.04);
+  }
+  .disease-btn.active {
+    border-color: transparent;
+    color: #fff;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.15);
+  }
+  .disease-btn.cat-hf.active { background: #c62828; }
+  .disease-btn.cat-shock.active { background: #d84315; }
+  .disease-btn.cat-valve.active { background: #1565c0; }
+  .disease-btn.cat-pericardial.active { background: #6a1b9a; }
+  .disease-btn.cat-remodel.active { background: #00695c; }
+
+  .disease-clear-btn {
+    margin-top: 6px;
+    padding: 4px 12px;
+    border-radius: 5px;
+    font-size: 10px;
+    font-weight: 700;
+    cursor: pointer;
+    border: 1px solid rgba(198,40,40,0.25);
+    background: transparent;
+    color: var(--red);
+    transition: all 0.2s;
+    display: none;
+  }
+  .disease-clear-btn.visible { display: inline-block; }
+  .disease-clear-btn:hover { background: rgba(198,40,40,0.06); border-color: rgba(198,40,40,0.5); }
+
+  body.dark .disease-btn { background: #1c2029; border-color: #2e3340; color: var(--text); }
+  body.dark .disease-btn:hover { border-color: #4a90d9; background: rgba(74,144,217,0.08); }
+  body.dark .disease-clear-btn { border-color: rgba(239,83,80,0.3); }
+
   /* CANVAS AREA */
   .canvas-container {
     flex: 1;
     position: relative;
-    margin: 12px 12px 0 12px;
+    margin: 4px 12px 12px 12px;
     background: var(--canvas-bg);
     border-radius: var(--section-radius);
     border: 1px solid var(--border);
@@ -346,78 +535,145 @@
     height: 100%;
   }
 
-  /* LEGEND on canvas */
-  .canvas-legend {
+  /* HEMODYNAMIC INDICES OVERLAY */
+  .indices-overlay {
     position: absolute;
     top: 10px;
     right: 12px;
-    font-size: 10px;
-    line-height: 1.7;
-    pointer-events: none;
+    z-index: 10;
+    background: rgba(255,255,255,0.88);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border-radius: 8px;
+    border: 1px solid rgba(0,0,0,0.06);
+    box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+    padding: 8px 10px;
+    pointer-events: auto;
+    min-width: 130px;
+    transition: transform 0.2s ease;
+    transform-origin: top right;
   }
-  .legend-item {
+  /* Size controls */
+  .idx-controls {
+    display: flex;
+    justify-content: flex-end;
+    gap: 2px;
+    margin-bottom: 4px;
+    opacity: 0;
+    transition: opacity 0.2s;
+  }
+  .indices-overlay:hover .idx-controls { opacity: 1; }
+  .idx-size-btn {
+    width: 18px;
+    height: 18px;
+    border-radius: 4px;
+    border: 1px solid rgba(0,0,0,0.1);
+    background: rgba(0,0,0,0.03);
+    color: rgba(0,0,0,0.4);
+    font-size: 13px;
+    font-weight: 700;
+    cursor: pointer;
     display: flex;
     align-items: center;
-    gap: 6px;
+    justify-content: center;
+    line-height: 1;
+    padding: 0;
+    transition: all 0.15s;
   }
-  .legend-line {
-    width: 20px;
-    height: 2px;
-    border-radius: 1px;
-    flex-shrink: 0;
+  .idx-size-btn:hover {
+    background: rgba(21,101,192,0.08);
+    border-color: rgba(21,101,192,0.25);
+    color: var(--blue);
   }
-  .legend-line.dashed {
-    background: repeating-linear-gradient(90deg, currentColor 0, currentColor 4px, transparent 4px, transparent 7px);
-    height: 2px;
+  .idx-size-btn:active { transform: scale(0.9); }
+  /* Size tiers via CSS scale */
+  .indices-overlay[data-size="1"] { transform: scale(1); }
+  .indices-overlay[data-size="2"] { transform: scale(1.35); }
+  body.dark .idx-size-btn {
+    border-color: rgba(255,255,255,0.1);
+    background: rgba(255,255,255,0.04);
+    color: rgba(255,255,255,0.35);
   }
-  .legend-line.dotted {
-    background: repeating-linear-gradient(90deg, currentColor 0, currentColor 2px, transparent 2px, transparent 5px);
+  body.dark .idx-size-btn:hover {
+    background: rgba(74,144,217,0.12);
+    border-color: rgba(74,144,217,0.3);
+    color: #6eb0f7;
   }
-  .legend-text { color: var(--text-dim); font-weight: 600; }
-
-  /* DERIVED VALUES STRIP */
-  .values-strip {
+  .idx-row {
     display: flex;
-    gap: 0;
-    margin: 8px 12px 14px 12px;
-    background: var(--card-bg);
-    border: 1px solid var(--border);
-    border-radius: var(--section-radius);
-    box-shadow: var(--shadow-sm);
-    flex-shrink: 0;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 10px;
+    padding: 1px 0;
   }
-  .val-cell {
-    flex: 1;
-    padding: 10px 6px 12px 6px;
-    text-align: center;
-    border-right: 1px solid var(--border);
-    transition: background 0.15s;
-  }
-  .val-cell:last-child { border-right: none; }
-  .val-cell:hover { background: rgba(21,101,192,0.02); }
-  .val-cell-label {
+  .idx-label {
     font-size: 9px;
     font-weight: 700;
     text-transform: uppercase;
-    letter-spacing: 0.5px;
-    color: var(--text-dim);
-    margin-bottom: 2px;
+    letter-spacing: 0.3px;
+    color: rgba(0,0,0,0.35);
   }
-  .val-cell-num {
+  .idx-val {
     font-family: "SF Mono", "Menlo", "Consolas", monospace;
-    font-size: 15px;
+    font-size: 13px;
     font-weight: 800;
     color: var(--navy);
   }
-  .val-cell-unit {
-    font-size: 9px;
-    color: var(--text-dim);
-    margin-top: 3px;
-    padding-bottom: 0;
+  .idx-unit {
+    font-size: 8px;
+    font-weight: 500;
+    color: rgba(0,0,0,0.3);
+    margin-left: 1px;
   }
-  .val-normal { color: var(--green); }
-  .val-abnormal { color: var(--red); }
-  .val-borderline { color: var(--amber); }
+  .idx-normal { color: var(--green); }
+  .idx-abnormal { color: var(--red); }
+  .idx-borderline { color: var(--amber); }
+
+  /* ACTIVE STATE BADGE — floats top-left of canvas, right of Y-axis */
+  .state-badge {
+    position: absolute;
+    top: 10px;
+    left: 62px;
+    z-index: 10;
+    background: rgba(255,255,255,0.88);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border-radius: 8px;
+    border: 1px solid rgba(0,0,0,0.06);
+    box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+    padding: 8px 12px;
+    pointer-events: none;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text-secondary);
+    line-height: 1.5;
+    display: none;
+    max-width: 280px;
+  }
+  .state-badge.visible { display: block; }
+  .state-badge .state-disease { color: var(--red); font-weight: 700; }
+  .state-badge .state-drugs { color: var(--blue); }
+  .state-badge .state-mcs { color: #e65100; font-weight: 700; }
+  .state-badge .state-sep { opacity: 0.3; margin: 0 5px; }
+  .state-effects {
+    margin-top: 4px;
+    font-size: 11px;
+    font-weight: 600;
+    opacity: 0.8;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 2px 0;
+    align-items: center;
+  }
+  /* Keep arrow+label together as a unit so arrows don't orphan on line breaks */
+  .eff-item {
+    display: inline-flex;
+    align-items: center;
+    white-space: nowrap;
+  }
+  .state-dot { opacity: 0.3; margin: 0 5px; }
+  .eff-up { color: var(--green); font-size: 12px; margin-right: 1px; }
+  .eff-down { color: var(--red); font-size: 12px; margin-right: 1px; }
 
   /* PHASE ANNOTATION TOGGLE */
   .toggle-row {
@@ -475,7 +731,7 @@
     --grid-color: rgba(255,255,255,0.03);
     --grid-major: rgba(255,255,255,0.06);
     --loop-color: #ff6b6b;
-    --ghost-color: rgba(255,107,107,0.18);
+    --ghost-color: rgba(100,180,255,0.55);
     --dot-color: #ffeb3b;
     --espvr-color: #66bb6a;
     --edpvr-color: #ba68c8;
@@ -490,12 +746,28 @@
   body.dark input[type="range"] { background: #2e3340; }
   body.dark input[type="range"]::-webkit-slider-thumb { background: #4a90d9; }
   body.dark .canvas-container { background: #161a22; border-color: #2e3340; }
-  body.dark .values-strip { background: #1c2029; border-color: #2e3340; }
-  body.dark .val-cell { border-right-color: #2e3340; }
-  body.dark .val-cell-num { color: #b0c8e8; }
-  body.dark .val-normal { color: #66bb6a; }
-  body.dark .val-abnormal { color: #ef5350; }
-  body.dark .val-borderline { color: #ffa726; }
+  body.dark .indices-overlay {
+    background: rgba(22,26,34,0.88);
+    border-color: rgba(255,255,255,0.06);
+    box-shadow: 0 2px 12px rgba(0,0,0,0.3);
+  }
+  body.dark .idx-label { color: rgba(255,255,255,0.3); }
+  body.dark .idx-val { color: #b0c8e8; }
+  body.dark .idx-unit { color: rgba(255,255,255,0.25); }
+  body.dark .idx-normal { color: #66bb6a; }
+  body.dark .idx-abnormal { color: #ef5350; }
+  body.dark .idx-borderline { color: #ffa726; }
+  body.dark .state-badge {
+    background: rgba(22,26,34,0.88);
+    border-color: rgba(255,255,255,0.06);
+    box-shadow: 0 2px 12px rgba(0,0,0,0.3);
+    color: #8a95a8;
+  }
+  body.dark .state-badge .state-disease { color: #ff6b6b; }
+  body.dark .state-badge .state-drugs { color: #6eb0f7; }
+  body.dark .state-badge .state-mcs { color: #ffa726; }
+  body.dark .eff-up { color: #66bb6a; }
+  body.dark .eff-down { color: #ef5350; }
   body.dark .btn-snapshot { background: #2a3548; }
   body.dark .btn-snapshot:hover { background: #354560; }
   body.dark .btn-snapshot.btn-reset { background: transparent; color: var(--text-dim); border-color: #2e3340; }
@@ -508,6 +780,9 @@
     .panel-left { width: 100%; min-width: unset; border-right: none; border-bottom: 1px solid var(--border); max-height: 45vh; }
     .panel-right { min-height: 55vh; }
     body { overflow: auto; height: auto; }
+    .indices-overlay { padding: 6px 8px; min-width: 110px; }
+    .idx-val { font-size: 11px; }
+    .state-badge { left: 50px; max-width: 220px; font-size: 11px; }
   }
 </style>
 </head>
@@ -523,6 +798,7 @@
     </div>
   </div>
   <div class="header-btns">
+    <button onclick="loadExample()" id="btnExample" title="Load a clinical scenario">Example</button>
     <button onclick="resetToBaseline()" title="Reset all parameters">Reset</button>
     <button id="darkToggle" onclick="toggleDark()">Dark Mode</button>
   </div>
@@ -534,8 +810,8 @@
 <div class="panel-left">
 
   <!-- PARAMETERS -->
-  <div class="section">
-    <div class="section-head"><span class="icon">&#9881;</span> Hemodynamic Parameters</div>
+  <div class="section collapsed" id="secParams">
+    <div class="section-head" onclick="toggleSection(this)"><span class="icon">&#9881;</span> Hemodynamic Parameters<span class="chevron">&#9660;</span></div>
     <div class="section-body">
 
       <div class="slider-row">
@@ -543,7 +819,7 @@
         <span class="slider-info">ⓘ<span class="tooltip"><b>End-Systolic Elastance (Contractility)</b><br>Slope of the ESPVR line. Reflects intrinsic LV contractility independent of loading conditions. Higher = stronger contraction.</span></span>
         <div class="slider-wrap">
           <input type="range" id="slEes" min="0.3" max="5.0" step="0.1" value="2.5" oninput="onParamChange()">
-          <span class="slider-value" id="valEes">2.0</span>
+          <span class="slider-value" id="valEes">2.5</span>
           <span class="slider-unit">mmHg/mL</span>
         </div>
       </div>
@@ -553,7 +829,7 @@
         <span class="slider-info">ⓘ<span class="tooltip"><b>Arterial Elastance (Afterload)</b><br>Lumped measure of total arterial load on the LV. Integrates SVR, arterial compliance, and heart rate. Higher = more afterload.</span></span>
         <div class="slider-wrap">
           <input type="range" id="slEa" min="0.3" max="6.0" step="0.1" value="1.8" oninput="onParamChange()">
-          <span class="slider-value" id="valEa">2.2</span>
+          <span class="slider-value" id="valEa">1.8</span>
           <span class="slider-unit">mmHg/mL</span>
         </div>
       </div>
@@ -563,7 +839,7 @@
         <span class="slider-info">ⓘ<span class="tooltip"><b>End-Diastolic Volume (Preload)</b><br>LV volume at end of diastole. Determined by venous return and LV compliance. Higher = more preload (Frank-Starling mechanism).</span></span>
         <div class="slider-wrap">
           <input type="range" id="slEDV" min="60" max="250" step="1" value="125" oninput="onParamChange()">
-          <span class="slider-value" id="valEDV">120</span>
+          <span class="slider-value" id="valEDV">125</span>
           <span class="slider-unit">mL</span>
         </div>
       </div>
@@ -601,9 +877,167 @@
     </div>
   </div>
 
-  <!-- DISPLAY OPTIONS -->
+  <!-- DRUGS & INTERVENTIONS -->
   <div class="section">
-    <div class="section-head"><span class="icon">&#9673;</span> Display</div>
+    <div class="section-head" onclick="toggleSection(this)"><span class="icon">&#9883;</span> Drugs & Interventions<span class="chevron">&#9660;</span></div>
+    <div class="section-body">
+
+      <div class="drug-category">
+        <div class="drug-cat-label">Inotropes</div>
+        <div class="drug-grid">
+          <button class="drug-btn cat-inotrope" data-drug="dobutamine">Dobutamine</button>
+          <button class="drug-btn cat-inotrope" data-drug="milrinone">Milrinone</button>
+          <button class="drug-btn cat-inotrope" data-drug="isoproterenol">Isoproterenol</button>
+          <button class="drug-btn cat-inotrope" data-drug="dopamine_low">Dopamine (low)</button>
+          <button class="drug-btn cat-inotrope" data-drug="dopamine_high">Dopamine (high)</button>
+        </div>
+      </div>
+
+      <div class="drug-category">
+        <div class="drug-cat-label">Vasopressors</div>
+        <div class="drug-grid">
+          <button class="drug-btn cat-vasopressor" data-drug="phenylephrine">Phenylephrine</button>
+          <button class="drug-btn cat-vasopressor" data-drug="norepinephrine">Norepinephrine</button>
+        </div>
+      </div>
+
+      <div class="drug-category">
+        <div class="drug-cat-label">Vasodilators</div>
+        <div class="drug-grid">
+          <button class="drug-btn cat-vasodilator" data-drug="nitroprusside">Nitroprusside</button>
+          <button class="drug-btn cat-vasodilator" data-drug="ntg">Nitroglycerin</button>
+          <button class="drug-btn cat-vasodilator" data-drug="phentolamine">Phentolamine</button>
+          <button class="drug-btn cat-vasodilator" data-drug="acei">ACE Inhibitor</button>
+          <button class="drug-btn cat-vasodilator" data-drug="ccb">CCB (DHP)</button>
+        </div>
+      </div>
+
+      <div class="drug-category">
+        <div class="drug-cat-label">Negative Inotrope</div>
+        <div class="drug-grid">
+          <button class="drug-btn cat-blocker" data-drug="metoprolol">Metoprolol</button>
+        </div>
+      </div>
+
+      <div class="drug-category">
+        <div class="drug-cat-label">Volume</div>
+        <div class="drug-grid">
+          <button class="drug-btn cat-volume" data-drug="fluids">IV Fluids</button>
+          <button class="drug-btn cat-volume" data-drug="diuretics">Diuretics</button>
+        </div>
+      </div>
+
+      <button class="drug-clear-btn" id="drugClearBtn" onclick="clearAllDrugs()">Clear</button>
+
+    </div>
+  </div>
+
+  <!-- DISEASE STATES -->
+  <div class="section">
+    <div class="section-head" onclick="toggleSection(this)"><span class="icon">&#9764;</span> Disease States<span class="chevron">&#9660;</span></div>
+    <div class="section-body">
+
+      <div class="drug-category">
+        <div class="drug-cat-label">Heart Failure</div>
+        <div class="disease-grid">
+          <button class="disease-btn cat-hf" data-disease="hfref">HFrEF</button>
+          <button class="disease-btn cat-hf" data-disease="hfpef">HFpEF</button>
+          <button class="disease-btn cat-hf" data-disease="dcm">DCM</button>
+        </div>
+      </div>
+
+      <div class="drug-category">
+        <div class="drug-cat-label">Shock</div>
+        <div class="disease-grid">
+          <button class="disease-btn cat-shock" data-disease="cardiogenic_shock">Cardiogenic</button>
+          <button class="disease-btn cat-shock" data-disease="septic_shock">Septic (warm)</button>
+          <button class="disease-btn cat-shock" data-disease="hypovolemic_shock">Hypovolemic</button>
+        </div>
+      </div>
+
+      <div class="drug-category">
+        <div class="drug-cat-label">Valve Disease</div>
+        <div class="disease-grid">
+          <button class="disease-btn cat-valve" data-disease="aortic_stenosis">Aortic Stenosis</button>
+          <button class="disease-btn cat-valve" data-disease="mitral_stenosis">Mitral Stenosis</button>
+          <button class="disease-btn cat-valve" data-disease="aortic_regurg">Aortic Regurg</button>
+          <button class="disease-btn cat-valve" data-disease="mitral_regurg">Mitral Regurg</button>
+        </div>
+      </div>
+
+      <div class="drug-category">
+        <div class="drug-cat-label">Mixed Valve</div>
+        <div class="disease-grid">
+          <button class="disease-btn cat-valve" data-disease="as_ar">AS + AR</button>
+          <button class="disease-btn cat-valve" data-disease="as_mr">AS + MR</button>
+          <button class="disease-btn cat-valve" data-disease="ms_mr">MS + MR</button>
+          <button class="disease-btn cat-valve" data-disease="ms_as">MS + AS</button>
+        </div>
+      </div>
+
+      <div class="drug-category">
+        <div class="drug-cat-label">Remodeling</div>
+        <div class="disease-grid">
+          <button class="disease-btn cat-remodel" data-disease="concentric_lvh">Concentric LVH</button>
+          <button class="disease-btn cat-remodel" data-disease="eccentric_lvh">Eccentric LVH</button>
+        </div>
+      </div>
+
+      <div class="drug-category">
+        <div class="drug-cat-label">Pericardial</div>
+        <div class="disease-grid">
+          <button class="disease-btn cat-pericardial" data-disease="constriction">Constriction</button>
+          <button class="disease-btn cat-pericardial" data-disease="tamponade">Tamponade</button>
+        </div>
+      </div>
+
+      <button class="disease-clear-btn" id="diseaseClearBtn" onclick="clearDisease()">Clear</button>
+
+    </div>
+  </div>
+
+  <!-- MCS DEVICES -->
+  <div class="section">
+    <div class="section-head" onclick="toggleSection(this)"><span class="icon">&#9881;</span> MCS Devices<span class="chevron">&#9660;</span></div>
+    <div class="section-body">
+
+      <div class="drug-category">
+        <div class="drug-cat-label">Counterpulsation</div>
+        <div class="mcs-grid">
+          <button class="mcs-btn cat-counterpulse" data-mcs="iabp">IABP</button>
+        </div>
+      </div>
+
+      <div class="drug-category">
+        <div class="drug-cat-label">Transvalvular Pump</div>
+        <div class="mcs-grid">
+          <button class="mcs-btn cat-lvad" data-mcs="impella_cp">Impella CP</button>
+          <button class="mcs-btn cat-lvad" data-mcs="impella_5">Impella 5.0</button>
+        </div>
+      </div>
+
+      <div class="drug-category">
+        <div class="drug-cat-label">Extracorporeal</div>
+        <div class="mcs-grid">
+          <button class="mcs-btn cat-ecmo" data-mcs="va_ecmo">VA-ECMO</button>
+        </div>
+      </div>
+
+      <div class="drug-category">
+        <div class="drug-cat-label">Combination</div>
+        <div class="mcs-grid">
+          <button class="mcs-btn cat-combo" data-mcs="ecpella">ECPELLA</button>
+        </div>
+      </div>
+
+      <button class="mcs-clear-btn" id="mcsClearBtn" onclick="clearMCS()">Clear</button>
+
+    </div>
+  </div>
+
+  <!-- DISPLAY OPTIONS -->
+  <div class="section collapsed" id="secDisplay">
+    <div class="section-head" onclick="toggleSection(this)"><span class="icon">&#9673;</span> Display<span class="chevron">&#9660;</span></div>
     <div class="section-body">
       <div class="toggle-row">
         <label class="toggle-switch">
@@ -645,7 +1079,7 @@
 
   <!-- SNAPSHOT / COMPARE -->
   <div class="section">
-    <div class="section-head"><span class="icon">&#10697;</span> Compare</div>
+    <div class="section-head" onclick="toggleSection(this)"><span class="icon">&#10697;</span> Compare<span class="chevron">&#9660;</span></div>
     <div class="section-body">
       <div class="btn-row">
         <button class="btn-snapshot" onclick="takeSnapshot()" id="btnSnapshot">Snapshot Current Loop</button>
@@ -665,45 +1099,24 @@
   <!-- CANVAS -->
   <div class="canvas-container" id="canvasContainer">
     <canvas id="pvCanvas"></canvas>
-  </div>
 
-  <!-- DERIVED VALUES -->
-  <div class="values-strip" id="valuesStrip">
-    <div class="val-cell">
-      <div class="val-cell-label">SV</div>
-      <div class="val-cell-num" id="outSV">—</div>
-      <div class="val-cell-unit">mL</div>
+    <!-- HEMODYNAMIC INDICES OVERLAY -->
+    <div class="indices-overlay" id="indicesOverlay" data-size="1">
+      <div class="idx-controls">
+        <button class="idx-size-btn" onclick="changeIdxSize(-1)" title="Smaller">&#8722;</button>
+        <button class="idx-size-btn" onclick="changeIdxSize(1)" title="Larger">&#43;</button>
+      </div>
+      <div class="idx-row"><span class="idx-label">SV</span><span><span class="idx-val" id="outSV">—</span><span class="idx-unit"> mL</span></span></div>
+      <div class="idx-row"><span class="idx-label">EF</span><span><span class="idx-val" id="outEF">—</span><span class="idx-unit"> %</span></span></div>
+      <div class="idx-row"><span class="idx-label">CO</span><span><span class="idx-val" id="outCO">—</span><span class="idx-unit"> L/min</span></span></div>
+      <div class="idx-row"><span class="idx-label">ESP</span><span><span class="idx-val" id="outESP">—</span><span class="idx-unit"> mmHg</span></span></div>
+      <div class="idx-row"><span class="idx-label">EDP</span><span><span class="idx-val" id="outEDP">—</span><span class="idx-unit"> mmHg</span></span></div>
+      <div class="idx-row"><span class="idx-label">SW</span><span><span class="idx-val" id="outSW">—</span><span class="idx-unit"> mmHg·mL</span></span></div>
+      <div class="idx-row"><span class="idx-label">Ea/Ees</span><span><span class="idx-val" id="outCoupling">—</span></span></div>
     </div>
-    <div class="val-cell">
-      <div class="val-cell-label">EF</div>
-      <div class="val-cell-num" id="outEF">—</div>
-      <div class="val-cell-unit">%</div>
-    </div>
-    <div class="val-cell">
-      <div class="val-cell-label">CO</div>
-      <div class="val-cell-num" id="outCO">—</div>
-      <div class="val-cell-unit">L/min</div>
-    </div>
-    <div class="val-cell">
-      <div class="val-cell-label">ESP</div>
-      <div class="val-cell-num" id="outESP">—</div>
-      <div class="val-cell-unit">mmHg</div>
-    </div>
-    <div class="val-cell">
-      <div class="val-cell-label">EDP</div>
-      <div class="val-cell-num" id="outEDP">—</div>
-      <div class="val-cell-unit">mmHg</div>
-    </div>
-    <div class="val-cell">
-      <div class="val-cell-label">SW</div>
-      <div class="val-cell-num" id="outSW">—</div>
-      <div class="val-cell-unit">mmHg·mL</div>
-    </div>
-    <div class="val-cell">
-      <div class="val-cell-label">E<sub>a</sub>/E<sub>es</sub></div>
-      <div class="val-cell-num" id="outCoupling">—</div>
-      <div class="val-cell-unit">ratio</div>
-    </div>
+
+    <!-- STATE SUMMARY (top-left) -->
+    <div class="state-badge" id="stateBadge"></div>
   </div>
 
 </div><!-- /panel-right -->
@@ -741,7 +1154,7 @@ let dpr = window.devicePixelRatio || 1;
 // ---- COORDINATE SYSTEM ----
 // PV space: X = Volume (mL), Y = Pressure (mmHg)
 // Viewport: V range [0, vMax], P range [0, pMax]
-const MARGIN = { top: 28, right: 28, bottom: 54, left: 56 };
+const MARGIN = { top: 28, right: 28, bottom: 58, left: 56 };
 let vMax = 260; // mL
 let pMax = 200; // mmHg
 
@@ -772,15 +1185,10 @@ function edpvr(V, B, V0) {
   return A_EDPVR * (Math.exp(B * (V - V0)) - 1);
 }
 
-function computeLoop(p) {
+function computeLoop(p, triFactor) {
   const { Ees, Ea, EDV, B, HR, V0 } = p;
+  const tri = triFactor || 0; // 0 = normal rectangular, 1 = fully triangular (Impella)
 
-  // End-systolic point: intersection of ESPVR and Ea line
-  // Ea line from (EDV, 0) with slope -Ea: P = Ea*(EDV - V)
-  // ESPVR: P = Ees*(V - V0)
-  // Ees*(V - V0) = Ea*(EDV - V)
-  // V*(Ees + Ea) = Ees*V0 + Ea*EDV
-  // ESV = (Ees*V0 + Ea*EDV) / (Ees + Ea)
   const ESV = (Ees * V0 + Ea * EDV) / (Ees + Ea);
   const ESP = Ees * (ESV - V0);
   const EDP = edpvr(EDV, B, V0);
@@ -788,83 +1196,62 @@ function computeLoop(p) {
   const EF = SV / EDV * 100;
   const CO = SV * HR / 1000;
   const coupling = Ea / Ees;
-
-  // Pressure at ESV on EDPVR (for IVR bottom)
   const P_esv_edpvr = edpvr(ESV, B, V0);
 
-  // Build loop points (clockwise: ED → IVC → Ejection → ES → IVR → Filling → ED)
   const pts = [];
   const N_IVC = 30;
   const N_EJ = 50;
   const N_IVR = 30;
   const N_FILL = 40;
 
-  // Phase 1: Isovolumic Contraction (V = EDV, P rises from EDP to ~ESP level)
-  // P rises from EDP to the Ea line at EDV: P_aov_open = Ea*(EDV - ESV) ... actually
-  // More accurate: IVC goes from EDP up to the pressure where AV opens
-  // AV opens when LV pressure = Aortic diastolic ≈ we approximate this
-  // For simplicity: IVC from (EDV, EDP) to (EDV, P_top) where P_top is the Ea line at EDV
-  // Ea line: P = Ea*(EDV - V), at V=EDV, P=0... that's wrong
-  // Ea line goes from (EDV, 0) to (ESV, ESP), so at V=EDV, P=0
-  // Actually the top of IVC connects to the ejection curve which starts near (EDV, ~diastolic Ao pressure)
-  // For the standard PV loop: IVC from (EDV, EDP) straight up to (EDV, P_ivc_top)
-  // P_ivc_top ≈ the pressure on the Ea line would be 0 at EDV, which is wrong
-  //
-  // CORRECT approach: The Ea line represents the end-systolic operating point.
-  // The ejection phase traces a curve from AV opening to AV closing (ES point).
-  // IVC: P goes from EDP up to ~aortic diastolic pressure (we estimate as 0.6*ESP)
-  // Then ejection follows a curved path from (EDV, P_ao_dia) to (ESV, ESP)
-  // IVR: P drops from ESP down to EDPVR at ESV
-
-  const P_ao_dia = Math.max(ESP * 0.55, EDP + 5); // rough Ao diastolic
+  const P_ao_dia = Math.max(ESP * 0.55, EDP + 5);
   const P_ivr_bottom = P_esv_edpvr;
 
-  // IVC: vertical line at EDV from EDP up to P_ao_dia
+  // === TRIANGULARIZATION (MCS Impella effect) ===
+  // tri=0: normal rectangular loop (vertical IVC/IVR)
+  // tri=1: IVC/IVR become diagonal (continuous pump flow across AV)
+
+  // IVC: normally vertical at EDV; with tri, volume drifts toward ESV
   for (let i = 0; i <= N_IVC; i++) {
     const t = i / N_IVC;
-    // Smooth acceleration (ease-in)
-    const tt = t * t * (3 - 2 * t); // smoothstep
+    const tt = t * t * (3 - 2 * t);
     const P = EDP + (P_ao_dia - EDP) * tt;
-    pts.push({ V: EDV, P, phase: 'IVC' });
+    const V = EDV - tri * (EDV - ESV) * 0.25 * t;
+    pts.push({ V, P, phase: 'IVC' });
   }
 
-  // EJECTION: from (EDV, P_ao_dia) to (ESV, ESP)
-  // The ejection curve rises to peak then comes back down
-  // Model as: V decreases linearly, P follows a parabolic arc above the Ea line
+  // EJECTION
+  const ejStartV = EDV - tri * (EDV - ESV) * 0.25;
   for (let i = 1; i <= N_EJ; i++) {
     const t = i / N_EJ;
-    const V = EDV + (ESV - EDV) * t;
-    // Base pressure from Ea line: P_ea = Ea * (EDV - V) — but this gives 0 at EDV
-    // Actually linear interpolation on the Ea line: from (EDV,0) to (ESV, ESP)
-    // We want the ejection to bulge upward above a simple line
-    // Peak pressure occurs roughly 1/3 into ejection
+    const V = ejStartV + (ESV - ejStartV) * t;
     const P_start = P_ao_dia;
     const P_end = ESP;
-    // Linear baseline
     const P_linear = P_start + (P_end - P_start) * t;
-    // Add a bulge (peak systolic pressure overshoot)
-    const bulge = Math.sin(Math.PI * t) * (ESP - P_ao_dia) * 0.2;
+    const bulge = Math.sin(Math.PI * t) * (ESP - P_ao_dia) * 0.2 * (1 - tri * 0.6);
     const P = P_linear + bulge;
     pts.push({ V, P, phase: 'Ejection' });
   }
 
-  // IVR: vertical line at ESV from ESP down to P_ivr_bottom
+  // IVR: normally vertical at ESV; with tri, volume drifts toward EDV
   for (let i = 1; i <= N_IVR; i++) {
     const t = i / N_IVR;
     const tt = t * t * (3 - 2 * t);
     const P = ESP + (P_ivr_bottom - ESP) * tt;
-    pts.push({ V: ESV, P, phase: 'IVR' });
+    const V = ESV + tri * (EDV - ESV) * 0.25 * t;
+    pts.push({ V, P, phase: 'IVR' });
   }
 
-  // FILLING: from (ESV, P_ivr_bottom) along EDPVR back to (EDV, EDP)
+  // FILLING
+  const fillStartV = ESV + tri * (EDV - ESV) * 0.25;
   for (let i = 1; i <= N_FILL; i++) {
     const t = i / N_FILL;
-    const V = ESV + (EDV - ESV) * t;
+    const V = fillStartV + (EDV - fillStartV) * t;
     const P = edpvr(V, B, V0);
     pts.push({ V, P, phase: 'Filling' });
   }
 
-  // Stroke Work ≈ area of the loop (shoelace formula)
+  // Stroke Work (shoelace)
   let SW = 0;
   for (let i = 0; i < pts.length; i++) {
     const j = (i + 1) % pts.length;
@@ -1106,7 +1493,7 @@ function drawEaLine(loop) {
   ctx.restore();
 }
 
-function drawLoopPath(pts, color, lineWidth, alpha, dashEnd) {
+function drawLoopPath(pts, color, lineWidth, alpha, dashEnd, dashed) {
   if (pts.length < 2) return;
 
   ctx.save();
@@ -1115,6 +1502,7 @@ function drawLoopPath(pts, color, lineWidth, alpha, dashEnd) {
   ctx.globalAlpha = alpha;
   ctx.lineJoin = 'round';
   ctx.lineCap = 'round';
+  if (dashed) ctx.setLineDash([6, 4]);
 
   const end = dashEnd !== undefined ? Math.floor(dashEnd * pts.length) : pts.length;
 
@@ -1125,8 +1513,8 @@ function drawLoopPath(pts, color, lineWidth, alpha, dashEnd) {
   }
   ctx.stroke();
 
-  // Fill the loop area with subtle color
-  if (end >= pts.length && alpha > 0.3) {
+  // Fill the loop area with subtle color (not for ghost/dashed)
+  if (!dashed && end >= pts.length && alpha > 0.3) {
     ctx.globalAlpha = 0.06;
     ctx.fillStyle = color;
     ctx.beginPath();
@@ -1322,12 +1710,12 @@ function draw() {
 
   drawGrid();
 
-  // Compute current loop
-  const loop = computeLoop(params);
+  // Compute current loop (with triangularization for MCS devices)
+  const loop = computeLoop(params, getTriangularFactor());
 
   // Draw ghost if exists
   if (ghostLoop) {
-    drawLoopPath(ghostLoop.pts, getCSS('--ghost-color'), 2, 0.3);
+    drawLoopPath(ghostLoop.pts, getCSS('--ghost-color'), 2, 1, undefined, true);
   }
 
   // Draw reference lines
@@ -1432,23 +1820,23 @@ function updateValues(v) {
 
 function colorVal(id, val, lowWarn, lowBad, hiWarn, hiBad) {
   const el = document.getElementById(id);
-  el.className = 'val-cell-num';
-  if (val < lowBad || val > hiBad) el.classList.add('val-abnormal');
-  else if (val < lowWarn || val > hiWarn) el.classList.add('val-borderline');
-  else el.classList.add('val-normal');
+  el.className = 'idx-val';
+  if (val < lowBad || val > hiBad) el.classList.add('idx-abnormal');
+  else if (val < lowWarn || val > hiWarn) el.classList.add('idx-borderline');
+  else el.classList.add('idx-normal');
 }
 
 function colorCoupling(ratio) {
   const el = document.getElementById('outCoupling');
-  el.className = 'val-cell-num';
-  if (ratio >= 0.5 && ratio <= 1.3) el.classList.add('val-normal');
-  else if (ratio > 1.3 && ratio <= 1.5) el.classList.add('val-borderline');
-  else el.classList.add('val-abnormal');
+  el.className = 'idx-val';
+  if (ratio >= 0.5 && ratio <= 1.3) el.classList.add('idx-normal');
+  else if (ratio > 1.3 && ratio <= 1.5) el.classList.add('idx-borderline');
+  else el.classList.add('idx-abnormal');
 }
 
 // ---- SNAPSHOT ----
 function takeSnapshot() {
-  const loop = computeLoop(params);
+  const loop = computeLoop(params, getTriangularFactor());
   ghostLoop = { pts: [...loop.pts] };
   ghostValues = { ...loop.values };
   document.getElementById('btnClearSnap').style.display = '';
@@ -1466,11 +1854,634 @@ function clearSnapshot() {
 
 // ---- RESET ----
 function resetToBaseline() {
-  params = { Ees: 2.0, Ea: 2.2, EDV: 120, B: 0.025, HR: 70, V0: 10 };
+  params = { ...BASELINE };
+  activeDrugs.clear();
+  activeDisease = null;
+  activeMCS = null;
+  document.querySelectorAll('.drug-btn').forEach(btn => btn.classList.remove('active'));
+  document.querySelectorAll('.disease-btn').forEach(btn => btn.classList.remove('active'));
+  document.querySelectorAll('.mcs-btn').forEach(btn => btn.classList.remove('active'));
+  updateDrugSummary();
+  updateDiseaseInfo();
+  updateMCSInfo();
+  updateStateBadge();
   setSliders(params);
   updateSliderDisplays();
   clearSnapshot();
   requestDraw();
+}
+
+// ---- DRUGS & INTERVENTIONS ----
+
+const BASELINE = { Ees: 2.5, Ea: 1.8, EDV: 125, B: 0.025, HR: 70, V0: 10 };
+
+const DRUGS = {
+  dobutamine:    { name: 'Dobutamine',     Ees: +1.0, Ea: 0,    EDV: 0,   B: 0,      mech: 'β1 agonist — increases contractility' },
+  milrinone:     { name: 'Milrinone',       Ees: +0.8, Ea: -0.6, EDV: 0,   B: 0,      mech: 'PDE3 inhibitor — inodilator (↑contractility + ↓afterload)' },
+  isoproterenol: { name: 'Isoproterenol',   Ees: +1.2, Ea: -0.5, EDV: 0,   B: -0.005, mech: 'β1+β2 agonist — inotropy + vasodilation + lusitropy' },
+  dopamine_low:  { name: 'Dopamine (low)',  Ees: +0.5, Ea: 0,    EDV: 0,   B: 0,      mech: 'Low-dose β1 effect — mild inotropy' },
+  dopamine_high: { name: 'Dopamine (high)', Ees: +0.5, Ea: +0.8, EDV: 0,   B: 0,      mech: 'High-dose β1 + α1 — inotropy + vasoconstriction' },
+  phenylephrine: { name: 'Phenylephrine',   Ees: 0,    Ea: +1.0, EDV: 0,   B: 0,      mech: 'Pure α1 agonist — increases afterload only' },
+  norepinephrine:{ name: 'Norepinephrine',  Ees: +0.3, Ea: +1.2, EDV: 0,   B: 0,      mech: 'α1 + mild β1 — predominant vasoconstriction' },
+  nitroprusside: { name: 'Nitroprusside',   Ees: 0,    Ea: -1.0, EDV: -10, B: 0,      mech: 'Arterio + venodilator — ↓afterload + ↓preload' },
+  ntg:           { name: 'Nitroglycerin',   Ees: 0,    Ea: -0.4, EDV: -20, B: 0,      mech: 'Primarily venodilator — ↓↓preload, mild ↓afterload' },
+  phentolamine:  { name: 'Phentolamine',    Ees: 0,    Ea: -0.8, EDV: 0,   B: 0,      mech: 'α1 blocker — pure afterload reduction' },
+  acei:          { name: 'ACE Inhibitor',   Ees: 0,    Ea: -0.6, EDV: -10, B: 0,      mech: 'Arterio + venodilation — balanced ↓afterload + ↓preload' },
+  ccb:           { name: 'CCB (DHP)',       Ees: 0,    Ea: -0.5, EDV: 0,   B: 0,      mech: 'Dihydropyridine — arterial vasodilation ↓afterload' },
+  metoprolol:    { name: 'Metoprolol',      Ees: -0.5, Ea: 0,    EDV: 0,   B: 0,      mech: 'β-blocker — ↓contractility, ↓heart rate' },
+  fluids:        { name: 'IV Fluids',       Ees: 0,    Ea: 0,    EDV: +20, B: 0,      mech: 'Volume expansion — ↑preload (Frank-Starling)' },
+  diuretics:     { name: 'Diuretics',       Ees: 0,    Ea: 0,    EDV: -20, B: 0,      mech: 'Volume removal — ↓preload' },
+};
+
+let activeDrugs = new Set();
+let animatingDrugs = false;
+let drugAnimStart = null;
+let drugAnimFrom = null;
+let drugAnimTo = null;
+const DRUG_ANIM_MS = 400;
+
+function toggleDrug(drugId) {
+  // Auto-snapshot before first drug if no ghost exists
+  if (activeDrugs.size === 0 && !ghostLoop) {
+    takeSnapshot();
+  }
+
+  if (activeDrugs.has(drugId)) {
+    activeDrugs.delete(drugId);
+  } else {
+    activeDrugs.add(drugId);
+  }
+
+  // Update button states
+  document.querySelectorAll('.drug-btn').forEach(btn => {
+    btn.classList.toggle('active', activeDrugs.has(btn.dataset.drug));
+  });
+
+  // Calculate target params (includes disease + MCS + drugs)
+  const target = calcFullParams();
+
+  // Animate transition
+  drugAnimFrom = { ...params };
+  drugAnimTo = target;
+  drugAnimStart = performance.now();
+  animatingDrugs = true;
+  requestAnimationFrame(animateDrugTransition);
+
+  updateDrugSummary();
+  updateStateBadge();
+}
+
+function getBaseParams() {
+  // If a disease is active, use its params as base; otherwise BASELINE
+  return activeDisease ? { ...DISEASES[activeDisease].params } : { ...BASELINE };
+}
+
+
+function animateDrugTransition(ts) {
+  if (!animatingDrugs) return;
+  const elapsed = ts - drugAnimStart;
+  let t = Math.min(elapsed / DRUG_ANIM_MS, 1);
+  // Ease-out cubic
+  t = 1 - Math.pow(1 - t, 3);
+
+  params.Ees = drugAnimFrom.Ees + (drugAnimTo.Ees - drugAnimFrom.Ees) * t;
+  params.Ea = drugAnimFrom.Ea + (drugAnimTo.Ea - drugAnimFrom.Ea) * t;
+  params.EDV = drugAnimFrom.EDV + (drugAnimTo.EDV - drugAnimFrom.EDV) * t;
+  params.B = drugAnimFrom.B + (drugAnimTo.B - drugAnimFrom.B) * t;
+  params.HR = drugAnimFrom.HR + (drugAnimTo.HR - drugAnimFrom.HR) * t;
+  params.V0 = drugAnimFrom.V0 + (drugAnimTo.V0 - drugAnimFrom.V0) * t;
+
+  setSliders(params);
+  updateSliderDisplays();
+  draw();
+
+  if (t < 1) {
+    requestAnimationFrame(animateDrugTransition);
+  } else {
+    animatingDrugs = false;
+    params = { ...drugAnimTo };
+    setSliders(params);
+    updateSliderDisplays();
+    draw();
+  }
+}
+
+function updateDrugSummary() {
+  const clearBtn = document.getElementById('drugClearBtn');
+  if (activeDrugs.size === 0) {
+    clearBtn.classList.remove('visible');
+  } else {
+    clearBtn.classList.add('visible');
+  }
+}
+
+function clearAllDrugs() {
+  activeDrugs.clear();
+  document.querySelectorAll('.drug-btn').forEach(btn => btn.classList.remove('active'));
+
+  // Animate back to base (disease + MCS, or just baseline)
+  drugAnimFrom = { ...params };
+  drugAnimTo = calcFullParams();
+  drugAnimStart = performance.now();
+  animatingDrugs = true;
+  requestAnimationFrame(animateDrugTransition);
+
+  updateDrugSummary();
+  updateStateBadge();
+}
+
+function initDrugButtons() {
+  document.querySelectorAll('.drug-btn').forEach(btn => {
+    btn.addEventListener('click', () => toggleDrug(btn.dataset.drug));
+
+    // Tooltip on hover via global tooltip
+    const drugId = btn.dataset.drug;
+    const drug = DRUGS[drugId];
+    if (!drug) return;
+
+    btn.addEventListener('mouseenter', () => {
+      const tip = document.getElementById('globalTooltip');
+      tip.innerHTML = '<b>' + drug.name + '</b><br>' + drug.mech;
+      tip.classList.add('visible');
+      const rect = btn.getBoundingClientRect();
+      tip.style.left = (rect.right + 10) + 'px';
+      tip.style.top = (rect.top + rect.height / 2) + 'px';
+      tip.style.transform = 'translateY(-50%)';
+      requestAnimationFrame(() => {
+        const tipRect = tip.getBoundingClientRect();
+        if (tipRect.right > window.innerWidth - 10) {
+          tip.style.left = (rect.left - tipRect.width - 10) + 'px';
+        }
+        if (tipRect.bottom > window.innerHeight - 10) {
+          tip.style.top = (window.innerHeight - tipRect.height - 10) + 'px';
+          tip.style.transform = 'none';
+        }
+      });
+    });
+
+    btn.addEventListener('mouseleave', () => {
+      document.getElementById('globalTooltip').classList.remove('visible');
+    });
+  });
+}
+
+// ---- DISEASE STATES ----
+
+const DISEASES = {
+  hfref:             { name: 'HFrEF', params: {Ees:1.0, Ea:2.2, EDV:180, B:0.025, HR:85, V0:30},
+                       desc: 'Reduced ejection fraction HF. ↓↓Contractility (Ees), ↑afterload, dilated LV. EF <40%.', category: 'Heart failure with reduced systolic function.' },
+  hfpef:             { name: 'HFpEF', params: {Ees:3.2, Ea:2.2, EDV:110, B:0.06, HR:75, V0:10},
+                       desc: 'Preserved EF but ↑diastolic stiffness (B). Normal Ees, ↑Ea, ↑EDP. Small stiff ventricle.', category: 'Diastolic dysfunction, impaired relaxation.' },
+  dcm:               { name: 'Dilated Cardiomyopathy', params: {Ees:0.8, Ea:2.0, EDV:220, B:0.02, HR:90, V0:40},
+                       desc: 'Severely dilated LV with ↓↓contractility. ↑↑EDV, ↑V0 (rightward shift). Very low EF.', category: 'End-stage dilated cardiomyopathy.' },
+  cardiogenic_shock: { name: 'Cardiogenic Shock', params: {Ees:0.6, Ea:2.5, EDV:200, B:0.03, HR:110, V0:35},
+                       desc: '↓↓↓Contractility with ↑afterload (compensatory vasoconstriction). Tachycardic. EF <20%, ↓CO.', category: 'SCAI Stage C/D shock.' },
+  septic_shock:      { name: 'Septic Shock (warm)', params: {Ees:1.2, Ea:0.6, EDV:150, B:0.02, HR:110, V0:15},
+                       desc: 'Distributive: ↓↓SVR (low Ea), mild myocardial depression, ↑HR. High-output, low-pressure state.', category: 'Vasodilatory/distributive shock.' },
+  hypovolemic_shock: { name: 'Hypovolemic Shock', params: {Ees:2.8, Ea:2.5, EDV:70, B:0.025, HR:120, V0:10},
+                       desc: '↓↓Preload (low EDV), compensatory ↑HR and vasoconstriction (↑Ea). Small loop, low SV.', category: 'Hemorrhage, dehydration.' },
+  aortic_stenosis:   { name: 'Aortic Stenosis', params: {Ees:3.0, Ea:3.5, EDV:120, B:0.045, HR:70, V0:5},
+                       desc: 'Fixed obstruction → ↑↑afterload (Ea). Compensatory concentric LVH (↑Ees, ↑B). ↑↑ESP, ↓SV.', category: 'Pressure overload → concentric hypertrophy.' },
+  mitral_stenosis:   { name: 'Mitral Stenosis', params: {Ees:2.5, Ea:1.8, EDV:85, B:0.025, HR:80, V0:10},
+                       desc: 'Restricted LV filling → ↓EDV. Normal contractility and afterload. Small loop, low SV.', category: 'Inflow obstruction limits preload.' },
+  aortic_regurg:     { name: 'Aortic Regurgitation', params: {Ees:1.8, Ea:1.0, EDV:190, B:0.02, HR:75, V0:25},
+                       desc: 'Volume overload → ↑↑EDV, eccentric remodeling (↑V0). ↓Effective Ea (regurgitant flow). Wide loop.', category: 'Combined volume + pressure overload.' },
+  mitral_regurg:     { name: 'Mitral Regurgitation', params: {Ees:2.0, Ea:0.8, EDV:170, B:0.02, HR:85, V0:15},
+                       desc: 'Low-impedance ejection into LA → ↓effective Ea. Volume overload → ↑EDV. High total SV but ↓forward SV.', category: 'Part of SV is regurgitant.' },
+  concentric_lvh:    { name: 'Concentric LVH', params: {Ees:3.5, Ea:2.5, EDV:100, B:0.05, HR:70, V0:5},
+                       desc: 'Wall thickening without chamber dilation. ↑Ees (supranormal contractility), ↑B (stiff), ↓cavity size.', category: 'Hypertension, AS response.' },
+  eccentric_lvh:     { name: 'Eccentric LVH', params: {Ees:1.5, Ea:1.8, EDV:170, B:0.02, HR:75, V0:25},
+                       desc: 'Chamber dilation with wall thinning. ↑EDV, ↑V0 (rightward shift). ↓Ees, relatively compliant (↓B).', category: 'Volume overload response (AR, MR).' },
+  constriction:      { name: 'Constrictive Pericarditis', params: {Ees:2.5, Ea:1.8, EDV:100, B:0.065, HR:85, V0:10},
+                       desc: 'Rigid pericardium limits filling → ↑↑B (steep EDPVR), ↓EDV. Normal systolic function. ↑EDP.', category: 'Dip-and-plateau physiology.' },
+  tamponade:         { name: 'Cardiac Tamponade', params: {Ees:2.5, Ea:2.2, EDV:80, B:0.06, HR:110, V0:10},
+                       desc: 'External compression → ↓↓EDV, ↑B, ↑Ea (compensatory). Tachycardic. Very small loop.', category: 'Pericardial effusion with hemodynamic compromise.' },
+  // Mixed Valve Disease
+  as_ar:             { name: 'AS + AR (Mixed Aortic)', params: {Ees:2.5, Ea:2.5, EDV:170, B:0.035, HR:75, V0:20},
+                       desc: 'Combined pressure + volume overload. Tall AND wide loop. Concentric + eccentric hypertrophy. Highest wall stress.', category: 'Bicuspid AV, calcific degeneration.' },
+  as_mr:             { name: 'AS + MR', params: {Ees:2.8, Ea:2.0, EDV:150, B:0.04, HR:80, V0:10},
+                       desc: 'AS pressure overload partially offset by MR "pop-off" into LA. ↑EDV from MR volume overload. Preserved EF.', category: 'Calcific AS + functional MR (common in elderly).' },
+  ms_mr:             { name: 'MS + MR (Rheumatic)', params: {Ees:2.2, Ea:1.0, EDV:100, B:0.025, HR:90, V0:10},
+                       desc: 'Restricted inflow (MS) + low-impedance regurgitant path (MR). Small loop, low pressures, high EF from MR unloading.', category: 'Rheumatic mitral valve disease.' },
+  ms_as:             { name: 'MS + AS (Rheumatic)', params: {Ees:3.0, Ea:3.5, EDV:80, B:0.045, HR:80, V0:5},
+                       desc: 'Worst combination: restricted inflow (MS) + outflow obstruction (AS). Tiny high-pressure loop. Very low CO.', category: 'Rheumatic multivalvular disease.' },
+};
+
+let activeDisease = null;
+
+function toggleDisease(diseaseId) {
+  // Auto-snapshot before first disease if no ghost
+  if (!activeDisease && !ghostLoop) {
+    takeSnapshot();
+  }
+
+  // If clicking same disease, deselect
+  if (activeDisease === diseaseId) {
+    activeDisease = null;
+  } else {
+    activeDisease = diseaseId;
+  }
+
+  // Update button states
+  document.querySelectorAll('.disease-btn').forEach(btn => {
+    btn.classList.toggle('active', btn.dataset.disease === activeDisease);
+  });
+
+  // Calculate target — disease params + drug deltas + MCS deltas
+  const target = calcFullParams();
+
+  // Animate transition
+  drugAnimFrom = { ...params };
+  drugAnimTo = target;
+  drugAnimStart = performance.now();
+  animatingDrugs = true;
+  requestAnimationFrame(animateDrugTransition);
+
+  updateDiseaseInfo();
+  updateStateBadge();
+}
+
+function updateDiseaseInfo() {
+  const clearBtn = document.getElementById('diseaseClearBtn');
+  if (!activeDisease) {
+    clearBtn.classList.remove('visible');
+  } else {
+    clearBtn.classList.add('visible');
+  }
+}
+
+function clearDisease() {
+  activeDisease = null;
+  document.querySelectorAll('.disease-btn').forEach(btn => btn.classList.remove('active'));
+
+  const target = calcFullParams();
+  drugAnimFrom = { ...params };
+  drugAnimTo = target;
+  drugAnimStart = performance.now();
+  animatingDrugs = true;
+  requestAnimationFrame(animateDrugTransition);
+
+  updateDiseaseInfo();
+  updateStateBadge();
+}
+
+function initDiseaseButtons() {
+  document.querySelectorAll('.disease-btn').forEach(btn => {
+    btn.addEventListener('click', () => toggleDisease(btn.dataset.disease));
+
+    const diseaseId = btn.dataset.disease;
+    const disease = DISEASES[diseaseId];
+    if (!disease) return;
+
+    btn.addEventListener('mouseenter', () => {
+      const tip = document.getElementById('globalTooltip');
+      tip.innerHTML = '<b>' + disease.name + '</b><br>' + disease.category;
+      tip.classList.add('visible');
+      const rect = btn.getBoundingClientRect();
+      tip.style.left = (rect.right + 10) + 'px';
+      tip.style.top = (rect.top + rect.height / 2) + 'px';
+      tip.style.transform = 'translateY(-50%)';
+      requestAnimationFrame(() => {
+        const tipRect = tip.getBoundingClientRect();
+        if (tipRect.right > window.innerWidth - 10) {
+          tip.style.left = (rect.left - tipRect.width - 10) + 'px';
+        }
+        if (tipRect.bottom > window.innerHeight - 10) {
+          tip.style.top = (window.innerHeight - tipRect.height - 10) + 'px';
+          tip.style.transform = 'none';
+        }
+      });
+    });
+
+    btn.addEventListener('mouseleave', () => {
+      document.getElementById('globalTooltip').classList.remove('visible');
+    });
+  });
+}
+
+// ---- MCS DEVICES ----
+
+const MCS_DEVICES = {
+  iabp: {
+    name: 'IABP',
+    Ea: -0.4, EDV: -5, Ees: 0, B: 0, HR: 0, V0: 0,
+    triangular: 0, // 0 = normal shape, 1 = fully triangular
+    flow: 0.5,
+    mech: 'Counterpulsation — diastolic augmentation + systolic unloading. ↓Afterload, modest ↑CO (~0.5 L/min). Least powerful MCS device.',
+    category: 'counterpulse'
+  },
+  impella_cp: {
+    name: 'Impella CP',
+    Ea: -0.4, EDV: -25, Ees: 0, B: 0, HR: 0, V0: 0,
+    triangular: 0.45,
+    flow: 3.5,
+    mech: 'Transvalvular axial pump (LV→Aorta). Direct LV unloading, ↓↓LVEDP, ↓↓MVO₂. Up to 3.5 L/min. Partial triangularization of PV loop.',
+    category: 'lvad'
+  },
+  impella_5: {
+    name: 'Impella 5.0',
+    Ea: -0.6, EDV: -45, Ees: 0, B: 0, HR: 0, V0: 0,
+    triangular: 0.85,
+    flow: 5.0,
+    mech: 'High-flow transvalvular pump. Near-complete LV unloading, ↓↓↓MVO₂. Up to 5 L/min. AV may not open. Triangular PV loop.',
+    category: 'lvad'
+  },
+  va_ecmo: {
+    name: 'VA-ECMO',
+    Ea: +1.2, EDV: +15, Ees: 0, B: 0, HR: 0, V0: 0,
+    triangular: 0,
+    flow: 5.0,
+    mech: 'Venous drainage → oxygenator → arterial return (retrograde). ↑↑Afterload, ↑LV distension, ↑↑MVO₂. Full cardiopulmonary support but WORSENS LV mechanics. May need LV venting.',
+    category: 'ecmo'
+  },
+  ecpella: {
+    name: 'ECPELLA',
+    Ea: -0.3, EDV: -35, Ees: 0, B: 0, HR: 0, V0: 0,
+    triangular: 0.8,
+    flow: 8.0,
+    mech: 'VA-ECMO + Impella. ECMO provides systemic perfusion; Impella unloads LV. Best of both: ↓↓↓MVO₂ + full circulatory support. PVA can approach near zero.',
+    category: 'combo'
+  }
+};
+
+let activeMCS = null;
+
+function toggleMCS(mcsId) {
+  // Auto-snapshot before first MCS if no ghost
+  if (!activeMCS && !ghostLoop) {
+    takeSnapshot();
+  }
+
+  // Mutually exclusive — clicking same deselects
+  if (activeMCS === mcsId) {
+    activeMCS = null;
+  } else {
+    activeMCS = mcsId;
+  }
+
+  // Update button states
+  document.querySelectorAll('.mcs-btn').forEach(btn => {
+    btn.classList.toggle('active', btn.dataset.mcs === activeMCS);
+  });
+
+  // Calculate target params: base (disease or baseline) + drug deltas + MCS deltas
+  const target = calcFullParams();
+
+  // Animate transition
+  drugAnimFrom = { ...params };
+  drugAnimTo = target;
+  drugAnimStart = performance.now();
+  animatingDrugs = true;
+  requestAnimationFrame(animateDrugTransition);
+
+  updateMCSInfo();
+  updateStateBadge();
+}
+
+function calcFullParams() {
+  // Start from disease or baseline
+  const base = getBaseParams();
+  const result = { ...base };
+
+  // Add drug deltas
+  activeDrugs.forEach(id => {
+    const d = DRUGS[id];
+    if (d.Ees) result.Ees += d.Ees;
+    if (d.Ea) result.Ea += d.Ea;
+    if (d.EDV) result.EDV += d.EDV;
+    if (d.B) result.B += d.B;
+  });
+
+  // Add MCS deltas
+  if (activeMCS) {
+    const m = MCS_DEVICES[activeMCS];
+    result.Ees += m.Ees;
+    result.Ea += m.Ea;
+    result.EDV += m.EDV;
+    result.B += m.B;
+    result.HR += m.HR;
+    result.V0 += m.V0;
+  }
+
+  // Clamp
+  result.Ees = Math.max(0.3, Math.min(5.0, result.Ees));
+  result.Ea = Math.max(0.3, Math.min(6.0, result.Ea));
+  result.EDV = Math.max(60, Math.min(250, result.EDV));
+  result.B = Math.max(0.005, Math.min(0.10, result.B));
+  result.HR = Math.max(40, Math.min(150, result.HR));
+  result.V0 = Math.max(0, Math.min(50, result.V0));
+
+  return result;
+}
+
+function getTriangularFactor() {
+  return activeMCS ? (MCS_DEVICES[activeMCS].triangular || 0) : 0;
+}
+
+function updateMCSInfo() {
+  const clearBtn = document.getElementById('mcsClearBtn');
+  if (!activeMCS) {
+    clearBtn.classList.remove('visible');
+  } else {
+    clearBtn.classList.add('visible');
+  }
+}
+
+function clearMCS() {
+  activeMCS = null;
+  document.querySelectorAll('.mcs-btn').forEach(btn => btn.classList.remove('active'));
+
+  const target = calcFullParams();
+  drugAnimFrom = { ...params };
+  drugAnimTo = target;
+  drugAnimStart = performance.now();
+  animatingDrugs = true;
+  requestAnimationFrame(animateDrugTransition);
+
+  updateMCSInfo();
+  updateStateBadge();
+}
+
+function initMCSButtons() {
+  document.querySelectorAll('.mcs-btn').forEach(btn => {
+    btn.addEventListener('click', () => toggleMCS(btn.dataset.mcs));
+
+    const mcsId = btn.dataset.mcs;
+    const device = MCS_DEVICES[mcsId];
+    if (!device) return;
+
+    btn.addEventListener('mouseenter', () => {
+      const tip = document.getElementById('globalTooltip');
+      tip.innerHTML = '<b>' + device.name + '</b><br>' + device.mech + '<br><span style="opacity:0.7;font-size:10px">Flow: ~' + device.flow + ' L/min</span>';
+      tip.classList.add('visible');
+      const rect = btn.getBoundingClientRect();
+      tip.style.left = (rect.right + 10) + 'px';
+      tip.style.top = (rect.top + rect.height / 2) + 'px';
+      tip.style.transform = 'translateY(-50%)';
+      requestAnimationFrame(() => {
+        const tipRect = tip.getBoundingClientRect();
+        if (tipRect.right > window.innerWidth - 10) {
+          tip.style.left = (rect.left - tipRect.width - 10) + 'px';
+        }
+        if (tipRect.bottom > window.innerHeight - 10) {
+          tip.style.top = (window.innerHeight - tipRect.height - 10) + 'px';
+          tip.style.transform = 'none';
+        }
+      });
+    });
+
+    btn.addEventListener('mouseleave', () => {
+      document.getElementById('globalTooltip').classList.remove('visible');
+    });
+  });
+}
+
+// ---- COLLAPSIBLE SECTIONS ----
+function toggleSection(headEl) {
+  headEl.parentElement.classList.toggle('collapsed');
+}
+
+// ---- STATE BADGE ----
+function updateStateBadge() {
+  const badge = document.getElementById('stateBadge');
+
+  if (!activeDisease && activeDrugs.size === 0 && !activeMCS) {
+    badge.classList.remove('visible');
+    return;
+  }
+
+  // Title line: disease + MCS + drug names
+  const nameParts = [];
+  if (activeDisease) {
+    nameParts.push('<span class="state-disease">' + DISEASES[activeDisease].name + '</span>');
+  }
+  if (activeMCS) {
+    nameParts.push('<span class="state-mcs">' + MCS_DEVICES[activeMCS].name + '</span>');
+  }
+  if (activeDrugs.size > 0) {
+    const names = [];
+    activeDrugs.forEach(id => names.push(DRUGS[id].name));
+    nameParts.push('<span class="state-drugs">' + names.join(' + ') + '</span>');
+  }
+
+  // Net effect summary — compare current params to BASELINE
+  const current = calcFullParams();
+  let effectLine = '';
+  if (current) {
+    const effects = [];
+    const dEes = current.Ees - BASELINE.Ees;
+    const dEa = current.Ea - BASELINE.Ea;
+    const dEDV = current.EDV - BASELINE.EDV;
+    const dB = current.B - BASELINE.B;
+    const dHR = current.HR - BASELINE.HR;
+    const dV0 = current.V0 - BASELINE.V0;
+
+    if (Math.abs(dEes) >= 0.1) effects.push('<span class="eff-item">' + arrow(dEes) + 'Contractility</span>');
+    if (Math.abs(dEa) >= 0.1) effects.push('<span class="eff-item">' + arrow(dEa) + 'Afterload</span>');
+    if (Math.abs(dEDV) >= 5) effects.push('<span class="eff-item">' + arrow(dEDV) + 'Preload</span>');
+    if (Math.abs(dB) >= 0.003) effects.push('<span class="eff-item">' + arrow(dB) + 'Stiffness</span>');
+    if (Math.abs(dHR) >= 5) effects.push('<span class="eff-item">' + arrow(dHR) + 'HR</span>');
+    if (Math.abs(dV0) >= 3) effects.push('<span class="eff-item">' + arrow(dV0) + 'V\u2080</span>');
+
+    if (effects.length) {
+      effectLine = '<div class="state-effects">' + effects.join('<span class="state-dot">\u00B7</span>') + '</div>';
+    }
+  }
+
+  badge.innerHTML = nameParts.join('<span class="state-sep">+</span>') + effectLine;
+  badge.classList.add('visible');
+}
+
+function arrow(val) {
+  if (val > 0) return '<span class="eff-up">\u2191</span>';
+  return '<span class="eff-down">\u2193</span>';
+}
+
+// ---- INDICES SIZE ----
+function changeIdxSize(delta) {
+  const overlay = document.getElementById('indicesOverlay');
+  let size = parseInt(overlay.dataset.size) + delta;
+  size = Math.max(1, Math.min(2, size));
+  overlay.dataset.size = size;
+  localStorage.setItem('pvloop_idx_size', size);
+}
+
+// ---- CLINICAL EXAMPLES ----
+const EXAMPLES = [
+  {
+    name: 'Cardiogenic Shock + Impella CP + Dobutamine',
+    disease: 'cardiogenic_shock',
+    mcs: 'impella_cp',
+    drugs: ['dobutamine']
+  },
+  {
+    name: 'HFrEF + VA-ECMO',
+    disease: 'hfref',
+    mcs: 'va_ecmo',
+    drugs: []
+  },
+  {
+    name: 'Cardiogenic Shock + ECPELLA + Milrinone',
+    disease: 'cardiogenic_shock',
+    mcs: 'ecpella',
+    drugs: ['milrinone']
+  }
+];
+let exampleIdx = -1;
+
+function loadExample() {
+  exampleIdx = (exampleIdx + 1) % EXAMPLES.length;
+  const ex = EXAMPLES[exampleIdx];
+
+  // Snapshot current state first for ghost comparison
+  if (!ghostLoop) takeSnapshot();
+
+  // Clear all current selections (no animation)
+  activeDrugs.clear();
+  activeDisease = null;
+  activeMCS = null;
+  document.querySelectorAll('.drug-btn').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('.disease-btn').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('.mcs-btn').forEach(b => b.classList.remove('active'));
+
+  // Apply disease
+  if (ex.disease) {
+    activeDisease = ex.disease;
+    const dBtn = document.querySelector('.disease-btn[data-disease="' + ex.disease + '"]');
+    if (dBtn) dBtn.classList.add('active');
+  }
+
+  // Apply MCS
+  if (ex.mcs) {
+    activeMCS = ex.mcs;
+    const mBtn = document.querySelector('.mcs-btn[data-mcs="' + ex.mcs + '"]');
+    if (mBtn) mBtn.classList.add('active');
+  }
+
+  // Apply drugs
+  ex.drugs.forEach(d => {
+    activeDrugs.add(d);
+    const btn = document.querySelector('.drug-btn[data-drug="' + d + '"]');
+    if (btn) btn.classList.add('active');
+  });
+
+  // Calculate target and animate
+  const target = calcFullParams();
+  drugAnimFrom = { ...params };
+  drugAnimTo = target;
+  drugAnimStart = performance.now();
+  animatingDrugs = true;
+  requestAnimationFrame(animateDrugTransition);
+
+  updateDrugSummary();
+  updateDiseaseInfo();
+  updateMCSInfo();
+  updateStateBadge();
+
+  // Brief flash on button to indicate which example loaded
+  const btn = document.getElementById('btnExample');
+  btn.textContent = (exampleIdx + 1) + '/3';
+  setTimeout(() => { btn.textContent = 'Example'; }, 1200);
 }
 
 // ---- DARK MODE ----
@@ -1493,7 +2504,16 @@ function init() {
     document.getElementById('darkToggle').classList.add('active');
   }
 
+  // Restore indices size
+  const savedSize = localStorage.getItem('pvloop_idx_size');
+  if (savedSize !== null) {
+    document.getElementById('indicesOverlay').dataset.size = savedSize;
+  }
+
   updateSliderDisplays();
+  initDrugButtons();
+  initDiseaseButtons();
+  initMCSButtons();
   resizeCanvas();
 
   // Start animation
