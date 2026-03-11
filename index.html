@@ -3000,12 +3000,12 @@ function toggleDark() {
   const btn = document.getElementById('darkToggle');
   const isDark = document.body.classList.contains('dark');
   btn.textContent = isDark ? 'Light Mode' : 'Dark Mode';
-  try { localStorage.setItem('rhc_dark', isDark ? '1' : '0'); } catch(e) {}
+  try { localStorage.setItem('cathmath_dark', isDark ? '1' : '0'); } catch(e) {}
   handleVo2Source();
 }
 // Default to dark mode (unless explicitly set to light)
 try {
-  const pref = localStorage.getItem('rhc_dark');
+  const pref = localStorage.getItem('cathmath_dark');
   if (pref === '0') {
     // User explicitly chose light mode
     document.body.classList.remove('dark');

@@ -2541,14 +2541,14 @@ function toggleDark() {
   document.getElementById('darkToggle').textContent = isDark ? 'Light Mode' : 'Dark Mode';
   if (isDark) document.getElementById('darkToggle').classList.add('active');
   else document.getElementById('darkToggle').classList.remove('active');
-  localStorage.setItem('pvloop_dark', isDark ? '1' : '0');
+  localStorage.setItem('cathmath_dark', isDark ? '1' : '0');
   requestDraw();
 }
 
 // ---- INIT ----
 function init() {
   // Restore dark mode — default to dark if no preference saved
-  const darkPref = localStorage.getItem('pvloop_dark');
+  const darkPref = localStorage.getItem('cathmath_dark');
   if (darkPref === '0') {
     document.body.classList.remove('dark');
     document.getElementById('darkToggle').textContent = 'Dark Mode';
