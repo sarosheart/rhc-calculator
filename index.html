@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>RHC Hemodynamic Calculator</title>
+<title>CathMath — Hemodynamic Tools</title>
 <style>
   :root {
     --navy: #0d2240;
@@ -508,8 +508,8 @@
 
 <div class="header">
   <div>
-    <h1>RHC Hemodynamic Calculator</h1>
-    <div style="font-size:11px; font-weight:400; opacity:0.7; margin-top:1px;">Developed by Dr. Saro Avedikian, MD, MPH — Cardiovascular Disease Fellow</div>
+    <h1>CathMath</h1>
+    <div style="font-size:11px; font-weight:400; opacity:0.7; margin-top:1px;">Developed by Dr. Saro Avedikian, MD, MPH</div>
   </div>
   <div class="header-btns">
     <button onclick="loadExample()">Load Example</button>
@@ -521,6 +521,7 @@
 <div class="tab-bar">
   <button class="tab-btn active" id="tabRhc" onclick="switchTab('rhc')">RHC Hemodynamics</button>
   <button class="tab-btn" id="tabShunt" onclick="switchTab('shunt')">Shunts</button>
+  <button class="tab-btn" onclick="window.location.href='/pvloop/'">PV Loops</button>
 </div>
 
 <div class="container">
