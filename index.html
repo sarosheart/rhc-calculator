@@ -540,6 +540,19 @@ body {
   var pullbackCtx = pullbackCanvas.getContext('2d');
   var TOP = 58, BOT = 76;
 
+  // ── Animation cache: play once per device, refresh after 48 hours ──
+  var ANIM_KEY = 'cathmath_anim_seen';
+  var ANIM_EXPIRY_MS = 48 * 60 * 60 * 1000; // 48 hours
+  var animSeen = false;
+  try {
+    var ts = localStorage.getItem(ANIM_KEY);
+    if (ts && (Date.now() - parseInt(ts, 10)) < ANIM_EXPIRY_MS) animSeen = true;
+  } catch(e) {}
+
+  function markAnimSeen() {
+    try { localStorage.setItem(ANIM_KEY, Date.now().toString()); } catch(e) {}
+  }
+
   // ── Pullback waveform generators (mmHg on common 0-30 scale) ──
   function hPcwp(beat) {
     var v = 8;
@@ -662,8 +675,13 @@ body {
   }
 
   // ══════ TIMELINE ══════
+  // Skip animation if already seen on this device within 48 hours
+  if (animSeen) {
+    skipToEnd(true); // true = silent skip (no scroll)
+  }
+
   // 1. Logo reveal → EKG sweep
-  setTimeout(function() {
+  if (!animSeen) setTimeout(function() {
     base.classList.add('revealed');
     base.style.opacity = '1';
     base.style.transform = 'scale(1)';
@@ -723,23 +741,29 @@ body {
      ══════════════════════════════════════ */
   var cardsRevealed = false;
 
-  function revealCards() {
+  function revealCards(instant) {
     if (cardsRevealed) return;
     cardsRevealed = true;
+    markAnimSeen();
     document.querySelector('.section-divider').classList.add('show');
     document.getElementById('sectionLabel').classList.add('show');
 
     var cards = document.querySelectorAll('.tool-card');
-    cards.forEach(function(c, i) {
-      setTimeout(function() { c.classList.add('show'); }, 200 + i * 150);
-    });
+    if (instant) {
+      cards.forEach(function(c) { c.classList.add('show'); });
+    } else {
+      cards.forEach(function(c, i) {
+        setTimeout(function() { c.classList.add('show'); }, 200 + i * 150);
+      });
+    }
 
-    // Start card animations after cards are visible (2 loops on initial play)
+    // Start card animations after cards are visible (2 loops on initial play, 1 on skip)
+    var loops = instant ? 1 : 2;
     setTimeout(function() {
-      startRhcAnimation(2);
-      startPvAnimation(2);
-      startEkgAnimation(2);
-    }, 600);
+      startRhcAnimation(loops);
+      startPvAnimation(loops);
+      startEkgAnimation(loops);
+    }, instant ? 100 : 600);
   }
 
   // Fade scroll hint on scroll
@@ -748,9 +772,9 @@ body {
     if (window.scrollY > 80) scrollHintEl.style.opacity = '0';
   }, { passive: true });
 
-  // ── CLICK TO SKIP — instantly show everything ──
+  // ── CLICK TO SKIP / AUTO-SKIP — instantly show everything ──
   var skipped = false;
-  function skipToEnd() {
+  function skipToEnd(silent) {
     if (skipped || cardsRevealed) return;
     skipped = true;
 
@@ -812,11 +836,13 @@ body {
     // Show scroll hint
     scrollHintEl.classList.add('show');
 
-    // Reveal cards + scroll to them
-    revealCards();
-    setTimeout(function() {
-      document.getElementById('toolsSection').scrollIntoView({ behavior: 'smooth' });
-    }, 300);
+    // Reveal cards (instant mode, no stagger) — scroll only on manual skip
+    revealCards(true);
+    if (!silent) {
+      setTimeout(function() {
+        document.getElementById('toolsSection').scrollIntoView({ behavior: 'smooth' });
+      }, 300);
+    }
   }
 
   document.addEventListener('click', skipToEnd);
