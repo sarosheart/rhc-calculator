@@ -3,3321 +3,1312 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>CathMath — Hemodynamic Tools</title>
+<title>CathMath — Hemodynamics Visualized</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600;9..40,700;9..40,800&display=swap" rel="stylesheet">
 <style>
-  :root {
-    --navy: #0d2240;
-    --blue: #1565c0;
-    --light-bg: #f4f6f9;
-    --card-bg: #ffffff;
-    --border: #d0d8e0;
-    --green: #2e7d32;
-    --red: #c62828;
-    --amber: #ef6c00;
-    --yellow-bg: #fffde7;
-    --red-bg: #fce4ec;
-    --green-bg: #e8f5e9;
-  }
-  * { margin: 0; padding: 0; box-sizing: border-box; }
-  body {
-    font-family: -apple-system, "Helvetica Neue", Helvetica, Arial, sans-serif;
-    font-size: 14px;
-    line-height: 1.4;
-    color: #1a1a1a;
-    background: var(--light-bg);
-  }
+:root {
+  --navy: #0d2240;
+  --navy-deep: #091a33;
+  --navy-card: #0c1f3a;
+  --accent: #00e676;
+  --accent-dim: rgba(0,230,118,0.12);
+  --red-trace: #ff5252;
+  --blue-trace: #4a90d9;
+  --purple-trace: #9c6ade;
+  --text: rgba(255,255,255,0.92);
+  --text-dim: rgba(255,255,255,0.5);
+  --text-muted: rgba(255,255,255,0.22);
+  --border: rgba(255,255,255,0.07);
+  --border-hover: rgba(0,230,118,0.22);
+}
 
-  /* SITE NAV */
-  .site-nav {
-    background: #0a1628;
-    color: #fff;
-    display: flex;
-    align-items: center;
-    padding: 0 24px;
-    height: 42px;
-    position: sticky;
-    top: 0;
-    z-index: 200;
-    border-bottom: 1px solid rgba(255,255,255,0.06);
-  }
-  .nav-brand { font-size: 16px; font-weight: 800; letter-spacing: 0.5px; margin-right: 32px; color: #fff; }
-  .nav-tabs { display: flex; gap: 0; height: 100%; }
-  .nav-tab {
-    display: flex; align-items: center; padding: 0 18px; height: 42px;
-    font-size: 13px; font-weight: 600; color: rgba(255,255,255,0.5);
-    text-decoration: none; border-bottom: 2px solid transparent; transition: color 0.2s, border-color 0.2s;
-  }
-  .nav-tab:hover { color: rgba(255,255,255,0.85); }
-  .nav-tab.active { color: #fff; border-bottom-color: #4a90d9; }
-  .nav-right { margin-left: auto; display: flex; align-items: center; gap: 16px; }
-  .nav-credit { font-size: 11px; opacity: 0.5; font-weight: 400; }
-  .nav-right button {
-    background: rgba(255,255,255,0.1); color: #fff; border: 1px solid rgba(255,255,255,0.2);
-    padding: 4px 12px; border-radius: 4px; cursor: pointer; font-size: 11px; font-weight: 600; transition: background 0.2s;
-  }
-  .nav-right button:hover { background: rgba(255,255,255,0.2); }
+* { margin:0; padding:0; box-sizing:border-box; }
 
-  /* PAGE CONTROLS */
-  .page-controls {
-    background: var(--navy); color: #fff;
-    display: flex; align-items: center; justify-content: space-between;
-    padding: 6px 24px;
-  }
-  .page-controls .page-title { display: flex; align-items: baseline; gap: 12px; }
-  .page-controls h1 { font-size: 16px; font-weight: 700; letter-spacing: 0.3px; }
-  .page-controls .page-sub { font-size: 11px; opacity: 0.6; }
-  .header-btns { display: flex; gap: 8px; }
-  .header-btns button {
-    background: rgba(255,255,255,0.12);
-    color: #fff;
-    border: 1px solid rgba(255,255,255,0.25);
-    padding: 5px 14px;
-    border-radius: 5px;
-    cursor: pointer;
-    font-size: 12px;
-    font-weight: 600;
-    transition: background 0.2s, border-color 0.2s;
-  }
-  .header-btns button:hover { background: rgba(255,255,255,0.22); border-color: rgba(255,255,255,0.4); }
+html { scroll-behavior: smooth; }
 
-  /* LAYOUT */
-  .container {
-    display: flex;
-    gap: 0;
-    height: calc(100vh - 120px);
-  }
-  .panel {
-    overflow-y: auto;
-    padding: 16px;
-  }
-  .panel-left {
-    flex: 1;
-    border-right: 1px solid var(--border);
-    background: #fff;
-    min-width: 420px;
-  }
-  .panel-right {
-    flex: 1;
-    background: var(--light-bg);
-    min-width: 420px;
-  }
+body {
+  font-family: 'DM Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+  background: var(--navy);
+  color: var(--text);
+  min-height: 100vh;
+  overflow-x: hidden;
+}
 
-  /* SECTIONS */
-  .section {
-    background: var(--card-bg);
-    border: 1px solid var(--border);
-    border-radius: 8px;
-    margin-bottom: 12px;
-    overflow: hidden;
-    box-shadow: 0 1px 4px rgba(0,0,0,0.06);
-    transition: box-shadow 0.2s;
-  }
-  /* Collapsible sections */
-  .section-head.collapsible { cursor: pointer; display: flex; justify-content: space-between; align-items: center; }
-  .section-head.collapsible::after { content: '\25B2'; font-size: 9px; opacity: 0.6; transition: transform 0.2s; }
-  .section.collapsed .section-head.collapsible::after { transform: rotate(180deg); }
-  .section.collapsed > .section-body { display: none; }
-  .section:hover { box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
-  .section-head {
-    background: var(--navy);
-    color: #fff;
-    font-size: 12px;
-    font-weight: 700;
-    padding: 7px 14px;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-  }
-  .section-body { padding: 10px 14px; }
+/* ══════ HERO ══════ */
+.hero {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 62vh;
+  padding: 36px 24px 28px;
+  position: relative;
+}
 
-  /* INPUT GROUPS */
-  .input-row {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    margin-bottom: 6px;
-    flex-wrap: wrap;
-  }
-  .input-row label {
-    font-weight: 700;
-    font-size: 13px;
-    color: var(--navy);
-    min-width: 52px;
-  }
-  .input-group {
-    display: flex;
-    align-items: center;
-    gap: 3px;
-  }
-  .input-group .sep {
-    color: #999;
-    font-weight: 700;
-    font-size: 16px;
-  }
-  .input-group .label-sm {
-    font-size: 11px;
-    color: #777;
-    min-width: 32px;
-  }
-  input[type="number"] {
-    width: 68px;
-    padding: 5px 6px;
-    border: 1px solid var(--border);
-    border-radius: 5px;
-    font-size: 14px;
-    font-family: "SF Mono", "Menlo", monospace;
-    text-align: center;
-    background: #fafbfc;
-    transition: border-color 0.2s, box-shadow 0.2s, background 0.2s;
-  }
-  input[type="number"]:focus {
-    outline: none;
-    border-color: var(--blue);
-    box-shadow: 0 0 0 3px rgba(21,101,192,0.12);
-    background: #fff;
-  }
-  input[type="number"]::placeholder { color: #c0c0c0; font-size: 11px; }
-  input[type="number"]::-webkit-inner-spin-button,
-  input[type="number"]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
-  input[type="number"] { -moz-appearance: textfield; }
-  .unit { font-size: 11px; color: #888; margin-left: 2px; }
+/* Subtle EKG-paper grid, masked to center */
+.hero::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image:
+    linear-gradient(rgba(255,255,255,0.018) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,0.018) 1px, transparent 1px);
+  background-size: 20px 20px;
+  -webkit-mask-image: radial-gradient(ellipse 70% 65% at 50% 45%, black 20%, transparent 70%);
+  mask-image: radial-gradient(ellipse 70% 65% at 50% 45%, black 20%, transparent 70%);
+  pointer-events: none;
+}
 
-  /* SELECTS & CHECKBOXES */
-  select {
-    padding: 5px 8px;
-    border: 1px solid var(--border);
-    border-radius: 5px;
-    font-size: 13px;
-    background: #fafbfc;
-    cursor: pointer;
-    transition: border-color 0.2s;
-  }
-  select:focus { outline: none; border-color: var(--blue); box-shadow: 0 0 0 3px rgba(21,101,192,0.12); }
-  .check-row {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    font-size: 13px;
-    margin: 4px 0;
-  }
-  .check-row input[type="checkbox"] { width: 16px; height: 16px; cursor: pointer; }
+.logo-wrap {
+  position: relative;
+  width: 800px;
+  max-width: 90vw;
+}
 
-  .radio-row {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    margin: 6px 0;
-    font-size: 13px;
-  }
-  .radio-row label { min-width: auto; font-weight: 600; cursor: pointer; }
-  .radio-row input[type="radio"] { cursor: pointer; }
+.logo-base {
+  display: block;
+  width: 100%;
+  height: auto;
+  opacity: 0;
+  transform: scale(0.96);
+  animation: logoReveal 1.2s cubic-bezier(0.16,1,0.3,1) 0.3s forwards;
+  filter: drop-shadow(0 0 30px rgba(0,230,118,0.06));
+}
 
-  .subsection { font-size: 11px; color: #888; text-transform: uppercase; letter-spacing: 0.5px; margin: 8px 0 4px 0; font-weight: 700; border-bottom: 1px solid #eee; padding-bottom: 2px; }
+.logo-ekg {
+  position: absolute;
+  top: 0; left: 0;
+  width: 100%; height: auto;
+  opacity: 0;
+  pointer-events: none;
+  clip-path: polygon(0% 58%, 0% 58%, 0% 76%, 0% 76%);
+}
 
-  /* RESULTS */
-  .result-row {
-    display: flex;
-    align-items: baseline;
-    gap: 8px;
-    padding: 4px 6px;
-    margin: 0 -6px;
-    border-bottom: 1px solid #f0f2f5;
-    border-radius: 4px;
-    transition: background 0.15s;
-  }
-  .result-row:hover { background: rgba(21,101,192,0.03); }
-  .result-row:last-child { border-bottom: none; }
-  .result-label {
-    font-weight: 600;
-    font-size: 13px;
-    color: #444;
-    min-width: 80px;
-  }
-  .result-value {
-    font-family: "SF Mono", "Menlo", monospace;
-    font-size: 15px;
-    font-weight: 700;
-    min-width: 100px;
-  }
-  .result-unit { font-size: 12px; color: #888; }
-  .result-range { font-size: 11px; color: #aaa; font-style: italic; }
-  .result-flag {
-    font-size: 11px;
-    font-weight: 700;
-    padding: 2px 8px;
-    border-radius: 10px;
-    letter-spacing: 0.2px;
-    transition: all 0.2s;
-  }
-  .flag-low { background: #fce4ec; color: var(--red); }
-  .flag-high { background: #fff3e0; color: var(--amber); }
-  .flag-severe { background: #ffcdd2; color: #b71c1c; }
-  .flag-normal { background: #e8f5e9; color: var(--green); }
+@keyframes logoReveal {
+  0% { opacity:0; transform:scale(0.96); }
+  60% { opacity:1; transform:scale(1); }
+  100% { opacity:1; transform:scale(1); filter:drop-shadow(0 0 40px rgba(0,230,118,0.10)); }
+}
 
-  .val-normal { color: var(--green); }
-  .val-abnormal { color: var(--red); }
-  .val-borderline { color: var(--amber); }
-  .val-na { color: #bbb; }
+.logo-base.revealed {
+  opacity: 1;
+  transform: scale(1);
+  animation: breathe 5s ease-in-out infinite;
+}
 
-  /* WARNINGS */
-  .warning-box {
-    background: var(--yellow-bg);
-    border-left: 3px solid #f9a825;
-    padding: 6px 10px;
-    margin: 6px 0;
-    font-size: 12px;
-    border-radius: 0 4px 4px 0;
-  }
-  .error-box {
-    background: var(--red-bg);
-    border-left: 3px solid var(--red);
-    padding: 6px 10px;
-    margin: 6px 0;
-    font-size: 12px;
-    border-radius: 0 4px 4px 0;
-  }
-  .info-box {
-    background: #e3f2fd;
-    border-left: 3px solid var(--blue);
-    padding: 6px 10px;
-    margin: 6px 0;
-    font-size: 12px;
-    border-radius: 0 4px 4px 0;
-  }
+@keyframes breathe {
+  0%,100% { filter:drop-shadow(0 0 30px rgba(0,230,118,0.06)); }
+  50% { filter:drop-shadow(0 0 50px rgba(0,230,118,0.15)); }
+}
 
-  /* COPY SECTION */
-  .copy-section {
-    background: var(--card-bg);
-    border: 1px solid var(--border);
-    border-radius: 8px;
-    margin-top: 12px;
-    overflow: hidden;
-    box-shadow: 0 1px 4px rgba(0,0,0,0.06);
-  }
-  .copy-head {
-    background: #2c3e50;
-    color: #fff;
-    font-size: 12px;
-    font-weight: 700;
-    padding: 8px 14px;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-  }
-  .copy-btn {
-    background: #43a047;
-    color: #fff;
-    border: none;
-    padding: 5px 18px;
-    border-radius: 5px;
-    cursor: pointer;
-    font-size: 12px;
-    font-weight: 700;
-    transition: background 0.2s, transform 0.1s;
-  }
-  .copy-btn:hover { background: #388e3c; }
-  .copy-btn:active { transform: scale(0.97); }
-  .copy-btn.copied { background: #1565c0; }
-  .copy-section textarea {
-    width: 100%;
-    min-height: 300px;
-    padding: 12px 14px;
-    font-family: "SF Mono", "Menlo", "Courier New", monospace;
-    font-size: 12px;
-    line-height: 1.55;
-    border: none;
-    resize: vertical;
-    color: #333;
-    background: #fafbfc;
-  }
+.hero-url {
+  opacity: 0;
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+  color: rgba(255,255,255,0.55);
+  margin-top: 14px;
+  transition: opacity 0.8s ease;
+}
 
-  /* HELPERS */
-  .hint { font-size: 11px; color: #999; margin-top: 2px; }
-  .divider { border-top: 1px solid #e0e0e0; margin: 8px 0; }
-  .flex-gap { display: flex; gap: 12px; flex-wrap: wrap; }
-  .bold { font-weight: 700; }
+.hero-credit {
+  opacity: 0;
+  font-size: 11px;
+  letter-spacing: 0.15em;
+  color: rgba(255,255,255,0.3);
+  margin-top: 14px;
+  transition: opacity 0.8s ease;
+}
 
-  /* TD RUNS */
-  .td-runs { display: flex; gap: 4px; align-items: center; flex-wrap: wrap; }
-  .td-runs input { width: 62px; }
+.hero-url.show, .hero-credit.show { opacity: 1; }
 
-  @media (max-width: 900px) {
-    .container { flex-direction: column; height: auto; }
-    .panel-left, .panel-right { min-width: unset; border-right: none; }
-    .panel-left { border-bottom: 2px solid var(--border); }
-  }
+/* Swan-Ganz catheter */
+.swan-wrap {
+  width: 520px;
+  max-width: 72vw;
+  height: 28px;
+  margin-top: 6px;
+  overflow: visible;
+}
 
-  /* TAB BAR */
-  .tab-bar {
-    display: flex;
-    background: #152238;
-    padding: 0 24px;
-    gap: 0;
-  }
-  .tab-btn {
-    background: transparent;
-    color: rgba(255,255,255,0.55);
-    border: none;
-    padding: 8px 20px;
-    font-size: 12px;
-    font-weight: 600;
-    cursor: pointer;
-    border-bottom: 2px solid transparent;
-    margin-bottom: -2px;
-    transition: color 0.2s, border-color 0.2s;
-  }
-  .tab-btn:hover { color: rgba(255,255,255,0.85); }
-  .tab-btn.active { color: #fff; border-bottom-color: #4a90d9; }
+.swan-wrap svg {
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
 
-  /* TABLE STYLES */
-  table.vals { border-collapse: collapse; width: 100%; }
-  table.vals th, table.vals td { padding: 3px 8px; text-align: left; border-bottom: 1px solid #eee; font-size: 11px; }
-  table.vals th { font-weight: 700; color: var(--navy); border-bottom: 2px solid var(--border); }
-  table.vals tr.severe td { color: var(--red); font-weight: 700; }
+.swan-shaft {
+  fill: none;
+  stroke: #c8a84e;
+  stroke-width: 2.4;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-dasharray: 620;
+  stroke-dashoffset: 620;
+  opacity: 0.7;
+}
 
-  /* DARK MODE */
-  body.dark {
-    --light-bg: #1a1d23;
-    --card-bg: #23272e;
-    --border: #3a3f4b;
-    --navy: #151b28;
-    color: #d8dce4;
-  }
-  body.dark .site-nav { background: #060b14; }
-  body.dark .page-controls { background: #101520; }
-  body.dark .panel-left { background: #1e2128; border-right-color: #3a3f4b; }
-  body.dark .panel-right { background: #1a1d23; }
-  body.dark .section { border-color: #3a3f4b; background: #23272e; }
-  body.dark .section-head { background: #1a2236; }
-  body.dark input[type="number"] {
-    background: #2a2e37; border-color: #3a3f4b; color: #d8dce4;
-  }
-  body.dark input[type="number"]:focus {
-    border-color: #4a90d9; box-shadow: 0 0 0 2px rgba(74,144,217,0.2); background: #2e323c;
-  }
-  body.dark input[type="number"]::placeholder { color: #6a7080; }
-  body.dark select { background: #2a2e37; border-color: #3a3f4b; color: #d8dce4; }
-  body.dark .input-row label { color: #8ab4f8; }
-  body.dark .result-label { color: #b0b8c4; }
-  body.dark .result-range { color: #8890a0; }
-  body.dark .result-unit { color: #8890a0; }
-  body.dark .result-row { border-bottom-color: #2e323c; }
-  body.dark .hint { color: #8890a0; }
-  body.dark .label-sm { color: #9098a8; }
-  body.dark .sep { color: #788; }
-  body.dark .unit { color: #8890a0; }
-  body.dark .subsection { color: #9098a8; border-bottom-color: #3a3f4b; }
-  body.dark .divider { border-top-color: #333; }
-  body.dark .warning-box { background: #332b1a; border-left-color: #b8860b; color: #e8d5a0; }
-  body.dark .error-box { background: #331a1a; border-left-color: #c62828; color: #e8a0a0; }
-  body.dark .info-box { background: #1a2533; border-left-color: #4a90d9; color: #a0c4e8; }
-  body.dark .copy-head { background: #1a1d23; }
-  body.dark .copy-section textarea { background: #1e2128; color: #d0d4dc; border-top: 1px solid #333; }
-  body.dark .flag-low { background: #3d1f2a; color: #ef9a9a; }
-  body.dark .flag-high { background: #3d2f1f; color: #ffcc80; }
-  body.dark .flag-severe { background: #4a1a1a; color: #ef5350; }
-  body.dark .flag-normal { background: #1f3d2a; color: #81c784; }
-  body.dark .val-normal { color: #66bb6a; }
-  body.dark .val-abnormal { color: #ef5350; }
-  body.dark .val-borderline { color: #ffa726; }
-  body.dark .tab-bar { background: #0d1117; border-top: 1px solid rgba(255,255,255,0.04); }
-  body.dark .tab-btn.active { border-bottom-color: #4a90d9; }
-  body.dark .section-head.collapsible::after { opacity: 0.4; }
-  body.dark table.vals th { color: #8ab4f8; border-bottom-color: #3a3f4b; }
-  body.dark table.vals td { border-bottom-color: #2e323c; }
-  body.dark table.vals tr.severe td { color: #ef5350; }
+.swan-lumen {
+  fill: none;
+  stroke: #d4b860;
+  stroke-width: 0.8;
+  stroke-linecap: round;
+  stroke-dasharray: 620;
+  stroke-dashoffset: 620;
+  opacity: 0.35;
+}
 
-  /* AFIB GORLIN */
-  .afib-toggle {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    background: #fffde7;
-    border: 1px solid #f9a825;
-    border-radius: 6px;
-    padding: 6px 10px;
-    margin-bottom: 8px;
-    font-size: 13px;
-    font-weight: 600;
-    color: #7b6b00;
-  }
-  .afib-toggle input[type="checkbox"] { width: 16px; height: 16px; cursor: pointer; }
-  .afib-toggle label { cursor: pointer; min-width: auto; font-weight: 600; }
-  .afib-beats-table {
-    width: 100%;
-    border-collapse: collapse;
-    margin: 4px 0;
-    font-size: 12px;
-  }
-  .afib-beats-table th {
-    background: var(--navy);
-    color: #fff;
-    padding: 4px 6px;
-    font-size: 10px;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 0.3px;
-  }
-  .afib-beats-table td {
-    padding: 2px 4px;
-    border-bottom: 1px solid #eee;
-    text-align: center;
-  }
-  .afib-beats-table td:first-child {
-    font-weight: 700;
-    color: #888;
-    font-size: 11px;
-    width: 32px;
-  }
-  .afib-beats-table input[type="number"] { width: 64px; font-size: 12px; padding: 3px 4px; }
-  .afib-beats-table .af-result {
-    font-family: "SF Mono", "Menlo", monospace;
-    font-size: 12px;
-    font-weight: 700;
-    color: var(--navy);
-    min-width: 50px;
-  }
-  .afib-avg-row {
-    background: #e8f5e9;
-    border: 1px solid #43a047;
-    border-radius: 6px;
-    padding: 6px 10px;
-    margin: 6px 0;
-    font-size: 13px;
-    font-weight: 700;
-    color: #2e7d32;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-  }
-  .afib-avg-row .avg-value {
-    font-family: "SF Mono", "Menlo", monospace;
-    font-size: 16px;
-  }
-  .afib-detail {
-    background: #f5f5f5;
-    border: 1px solid #ddd;
-    border-radius: 6px;
-    padding: 8px 10px;
-    margin: 6px 0;
-    font-size: 11px;
-    font-family: "SF Mono", "Menlo", monospace;
-    line-height: 1.6;
-  }
+.swan-balloon {
+  fill: #c8a84e;
+  opacity: 0;
+  transform-origin: 500px 14px;
+  transform: scale(0);
+}
 
-  /* AFIB DARK MODE */
-  body.dark .afib-toggle { background: #332b1a; border-color: #b8860b; color: #e8d5a0; }
-  body.dark .afib-beats-table th { background: #1a2236; }
-  body.dark .afib-beats-table td { border-bottom-color: #3a3f4b; }
-  body.dark .afib-beats-table td:first-child { color: #9098a8; }
-  body.dark .afib-beats-table .af-result { color: #8ab4f8; }
-  body.dark .afib-avg-row { background: #1f3d2a; border-color: #43a047; color: #81c784; }
-  body.dark .afib-detail { background: #2a2e37; border-color: #3a3f4b; color: #b0b8c4; }
+.swan-mark {
+  stroke: rgba(0,0,0,0.4);
+  stroke-width: 2.6;
+  stroke-linecap: butt;
+}
 
-  /* SEP/DFP PRESSURE TRACING DIAGRAM */
-  .sep-dfp-diagram { margin: 10px 0 4px; }
-  .sep-dfp-diagram summary { color: #1565c0; cursor: pointer; font-size: 12px; font-weight: 600; }
-  .sep-dfp-diagram summary:hover { text-decoration: underline; }
-  body.dark .sep-dfp-diagram summary { color: #64b5f6; }
-  body.dark .sep-dfp-diagram .dg-axis { stroke: #666; }
-  body.dark .sep-dfp-diagram .dg-tick { stroke: #666; }
-  body.dark .sep-dfp-diagram .dg-lbl { fill: #999; }
-  body.dark .sep-dfp-diagram .dg-land { stroke: #555; }
-  body.dark .sep-dfp-diagram .dg-ecg { stroke: #ef9a9a; }
-  body.dark .sep-dfp-diagram .dg-ecg-lbl { fill: #ef9a9a; }
+.swan-shaft.animate,
+.swan-lumen.animate {
+  transition: stroke-dashoffset 1.6s cubic-bezier(0.22,0.61,0.36,1);
+  stroke-dashoffset: 0;
+}
 
-  /* Gorlin results headings */
-  .gorlin-heading { font-weight:700; font-size:12px; color:var(--navy); }
-  body.dark .gorlin-heading { color: #8ab4f8; }
-  body.dark #mvaResults > .gorlin-heading { border-top-color: #3a3f4b; }
-  body.dark #ava_math, body.dark #mva_math { color: #8890a0; }
+.swan-balloon.inflate {
+  transition: opacity 0.3s ease, transform 0.4s cubic-bezier(0.34,1.56,0.64,1);
+  opacity: 0.6;
+  transform: scale(1);
+}
 
+/* Pullback waveform canvas */
+#pullbackCanvas {
+  display: block;
+  width: 700px;
+  max-width: 85vw;
+  height: 100px;
+  margin-top: 8px;
+  opacity: 0;
+  transition: opacity 0.4s ease;
+}
+
+/* Chamber labels */
+.chamber-labels {
+  width: 700px;
+  max-width: 85vw;
+  display: flex;
+  justify-content: space-around;
+  margin-top: 2px;
+  opacity: 0;
+  transition: opacity 0.8s ease;
+}
+
+.chamber-labels.show { opacity: 1; }
+
+.chamber-label {
+  font-family: 'DM Sans', -apple-system, sans-serif;
+  font-size: 9px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  opacity: 0;
+  transition: opacity 0.5s ease;
+}
+
+.chamber-label.show { opacity: 1; }
+
+.lbl-pcwp, .lbl-pa, .lbl-rv, .lbl-ra { color: rgba(220,80,80,0.5); }
+
+/* Scroll indicator */
+.scroll-hint {
+  position: absolute;
+  bottom: 10px;
+  left: 50%;
+  transform: translateX(-50%);
+  opacity: 0;
+  transition: opacity 1s ease 0.5s;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+}
+
+.scroll-hint.show { opacity: 1; }
+
+.scroll-hint span {
+  font-size: 10px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+.scroll-chevron {
+  width: 16px; height: 16px;
+  border-right: 1.5px solid var(--text-muted);
+  border-bottom: 1.5px solid var(--text-muted);
+  transform: rotate(45deg);
+  animation: bobDown 2s ease-in-out infinite;
+}
+
+@keyframes bobDown {
+  0%,100% { transform: rotate(45deg) translate(0,0); opacity:0.4; }
+  50% { transform: rotate(45deg) translate(3px,3px); opacity:0.8; }
+}
+
+/* ══════ TOOLS SECTION ══════ */
+.tools-section {
+  padding: 8px 32px 80px;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.section-divider {
+  width: 40px;
+  height: 1px;
+  background: var(--accent);
+  opacity: 0.3;
+  margin: 0 auto 16px;
+}
+
+.section-label {
+  text-align: center;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.35em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  margin-bottom: 24px;
+  opacity: 0;
+  transform: translateY(8px);
+  transition: opacity 0.6s ease, transform 0.6s ease;
+}
+
+.section-label.show { opacity:1; transform:translateY(0); }
+
+.cards {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 20px;
+}
+
+/* ══════ CARD ══════ */
+.tool-card {
+  background: var(--navy-deep);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  overflow: hidden;
+  cursor: pointer;
+  text-decoration: none;
+  color: inherit;
+  opacity: 0;
+  transform: translateY(24px);
+  transition: opacity 0.5s ease, transform 0.5s ease, border-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+.tool-card.show { opacity:1; transform:translateY(0); }
+
+.tool-card:hover {
+  border-color: var(--border-hover);
+  box-shadow:
+    0 8px 40px rgba(0,0,0,0.35),
+    0 0 30px rgba(0,230,118,0.04);
+  transform: translateY(-3px);
+}
+
+.card-canvas-wrap {
+  width: 100%;
+  aspect-ratio: 16/9;
+  background: var(--navy-card);
+  position: relative;
+  overflow: hidden;
+}
+
+/* Minor grid overlay on canvas */
+.card-canvas-wrap::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image:
+    linear-gradient(rgba(255,255,255,0.015) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,0.015) 1px, transparent 1px);
+  background-size: 10px 10px;
+  pointer-events: none;
+}
+
+.card-canvas-wrap canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.card-info {
+  padding: 18px 22px 20px;
+  border-top: 1px solid var(--border);
+}
+
+.card-title {
+  font-size: 17px;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+  margin-bottom: 4px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.card-arrow {
+  display: inline-block;
+  font-size: 13px;
+  color: var(--accent);
+  opacity: 0;
+  transform: translateX(-4px);
+  transition: opacity 0.2s ease, transform 0.2s ease;
+}
+
+.tool-card:hover .card-arrow { opacity:1; transform:translateX(0); }
+
+.card-desc {
+  font-size: 12.5px;
+  color: var(--text-dim);
+  line-height: 1.55;
+}
+
+.card-tags {
+  display: flex;
+  gap: 5px;
+  margin-top: 10px;
+  flex-wrap: wrap;
+}
+
+.card-tag {
+  font-size: 9.5px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  padding: 2px 7px;
+  border-radius: 3px;
+  background: rgba(255,255,255,0.05);
+  color: var(--text-dim);
+}
+
+/* ══════ FOOTER ══════ */
+.footer {
+  text-align: center;
+  padding: 32px 24px;
+  font-size: 10px;
+  letter-spacing: 0.12em;
+  color: var(--text-muted);
+  border-top: 1px solid var(--border);
+}
+
+/* ══════ MOBILE ══════ */
+@media (max-width: 960px) {
+  .cards { grid-template-columns: 1fr; max-width: 500px; margin:0 auto; }
+  .hero { min-height: 50vh; padding: 40px 16px 30px; }
+}
+
+@media (max-width: 600px) {
+  .hero { min-height: 42vh; padding: 28px 12px 20px; }
+  .logo-wrap { width: 96vw; }
+  .tools-section { padding: 16px 16px 60px; }
+  .card-info { padding: 14px 16px 16px; }
+  .card-title { font-size: 15px; }
+}
 </style>
 </head>
 <body>
 
-<!-- SITE NAV -->
-<div class="site-nav">
-  <div class="nav-brand">CathMath</div>
-  <div class="nav-tabs">
-    <a href="/" class="nav-tab active">Hemodynamics</a>
-    <a href="/pvloop/" class="nav-tab">PV Loops</a>
-    <a href="/ekg/" class="nav-tab">EKG Simulator</a>
+<!-- ══════ HERO ══════ -->
+<section class="hero">
+  <div class="logo-wrap">
+    <img src="logo/single_2_no_ekg.png" alt="CathMath — Hemodynamics Visualized" class="logo-base" id="logoBase">
+    <img src="logo/single_2_transparent.png" alt="" class="logo-ekg" id="logoEkg">
   </div>
-  <div class="nav-right">
-    <div class="nav-credit">Developer: Saro Avedikian, MD, MPH</div>
-    <button id="darkToggle" onclick="toggleDark()">Light Mode</button>
+  <div class="hero-url" id="heroUrl">cathmath.org</div>
+  <div class="hero-credit" id="heroCredit">Developed by Dr. Saro Avedikian, MD, MPH</div>
+  <div class="swan-wrap">
+    <svg viewBox="0 0 520 28" preserveAspectRatio="xMidYMid meet">
+      <defs>
+        <filter id="cathShadow" x="-2%" y="-20%" width="104%" height="140%">
+          <feDropShadow dx="0" dy="1" stdDeviation="1" flood-color="#000" flood-opacity="0.3"/>
+        </filter>
+      </defs>
+      <path id="swanShaft" class="swan-shaft" filter="url(#cathShadow)"
+        d="M -10,14 C 40,14 60,12 120,13 S 200,16 270,14 S 350,10 400,12 S 450,16 480,12 C 488,10 493,9 496,8" />
+      <path id="swanLumen" class="swan-lumen"
+        d="M -10,14 C 40,14 60,12 120,13 S 200,16 270,14 S 350,10 400,12 S 450,16 480,12 C 488,10 493,9 496,8" />
+      <line x1="80" y1="12" x2="80" y2="16" class="swan-mark" stroke-dasharray="4" stroke-dashoffset="4"/>
+      <line x1="160" y1="11.5" x2="160" y2="15.5" class="swan-mark" stroke-dasharray="4" stroke-dashoffset="4"/>
+      <line x1="240" y1="13" x2="240" y2="17" class="swan-mark" stroke-dasharray="4" stroke-dashoffset="4"/>
+      <line x1="320" y1="11" x2="320" y2="15" class="swan-mark" stroke-dasharray="4" stroke-dashoffset="4"/>
+      <line x1="400" y1="10.5" x2="400" y2="14.5" class="swan-mark" stroke-dasharray="4" stroke-dashoffset="4"/>
+      <ellipse id="swanBalloon" class="swan-balloon" cx="500" cy="8" rx="6" ry="4.5" />
+    </svg>
   </div>
-</div>
-
-<!-- PAGE CONTROLS -->
-<div class="page-controls">
-  <div class="page-title">
-    <h1>RHC Hemodynamic Calculator</h1>
+  <canvas id="pullbackCanvas" width="1400" height="200"></canvas>
+  <div class="chamber-labels" id="chamberLabels">
+    <span class="chamber-label lbl-pcwp" id="lblPcwp">PCWP</span>
+    <span class="chamber-label lbl-pa" id="lblPa">PA</span>
+    <span class="chamber-label lbl-rv" id="lblRv">RV</span>
+    <span class="chamber-label lbl-ra" id="lblRa">RA</span>
   </div>
-  <div class="header-btns">
-    <button onclick="loadExample()">Load Example</button>
-    <button onclick="clearAll()">Clear All</button>
+  <div class="scroll-hint" id="scrollHint">
+    <span>Explore</span>
+    <div class="scroll-chevron"></div>
   </div>
-</div>
+</section>
 
-<div class="tab-bar">
-  <button class="tab-btn active" id="tabRhc" onclick="switchTab('rhc')">RHC Hemodynamics</button>
-  <button class="tab-btn" id="tabShunt" onclick="switchTab('shunt')">Shunts</button>
-</div>
+<!-- ══════ TOOLS ══════ -->
+<section class="tools-section" id="toolsSection">
+  <div class="section-divider"></div>
+  <div class="section-label" id="sectionLabel">Interactive Hemodynamic Tools</div>
 
-<div class="container">
-
-<!-- ==================== LEFT PANEL: INPUTS ==================== -->
-<div class="panel panel-left">
-
-  <!-- PATIENT CONSTANTS -->
-  <div class="section">
-    <div class="section-head">Patient / Constants</div>
-    <div class="section-body">
-      <div class="input-row">
-        <label>Age</label>
-        <input type="number" id="age" step="1" placeholder="yrs" oninput="calc()">
-        <span class="unit">years</span>
-        &nbsp;&nbsp;
-        <label>Sex</label>
-        <select id="sex" onchange="calc()">
-          <option value="male">Male</option>
-          <option value="female">Female</option>
-        </select>
-        &nbsp;&nbsp;
-        <label>BSA</label>
-        <input type="number" id="bsa" step="0.01" placeholder="m²" oninput="calc()">
-        <span class="unit">m²</span>
+  <div class="cards">
+    <!-- RHC Calculator -->
+    <a class="tool-card" id="cardRhc" href="/rhc/">
+      <div class="card-canvas-wrap">
+        <canvas id="canvasRhc"></canvas>
       </div>
-      <div class="input-row">
-        <label>Hb<sub>CBC</sub></label>
-        <input type="number" id="hb" step="0.1" placeholder="g/dL" oninput="calc()">
-        <span class="unit">g/dL</span>
-        &nbsp;&nbsp;
-        <label>HR</label>
-        <input type="number" id="hr" step="1" placeholder="bpm" oninput="calc()">
-        <span class="unit">bpm</span>
-      </div>
-      <div class="input-row">
-        <label>O₂ const</label>
-        <select id="o2const" onchange="calc()">
-          <option value="1.36" selected>1.36 mL O₂/g Hb</option>
-          <option value="1.34">1.34 mL O₂/g Hb</option>
-        </select>
-        <div class="check-row" style="margin-left:12px;">
-          <input type="checkbox" id="useDissolvedO2" onchange="calc()">
-          <label for="useDissolvedO2" style="font-weight:400; min-width:auto; cursor:pointer;">Include dissolved O₂</label>
+      <div class="card-info">
+        <div class="card-title">RHC Calculator <span class="card-arrow">&rarr;</span></div>
+        <div class="card-desc">Right heart catheterization hemodynamics with Fick CO, PVR/SVR, Gorlin valve areas, PH classification, and full copy-paste reports.</div>
+        <div class="card-tags">
+          <span class="card-tag">Fick CO</span>
+          <span class="card-tag">PVR / SVR</span>
+          <span class="card-tag">Gorlin</span>
+          <span class="card-tag">PH Class</span>
         </div>
       </div>
-    </div>
-  </div>
+    </a>
 
-  <!-- EQUIPMENT -->
-  <div class="section">
-    <div class="section-head">Access &amp; Equipment</div>
-    <div class="section-body">
-      <div class="input-row">
-        <label>Venous sheath</label>
-        <select id="venous_sheath" onchange="calc()">
-          <option value="">—</option>
-          <option value="6">6 Fr</option>
-          <option value="7">7 Fr</option>
-          <option value="8" selected>8 Fr</option>
-          <option value="8.5">8.5 Fr</option>
-          <option value="9">9 Fr</option>
-        </select>
-        &nbsp;&nbsp;
-        <label>PA catheter</label>
-        <select id="pa_catheter" onchange="calc()">
-          <option value="">—</option>
-          <option value="5">5 Fr (pediatric)</option>
-          <option value="7">7 Fr</option>
-          <option value="7.5" selected>7.5 Fr (standard Swan-Ganz)</option>
-          <option value="8">8 Fr</option>
-        </select>
+    <!-- PV Loop -->
+    <a class="tool-card" id="cardPv" href="/pvloop/">
+      <div class="card-canvas-wrap">
+        <canvas id="canvasPv"></canvas>
       </div>
-      <div class="input-row">
-        <label>TD injectate</label>
-        <select id="td_injectate" onchange="calc()">
-          <option value="room_10" selected>10 mL room temp</option>
-          <option value="iced_10">10 mL iced</option>
-          <option value="room_5">5 mL room temp</option>
-          <option value="iced_5">5 mL iced</option>
-        </select>
-        <span class="hint" style="margin-left:8px;" id="compConstHint">Computation constant must match catheter + injectate in monitor</span>
-      </div>
-      <div class="info-box" style="font-size:11px; margin-top:4px;">
-        <b>Why this matters:</b> The TD computation constant programmed in the hemodynamic monitor is specific to catheter size + injectate volume/temperature. A mismatch produces systematic TD CO error. Verify the constant matches your setup. This does <b>not</b> affect Fick or LaFarge calculations.
-      </div>
-    </div>
-  </div>
-
-  <!-- PRESSURES -->
-  <div class="section">
-    <div class="section-head">Pressures (mmHg)</div>
-    <div class="section-body">
-
-      <div class="input-row">
-        <label>RA</label>
-        <div class="input-group">
-          <span class="label-sm">a</span>
-          <input type="number" id="ra_a" step="1" oninput="calc()">
-          <span class="sep">/</span>
-          <span class="label-sm">v</span>
-          <input type="number" id="ra_v" step="1" oninput="calc()">
-          <span class="sep">/</span>
-          <span class="label-sm">mean</span>
-          <input type="number" id="ra_mean" step="1" oninput="calc()">
+      <div class="card-info">
+        <div class="card-title">PV Loop Simulator <span class="card-arrow">&rarr;</span></div>
+        <div class="card-desc">Interactive pressure-volume loop simulator with 15 drugs, 18 diseases, 5 MCS devices, and real-time elastance model visualization.</div>
+        <div class="card-tags">
+          <span class="card-tag">Elastance</span>
+          <span class="card-tag">Drugs</span>
+          <span class="card-tag">MCS</span>
+          <span class="card-tag">Valve Disease</span>
         </div>
       </div>
+    </a>
 
-      <div class="input-row">
-        <label>RV</label>
-        <div class="input-group">
-          <span class="label-sm">sys</span>
-          <input type="number" id="rv_sys" step="1" oninput="calc()">
-          <span class="sep">/</span>
-          <span class="label-sm">dia</span>
-          <input type="number" id="rv_dia" step="1" oninput="calc()">
-          <span class="sep">/</span>
-          <span class="label-sm">EDP</span>
-          <input type="number" id="rv_edp" step="1" oninput="calc()">
+    <!-- EKG Simulator -->
+    <a class="tool-card" id="cardEkg" href="/ekg/">
+      <div class="card-canvas-wrap">
+        <canvas id="canvasEkg"></canvas>
+      </div>
+      <div class="card-info">
+        <div class="card-title">EKG Simulator <span class="card-arrow">&rarr;</span></div>
+        <div class="card-desc">12-lead EKG simulator with coronary artery occlusion mapping, MI phase evolution, and special patterns including Wellens and De Winter.</div>
+        <div class="card-tags">
+          <span class="card-tag">12-Lead</span>
+          <span class="card-tag">STEMI</span>
+          <span class="card-tag">Coronary Map</span>
+          <span class="card-tag">Patterns</span>
         </div>
       </div>
-
-      <div class="input-row">
-        <label>PA</label>
-        <div class="input-group">
-          <span class="label-sm">sys</span>
-          <input type="number" id="pa_sys" step="1" oninput="calc()">
-          <span class="sep">/</span>
-          <span class="label-sm">dia</span>
-          <input type="number" id="pa_dia" step="1" oninput="calc()">
-          <span class="sep">/</span>
-          <span class="label-sm">mean</span>
-          <input type="number" id="pa_mean" step="1" oninput="calc()">
-        </div>
-      </div>
-
-      <div class="input-row">
-        <label>PCWP</label>
-        <div class="input-group">
-          <span class="label-sm">a</span>
-          <input type="number" id="pcwp_a" step="1" oninput="calc()">
-          <span class="sep">/</span>
-          <span class="label-sm">v</span>
-          <input type="number" id="pcwp_v" step="1" oninput="calc()">
-          <span class="sep">/</span>
-          <span class="label-sm">mean</span>
-          <input type="number" id="pcwp_mean" step="1" oninput="calc()">
-        </div>
-      </div>
-
-      <div class="input-row">
-        <label>LV</label>
-        <div class="input-group">
-          <span class="label-sm">sys</span>
-          <input type="number" id="lv_sys" step="1" oninput="calc()">
-          <span class="sep">/</span>
-          <span class="label-sm">dia</span>
-          <input type="number" id="lv_dia" step="1" oninput="calc()">
-          <span class="sep">/</span>
-          <span class="label-sm">EDP</span>
-          <input type="number" id="lv_edp" step="1" oninput="calc()">
-        </div>
-      </div>
-
-      <div class="input-row">
-        <label>Aorta</label>
-        <div class="input-group">
-          <span class="label-sm">sys</span>
-          <input type="number" id="ao_sys" step="1" oninput="calc()">
-          <span class="sep">/</span>
-          <span class="label-sm">dia</span>
-          <input type="number" id="ao_dia" step="1" oninput="calc()">
-          <span class="sep">/</span>
-          <span class="label-sm">mean</span>
-          <input type="number" id="ao_mean" step="1" oninput="calc()">
-        </div>
-      </div>
-
-    </div>
+    </a>
   </div>
+</section>
 
-  <!-- OXIMETRY -->
-  <div class="section">
-    <div class="section-head">Oximetry</div>
-    <div class="section-body">
-      <div class="input-row">
-        <label>SaO₂</label>
-        <input type="number" id="sao2" step="0.1" placeholder="%" oninput="calc()">
-        <span class="unit">%</span>
-        &nbsp;&nbsp;
-        <label>SvO₂</label>
-        <input type="number" id="svo2" step="0.1" placeholder="%" oninput="calc()">
-        <span class="unit">% (PA sat)</span>
-      </div>
-      <div class="input-row" id="dissolvedRow" style="display:none;">
-        <label>PaO₂</label>
-        <input type="number" id="pao2" step="1" placeholder="mmHg" oninput="calc()">
-        <span class="unit">mmHg</span>
-        &nbsp;&nbsp;
-        <label>PvO₂</label>
-        <input type="number" id="pvo2" step="1" placeholder="mmHg" oninput="calc()">
-        <span class="unit">mmHg</span>
-      </div>
-      <div class="hint">Enter saturations as percentages (e.g., 92.8 not 0.928). Calculator converts automatically.</div>
-    </div>
-  </div>
-
-  <!-- VO2 -->
-  <div class="section">
-    <div class="section-head">VO₂ — Oxygen Consumption</div>
-    <div class="section-body">
-      <div class="input-row">
-        <label>Source</label>
-        <select id="vo2source" onchange="handleVo2Source(); calc();">
-          <option value="lafarge">LaFarge (auto-calculated)</option>
-          <option value="lafarge_manual">LaFarge (enter from cath lab software)</option>
-          <option value="measured">Measured (metabolic cart)</option>
-          <option value="estimated">Estimated (125 mL/min/m²)</option>
-        </select>
-      </div>
-      <div id="lafargeCalcRow">
-        <div class="info-box" style="font-size:12px; margin:4px 0;" id="lafargeDetail">
-          Requires: Age, Sex, HR, BSA (from Patient section above)
-        </div>
-      </div>
-      <div class="input-row">
-        <label>VO₂</label>
-        <input type="number" id="vo2" step="0.1" placeholder="mL/min" oninput="calc()" style="width:92px;">
-        <span class="unit">mL O₂/min</span>
-        <span class="hint" style="margin-left:6px;" id="vo2_per_m2"></span>
-      </div>
-      <div class="hint" id="vo2hint">LaFarge: VO₂ = [138.1 − (k × ln(age)) + (0.378 × HR)] × BSA &nbsp; (k = 11.49 M, 17.04 F)</div>
-    </div>
-  </div>
-
-  <!-- THERMODILUTION -->
-  <div class="section">
-    <div class="section-head">Thermodilution</div>
-    <div class="section-body">
-      <div class="input-row">
-        <label>Runs</label>
-        <div class="td-runs">
-          <input type="number" id="td1" step="0.01" placeholder="#1" oninput="calcTD(); calc();">
-          <input type="number" id="td2" step="0.01" placeholder="#2" oninput="calcTD(); calc();">
-          <input type="number" id="td3" step="0.01" placeholder="#3" oninput="calcTD(); calc();">
-          <input type="number" id="td4" step="0.01" placeholder="#4" oninput="calcTD(); calc();">
-          <input type="number" id="td5" step="0.01" placeholder="#5" oninput="calcTD(); calc();">
-          <span class="unit">L/min each</span>
-        </div>
-      </div>
-      <div class="input-row">
-        <label>TD CO</label>
-        <input type="number" id="td_co" step="0.01" placeholder="avg" oninput="calc()">
-        <span class="unit">L/min (avg)</span>
-        <span class="hint" style="margin-left:8px;" id="tdAvgHint"></span>
-      </div>
-    </div>
-  </div>
-
-  <!-- CO SOURCE FOR DERIVED -->
-  <div class="section" id="coSourceSection">
-    <div class="section-head">CO Source for Derived Hemodynamics</div>
-    <div class="section-body">
-      <div class="radio-row">
-        <input type="radio" name="coSource" id="coFick" value="fick" checked onchange="calc()">
-        <label for="coFick">Fick CO (recommended)</label>
-        <input type="radio" name="coSource" id="coTD" value="td" onchange="calc()">
-        <label for="coTD">Thermodilution CO</label>
-      </div>
-    </div>
-  </div>
-
-  <!-- GORLIN VALVE AREA INPUTS -->
-  <div class="section" id="gorlinInputSection">
-    <div class="section-head">Gorlin Valve Area Calculations (Optional)</div>
-    <div class="section-body">
-
-      <div class="afib-toggle">
-        <input type="checkbox" id="afibToggle" onchange="toggleAfib()">
-        <label for="afibToggle">AFib mode — beat-by-beat Gorlin averaging</label>
-      </div>
-
-      <details class="sep-dfp-diagram">
-        <summary>SEP &amp; DFP — Pressure Tracing Reference</summary>
-        <div style="margin-top:6px;">
-          <svg viewBox="0 0 460 300" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:460px;height:auto;font-family:system-ui,sans-serif;">
-            <!-- Background time-period shading -->
-            <rect x="110" y="30" width="150" height="220" fill="rgba(21,101,192,0.06)"/>
-            <rect x="315" y="30" width="110" height="220" fill="rgba(46,125,50,0.06)"/>
-            <!-- Gradient fill between curves: LV-Ao during SEP -->
-            <path d="M110,133 C130,103 160,68 190,60 C210,67 240,100 260,125 C245,110 215,79 195,74 C165,84 135,111 110,133Z" fill="rgba(21,101,192,0.18)"/>
-            <!-- Gradient fill between curves: PCW-LV during DFP -->
-            <path d="M315,232 C325,234 335,233 350,232 C365,231 385,229 400,227 C410,229 420,231 425,232 L410,236 C390,241 365,244 350,247 C335,248 320,246 315,232Z" fill="rgba(46,125,50,0.18)"/>
-            <!-- Landmark dashed lines -->
-            <line x1="110" y1="250" x2="110" y2="44" class="dg-land" stroke="#bbb" stroke-width="0.5" stroke-dasharray="3,2"/>
-            <line x1="260" y1="250" x2="260" y2="44" class="dg-land" stroke="#bbb" stroke-width="0.5" stroke-dasharray="3,2"/>
-            <line x1="315" y1="250" x2="315" y2="274" class="dg-land" stroke="#bbb" stroke-width="0.5" stroke-dasharray="3,2"/>
-            <line x1="425" y1="250" x2="425" y2="274" class="dg-land" stroke="#bbb" stroke-width="0.5" stroke-dasharray="3,2"/>
-            <!-- Axes -->
-            <line x1="45" y1="250" x2="435" y2="250" class="dg-axis" stroke="#555" stroke-width="1"/>
-            <line x1="45" y1="250" x2="45" y2="30" class="dg-axis" stroke="#555" stroke-width="1"/>
-            <!-- Y-axis ticks and labels -->
-            <line x1="42" y1="250" x2="45" y2="250" class="dg-tick" stroke="#555"/>
-            <text x="39" y="253" text-anchor="end" font-size="9" class="dg-lbl" fill="#666">0</text>
-            <line x1="42" y1="177" x2="45" y2="177" class="dg-tick" stroke="#555"/>
-            <text x="39" y="180" text-anchor="end" font-size="9" class="dg-lbl" fill="#666">50</text>
-            <line x1="42" y1="103" x2="45" y2="103" class="dg-tick" stroke="#555"/>
-            <text x="39" y="106" text-anchor="end" font-size="9" class="dg-lbl" fill="#666">100</text>
-            <line x1="42" y1="30" x2="45" y2="30" class="dg-tick" stroke="#555"/>
-            <text x="39" y="33" text-anchor="end" font-size="9" class="dg-lbl" fill="#666">150</text>
-            <!-- Axis titles -->
-            <text x="14" y="140" text-anchor="middle" font-size="9" class="dg-lbl" fill="#666" transform="rotate(-90,14,140)">Pressure (mmHg)</text>
-            <text x="242" y="292" text-anchor="middle" font-size="9" class="dg-lbl" fill="#666">Time &#x2192;</text>
-            <!-- LV pressure curve (red, solid) -->
-            <path d="M50,238 C55,236 60,234 65,232 C75,192 90,155 110,133 C130,103 160,68 190,60 C210,67 240,100 260,125 C275,162 295,205 315,232 C325,246 335,248 350,247 C365,244 390,241 410,236 L425,232" fill="none" stroke="#c62828" stroke-width="2.2"/>
-            <!-- Aortic pressure curve (blue, solid) -->
-            <path d="M50,130 C70,131 90,133 110,133 C135,111 165,84 195,74 C215,79 245,110 257,124 L262,130 L268,125 C290,129 330,133 370,136 C400,138 415,138 425,138" fill="none" stroke="#1565c0" stroke-width="2.2"/>
-            <!-- PCW/LA pressure curve (green, dashed) -->
-            <path d="M50,235 C53,232 57,229 62,228 C67,228 72,238 80,241 C90,242 105,241 120,240 C150,238 210,232 275,225 C290,224 305,228 315,232 C325,234 335,233 350,232 C365,231 385,229 400,227 C410,229 420,231 425,232" fill="none" stroke="#2e7d32" stroke-width="2" stroke-dasharray="6,3"/>
-            <!-- Curve labels -->
-            <text x="182" y="53" font-size="11" font-weight="700" fill="#c62828">LV</text>
-            <text x="205" y="86" font-size="10" font-weight="700" fill="#1565c0">Ao</text>
-            <text x="140" y="233" font-size="10" font-weight="700" fill="#2e7d32">PCW</text>
-            <!-- PCW wave annotations -->
-            <text x="62" y="221" text-anchor="middle" font-size="8" fill="#2e7d32" font-style="italic">a</text>
-            <text x="275" y="218" text-anchor="middle" font-size="8" fill="#2e7d32" font-style="italic">v</text>
-            <!-- SEP bracket (above curves) -->
-            <line x1="112" y1="40" x2="258" y2="40" stroke="#1565c0" stroke-width="1.5"/>
-            <line x1="112" y1="45" x2="112" y2="35" stroke="#1565c0" stroke-width="1.5"/>
-            <line x1="258" y1="45" x2="258" y2="35" stroke="#1565c0" stroke-width="1.5"/>
-            <text x="185" y="33" text-anchor="middle" font-size="11" font-weight="700" fill="#1565c0">SEP</text>
-            <!-- DFP bracket (below x-axis) -->
-            <line x1="317" y1="278" x2="423" y2="278" stroke="#2e7d32" stroke-width="1.5"/>
-            <line x1="317" y1="274" x2="317" y2="282" stroke="#2e7d32" stroke-width="1.5"/>
-            <line x1="423" y1="274" x2="423" y2="282" stroke="#2e7d32" stroke-width="1.5"/>
-            <text x="370" y="293" text-anchor="middle" font-size="11" font-weight="700" fill="#2e7d32">DFP</text>
-            <!-- Gradient (ΔP) labels -->
-            <text x="185" y="100" text-anchor="middle" font-size="9" fill="rgba(21,101,192,0.8)" font-style="italic">&#x394;P (LV&#x2013;Ao)</text>
-            <text x="370" y="242" text-anchor="middle" font-size="8" fill="rgba(46,125,50,0.9)" font-style="italic">&#x394;P (PCW&#x2013;LV)</text>
-            <!-- Landmark labels below axis (two-line with physiologic context) -->
-            <text x="110" y="259" text-anchor="middle" class="dg-lbl" fill="#999"><tspan x="110" font-size="6.5">AV open</tspan><tspan x="110" dy="8" font-size="5.5" font-style="italic">(LV &gt; Ao)</tspan></text>
-            <text x="260" y="259" text-anchor="middle" class="dg-lbl" fill="#999"><tspan x="260" font-size="6.5">AV close</tspan><tspan x="260" dy="8" font-size="5.5" font-style="italic">(dicrotic notch)</tspan></text>
-            <text x="315" y="259" text-anchor="middle" class="dg-lbl" fill="#999"><tspan x="315" font-size="6.5">MV open</tspan><tspan x="315" dy="8" font-size="5.5" font-style="italic">(LV &lt; PCW)</tspan></text>
-            <text x="425" y="259" text-anchor="middle" class="dg-lbl" fill="#999"><tspan x="425" font-size="6.5">MV close</tspan><tspan x="425" dy="8" font-size="5.5" font-style="italic">(onset systole)</tspan></text>
-          </svg>
-        </div>
-      </details>
-
-      <!-- SINGLE-VALUE INPUTS (non-AFib) -->
-      <div id="avaSingleInputs">
-        <div class="subsection">Aortic Valve (AVA)</div>
-        <div class="input-row">
-          <label>Mean ΔP</label>
-          <input type="number" id="ava_gradient" step="0.1" placeholder="mmHg" oninput="calc()">
-          <span class="unit">mmHg (transaortic gradient)</span>
-        </div>
-        <div class="input-row">
-          <label>Eject time</label>
-          <input type="number" id="ava_ejtime" step="0.01" placeholder="sec/beat" oninput="calcSEP(); calc();">
-          <span class="unit">sec/beat</span>
-          <span style="margin:0 6px; color:#999;">→</span>
-          <label>SEP</label>
-          <input type="number" id="ava_sep" step="0.1" placeholder="sec/min" oninput="calc()">
-          <span class="unit">sec/min</span>
-        </div>
-        <div class="hint">SEP = ejection time/beat × HR. Typical: 0.30–0.35 sec/beat → 20–25 sec/min. Measured from AV open to dicrotic notch.</div>
-      </div>
-
-      <div id="mvaSingleInputs">
-        <div class="subsection" style="margin-top:10px;">Mitral Valve (MVA)</div>
-        <div class="input-row">
-          <label>Mean ΔP</label>
-          <input type="number" id="mva_gradient" step="0.1" placeholder="mmHg" oninput="calc()">
-          <span class="unit">mmHg (transmitral gradient)</span>
-        </div>
-        <div class="input-row">
-          <label>Fill time</label>
-          <input type="number" id="mva_filltime" step="0.01" placeholder="sec/beat" oninput="calcDFP(); calc();">
-          <span class="unit">sec/beat</span>
-          <span style="margin:0 6px; color:#999;">→</span>
-          <label>DFP</label>
-          <input type="number" id="mva_dfp" step="0.1" placeholder="sec/min" oninput="calc()">
-          <span class="unit">sec/min</span>
-        </div>
-        <div class="hint">DFP = filling time/beat × HR. Typical: 0.40–0.50 sec/beat → 30–40 sec/min. Shortened in tachycardia. Average ≥5 beats in AFib.</div>
-      </div>
-
-      <!-- AFIB PER-BEAT INPUTS (hidden by default) -->
-      <div id="avaAfibInputs" style="display:none;">
-        <div class="subsection">Aortic Valve (AVA) — Per-Beat Data</div>
-        <div class="hint" style="margin-bottom:4px;">Enter gradient and ejection time for each beat. Minimum 5 beats recommended. Empty rows are ignored.</div>
-        <table class="afib-beats-table">
-          <tr><th>Beat</th><th>ΔP (mmHg)</th><th>Eject time (s)</th><th>AVA (cm²)</th></tr>
-          <tr><td>1</td><td><input type="number" id="ava_af_grad_1" step="0.1" oninput="calc()"></td><td><input type="number" id="ava_af_et_1" step="0.01" oninput="calc()"></td><td class="af-result" id="ava_af_result_1">—</td></tr>
-          <tr><td>2</td><td><input type="number" id="ava_af_grad_2" step="0.1" oninput="calc()"></td><td><input type="number" id="ava_af_et_2" step="0.01" oninput="calc()"></td><td class="af-result" id="ava_af_result_2">—</td></tr>
-          <tr><td>3</td><td><input type="number" id="ava_af_grad_3" step="0.1" oninput="calc()"></td><td><input type="number" id="ava_af_et_3" step="0.01" oninput="calc()"></td><td class="af-result" id="ava_af_result_3">—</td></tr>
-          <tr><td>4</td><td><input type="number" id="ava_af_grad_4" step="0.1" oninput="calc()"></td><td><input type="number" id="ava_af_et_4" step="0.01" oninput="calc()"></td><td class="af-result" id="ava_af_result_4">—</td></tr>
-          <tr><td>5</td><td><input type="number" id="ava_af_grad_5" step="0.1" oninput="calc()"></td><td><input type="number" id="ava_af_et_5" step="0.01" oninput="calc()"></td><td class="af-result" id="ava_af_result_5">—</td></tr>
-          <tr><td>6</td><td><input type="number" id="ava_af_grad_6" step="0.1" oninput="calc()"></td><td><input type="number" id="ava_af_et_6" step="0.01" oninput="calc()"></td><td class="af-result" id="ava_af_result_6">—</td></tr>
-          <tr><td>7</td><td><input type="number" id="ava_af_grad_7" step="0.1" oninput="calc()"></td><td><input type="number" id="ava_af_et_7" step="0.01" oninput="calc()"></td><td class="af-result" id="ava_af_result_7">—</td></tr>
-          <tr><td>8</td><td><input type="number" id="ava_af_grad_8" step="0.1" oninput="calc()"></td><td><input type="number" id="ava_af_et_8" step="0.01" oninput="calc()"></td><td class="af-result" id="ava_af_result_8">—</td></tr>
-          <tr><td>9</td><td><input type="number" id="ava_af_grad_9" step="0.1" oninput="calc()"></td><td><input type="number" id="ava_af_et_9" step="0.01" oninput="calc()"></td><td class="af-result" id="ava_af_result_9">—</td></tr>
-          <tr><td>10</td><td><input type="number" id="ava_af_grad_10" step="0.1" oninput="calc()"></td><td><input type="number" id="ava_af_et_10" step="0.01" oninput="calc()"></td><td class="af-result" id="ava_af_result_10">—</td></tr>
-        </table>
-      </div>
-
-      <div id="mvaAfibInputs" style="display:none;">
-        <div class="subsection" style="margin-top:10px;">Mitral Valve (MVA) — Per-Beat Data</div>
-        <div class="hint" style="margin-bottom:4px;">Enter gradient and filling time for each beat. Minimum 5 beats recommended. Empty rows are ignored.</div>
-        <table class="afib-beats-table">
-          <tr><th>Beat</th><th>ΔP (mmHg)</th><th>Fill time (s)</th><th>MVA (cm²)</th></tr>
-          <tr><td>1</td><td><input type="number" id="mva_af_grad_1" step="0.1" oninput="calc()"></td><td><input type="number" id="mva_af_ft_1" step="0.01" oninput="calc()"></td><td class="af-result" id="mva_af_result_1">—</td></tr>
-          <tr><td>2</td><td><input type="number" id="mva_af_grad_2" step="0.1" oninput="calc()"></td><td><input type="number" id="mva_af_ft_2" step="0.01" oninput="calc()"></td><td class="af-result" id="mva_af_result_2">—</td></tr>
-          <tr><td>3</td><td><input type="number" id="mva_af_grad_3" step="0.1" oninput="calc()"></td><td><input type="number" id="mva_af_ft_3" step="0.01" oninput="calc()"></td><td class="af-result" id="mva_af_result_3">—</td></tr>
-          <tr><td>4</td><td><input type="number" id="mva_af_grad_4" step="0.1" oninput="calc()"></td><td><input type="number" id="mva_af_ft_4" step="0.01" oninput="calc()"></td><td class="af-result" id="mva_af_result_4">—</td></tr>
-          <tr><td>5</td><td><input type="number" id="mva_af_grad_5" step="0.1" oninput="calc()"></td><td><input type="number" id="mva_af_ft_5" step="0.01" oninput="calc()"></td><td class="af-result" id="mva_af_result_5">—</td></tr>
-          <tr><td>6</td><td><input type="number" id="mva_af_grad_6" step="0.1" oninput="calc()"></td><td><input type="number" id="mva_af_ft_6" step="0.01" oninput="calc()"></td><td class="af-result" id="mva_af_result_6">—</td></tr>
-          <tr><td>7</td><td><input type="number" id="mva_af_grad_7" step="0.1" oninput="calc()"></td><td><input type="number" id="mva_af_ft_7" step="0.01" oninput="calc()"></td><td class="af-result" id="mva_af_result_7">—</td></tr>
-          <tr><td>8</td><td><input type="number" id="mva_af_grad_8" step="0.1" oninput="calc()"></td><td><input type="number" id="mva_af_ft_8" step="0.01" oninput="calc()"></td><td class="af-result" id="mva_af_result_8">—</td></tr>
-          <tr><td>9</td><td><input type="number" id="mva_af_grad_9" step="0.1" oninput="calc()"></td><td><input type="number" id="mva_af_ft_9" step="0.01" oninput="calc()"></td><td class="af-result" id="mva_af_result_9">—</td></tr>
-          <tr><td>10</td><td><input type="number" id="mva_af_grad_10" step="0.1" oninput="calc()"></td><td><input type="number" id="mva_af_ft_10" step="0.01" oninput="calc()"></td><td class="af-result" id="mva_af_result_10">—</td></tr>
-        </table>
-      </div>
-
-    </div>
-  </div>
-
-  <!-- SHUNT OXIMETRY RUN (Shunts tab only) -->
-  <div class="section" id="shuntInputSection" style="display:none;">
-    <div class="section-head">Shunt Oximetry Run</div>
-    <div class="section-body">
-
-      <div class="info-box" style="font-size:11px; margin-bottom:8px;">
-        <b>Workflow:</b> On routine RHC, draw <b>1 SVC + 1 PA</b> sample. If PA sat is ≥ 8% higher than SVC → significant L→R shunt suspected → perform full oximetry run below to localize the shunt level and quantify Qp/Qs.
-      </div>
-
-      <div class="subsection">Screening (minimum required)</div>
-      <div class="input-row">
-        <label>High SVC</label>
-        <input type="number" id="svc_high" step="0.1" placeholder="%" oninput="calc()">
-        <span class="unit">%</span>
-        &nbsp;&nbsp;
-        <label>PA main</label>
-        <input type="number" id="pa_main_sat" step="0.1" placeholder="%" oninput="calc()">
-        <span class="unit">%</span>
-      </div>
-      <div class="hint">These two samples alone detect most L→R shunts (≥ 8% step-up = significant).</div>
-
-      <div class="divider"></div>
-
-      <div class="subsection">Full Oximetry Run (for localization &amp; Qp/Qs)</div>
-      <div class="hint" style="margin-bottom:6px;">Enter all samples obtained. At minimum, need SVC + IVC (for MV O₂) and PA (for Qp/Qs). More samples = better localization. RA best sampled at mid-RA level.</div>
-
-      <div class="subsection" style="color:var(--blue); border-bottom-color:var(--blue);">SVC</div>
-      <div class="input-row">
-        <label>Low SVC</label>
-        <input type="number" id="svc_low" step="0.1" placeholder="%" oninput="calc()">
-        <span class="unit">%</span>
-        <span class="hint" style="margin-left:6px;">High SVC entered above</span>
-      </div>
-
-      <div class="subsection" style="color:var(--blue); border-bottom-color:var(--blue);">IVC <span style="font-weight:400; font-size:10px; color:#999;">(needed for MV O₂)</span></div>
-      <div class="input-row">
-        <label>IVC</label>
-        <input type="number" id="ivc_sat" step="0.1" placeholder="%" oninput="calc()">
-        <span class="unit">%</span>
-        <span class="hint" style="margin-left:6px;">At level of diaphragm, beyond renal veins</span>
-      </div>
-
-      <div class="subsection" style="color:var(--blue); border-bottom-color:var(--blue);">Right Atrium <span style="font-weight:400; font-size:10px; color:#999;">(step-up here → ASD)</span></div>
-      <div class="input-row">
-        <label>RA high</label>
-        <input type="number" id="ra_high_sat" step="0.1" placeholder="%" oninput="calc()">
-        <span class="unit">%</span>
-        &nbsp;&nbsp;
-        <label>RA mid</label>
-        <input type="number" id="ra_mid_sat" step="0.1" placeholder="%" oninput="calc()">
-        <span class="unit">%</span>
-        &nbsp;&nbsp;
-        <label>RA low</label>
-        <input type="number" id="ra_low_sat" step="0.1" placeholder="%" oninput="calc()">
-        <span class="unit">%</span>
-      </div>
-      <div class="hint">Mid-RA least affected by IVC/coronary sinus streaming. Multiple samples preferred.</div>
-
-      <div class="subsection" style="color:var(--blue); border-bottom-color:var(--blue);">Right Ventricle <span style="font-weight:400; font-size:10px; color:#999;">(step-up here → VSD)</span></div>
-      <div class="input-row">
-        <label>RV mid</label>
-        <input type="number" id="rv_mid_sat" step="0.1" placeholder="%" oninput="calc()">
-        <span class="unit">%</span>
-        &nbsp;&nbsp;
-        <label>RVOT</label>
-        <input type="number" id="rvot_sat" step="0.1" placeholder="%" oninput="calc()">
-        <span class="unit">%</span>
-      </div>
-
-      <div class="subsection" style="color:var(--blue); border-bottom-color:var(--blue);">Pulmonary Artery <span style="font-weight:400; font-size:10px; color:#999;">(step-up here → PDA)</span></div>
-      <div class="input-row">
-        <span class="hint">PA main entered above in screening</span>
-        &nbsp;&nbsp;
-        <label>PA left</label>
-        <input type="number" id="pa_left_sat" step="0.1" placeholder="%" oninput="calc()">
-        <span class="unit">%</span>
-        &nbsp;&nbsp;
-        <label>PA right</label>
-        <input type="number" id="pa_right_sat" step="0.1" placeholder="%" oninput="calc()">
-        <span class="unit">%</span>
-      </div>
-
-      <div class="divider"></div>
-
-      <div class="subsection">PV O₂ &amp; FiO₂</div>
-      <div class="input-row">
-        <label>PV O₂</label>
-        <select id="pvo2_source" onchange="handlePvO2Source(); calc();">
-          <option value="assume_sa">SaO₂ (assumes no R→L shunt)</option>
-          <option value="assume_98">98% (room air assumption)</option>
-          <option value="manual">Manual entry (wedge PA sample)</option>
-        </select>
-      </div>
-      <div class="input-row" id="pvO2ManualRow" style="display:none;">
-        <label>PV O₂</label>
-        <input type="number" id="pv_o2_manual" step="0.1" placeholder="%" oninput="calc()">
-        <span class="unit">%</span>
-      </div>
-      <div class="hint">If SaO₂ ≥ 95% on room air → no significant R→L shunt → PV O₂ ≈ SaO₂. If R→L shunt suspected, use wedge PA sample or assume 98%.</div>
-      <div class="input-row" style="margin-top:4px;">
-        <label>FiO₂</label>
-        <input type="number" id="fio2" step="1" placeholder="21" value="21" oninput="calc()">
-        <span class="unit">%</span>
-        <span class="hint" style="margin-left:8px;">Room air = 21%. If &gt; 30%, simplified Qp/Qs is inaccurate — must use full O₂ content with dissolved O₂.</span>
-      </div>
-
-      <div class="hint" style="margin-top:8px;">Collect all samples within a few minutes to minimize error from fluctuations in anxiety/wakefulness.</div>
-    </div>
-  </div>
-
-</div>
-
-<!-- ==================== RIGHT PANEL: RESULTS ==================== -->
-<div class="panel panel-right">
-
-<div id="rhcResults">
-
-  <!-- O2 CONTENT -->
-  <div class="section">
-    <div class="section-head">O₂ Content</div>
-    <div class="section-body">
-      <div class="result-row">
-        <span class="result-label">CaO₂</span>
-        <span class="result-value" id="r_cao2">—</span>
-        <span class="result-unit">mL O₂/dL</span>
-      </div>
-      <div class="result-row">
-        <span class="result-label">CvO₂</span>
-        <span class="result-value" id="r_cvo2">—</span>
-        <span class="result-unit">mL O₂/dL</span>
-      </div>
-      <div class="result-row">
-        <span class="result-label">a-vO₂ diff</span>
-        <span class="result-value" id="r_avo2">—</span>
-        <span class="result-unit">mL O₂/dL</span>
-        <span class="result-range">normal: 3.5–5.0</span>
-      </div>
-    </div>
-  </div>
-
-  <!-- FICK CO -->
-  <div class="section">
-    <div class="section-head">Fick Cardiac Output</div>
-    <div class="section-body">
-      <div class="result-row">
-        <span class="result-label">Fick CO</span>
-        <span class="result-value" id="r_fick_co">—</span>
-        <span class="result-unit">L/min</span>
-        <span class="result-range">normal: 4–8</span>
-        <span class="result-flag" id="f_fick_co"></span>
-      </div>
-      <div class="result-row">
-        <span class="result-label">Fick CI</span>
-        <span class="result-value" id="r_fick_ci">—</span>
-        <span class="result-unit">L/min/m²</span>
-        <span class="result-range">normal: 2.5–4.0</span>
-        <span class="result-flag" id="f_fick_ci"></span>
-      </div>
-      <div class="result-row">
-        <span class="result-label">SV</span>
-        <span class="result-value" id="r_sv">—</span>
-        <span class="result-unit">mL/beat</span>
-        <span class="result-range">normal: 60–100</span>
-        <span class="result-flag" id="f_sv"></span>
-      </div>
-      <div class="result-row">
-        <span class="result-label">SVI</span>
-        <span class="result-value" id="r_svi">—</span>
-        <span class="result-unit">mL/beat/m²</span>
-        <span class="result-range">normal: 33–47</span>
-        <span class="result-flag" id="f_svi"></span>
-      </div>
-    </div>
-  </div>
-
-  <!-- TD CO -->
-  <div class="section">
-    <div class="section-head">Thermodilution</div>
-    <div class="section-body">
-      <div class="result-row">
-        <span class="result-label">TD CO</span>
-        <span class="result-value" id="r_td_co">—</span>
-        <span class="result-unit">L/min</span>
-        <span class="result-range">normal: 4–8</span>
-      </div>
-      <div class="result-row">
-        <span class="result-label">TD CI</span>
-        <span class="result-value" id="r_td_ci">—</span>
-        <span class="result-unit">L/min/m²</span>
-        <span class="result-range">normal: 2.5–4.0</span>
-      </div>
-      <div id="tdFickWarning"></div>
-    </div>
-  </div>
-
-  <!-- PULMONARY HEMODYNAMICS -->
-  <div class="section">
-    <div class="section-head">Pulmonary Hemodynamics <span style="font-weight:400; text-transform:none; font-size:11px;" id="derivedLabel">(using Fick CO)</span></div>
-    <div class="section-body">
-      <div class="result-row">
-        <span class="result-label">TPG</span>
-        <span class="result-value" id="r_tpg">—</span>
-        <span class="result-unit">mmHg</span>
-        <span class="result-range">mPAP − PCWP</span>
-      </div>
-      <div class="result-row">
-        <span class="result-label">DPG</span>
-        <span class="result-value" id="r_dpg">—</span>
-        <span class="result-unit">mmHg</span>
-        <span class="result-range">normal: ≤ 7; &gt;7 → pre-cap component</span>
-      </div>
-      <div class="result-row">
-        <span class="result-label">PVR</span>
-        <span class="result-value" id="r_pvr">—</span>
-        <span class="result-unit">WU</span>
-        <span class="result-range">normal: &lt; 2</span>
-        <span class="result-flag" id="f_pvr"></span>
-      </div>
-      <div class="result-row">
-        <span class="result-label">PVR</span>
-        <span class="result-value" id="r_pvr_dyn">—</span>
-        <span class="result-unit">dyn·s·cm⁻⁵</span>
-      </div>
-      <div class="result-row">
-        <span class="result-label">PVRI</span>
-        <span class="result-value" id="r_pvri">—</span>
-        <span class="result-unit">WU·m²</span>
-      </div>
-      <div id="phClassification"></div>
-    </div>
-  </div>
-
-  <!-- SYSTEMIC HEMODYNAMICS -->
-  <div class="section">
-    <div class="section-head">Systemic Hemodynamics <span style="font-weight:400; text-transform:none; font-size:11px;" id="derivedLabel2">(using Fick CO)</span></div>
-    <div class="section-body">
-      <div class="result-row">
-        <span class="result-label">SVR</span>
-        <span class="result-value" id="r_svr">—</span>
-        <span class="result-unit">WU</span>
-        <span class="result-range">normal: 10–20</span>
-        <span class="result-flag" id="f_svr"></span>
-      </div>
-      <div class="result-row">
-        <span class="result-label">SVR</span>
-        <span class="result-value" id="r_svr_dyn">—</span>
-        <span class="result-unit">dyn·s·cm⁻⁵</span>
-        <span class="result-range">normal: 800–1600</span>
-      </div>
-      <div class="result-row">
-        <span class="result-label">SVRI</span>
-        <span class="result-value" id="r_svri">—</span>
-        <span class="result-unit">WU·m²</span>
-      </div>
-    </div>
-  </div>
-
-  <!-- RV PERFORMANCE -->
-  <div class="section">
-    <div class="section-head">RV Performance &amp; Shock Indices</div>
-    <div class="section-body">
-      <div class="result-row">
-        <span class="result-label">PAPi</span>
-        <span class="result-value" id="r_papi">—</span>
-        <span class="result-unit">(unitless)</span>
-        <span class="result-range">&gt;1.0 adequate; &lt;0.9 RV failure risk</span>
-        <span class="result-flag" id="f_papi"></span>
-      </div>
-      <div class="result-row">
-        <span class="result-label">RVSWI</span>
-        <span class="result-value" id="r_rvswi">—</span>
-        <span class="result-unit">g·m/m²/beat</span>
-        <span class="result-range">normal: 5–10</span>
-        <span class="result-flag" id="f_rvswi"></span>
-      </div>
-      <div class="result-row">
-        <span class="result-label">CPO</span>
-        <span class="result-value" id="r_cpo">—</span>
-        <span class="result-unit">Watts</span>
-        <span class="result-range">normal: ~1; &lt;0.6 poor prognosis</span>
-        <span class="result-flag" id="f_cpo"></span>
-      </div>
-      <div class="result-row">
-        <span class="result-label">CPI</span>
-        <span class="result-value" id="r_cpi">—</span>
-        <span class="result-unit">W/m²</span>
-        <span class="result-range">&lt;0.33 strongest predictor of mortality</span>
-        <span class="result-flag" id="f_cpi"></span>
-      </div>
-    </div>
-  </div>
-
-  <!-- LV PRESSURES & AORTIC VALVE -->
-  <div class="section" id="lvResultsSection" style="display:none;">
-    <div class="section-head">LV Pressures &amp; Aortic Pullback</div>
-    <div class="section-body">
-      <div class="result-row">
-        <span class="result-label">LVEDP</span>
-        <span class="result-value" id="r_lvedp">—</span>
-        <span class="result-unit">mmHg</span>
-        <span class="result-range">normal: ≤ 12</span>
-        <span class="result-flag" id="f_lvedp"></span>
-      </div>
-      <div class="result-row">
-        <span class="result-label">LV–Ao Peak-to-Peak Gradient</span>
-        <span class="result-value" id="r_lv_ao_gradient">—</span>
-        <span class="result-unit">mmHg</span>
-        <span class="result-range">≥ 30 significant; ≥ 50 severe</span>
-        <span class="result-flag" id="f_lv_ao_gradient"></span>
-      </div>
-      <div id="lvedpPcwpCheck" style="display:none;"></div>
-      <div id="lvAoSysCheck" style="display:none;"></div>
-    </div>
-  </div>
-
-  <!-- GORLIN VALVE AREA RESULTS -->
-  <div class="section" id="gorlinResultsSection" style="display:none;">
-    <div class="section-head">Gorlin Valve Areas <span style="font-weight:400; text-transform:none; font-size:11px;" id="gorlinCoLabel">(using Fick CO)</span></div>
-    <div class="section-body">
-
-      <div id="avaResults" style="display:none;">
-        <div class="gorlin-heading" style="margin-bottom:2px;">Aortic Valve Area (AVA)</div>
-        <div class="result-row">
-          <span class="result-label">AVA</span>
-          <span class="result-value" id="r_ava">—</span>
-          <span class="result-unit">cm²</span>
-          <span class="result-range">normal: &gt; 2.0</span>
-          <span class="result-flag" id="f_ava"></span>
-        </div>
-        <div style="font-size:11px; color:#666; margin:2px 0;" id="ava_math"></div>
-        <div id="avaAfibDetail" class="afib-detail" style="display:none;"></div>
-        <table class="vals" style="font-size:7.5pt; margin:4px 0;">
-          <tr><th>Severity</th><th>AVA (cm²)</th></tr>
-          <tr><td>Normal</td><td>&gt; 2.0</td></tr>
-          <tr><td>Mild AS</td><td>1.5 – 2.0</td></tr>
-          <tr><td>Moderate AS</td><td>1.0 – 1.5</td></tr>
-          <tr class="severe"><td>Severe AS</td><td>&lt; 1.0</td></tr>
-          <tr class="severe"><td>Critical AS</td><td>≤ 0.6</td></tr>
-        </table>
-      </div>
-
-      <div id="mvaResults" style="display:none;">
-        <div class="gorlin-heading" style="margin:6px 0 2px 0; border-top:1px solid #eee; padding-top:6px;">Mitral Valve Area (MVA)</div>
-        <div class="result-row">
-          <span class="result-label">MVA</span>
-          <span class="result-value" id="r_mva">—</span>
-          <span class="result-unit">cm²</span>
-          <span class="result-range">normal: 4 – 6</span>
-          <span class="result-flag" id="f_mva"></span>
-        </div>
-        <div style="font-size:11px; color:#666; margin:2px 0;" id="mva_math"></div>
-        <div id="mvaAfibDetail" class="afib-detail" style="display:none;"></div>
-        <table class="vals" style="font-size:7.5pt; margin:4px 0;">
-          <tr><th>Severity</th><th>MVA (cm²)</th></tr>
-          <tr><td>Normal</td><td>4 – 6</td></tr>
-          <tr><td>Mild MS</td><td>&gt; 1.5</td></tr>
-          <tr><td>Moderate MS</td><td>1.0 – 1.5</td></tr>
-          <tr class="severe"><td>Severe MS</td><td>&lt; 1.0</td></tr>
-        </table>
-      </div>
-
-      <div class="pearl-box" style="font-size:11px; margin-top:4px;">
-        <b>Gorlin is flow-dependent.</b> Low CO → falsely small valve area. Tachycardia → major effect on MVA (short DFP), minimal on AVA. Use Fick CO for Gorlin.
-      </div>
-
-    </div>
-  </div>
-
-  <!-- QUALITY CHECKS -->
-  <div class="section">
-    <div class="section-head">Quality Checks</div>
-    <div class="section-body" id="qualityChecks">
-      <div class="info-box">Enter values to see quality checks.</div>
-    </div>
-  </div>
-
-  <!-- INTERPRETATION (collapsible) -->
-  <div class="section" id="rhcInterpSection">
-    <div class="section-head collapsible" onclick="toggleInterpSection('rhcInterpSection')">Interpretation</div>
-    <div class="section-body" id="rhcInterpretation">
-      <div class="info-box">Enter hemodynamic data to generate interpretation.</div>
-    </div>
-  </div>
-
-  <!-- COPY SECTION -->
-  <div class="copy-section" id="rhcCopySection">
-    <div class="copy-head">
-      <span>EVALUATION REPORT</span>
-      <div style="display:flex; align-items:center; gap:12px;">
-        <label style="display:flex; align-items:center; gap:5px; font-weight:400; font-size:11px; cursor:pointer; min-width:auto; color:#ccc;">
-          <input type="checkbox" id="plainTextToggle" onchange="calc()" style="width:14px; height:14px; cursor:pointer;">
-          Plain text (EHR)
-        </label>
-        <button class="copy-btn" id="copyBtn" onclick="copyResults()">Copy to Clipboard</button>
-      </div>
-    </div>
-    <textarea id="copyText" readonly></textarea>
-  </div>
-
-</div><!-- end rhcResults -->
-
-<!-- ==================== SHUNT RESULTS ==================== -->
-<div id="shuntResults" style="display:none;">
-
-  <!-- MIXED VENOUS O2 -->
-  <div class="section">
-    <div class="section-head">Mixed Venous O₂</div>
-    <div class="section-body">
-      <div class="result-row">
-        <span class="result-label">MV O₂</span>
-        <span class="result-value" id="r_mvo2">—</span>
-        <span class="result-unit">%</span>
-        <span class="result-range">Flamm formula</span>
-      </div>
-      <div style="font-size:11px; color:#666; margin-top:4px;" id="mvo2_math"></div>
-    </div>
-  </div>
-
-  <!-- O2 STEP-UP DETECTION -->
-  <div class="section">
-    <div class="section-head">O₂ Step-Up Detection &amp; Localization</div>
-    <div class="section-body" id="stepUpResults">
-      <div class="info-box">Enter oximetry run values to detect step-ups.</div>
-    </div>
-  </div>
-
-  <!-- SHUNT QUANTIFICATION -->
-  <div class="section">
-    <div class="section-head">Shunt Quantification</div>
-    <div class="section-body">
-      <div class="result-row">
-        <span class="result-label">Qp/Qs</span>
-        <span class="result-value" id="r_qpqs">—</span>
-        <span class="result-unit">(ratio)</span>
-        <span class="result-flag" id="f_qpqs"></span>
-      </div>
-      <div style="font-size:11px; color:#666; margin-top:2px;" id="qpqs_math"></div>
-      <div class="divider"></div>
-      <div class="result-row">
-        <span class="result-label">Qp</span>
-        <span class="result-value" id="r_qp">—</span>
-        <span class="result-unit">L/min</span>
-        <span class="result-range">pulmonary flow</span>
-      </div>
-      <div class="result-row">
-        <span class="result-label">Qs</span>
-        <span class="result-value" id="r_qs">—</span>
-        <span class="result-unit">L/min</span>
-        <span class="result-range">systemic flow</span>
-      </div>
-      <div class="result-row">
-        <span class="result-label">Q effective</span>
-        <span class="result-value" id="r_qeff">—</span>
-        <span class="result-unit">L/min</span>
-        <span class="result-range">non-shunted flow</span>
-      </div>
-      <div class="divider"></div>
-      <div class="result-row">
-        <span class="result-label">L→R shunt</span>
-        <span class="result-value" id="r_lr_shunt">—</span>
-        <span class="result-unit">L/min</span>
-      </div>
-      <div class="result-row">
-        <span class="result-label">R→L shunt</span>
-        <span class="result-value" id="r_rl_shunt">—</span>
-        <span class="result-unit">L/min</span>
-      </div>
-      <div style="font-size:11px; color:#666; margin-top:4px;" id="shunt_flow_math"></div>
-      <div class="divider"></div>
-      <table class="vals" style="margin-top:4px;">
-        <tr><th>Qp/Qs</th><th>Interpretation</th></tr>
-        <tr><td>&lt; 1.0</td><td>Net right-to-left shunt</td></tr>
-        <tr><td>1.0–1.4</td><td>No significant shunt</td></tr>
-        <tr><td>1.5–1.9</td><td>Small-moderate L→R shunt</td></tr>
-        <tr><td>2.0–2.9</td><td>Large L→R shunt (consider repair)</td></tr>
-        <tr class="severe"><td>≥ 3.0</td><td>Very large L→R shunt (repair indicated)</td></tr>
-      </table>
-    </div>
-  </div>
-
-  <!-- SHUNT-ADJUSTED VASCULAR RESISTANCE -->
-  <div class="section">
-    <div class="section-head">Shunt-Adjusted Vascular Resistance</div>
-    <div class="section-body">
-      <div class="result-row">
-        <span class="result-label">PVR (Qp)</span>
-        <span class="result-value" id="r_pvr_shunt">—</span>
-        <span class="result-unit">WU</span>
-        <span class="result-range">normal: &lt; 2</span>
-        <span class="result-flag" id="f_pvr_shunt"></span>
-      </div>
-      <div class="result-row">
-        <span class="result-label">SVR (Qs)</span>
-        <span class="result-value" id="r_svr_shunt">—</span>
-        <span class="result-unit">WU</span>
-        <span class="result-range">normal: 10–20</span>
-        <span class="result-flag" id="f_svr_shunt"></span>
-      </div>
-      <div class="result-row">
-        <span class="result-label">PVR/SVR</span>
-        <span class="result-value" id="r_pvr_svr_ratio">—</span>
-        <span class="result-unit">(ratio)</span>
-        <span class="result-range">&gt; 0.67 = Eisenmenger concern</span>
-        <span class="result-flag" id="f_pvr_svr_ratio"></span>
-      </div>
-      <div id="eisenmengerWarning"></div>
-      <div class="info-box" style="margin-top:6px;">In shunt physiology, use Qp (not TD CO) for PVR and Qs for SVR.</div>
-    </div>
-  </div>
-
-  <!-- SHUNT QUALITY CHECKS -->
-  <div class="section">
-    <div class="section-head">Shunt Quality Checks</div>
-    <div class="section-body" id="shuntQualityChecks">
-      <div class="info-box">Enter oximetry run values to see quality checks.</div>
-    </div>
-  </div>
-
-  <!-- SHUNT INTERPRETATION (collapsible) -->
-  <div class="section" id="shuntInterpSection">
-    <div class="section-head collapsible" onclick="toggleInterpSection('shuntInterpSection')">Interpretation</div>
-    <div class="section-body" id="shuntInterpretation">
-      <div class="info-box">Enter oximetry data to generate interpretation.</div>
-    </div>
-  </div>
-
-  <!-- SHUNT COPY SECTION -->
-  <div class="copy-section" id="shuntCopySection">
-    <div class="copy-head">
-      <span>EVALUATION REPORT</span>
-      <div style="display:flex; align-items:center; gap:12px;">
-        <label style="display:flex; align-items:center; gap:5px; font-weight:400; font-size:11px; cursor:pointer; min-width:auto; color:#ccc;">
-          <input type="checkbox" id="shuntPlainTextToggle" onchange="calc()" style="width:14px; height:14px; cursor:pointer;">
-          Plain text (EHR)
-        </label>
-        <button class="copy-btn" id="shuntCopyBtn" onclick="copyShuntResults()">Copy to Clipboard</button>
-      </div>
-    </div>
-    <textarea id="shuntCopyText" readonly></textarea>
-  </div>
-
-</div><!-- end shuntResults -->
-
-</div>
-
-</div>
+<footer class="footer">
+  &copy; 2026 CathMath &mdash; Hemodynamic Education Tools
+</footer>
 
 <script>
-// ===================== TAB SWITCHING =====================
-let currentTab = 'rhc';
-function switchTab(tab) {
-  currentTab = tab;
-  document.getElementById('tabRhc').classList.toggle('active', tab === 'rhc');
-  document.getElementById('tabShunt').classList.toggle('active', tab === 'shunt');
-  document.getElementById('rhcResults').style.display = tab === 'rhc' ? 'block' : 'none';
-  document.getElementById('shuntResults').style.display = tab === 'shunt' ? 'block' : 'none';
-  document.getElementById('gorlinInputSection').style.display = tab === 'rhc' ? 'block' : 'none';
-  document.getElementById('shuntInputSection').style.display = tab === 'shunt' ? 'block' : 'none';
-  document.getElementById('coSourceSection').style.display = tab === 'rhc' ? 'block' : 'none';
-  calc();
-}
+(function() {
+  'use strict';
 
-// ===================== PV O2 SOURCE =====================
-function handlePvO2Source() {
-  const src = document.getElementById('pvo2_source').value;
-  document.getElementById('pvO2ManualRow').style.display = (src === 'manual') ? 'flex' : 'none';
-}
+  /* ══════════════════════════════════════
+     HERO ANIMATION — Full sequence
+     ══════════════════════════════════════ */
+  var base = document.getElementById('logoBase');
+  var ekg = document.getElementById('logoEkg');
+  var balloon = document.getElementById('swanBalloon');
+  var pullbackCanvas = document.getElementById('pullbackCanvas');
+  var pullbackCtx = pullbackCanvas.getContext('2d');
+  var TOP = 58, BOT = 76;
 
-// ===================== HELPERS =====================
-function v(id) {
-  const el = document.getElementById(id);
-  const val = parseFloat(el.value);
-  return isNaN(val) ? null : val;
-}
-function fmt(val, dec) {
-  if (val === null || val === undefined || isNaN(val) || !isFinite(val)) return '—';
-  return val.toFixed(dec === undefined ? 2 : dec);
-}
-function setText(id, text) { document.getElementById(id).textContent = text; }
-function setFlag(id, text, cls) {
-  const el = document.getElementById(id);
-  el.textContent = text;
-  el.className = 'result-flag' + (cls ? ' ' + cls : '');
-}
-function clearFlag(id) { setFlag(id, '', ''); }
-
-// ===================== TD AVERAGE =====================
-function calcTD() {
-  const runs = [];
-  for (let i = 1; i <= 5; i++) {
-    const val = v('td' + i);
-    if (val !== null && val > 0) runs.push(val);
+  // ── Pullback waveform generators (mmHg on common 0-30 scale) ──
+  function hPcwp(beat) {
+    var v = 8;
+    v += 5 * Math.exp(-0.5 * Math.pow((beat-0.08)/0.04,2));
+    v -= 3 * Math.exp(-0.5 * Math.pow((beat-0.20)/0.05,2));
+    v += 6 * Math.exp(-0.5 * Math.pow((beat-0.42)/0.06,2));
+    v -= 4 * Math.exp(-0.5 * Math.pow((beat-0.58)/0.05,2));
+    return Math.max(0,v);
   }
-  if (runs.length > 0) {
-    const avg = runs.reduce((a, b) => a + b, 0) / runs.length;
-    document.getElementById('td_co').value = avg.toFixed(2);
-    document.getElementById('tdAvgHint').textContent = `(avg of ${runs.length} runs)`;
-  } else {
-    document.getElementById('tdAvgHint').textContent = '';
+  function hPa(beat) {
+    var v=0;
+    if(beat<0.08){v=10+(beat/0.08)*15;}
+    else if(beat<0.16){v=25-((beat-0.08)/0.08)*10;}
+    else if(beat<0.24){v=15+Math.sin(((beat-0.16)/0.08)*Math.PI)*2;}
+    else if(beat<0.85){v=16*Math.exp(-2*((beat-0.24)/0.61))+10;}
+    else{v=10;}
+    return Math.max(0,v);
   }
-}
-
-// ===================== SEP / DFP AUTO-CALC =====================
-function calcSEP() {
-  const ejTime = v('ava_ejtime');
-  const hr = v('hr');
-  if (ejTime !== null && hr !== null && hr > 0) {
-    document.getElementById('ava_sep').value = (ejTime * hr).toFixed(1);
+  function hRv(beat) {
+    var v=0;
+    if(beat<0.05){v=1+(beat/0.05)*24;}
+    else if(beat<0.20){v=25-((beat-0.05)/0.15)*2;}
+    else if(beat<0.30){v=23*(1-(beat-0.20)/0.10);}
+    else if(beat<0.88){v=1+((beat-0.30)/0.58)*4;}
+    else{v=5*(1-(beat-0.88)/0.12);}
+    return Math.max(0,v);
   }
-}
-function calcDFP() {
-  const fillTime = v('mva_filltime');
-  const hr = v('hr');
-  if (fillTime !== null && hr !== null && hr > 0) {
-    document.getElementById('mva_dfp').value = (fillTime * hr).toFixed(1);
+  function hRa(beat) {
+    var v=3;
+    v+=3.5*Math.exp(-0.5*Math.pow((beat-0.06)/0.035,2));
+    v-=2*Math.exp(-0.5*Math.pow((beat-0.18)/0.04,2));
+    v+=2.5*Math.exp(-0.5*Math.pow((beat-0.40)/0.05,2));
+    v-=2*Math.exp(-0.5*Math.pow((beat-0.55)/0.04,2));
+    return Math.max(0,v);
   }
-}
-
-// ===================== AFIB TOGGLE =====================
-function toggleAfib() {
-  const isAfib = document.getElementById('afibToggle').checked;
-  document.getElementById('avaSingleInputs').style.display = isAfib ? 'none' : 'block';
-  document.getElementById('mvaSingleInputs').style.display = isAfib ? 'none' : 'block';
-  document.getElementById('avaAfibInputs').style.display = isAfib ? 'block' : 'none';
-  document.getElementById('mvaAfibInputs').style.display = isAfib ? 'block' : 'none';
-  calc();
-}
-
-// ===================== VO2 SOURCE =====================
-function handleVo2Source() {
-  const src = document.getElementById('vo2source').value;
-  const hint = document.getElementById('vo2hint');
-  const lafargeRow = document.getElementById('lafargeCalcRow');
-  const vo2Input = document.getElementById('vo2');
-
-  if (src === 'lafarge') {
-    hint.textContent = 'LaFarge: VO₂ = [138.1 − (k × ln(age)) + (0.378 × HR)] × BSA   (k = 11.49 M, 17.04 F)';
-    lafargeRow.style.display = 'block';
-    vo2Input.readOnly = true;
-    vo2Input.style.background = document.body.classList.contains('dark') ? '#1a2e1a' : '#e8f5e9';
-    calcLaFarge();
-  } else if (src === 'lafarge_manual') {
-    hint.textContent = 'Document: "estimated VO₂ via LaFarge equation (cath lab software)"';
-    lafargeRow.style.display = 'none';
-    vo2Input.readOnly = false;
-    vo2Input.style.background = '';
-  } else if (src === 'measured') {
-    hint.textContent = 'Document: "measured VO₂ via metabolic cart"';
-    lafargeRow.style.display = 'none';
-    vo2Input.readOnly = false;
-    vo2Input.style.background = '';
-  } else {
-    hint.textContent = 'VO₂ = 125 × BSA. Less accurate — use LaFarge if available.';
-    lafargeRow.style.display = 'none';
-    vo2Input.readOnly = false;
-    vo2Input.style.background = '';
-    const bsa = v('bsa');
-    if (bsa) {
-      vo2Input.value = (125 * bsa).toFixed(1);
-    }
-  }
-}
-
-function calcLaFarge() {
-  const src = document.getElementById('vo2source').value;
-  if (src !== 'lafarge') return;
-
-  const age = v('age');
-  const hr = v('hr');
-  const bsa = v('bsa');
-  const sex = document.getElementById('sex').value;
-  const detail = document.getElementById('lafargeDetail');
-  const perM2 = document.getElementById('vo2_per_m2');
-
-  if (age === null || age <= 0 || hr === null || hr <= 0 || bsa === null || bsa <= 0) {
-    detail.innerHTML = '<b>LaFarge auto-calc:</b> Needs Age, HR, and BSA above. Fill those in and VO₂ will compute automatically.';
-    detail.className = 'info-box';
-    document.getElementById('vo2').value = '';
-    perM2.textContent = '';
-    return;
+  function hLerp(a,b,t){return a*(1-t)+b*t;}
+  function pullbackValue(t) {
+    if(t<0.22){return hPcwp(((t/0.22)*3)%1);}
+    else if(t<0.27){var m=(t-0.22)/0.05;return hLerp(hPcwp((((t)/0.22)*3)%1),hPa((Math.abs((t-0.27)/0.23+0.0001)*3)%1),m);}
+    else if(t<0.50){return hPa((((t-0.27)/0.23)*3)%1);}
+    else if(t<0.55){var m=(t-0.50)/0.05;return hLerp(hPa((((t-0.27)/0.23)*3)%1),hRv((Math.abs((t-0.55)/0.22+0.0001)*3)%1),m);}
+    else if(t<0.77){return hRv((((t-0.55)/0.22)*3)%1);}
+    else if(t<0.82){var m=(t-0.77)/0.05;return hLerp(hRv((((t-0.55)/0.22)*3)%1),hRa((Math.abs((t-0.82)/0.18+0.0001)*3)%1),m);}
+    else{return hRa((((t-0.82)/0.18)*3)%1);}
   }
 
-  const k = (sex === 'female') ? 17.04 : 11.49;
-  const vo2_per_m2 = 138.1 - (k * Math.log(age)) + (0.378 * hr);
-  const vo2_total = vo2_per_m2 * bsa;
-
-  document.getElementById('vo2').value = vo2_total.toFixed(1);
-  perM2.textContent = `(${vo2_per_m2.toFixed(1)} mL/min/m²)`;
-
-  const sexLabel = sex === 'female' ? 'F' : 'M';
-  detail.innerHTML = `<b>LaFarge (${sexLabel}):</b> [138.1 − (${k} × ln(${age})) + (0.378 × ${hr})] × ${bsa} = <b>${vo2_total.toFixed(1)} mL/min</b>`;
-  detail.className = 'info-box';
-  detail.style.fontSize = '12px';
-}
-
-// ===================== DISSOLVED O2 TOGGLE =====================
-document.getElementById('useDissolvedO2').addEventListener('change', function() {
-  document.getElementById('dissolvedRow').style.display = this.checked ? 'flex' : 'none';
-});
-
-// ===================== MAIN CALCULATION =====================
-function calc() {
-  // --- Auto-calculate LaFarge if selected, and SEP/DFP from HR ---
-  calcLaFarge();
-  calcSEP();
-  calcDFP();
-
-  // --- Get inputs ---
-  const bsa = v('bsa');
-  const hb = v('hb');
-  const hr = v('hr');
-  const o2k = parseFloat(document.getElementById('o2const').value);
-  const useDissolved = document.getElementById('useDissolvedO2').checked;
-
-  const ra_a = v('ra_a'), ra_v = v('ra_v'), ra_mean = v('ra_mean');
-  const rv_sys = v('rv_sys'), rv_dia = v('rv_dia'), rv_edp = v('rv_edp');
-  const pa_sys = v('pa_sys'), pa_dia = v('pa_dia'), pa_mean = v('pa_mean');
-  const pcwp_a = v('pcwp_a'), pcwp_v = v('pcwp_v'), pcwp_mean = v('pcwp_mean');
-  const ao_sys = v('ao_sys'), ao_dia = v('ao_dia'), ao_mean = v('ao_mean');
-  const lv_sys = v('lv_sys'), lv_dia = v('lv_dia'), lv_edp = v('lv_edp');
-
-  const sao2_pct = v('sao2'), svo2_pct = v('svo2');
-  const sao2 = (sao2_pct !== null && sao2_pct <= 100) ? sao2_pct / 100 : null;
-  const svo2 = (svo2_pct !== null && svo2_pct <= 100) ? svo2_pct / 100 : null;
-  const pao2 = v('pao2'), pvo2 = v('pvo2');
-
-  const vo2 = v('vo2');
-  const td_co = v('td_co');
-
-  const useFick = document.getElementById('coFick').checked;
-
-  // --- O2 Content ---
-  let cao2 = null, cvo2 = null, avo2 = null;
-  if (hb !== null && sao2 !== null) {
-    cao2 = hb * o2k * sao2;
-    if (useDissolved && pao2 !== null) cao2 += 0.0031 * pao2;
-  }
-  if (hb !== null && svo2 !== null) {
-    cvo2 = hb * o2k * svo2;
-    if (useDissolved && pvo2 !== null) cvo2 += 0.0031 * pvo2;
-  }
-  if (cao2 !== null && cvo2 !== null) avo2 = cao2 - cvo2;
-
-  setText('r_cao2', fmt(cao2));
-  setText('r_cvo2', fmt(cvo2));
-  setText('r_avo2', fmt(avo2));
-
-  // --- Fick CO ---
-  let fickCO = null, fickCI = null, sv = null, svi = null;
-  if (vo2 !== null && avo2 !== null && avo2 > 0) {
-    fickCO = vo2 / (avo2 * 10);
-  }
-  if (fickCO !== null && bsa !== null && bsa > 0) fickCI = fickCO / bsa;
-  if (fickCO !== null && hr !== null && hr > 0) sv = (fickCO * 1000) / hr;
-  if (sv !== null && bsa !== null && bsa > 0) svi = sv / bsa;
-
-  setText('r_fick_co', fmt(fickCO));
-  setText('r_fick_ci', fmt(fickCI));
-  setText('r_sv', fmt(sv, 1));
-  setText('r_svi', fmt(svi, 1));
-
-  // Fick flags
-  flagValue('f_fick_co', fickCO, 4, 8, 'L/min');
-  flagValue('f_fick_ci', fickCI, 2.5, 4.0, 'CI');
-  flagValue('f_sv', sv, 60, 100, 'SV');
-  flagValue('f_svi', svi, 33, 47, 'SVI');
-
-  // --- TD ---
-  let tdCI = null;
-  if (td_co !== null && bsa !== null && bsa > 0) tdCI = td_co / bsa;
-  setText('r_td_co', td_co !== null ? fmt(td_co) : '—');
-  setText('r_td_ci', fmt(tdCI));
-
-  // Fick vs TD warning
-  const tdWarn = document.getElementById('tdFickWarning');
-  if (fickCO !== null && td_co !== null && fickCO > 0 && td_co > 0) {
-    const diff = Math.abs(fickCO - td_co) / fickCO * 100;
-    if (diff > 20) {
-      tdWarn.innerHTML = `<div class="warning-box"><b>Fick–TD discordance: ${fmt(diff,0)}%.</b> Consider: VO₂ estimated vs measured? Severe TR? Low-output state? Use Fick for derived hemodynamics.</div>`;
-    } else {
-      tdWarn.innerHTML = `<div class="info-box">Fick–TD difference: ${fmt(diff,0)}% — concordant.</div>`;
-    }
-  } else {
-    tdWarn.innerHTML = '';
+  // Pre-compute pullback points
+  var PW=700, PH=100, PDPR=2;
+  pullbackCtx.scale(PDPR,PDPR);
+  var pullPts=[];
+  for(var i=0;i<=PW;i++){
+    var t=i/PW, mmhg=pullbackValue(t);
+    var yFrac=mmhg/30;
+    pullPts.push({x:i, y:PH*0.95-yFrac*PH*0.88});
   }
 
-  // --- Select CO for derived ---
-  const co = useFick ? fickCO : td_co;
-  const ci = useFick ? fickCI : tdCI;
-  const coLabel = useFick ? '(using Fick CO)' : '(using TD CO)';
-  setText('derivedLabel', coLabel);
-  setText('derivedLabel2', coLabel);
-
-  // --- Pulmonary hemodynamics ---
-  let tpg = null, dpg = null, pvr = null, pvrDyn = null, pvri = null;
-  if (pa_mean !== null && pcwp_mean !== null) tpg = pa_mean - pcwp_mean;
-  if (pa_dia !== null && pcwp_mean !== null) dpg = pa_dia - pcwp_mean;
-  if (tpg !== null && co !== null && co > 0) pvr = tpg / co;
-  if (pvr !== null) pvrDyn = pvr * 80;
-  if (tpg !== null && ci !== null && ci > 0) pvri = tpg / ci;
-
-  setText('r_tpg', fmt(tpg, 0));
-  setText('r_dpg', fmt(dpg, 0));
-  setText('r_pvr', fmt(pvr));
-  setText('r_pvr_dyn', fmt(pvrDyn, 0));
-  setText('r_pvri', fmt(pvri));
-
-  flagPVR('f_pvr', pvr);
-
-  // PH classification
-  const phDiv = document.getElementById('phClassification');
-  if (pa_mean !== null && pcwp_mean !== null && pvr !== null) {
-    if (pa_mean > 20) {
-      let phType = '';
-      if (pcwp_mean <= 15 && pvr > 2) phType = 'Pre-capillary PH';
-      else if (pcwp_mean > 15 && pvr <= 2) phType = 'Isolated post-capillary PH (IpcPH)';
-      else if (pcwp_mean > 15 && pvr > 2) phType = 'Combined pre & post-capillary PH (CpcPH)';
-      else phType = 'Elevated mPAP with normal PCWP and PVR — exercise PH or borderline';
-      phDiv.innerHTML = `<div class="warning-box"><b>PH Classification (2022 ESC/ERS):</b> ${phType}</div>`;
-    } else {
-      phDiv.innerHTML = `<div class="info-box">mPAP ≤ 20 — no pulmonary hypertension by hemodynamic criteria.</div>`;
-    }
-  } else {
-    phDiv.innerHTML = '';
-  }
-
-  // --- Systemic hemodynamics ---
-  let svr = null, svrDyn = null, svri = null;
-  if (ao_mean !== null && ra_mean !== null && co !== null && co > 0) {
-    svr = (ao_mean - ra_mean) / co;
-  }
-  if (svr !== null) svrDyn = svr * 80;
-  if (ao_mean !== null && ra_mean !== null && ci !== null && ci > 0) {
-    svri = (ao_mean - ra_mean) / ci;
-  }
-
-  setText('r_svr', fmt(svr));
-  setText('r_svr_dyn', fmt(svrDyn, 0));
-  setText('r_svri', fmt(svri));
-  flagSVR('f_svr', svr);
-
-  // --- RV Performance ---
-  let papi = null, rvswi = null, cpo = null, cpi = null;
-  if (pa_sys !== null && pa_dia !== null && ra_mean !== null && ra_mean > 0) {
-    papi = (pa_sys - pa_dia) / ra_mean;
-  }
-  if (pa_mean !== null && ra_mean !== null && svi !== null) {
-    rvswi = (pa_mean - ra_mean) * svi * 0.0136;
-  }
-  if (ao_mean !== null && co !== null) {
-    cpo = (ao_mean * co) / 451;
-  }
-  if (ao_mean !== null && ci !== null) {
-    cpi = (ao_mean * ci) / 451;
-  }
-
-  setText('r_papi', fmt(papi));
-  setText('r_rvswi', fmt(rvswi));
-  setText('r_cpo', fmt(cpo));
-  setText('r_cpi', fmt(cpi));
-
-  flagPAPi('f_papi', papi, ra_mean);
-  flagValue('f_rvswi', rvswi, 5, 10, 'RVSWI');
-  flagCPO('f_cpo', cpo);
-  flagCPI('f_cpi', cpi);
-
-  // --- LV Pressures & Aortic Pullback ---
-  const lvSection = document.getElementById('lvResultsSection');
-  const hasLV = lv_sys !== null || lv_dia !== null || lv_edp !== null;
-  lvSection.style.display = hasLV ? 'block' : 'none';
-
-  let lv_ao_gradient = null;
-  if (hasLV) {
-    // LVEDP
-    setText('r_lvedp', lv_edp !== null ? fmt(lv_edp, 0) : '—');
-    if (lv_edp !== null) {
-      if (lv_edp > 20) setFlag('f_lvedp', 'Elevated', 'flag-severe');
-      else if (lv_edp > 12) setFlag('f_lvedp', 'Borderline', 'flag-high');
-      else setFlag('f_lvedp', 'Normal', 'flag-normal');
-    } else { clearFlag('f_lvedp'); }
-
-    // LV-Ao peak-to-peak gradient
-    if (lv_sys !== null && ao_sys !== null) {
-      lv_ao_gradient = lv_sys - ao_sys;
-      setText('r_lv_ao_gradient', fmt(lv_ao_gradient, 0));
-      if (lv_ao_gradient >= 50) setFlag('f_lv_ao_gradient', 'Severe AS', 'flag-severe');
-      else if (lv_ao_gradient >= 30) setFlag('f_lv_ao_gradient', 'Significant', 'flag-high');
-      else if (lv_ao_gradient > 0) setFlag('f_lv_ao_gradient', 'Mild', 'flag-normal');
-      else setFlag('f_lv_ao_gradient', 'No gradient', 'flag-normal');
-    } else {
-      setText('r_lv_ao_gradient', '—');
-      clearFlag('f_lv_ao_gradient');
-    }
-
-    // LVEDP vs PCWP discordance
-    const lvedpPcwpEl = document.getElementById('lvedpPcwpCheck');
-    if (lv_edp !== null && pcwp_mean !== null) {
-      const diff = lv_edp - pcwp_mean;
-      if (diff > 5) {
-        lvedpPcwpEl.innerHTML = `<div class="warning-box">LVEDP–PCWP discordance: LVEDP ${lv_edp} − PCWP ${pcwp_mean} = ${diff} mmHg (> 5). Consider stiff LA, mitral stenosis, or non-compliant LV.</div>`;
-        lvedpPcwpEl.style.display = 'block';
-      } else {
-        lvedpPcwpEl.innerHTML = `<div class="info-box">LVEDP–PCWP concordant (difference ${diff} mmHg ≤ 5).</div>`;
-        lvedpPcwpEl.style.display = 'block';
+  function animatePullback(cb) {
+    pullbackCanvas.style.opacity='1';
+    var dur=4000, t0=performance.now();
+    function frame(){
+      var now=performance.now(), p=Math.min((now-t0)/dur,1);
+      var end=Math.floor(p*PW);
+      pullbackCtx.clearRect(0,0,PW,PH);
+      if(end>1){
+        pullbackCtx.save();
+        pullbackCtx.shadowColor='rgba(255,50,50,0.4)';
+        pullbackCtx.shadowBlur=6;
+        pullbackCtx.strokeStyle='rgba(220,50,50,0.8)';
+        pullbackCtx.lineWidth=2.2;
+        pullbackCtx.lineCap='round';
+        pullbackCtx.lineJoin='round';
+        pullbackCtx.beginPath();
+        pullbackCtx.moveTo(pullPts[0].x,pullPts[0].y);
+        for(var i=1;i<=end;i++) pullbackCtx.lineTo(pullPts[i].x,pullPts[i].y);
+        pullbackCtx.stroke();
+        pullbackCtx.restore();
+        pullbackCtx.strokeStyle='rgba(220,50,50,0.8)';
+        pullbackCtx.lineWidth=1.6;
+        pullbackCtx.lineCap='round';
+        pullbackCtx.lineJoin='round';
+        pullbackCtx.beginPath();
+        pullbackCtx.moveTo(pullPts[0].x,pullPts[0].y);
+        for(var i=1;i<=end;i++) pullbackCtx.lineTo(pullPts[i].x,pullPts[i].y);
+        pullbackCtx.stroke();
+        if(p<1){
+          pullbackCtx.save();
+          pullbackCtx.shadowColor='rgba(255,60,60,0.9)';
+          pullbackCtx.shadowBlur=12;
+          pullbackCtx.fillStyle='rgba(255,60,60,0.9)';
+          pullbackCtx.beginPath();
+          pullbackCtx.arc(pullPts[end].x,pullPts[end].y,2.5,0,Math.PI*2);
+          pullbackCtx.fill();
+          pullbackCtx.restore();
+        }
       }
-    } else {
-      lvedpPcwpEl.style.display = 'none';
+      if(p>0.05) document.getElementById('lblPcwp').classList.add('show');
+      if(p>0.30) document.getElementById('lblPa').classList.add('show');
+      if(p>0.58) document.getElementById('lblRv').classList.add('show');
+      if(p>0.84) document.getElementById('lblRa').classList.add('show');
+      if(p<1) requestAnimationFrame(frame);
+      else if(cb) cb();
     }
+    requestAnimationFrame(frame);
+  }
 
-    // LV sys < Ao sys check
-    const lvAoSysEl = document.getElementById('lvAoSysCheck');
-    if (lv_sys !== null && ao_sys !== null && lv_sys < ao_sys) {
-      lvAoSysEl.innerHTML = `<div class="info-box">LV sys (${lv_sys}) < Ao sys (${ao_sys}): Peripheral systolic amplification — normal finding when Ao measured peripherally. Use central aortic pressure for accurate gradient.</div>`;
-      lvAoSysEl.style.display = 'block';
-    } else {
-      lvAoSysEl.style.display = 'none';
+  function pulseBalloon(beats,beatMs,cb) {
+    var count=0;
+    function pulse(){
+      balloon.style.transition='transform 0.15s ease-out';
+      balloon.style.transform='scale(1.25,1.35)';
+      setTimeout(function(){
+        balloon.style.transition='transform 0.45s ease-in';
+        balloon.style.transform='scale(1,1)';
+      },150);
+      count++;
+      if(count<beats) setTimeout(pulse,beatMs);
+      else if(cb) setTimeout(cb,beatMs*0.4);
     }
+    pulse();
   }
 
-  // --- Gorlin Valve Areas ---
-  const isAfib = document.getElementById('afibToggle').checked;
-  const gorlinSection = document.getElementById('gorlinResultsSection');
-  const avaDiv = document.getElementById('avaResults');
-  const mvaDiv = document.getElementById('mvaResults');
-  const gorlinCoLabel = document.getElementById('gorlinCoLabel');
-  const avaAfibDetailEl = document.getElementById('avaAfibDetail');
-  const mvaAfibDetailEl = document.getElementById('mvaAfibDetail');
-  gorlinCoLabel.textContent = isAfib ? coLabel + ' — AFib beat averaging' : coLabel;
+  // ══════ TIMELINE ══════
+  // 1. Logo reveal → EKG sweep
+  setTimeout(function() {
+    base.classList.add('revealed');
+    base.style.opacity = '1';
+    base.style.transform = 'scale(1)';
+    ekg.style.opacity = '1';
 
-  let ava = null, mva = null;
-  let showGorlin = false;
-
-  if (isAfib) {
-    // --- AFib: per-beat Gorlin ---
-    // AVA per-beat
-    const avaBeats = [];
-    let avaDetailLines = [];
-    let anyAvaInput = false;
-    for (let i = 1; i <= 10; i++) {
-      const grad = v('ava_af_grad_' + i);
-      const et = v('ava_af_et_' + i);
-      const resultEl = document.getElementById('ava_af_result_' + i);
-      if (grad !== null || et !== null) anyAvaInput = true;
-      if (grad !== null && grad > 0 && et !== null && et > 0 && co !== null && co > 0 && hr !== null && hr > 0) {
-        const sep_i = et * hr;
-        const sqrtG = Math.sqrt(grad);
-        const ava_i = (co * 1000) / (44.3 * sep_i * sqrtG);
-        avaBeats.push(ava_i);
-        resultEl.textContent = fmt(ava_i);
-        avaDetailLines.push(`Beat ${i}: ΔP=${fmt(grad,1)}, ET=${fmt(et,2)}s, SEP=${fmt(sep_i,1)}, √ΔP=${fmt(sqrtG)}, AVA=${fmt(ava_i)} cm²`);
-      } else {
-        resultEl.textContent = '—';
-      }
+    var dur = 1800, t0 = performance.now();
+    function sweepFrame() {
+      var p = Math.min((performance.now() - t0) / dur, 1);
+      var ep = 1 - Math.pow(1 - p, 2);
+      ekg.style.clipPath = 'polygon(0% '+TOP+'%, '+(ep*100)+'% '+TOP+'%, '+(ep*100)+'% '+BOT+'%, 0% '+BOT+'%)';
+      if (p < 1) requestAnimationFrame(sweepFrame);
+      else afterEkg();
     }
-    if (avaBeats.length > 0) {
-      ava = avaBeats.reduce((a, b) => a + b, 0) / avaBeats.length;
-      setText('r_ava', fmt(ava));
-      flagAVA('f_ava', ava);
-      document.getElementById('ava_math').textContent =
-        `AFib average of ${avaBeats.length} beats = ${fmt(ava)} cm²`;
-      let detailHtml = avaDetailLines.join('\n');
-      detailHtml += `\n─────────────────────────────────`;
-      detailHtml += `\nAverage AVA (${avaBeats.length} beats) = ${fmt(ava)} cm²`;
-      avaAfibDetailEl.textContent = detailHtml;
-      avaAfibDetailEl.style.display = 'block';
-      if (avaBeats.length < 5) {
-        detailHtml += `\n⚠ Only ${avaBeats.length} beat(s) — minimum 5 recommended in AFib`;
-        avaAfibDetailEl.textContent = detailHtml;
-      }
-      avaDiv.style.display = 'block';
-      showGorlin = true;
-    } else {
-      setText('r_ava', '—');
-      clearFlag('f_ava');
-      document.getElementById('ava_math').textContent = '';
-      avaAfibDetailEl.style.display = 'none';
-      avaDiv.style.display = anyAvaInput ? 'block' : 'none';
-      if (anyAvaInput) showGorlin = true;
-    }
+    requestAnimationFrame(sweepFrame);
+  }, 1500);
 
-    // MVA per-beat
-    const mvaBeats = [];
-    let mvaDetailLines = [];
-    let anyMvaInput = false;
-    for (let i = 1; i <= 10; i++) {
-      const grad = v('mva_af_grad_' + i);
-      const ft = v('mva_af_ft_' + i);
-      const resultEl = document.getElementById('mva_af_result_' + i);
-      if (grad !== null || ft !== null) anyMvaInput = true;
-      if (grad !== null && grad > 0 && ft !== null && ft > 0 && co !== null && co > 0 && hr !== null && hr > 0) {
-        const dfp_i = ft * hr;
-        const sqrtG = Math.sqrt(grad);
-        const mva_i = (co * 1000) / (37.7 * dfp_i * sqrtG);
-        mvaBeats.push(mva_i);
-        resultEl.textContent = fmt(mva_i);
-        mvaDetailLines.push(`Beat ${i}: ΔP=${fmt(grad,1)}, FT=${fmt(ft,2)}s, DFP=${fmt(dfp_i,1)}, √ΔP=${fmt(sqrtG)}, MVA=${fmt(mva_i)} cm²`);
-      } else {
-        resultEl.textContent = '—';
-      }
-    }
-    if (mvaBeats.length > 0) {
-      mva = mvaBeats.reduce((a, b) => a + b, 0) / mvaBeats.length;
-      setText('r_mva', fmt(mva));
-      flagMVA('f_mva', mva);
-      document.getElementById('mva_math').textContent =
-        `AFib average of ${mvaBeats.length} beats = ${fmt(mva)} cm²`;
-      let detailHtml = mvaDetailLines.join('\n');
-      detailHtml += `\n─────────────────────────────────`;
-      detailHtml += `\nAverage MVA (${mvaBeats.length} beats) = ${fmt(mva)} cm²`;
-      mvaAfibDetailEl.textContent = detailHtml;
-      mvaAfibDetailEl.style.display = 'block';
-      if (mvaBeats.length < 5) {
-        detailHtml += `\n⚠ Only ${mvaBeats.length} beat(s) — minimum 5 recommended in AFib`;
-        mvaAfibDetailEl.textContent = detailHtml;
-      }
-      mvaDiv.style.display = 'block';
-      showGorlin = true;
-    } else {
-      setText('r_mva', '—');
-      clearFlag('f_mva');
-      document.getElementById('mva_math').textContent = '';
-      mvaAfibDetailEl.style.display = 'none';
-      mvaDiv.style.display = anyMvaInput ? 'block' : 'none';
-      if (anyMvaInput) showGorlin = true;
-    }
+  // 2. Text + Swan-Ganz catheter + balloon + pullback
+  function afterEkg() {
+    document.getElementById('heroUrl').classList.add('show');
+    setTimeout(function() { document.getElementById('heroCredit').classList.add('show'); }, 400);
 
-  } else {
-    // --- Non-AFib: single-value Gorlin ---
-    avaAfibDetailEl.style.display = 'none';
-    mvaAfibDetailEl.style.display = 'none';
+    setTimeout(function() {
+      // Thread catheter in
+      document.getElementById('swanShaft').classList.add('animate');
+      document.getElementById('swanLumen').classList.add('animate');
+      var marks = document.querySelectorAll('.swan-mark');
+      marks.forEach(function(m,i) {
+        setTimeout(function() {
+          m.style.transition = 'stroke-dashoffset 0.2s ease';
+          m.style.strokeDashoffset = '0';
+        }, 300 + i * 200);
+      });
 
-    const ava_gradient = v('ava_gradient');
-    const ava_sep = v('ava_sep');
-    const mva_gradient = v('mva_gradient');
-    const mva_dfp = v('mva_dfp');
-
-    // AVA
-    if (ava_gradient !== null && ava_gradient > 0 && ava_sep !== null && ava_sep > 0 && co !== null && co > 0) {
-      const sqrtG = Math.sqrt(ava_gradient);
-      ava = (co * 1000) / (44.3 * ava_sep * sqrtG);
-      setText('r_ava', fmt(ava));
-      flagAVA('f_ava', ava);
-      document.getElementById('ava_math').textContent =
-        `= (${fmt(co)} × 1000) / (44.3 × ${fmt(ava_sep,1)} × √${fmt(ava_gradient,1)}) = ${fmt(co*1000,0)} / (44.3 × ${fmt(ava_sep,1)} × ${fmt(sqrtG)}) = ${fmt(co*1000,0)} / ${fmt(44.3 * ava_sep * sqrtG,0)} = ${fmt(ava)} cm²`;
-      avaDiv.style.display = 'block';
-      showGorlin = true;
-    } else {
-      setText('r_ava', '—');
-      clearFlag('f_ava');
-      document.getElementById('ava_math').textContent = '';
-      avaDiv.style.display = (ava_gradient !== null || ava_sep !== null) ? 'block' : 'none';
-      if (ava_gradient !== null || ava_sep !== null) showGorlin = true;
-    }
-
-    // MVA
-    if (mva_gradient !== null && mva_gradient > 0 && mva_dfp !== null && mva_dfp > 0 && co !== null && co > 0) {
-      const sqrtG = Math.sqrt(mva_gradient);
-      mva = (co * 1000) / (37.7 * mva_dfp * sqrtG);
-      setText('r_mva', fmt(mva));
-      flagMVA('f_mva', mva);
-      document.getElementById('mva_math').textContent =
-        `= (${fmt(co)} × 1000) / (37.7 × ${fmt(mva_dfp,1)} × √${fmt(mva_gradient,1)}) = ${fmt(co*1000,0)} / (37.7 × ${fmt(mva_dfp,1)} × ${fmt(sqrtG)}) = ${fmt(co*1000,0)} / ${fmt(37.7 * mva_dfp * sqrtG,0)} = ${fmt(mva)} cm²`;
-      mvaDiv.style.display = 'block';
-      showGorlin = true;
-    } else {
-      setText('r_mva', '—');
-      clearFlag('f_mva');
-      document.getElementById('mva_math').textContent = '';
-      mvaDiv.style.display = (mva_gradient !== null || mva_dfp !== null) ? 'block' : 'none';
-      if (mva_gradient !== null || mva_dfp !== null) showGorlin = true;
-    }
+      // Balloon inflates
+      setTimeout(function() {
+        balloon.classList.add('inflate');
+        // 3. Balloon pulses (PA pulsation)
+        setTimeout(function() {
+          pulseBalloon(3, 750, function() {
+            // 4. Show chamber labels + start pullback
+            document.getElementById('chamberLabels').classList.add('show');
+            animatePullback(function() {
+              // 5. After pullback, show scroll hint + reveal cards
+              setTimeout(function() {
+                document.getElementById('scrollHint').classList.add('show');
+                revealCards();
+              }, 400);
+            });
+          });
+        }, 500);
+      }, 1700);
+    }, 1200);
   }
 
-  gorlinSection.style.display = showGorlin ? 'block' : 'none';
+  /* ══════════════════════════════════════
+     CARD REVEAL + ANIMATION TRIGGER
+     ══════════════════════════════════════ */
+  var cardsRevealed = false;
 
-  // --- Quality Checks ---
-  buildQualityChecks(hb, sao2, svo2, avo2, fickCO, td_co, vo2, ra_mean, papi,
-    sao2_pct, svo2_pct, pa_sys, pa_dia, pcwp_mean, ao_mean, lv_edp, lv_sys, ao_sys);
+  function revealCards() {
+    if (cardsRevealed) return;
+    cardsRevealed = true;
+    document.getElementById('sectionLabel').classList.add('show');
 
-  // --- Interpretation ---
-  buildRhcInterpretation(ci, fickCI, tdCI, useFick, ra_mean, pcwp_mean, pa_mean, pvr, papi, rvswi, cpo, cpi, avo2, fickCO, td_co, ava, mva, lv_edp, lv_sys, ao_sys, lv_ao_gradient);
+    var cards = document.querySelectorAll('.tool-card');
+    cards.forEach(function(c, i) {
+      setTimeout(function() { c.classList.add('show'); }, 200 + i * 150);
+    });
 
-
-  // --- Copy text ---
-  const _ava_gradient = isAfib ? null : v('ava_gradient');
-  const _ava_sep = isAfib ? null : v('ava_sep');
-  const _mva_gradient = isAfib ? null : v('mva_gradient');
-  const _mva_dfp = isAfib ? null : v('mva_dfp');
-  buildCopyText(bsa, hb, hr, o2k, useDissolved,
-    ra_a, ra_v, ra_mean, rv_sys, rv_dia, rv_edp,
-    pa_sys, pa_dia, pa_mean, pcwp_a, pcwp_v, pcwp_mean,
-    ao_sys, ao_dia, ao_mean, sao2_pct, svo2_pct,
-    cao2, cvo2, avo2, vo2, fickCO, fickCI, sv, svi,
-    td_co, tdCI, tpg, dpg, pvr, pvrDyn, pvri, svr, svrDyn, svri,
-    papi, rvswi, cpo, cpi, useFick,
-    ava, mva, _ava_gradient, _ava_sep, _mva_gradient, _mva_dfp, isAfib,
-    lv_sys, lv_dia, lv_edp, lv_ao_gradient);
-
-  if (currentTab === 'shunt') {
-    calcShunt();
-  }
-}
-
-// ===================== FLAG HELPERS =====================
-function flagValue(id, val, lo, hi, label) {
-  if (val === null || val === undefined || isNaN(val)) { clearFlag(id); return; }
-  if (val < lo) setFlag(id, 'LOW', 'flag-low');
-  else if (val > hi) setFlag(id, 'HIGH', 'flag-high');
-  else setFlag(id, 'Normal', 'flag-normal');
-}
-function flagPVR(id, val) {
-  if (val === null) { clearFlag(id); return; }
-  if (val < 2) setFlag(id, 'Normal', 'flag-normal');
-  else if (val <= 3) setFlag(id, 'Borderline', 'flag-high');
-  else if (val <= 5) setFlag(id, 'Moderate', 'flag-high');
-  else setFlag(id, 'SEVERE', 'flag-severe');
-}
-function flagSVR(id, val) {
-  if (val === null) { clearFlag(id); return; }
-  if (val < 10) setFlag(id, 'LOW', 'flag-low');
-  else if (val <= 20) setFlag(id, 'Normal', 'flag-normal');
-  else setFlag(id, 'HIGH', 'flag-high');
-}
-function flagPAPi(id, val, rap) {
-  if (val === null) { clearFlag(id); return; }
-  if (val < 0) { setFlag(id, 'Check PA pressures (sys < dia?)', 'flag-severe'); return; }
-  if (rap !== null && rap < 3) { setFlag(id, 'Unreliable (low RAP)', 'flag-high'); return; }
-  if (val < 0.9) setFlag(id, 'RV failure risk', 'flag-severe');
-  else if (val < 1.0) setFlag(id, 'Borderline', 'flag-high');
-  else setFlag(id, 'Adequate', 'flag-normal');
-}
-function flagCPO(id, val) {
-  if (val === null) { clearFlag(id); return; }
-  if (val < 0.6) setFlag(id, 'CRITICAL', 'flag-severe');
-  else if (val < 0.8) setFlag(id, 'LOW', 'flag-low');
-  else setFlag(id, 'Normal', 'flag-normal');
-}
-function flagCPI(id, val) {
-  if (val === null) { clearFlag(id); return; }
-  if (val < 0.33) setFlag(id, 'CRITICAL', 'flag-severe');
-  else if (val < 0.5) setFlag(id, 'LOW', 'flag-low');
-  else setFlag(id, 'Normal', 'flag-normal');
-}
-
-function flagAVA(id, val) {
-  if (val === null) { clearFlag(id); return; }
-  if (val <= 0.6) setFlag(id, 'Critical AS', 'flag-severe');
-  else if (val < 1.0) setFlag(id, 'Severe AS', 'flag-severe');
-  else if (val < 1.5) setFlag(id, 'Moderate AS', 'flag-high');
-  else if (val <= 2.0) setFlag(id, 'Mild AS', 'flag-high');
-  else setFlag(id, 'Normal', 'flag-normal');
-}
-function flagMVA(id, val) {
-  if (val === null) { clearFlag(id); return; }
-  if (val < 1.0) setFlag(id, 'Severe MS', 'flag-severe');
-  else if (val <= 1.5) setFlag(id, 'Moderate MS', 'flag-high');
-  else if (val <= 4.0) setFlag(id, 'Mild MS', 'flag-high');
-  else setFlag(id, 'Normal', 'flag-normal');
-}
-function avaLabel(val) {
-  if (val <= 0.6) return 'Critical AS (≤ 0.6)';
-  if (val < 1.0) return 'Severe AS (< 1.0)';
-  if (val < 1.5) return 'Moderate AS (1.0–1.5)';
-  if (val <= 2.0) return 'Mild AS (1.5–2.0)';
-  return 'Normal (> 2.0)';
-}
-function mvaLabel(val) {
-  if (val < 1.0) return 'Severe MS (< 1.0)';
-  if (val <= 1.5) return 'Moderate MS (1.0–1.5)';
-  if (val <= 4.0) return 'Mild MS (> 1.5)';
-  return 'Normal (4–6)';
-}
-function flagQpQs(id, val) {
-  if (val === null) { clearFlag(id); return; }
-  if (val < 1.0) setFlag(id, 'Net R\u2192L', 'flag-severe');
-  else if (val < 1.5) setFlag(id, 'No significant shunt', 'flag-normal');
-  else if (val < 2.0) setFlag(id, 'Small-mod L\u2192R', 'flag-high');
-  else setFlag(id, 'Large L\u2192R', 'flag-severe');
-}
-
-// ===================== SHUNT CALCULATION =====================
-function calcShunt() {
-  const hb = v('hb');
-  const bsa = v('bsa');
-  const vo2 = v('vo2');
-  const o2k = parseFloat(document.getElementById('o2const').value);
-  const sao2_pct = v('sao2');
-  const sao2 = sao2_pct !== null ? sao2_pct / 100 : null;
-  const pa_mean = v('pa_mean');
-  const pcwp_mean = v('pcwp_mean');
-  const ao_mean = v('ao_mean');
-  const ra_mean = v('ra_mean');
-
-  // Shunt oximetry inputs
-  const svc_high = v('svc_high');
-  const svc_low = v('svc_low');
-  const ivc_sat = v('ivc_sat');
-  const ra_high_sat = v('ra_high_sat');
-  const ra_mid_sat = v('ra_mid_sat');
-  const ra_low_sat = v('ra_low_sat');
-  const rv_mid_sat = v('rv_mid_sat');
-  const rvot_sat = v('rvot_sat');
-  const pa_main_sat = v('pa_main_sat');
-  const pa_left_sat = v('pa_left_sat');
-  const pa_right_sat = v('pa_right_sat');
-  const fio2 = v('fio2') || 21;
-  const pvo2_src = document.getElementById('pvo2_source').value;
-  const pv_o2_manual = v('pv_o2_manual');
-
-  const n = (val, dec) => (val !== null && val !== undefined && !isNaN(val) && isFinite(val)) ? val.toFixed(dec === undefined ? 2 : dec) : '—';
-
-  // --- MV O2 (Flamm formula): (3 × high_SVC + IVC) / 4 ---
-  let mvo2 = null;
-  let mvo2_math = '';
-  if (svc_high !== null && ivc_sat !== null) {
-    mvo2 = (3 * svc_high + ivc_sat) / 4;
-    mvo2_math = `MV O₂ = (3 × ${n(svc_high,1)} [high SVC] + ${n(ivc_sat,1)} [IVC]) / 4 = ${n(mvo2,1)}%`;
-  } else if (svc_high !== null) {
-    // fallback: use only SVC
-    mvo2 = svc_high;
-    mvo2_math = `MV O₂ = High SVC (IVC not entered): ${n(mvo2,1)}%`;
+    // Start card animations after cards are visible
+    setTimeout(function() {
+      startRhcAnimation();
+      startPvAnimation();
+      startEkgAnimation();
+    }, 600);
   }
 
-  setText('r_mvo2', mvo2 !== null ? n(mvo2,1) : '—');
-  document.getElementById('mvo2_math').textContent = mvo2_math;
+  // Fade scroll hint on scroll
+  var scrollHintEl = document.getElementById('scrollHint');
+  window.addEventListener('scroll', function() {
+    if (window.scrollY > 80) scrollHintEl.style.opacity = '0';
+  }, { passive: true });
 
-  // --- Mean chamber saturations ---
-  // SVC: use high SVC as primary reference
-  const svc_ref = svc_high;
+  // ── CLICK TO SKIP — instantly show everything ──
+  var skipped = false;
+  function skipToEnd() {
+    if (skipped || cardsRevealed) return;
+    skipped = true;
 
-  // Mean RA
-  const ra_vals = [ra_high_sat, ra_mid_sat, ra_low_sat].filter(x => x !== null);
-  const ra_mean_sat = ra_vals.length > 0 ? ra_vals.reduce((a,b)=>a+b,0)/ra_vals.length : null;
+    // Show logo immediately
+    base.classList.add('revealed');
+    base.style.opacity = '1';
+    base.style.transform = 'scale(1)';
+    base.style.animation = 'breathe 5s ease-in-out infinite';
 
-  // Mean RV
-  const rv_vals = [rv_mid_sat, rvot_sat].filter(x => x !== null);
-  const rv_mean_sat = rv_vals.length > 0 ? rv_vals.reduce((a,b)=>a+b,0)/rv_vals.length : null;
+    // Show EKG fully
+    ekg.style.opacity = '1';
+    ekg.style.clipPath = 'polygon(0% '+TOP+'%, 100% '+TOP+'%, 100% '+BOT+'%, 0% '+BOT+'%)';
 
-  // PA sat: prefer PA main, else average branch PAs
-  let pa_sat = null;
-  if (pa_main_sat !== null) {
-    pa_sat = pa_main_sat;
-  } else {
-    const pa_vals = [pa_left_sat, pa_right_sat].filter(x => x !== null);
-    if (pa_vals.length > 0) pa_sat = pa_vals.reduce((a,b)=>a+b,0)/pa_vals.length;
+    // Show text
+    document.getElementById('heroUrl').classList.add('show');
+    document.getElementById('heroCredit').classList.add('show');
+
+    // Show catheter fully
+    var shaft = document.getElementById('swanShaft');
+    var lumen = document.getElementById('swanLumen');
+    shaft.style.transition = 'none'; shaft.style.strokeDashoffset = '0';
+    lumen.style.transition = 'none'; lumen.style.strokeDashoffset = '0';
+    shaft.classList.add('animate');
+    lumen.classList.add('animate');
+    document.querySelectorAll('.swan-mark').forEach(function(m) {
+      m.style.transition = 'none';
+      m.style.strokeDashoffset = '0';
+    });
+
+    // Show balloon
+    balloon.style.transition = 'none';
+    balloon.style.opacity = '0.6';
+    balloon.style.transform = 'scale(1)';
+    balloon.classList.add('inflate');
+
+    // Show pullback fully
+    pullbackCanvas.style.opacity = '1';
+    pullbackCtx.clearRect(0, 0, PW, PH);
+    pullbackCtx.save();
+    pullbackCtx.shadowColor = 'rgba(255,50,50,0.4)';
+    pullbackCtx.shadowBlur = 6;
+    pullbackCtx.strokeStyle = 'rgba(220,50,50,0.8)';
+    pullbackCtx.lineWidth = 2.2;
+    pullbackCtx.lineCap = 'round';
+    pullbackCtx.lineJoin = 'round';
+    pullbackCtx.beginPath();
+    pullbackCtx.moveTo(pullPts[0].x, pullPts[0].y);
+    for (var i = 1; i < pullPts.length; i++) pullbackCtx.lineTo(pullPts[i].x, pullPts[i].y);
+    pullbackCtx.stroke();
+    pullbackCtx.restore();
+
+    // Show chamber labels
+    document.getElementById('chamberLabels').classList.add('show');
+    document.getElementById('lblPcwp').classList.add('show');
+    document.getElementById('lblPa').classList.add('show');
+    document.getElementById('lblRv').classList.add('show');
+    document.getElementById('lblRa').classList.add('show');
+
+    // Show scroll hint
+    scrollHintEl.classList.add('show');
+
+    // Reveal cards + scroll to them
+    revealCards();
+    setTimeout(function() {
+      document.getElementById('toolsSection').scrollIntoView({ behavior: 'smooth' });
+    }, 300);
   }
 
-  // --- O2 Step-Up Detection ---
-  const stepUpEl = document.getElementById('stepUpResults');
-  let stepUpHtml = '';
-  let anyData = false;
-
-  // Screening: SVC → PA (threshold ≥ 8%)
-  if (svc_ref !== null && pa_sat !== null) {
-    anyData = true;
-    const screeningStepUp = pa_sat - svc_ref;
-    const screeningSig = screeningStepUp >= 8;
-    stepUpHtml += `<div class="result-row">
-      <span class="result-label" style="min-width:160px;">Screening (SVC→PA)</span>
-      <span class="result-value" style="${screeningSig ? 'color:var(--red)' : ''}">${n(screeningStepUp,1)}%</span>
-      <span class="result-range">${screeningSig ? '≥ 8% — <b>significant</b>' : '< 8% — no significant shunt'}</span>
-    </div>`;
-    if (screeningSig) {
-      stepUpHtml += `<div class="info-box" style="margin:4px 0;">Significant screening step-up detected. Localizing...</div>`;
-    }
-  }
-
-  // Atrial: SVC → mean RA (threshold ≥ 7%)
-  if (svc_ref !== null && ra_mean_sat !== null) {
-    anyData = true;
-    const atrialStepUp = ra_mean_sat - svc_ref;
-    const atrialSig = atrialStepUp >= 7;
-    stepUpHtml += `<div class="result-row">
-      <span class="result-label" style="min-width:160px;">Atrial (SVC→RA)</span>
-      <span class="result-value" style="${atrialSig ? 'color:var(--red)' : ''}">${n(atrialStepUp,1)}%</span>
-      <span class="result-range">${atrialSig ? '≥ 7% — <b>atrial-level shunt</b> (ASD, PAPVR, sinus venosus, coronary fistula to RA)' : '< 7% — no atrial step-up'}</span>
-    </div>`;
-  }
-
-  // Ventricular: mean RA → mean RV (threshold ≥ 5%)
-  if (ra_mean_sat !== null && rv_mean_sat !== null) {
-    anyData = true;
-    const ventriclStepUp = rv_mean_sat - ra_mean_sat;
-    const ventriclSig = ventriclStepUp >= 5;
-    stepUpHtml += `<div class="result-row">
-      <span class="result-label" style="min-width:160px;">Ventricular (RA→RV)</span>
-      <span class="result-value" style="${ventriclSig ? 'color:var(--red)' : ''}">${n(ventriclStepUp,1)}%</span>
-      <span class="result-range">${ventriclSig ? '≥ 5% — <b>ventricular-level shunt</b> (VSD, coronary fistula to RV)' : '< 5% — no ventricular step-up'}</span>
-    </div>`;
-  }
-
-  // Great vessel: mean RV → PA (threshold ≥ 5%)
-  if (rv_mean_sat !== null && pa_sat !== null) {
-    anyData = true;
-    const gvStepUp = pa_sat - rv_mean_sat;
-    const gvSig = gvStepUp >= 5;
-    stepUpHtml += `<div class="result-row">
-      <span class="result-label" style="min-width:160px;">Great vessel (RV→PA)</span>
-      <span class="result-value" style="${gvSig ? 'color:var(--red)' : ''}">${n(gvStepUp,1)}%</span>
-      <span class="result-range">${gvSig ? '≥ 5% — <b>great vessel-level shunt</b> (PDA, aortopulmonary window, coronary fistula to PA)' : '< 5% — no great vessel step-up'}</span>
-    </div>`;
-  }
-
-  if (!anyData) {
-    stepUpHtml = '<div class="info-box">Enter SVC and PA saturations for step-up analysis.</div>';
-  }
-  stepUpEl.innerHTML = stepUpHtml;
-
-  // --- PV O2 ---
-  let pvo2_pct = null;
-  let pvo2_label = '';
-  const pvo2SrcEl = document.getElementById('pvo2_source');
-  const pvo2SrcText = pvo2SrcEl.options[pvo2SrcEl.selectedIndex].text;
-  if (pvo2_src === 'assume_sa') {
-    pvo2_pct = sao2_pct;
-    pvo2_label = 'Assumed = SaO₂';
-  } else if (pvo2_src === 'assume_98') {
-    pvo2_pct = 98;
-    pvo2_label = 'Assumed 98%';
-  } else if (pvo2_src === 'manual') {
-    pvo2_pct = pv_o2_manual;
-    pvo2_label = 'Manual entry';
-  }
-  const pvo2 = pvo2_pct !== null ? pvo2_pct / 100 : null;
-  const pa_sat_dec = pa_sat !== null ? pa_sat / 100 : null;
-  const mvo2_dec = mvo2 !== null ? mvo2 / 100 : null;
-
-  // --- Qp/Qs ---
-  let qpqs = null;
-  let qpqs_math = '';
-  if (sao2 !== null && mvo2_dec !== null && pvo2 !== null && pa_sat_dec !== null) {
-    const num = sao2 - mvo2_dec;
-    const den = pvo2 - pa_sat_dec;
-    if (Math.abs(den) > 0.001) {
-      qpqs = num / den;
-      qpqs_math = `Qp/Qs = (SA O₂ − MV O₂) / (PV O₂ − PA O₂)\n      = (${n(sao2_pct,1)}% − ${n(mvo2,1)}%) / (${n(pvo2_pct,1)}% − ${n(pa_sat,1)}%)\n      = ${n(qpqs,2)}`;
-    }
-  }
-  setText('r_qpqs', qpqs !== null ? n(qpqs,2) : '—');
-  flagQpQs('f_qpqs', qpqs);
-  document.getElementById('qpqs_math').textContent = qpqs_math;
-
-  // --- Absolute flows (Fick-based) ---
-  let qp = null, qs = null, qeff = null, lr_shunt = null, rl_shunt = null;
-  let flow_math = '';
-  if (vo2 !== null && hb !== null && o2k !== null && pvo2 !== null && pa_sat_dec !== null) {
-    const pv_pa_diff = pvo2 - pa_sat_dec;
-    if (Math.abs(pv_pa_diff) > 0.001) {
-      qp = vo2 / (hb * o2k * pv_pa_diff * 10);
-    }
-  }
-  if (vo2 !== null && hb !== null && o2k !== null && sao2 !== null && mvo2_dec !== null) {
-    const sa_mv_diff = sao2 - mvo2_dec;
-    if (Math.abs(sa_mv_diff) > 0.001) {
-      qs = vo2 / (hb * o2k * sa_mv_diff * 10);
-    }
-  }
-  if (vo2 !== null && hb !== null && o2k !== null && pvo2 !== null && mvo2_dec !== null) {
-    const pv_mv_diff = pvo2 - mvo2_dec;
-    if (Math.abs(pv_mv_diff) > 0.001) {
-      qeff = vo2 / (hb * o2k * pv_mv_diff * 10);
-    }
-  }
-  if (qp !== null && qeff !== null) lr_shunt = qp - qeff;
-  if (qs !== null && qeff !== null) rl_shunt = qs - qeff;
-
-  if (qp !== null && qs !== null && qeff !== null) {
-    flow_math = `Hb: ${n(hb,1)} g/dL, O₂ binding: ${o2k}, VO₂: ${n(vo2,1)} mL/min\nQp = VO₂/[(Hb×${o2k}×(PV−PA))×10] = ${n(vo2,0)}/[(${n(hb,1)}×${o2k}×${n((pvo2!==null&&pa_sat_dec!==null)?(pvo2-pa_sat_dec)*100:null,1)}%)×10] = ${n(qp,2)} L/min\nQs = VO₂/[(Hb×${o2k}×(SA−MV))×10] = ${n(qs,2)} L/min\nQ eff = ${n(qeff,2)} L/min`;
-  }
-
-  setText('r_qp', qp !== null ? n(qp,2) : '—');
-  setText('r_qs', qs !== null ? n(qs,2) : '—');
-  setText('r_qeff', qeff !== null ? n(qeff,2) : '—');
-  setText('r_lr_shunt', lr_shunt !== null ? n(Math.max(0,lr_shunt),2) : '—');
-  setText('r_rl_shunt', rl_shunt !== null ? n(Math.max(0,rl_shunt),2) : '—');
-  document.getElementById('shunt_flow_math').textContent = flow_math;
-
-  // --- Shunt-adjusted vascular resistance ---
-  let pvr_shunt = null, svr_shunt = null, pvr_svr_ratio = null;
-  if (pa_mean !== null && pcwp_mean !== null && qp !== null && qp > 0) {
-    pvr_shunt = (pa_mean - pcwp_mean) / qp;
-  }
-  if (ao_mean !== null && ra_mean !== null && qs !== null && qs > 0) {
-    svr_shunt = (ao_mean - ra_mean) / qs;
-  }
-  if (pvr_shunt !== null && svr_shunt !== null && svr_shunt > 0) {
-    pvr_svr_ratio = pvr_shunt / svr_shunt;
-  }
-
-  setText('r_pvr_shunt', pvr_shunt !== null ? n(pvr_shunt,2) : '—');
-  setText('r_svr_shunt', svr_shunt !== null ? n(svr_shunt,2) : '—');
-  setText('r_pvr_svr_ratio', pvr_svr_ratio !== null ? n(pvr_svr_ratio,2) : '—');
-  flagPVR('f_pvr_shunt', pvr_shunt);
-  flagSVR('f_svr_shunt', svr_shunt);
-
-  // PVR/SVR flag
-  if (pvr_svr_ratio !== null) {
-    if (pvr_svr_ratio > 0.67) setFlag('f_pvr_svr_ratio', 'Eisenmenger concern', 'flag-severe');
-    else setFlag('f_pvr_svr_ratio', 'OK', 'flag-normal');
-  } else {
-    clearFlag('f_pvr_svr_ratio');
-  }
-
-  // Eisenmenger warning
-  const eisenEl = document.getElementById('eisenmengerWarning');
-  const eisenmenger = (pvr_shunt !== null && pvr_shunt > 6) || (pvr_svr_ratio !== null && pvr_svr_ratio > 0.67);
-  if (eisenmenger) {
-    eisenEl.innerHTML = '<div class="error-box"><b>Eisenmenger physiology concern:</b> PVR > 6 WU or PVR/SVR > 0.67. Shunt closure may be contraindicated. Cardiology/PH specialist consultation required.</div>';
-  } else {
-    eisenEl.innerHTML = '';
-  }
-
-  // --- Shunt Quality Checks ---
-  buildShuntQualityChecks(fio2, sao2_pct, qpqs, pvr_shunt, pvr_svr_ratio, mvo2, vo2, svc_high, pa_sat);
-
-  // --- Shunt Interpretation ---
-  buildShuntInterpretation(svc_ref, pa_sat, ra_mean_sat, rv_mean_sat, qpqs, qp, qs, qeff, lr_shunt, rl_shunt, pvr_shunt, svr_shunt, pvr_svr_ratio);
-
-
-  // --- Shunt Copy Text ---
-  buildShuntCopyText({
-    fio2, pvo2_label: pvo2SrcText, svc_high, svc_low, ivc_sat,
-    ra_high_sat, ra_mid_sat, ra_low_sat, rv_mid_sat, rvot_sat,
-    pa_main_sat, pa_left_sat, pa_right_sat,
-    mvo2, sao2_pct, pvo2_pct, pa_sat,
-    qpqs, qp, qs, qeff, lr_shunt, rl_shunt,
-    hb, o2k, vo2, pvr_shunt, svr_shunt, pvr_svr_ratio,
-    pa_mean, pcwp_mean, ao_mean, ra_mean, n
+  document.addEventListener('click', skipToEnd);
+  document.addEventListener('keydown', function(e) {
+    if (e.key === ' ' || e.key === 'Escape') skipToEnd();
   });
-}
 
-// ===================== SHUNT QUALITY CHECKS =====================
-function buildShuntQualityChecks(fio2, sao2_pct, qpqs, pvr_shunt, pvr_svr_ratio, mvo2, vo2, svc_high, pa_sat) {
-  const el = document.getElementById('shuntQualityChecks');
-  const checks = [];
 
-  if (fio2 > 30) {
-    checks.push({type:'warn', msg:`FiO₂ ${fio2}% > 30%: simplified Qp/Qs ratio is inaccurate at high FiO₂. Full O₂ content equation required.`});
-  }
-  if (sao2_pct !== null && sao2_pct < 95) {
-    checks.push({type:'warn', msg:`SaO₂ ${sao2_pct}% < 95% on room air — suggests R→L shunt or underlying lung disease. Check PV O₂ source.`});
-  }
-  if (svc_high !== null && pa_sat !== null && (pa_sat - svc_high) >= 8 && qpqs !== null && qpqs >= 1.0 && qpqs < 1.5) {
-    checks.push({type:'warn', msg:`Screening step-up ≥ 8% but Qp/Qs 1.0–1.5 — consider bidirectional shunting or sampling variability.`});
-  }
-  if (pvr_shunt !== null && pvr_shunt > 6) {
-    checks.push({type:'error', msg:`PVR ${pvr_shunt.toFixed(2)} WU > 6: Eisenmenger physiology. Shunt closure likely contraindicated.`});
-  }
-  if (pvr_svr_ratio !== null && pvr_svr_ratio > 0.67) {
-    checks.push({type:'warn', msg:`PVR/SVR > 0.67 (${pvr_svr_ratio.toFixed(2)}): Eisenmenger concern. Evaluate carefully before intervention.`});
-  }
-  if (mvo2 !== null && mvo2 > 80) {
-    checks.push({type:'warn', msg:`MV O₂ ${mvo2.toFixed(1)}% > 80%: very high mixed venous sat — consider high output state, incomplete mixing, or sampling error.`});
-  }
-  if (vo2 !== null && document.getElementById('vo2source').value === 'estimated') {
-    checks.push({type:'warn', msg:'VO₂ estimated at 125 mL/min/m². Absolute flow calculations (Qp, Qs) may have ±25% error. Use LaFarge or measured VO₂ when possible.'});
+  /* ══════════════════════════════════════
+     CARD CANVAS SETUP
+     ══════════════════════════════════════ */
+  var DPR = window.devicePixelRatio || 1;
+
+  function setupCanvas(id) {
+    var c = document.getElementById(id);
+    var rect = c.parentElement.getBoundingClientRect();
+    var w = rect.width || 380;
+    var h = rect.height || 214;
+    c.width = w * DPR;
+    c.height = h * DPR;
+    var ctx = c.getContext('2d');
+    ctx.scale(DPR, DPR);
+    return { canvas: c, ctx: ctx, w: w, h: h };
   }
 
-  if (checks.length === 0) {
-    el.innerHTML = '<div class="info-box">No issues detected. Enter more values for additional checks.</div>';
-    return;
-  }
-  el.innerHTML = checks.map(c => {
-    if (c.type === 'error') return `<div class="error-box">${c.msg}</div>`;
-    if (c.type === 'warn') return `<div class="warning-box">${c.msg}</div>`;
-    return `<div class="info-box">${c.msg}</div>`;
-  }).join('');
-}
-
-// ===================== SHUNT COPY TEXT =====================
-function buildShuntCopyText(d) {
-  const {fio2, pvo2_label, svc_high, svc_low, ivc_sat,
-    ra_high_sat, ra_mid_sat, ra_low_sat, rv_mid_sat, rvot_sat,
-    pa_main_sat, pa_left_sat, pa_right_sat,
-    mvo2, sao2_pct, pvo2_pct, pa_sat,
-    qpqs, qp, qs, qeff, lr_shunt, rl_shunt,
-    hb, o2k, vo2, pvr_shunt, svr_shunt, pvr_svr_ratio,
-    pa_mean, pcwp_mean, ao_mean, ra_mean, n} = d;
-
-  let t = '';
-  t += 'SHUNT EVALUATION\n';
-  t += `FiO₂: ${fio2}%\n`;
-  t += `PV O₂ source: ${pvo2_label}\n`;
-
-  t += '\nOXIMETRY RUN (O₂ saturations, %)\n';
-  if (svc_high !== null) t += `  High SVC: ${n(svc_high,1)}%\n`;
-  if (svc_low !== null) t += `  Low SVC: ${n(svc_low,1)}%\n`;
-  if (ivc_sat !== null) t += `  IVC: ${n(ivc_sat,1)}%\n`;
-  if (ra_high_sat !== null) t += `  RA high: ${n(ra_high_sat,1)}%\n`;
-  if (ra_mid_sat !== null) t += `  RA mid: ${n(ra_mid_sat,1)}%\n`;
-  if (ra_low_sat !== null) t += `  RA low: ${n(ra_low_sat,1)}%\n`;
-  if (rv_mid_sat !== null) t += `  RV mid: ${n(rv_mid_sat,1)}%\n`;
-  if (rvot_sat !== null) t += `  RVOT: ${n(rvot_sat,1)}%\n`;
-  if (pa_main_sat !== null) t += `  PA main: ${n(pa_main_sat,1)}%\n`;
-  if (pa_left_sat !== null) t += `  PA left: ${n(pa_left_sat,1)}%\n`;
-  if (pa_right_sat !== null) t += `  PA right: ${n(pa_right_sat,1)}%\n`;
-
-  t += '\nMIXED VENOUS O₂ (Flamm formula)\n';
-  if (svc_high !== null && ivc_sat !== null) {
-    t += `  MV O₂ = (3 × ${n(svc_high,1)} [high SVC] + ${n(ivc_sat,1)} [IVC]) / 4 = ${n(mvo2,1)}%\n`;
-  } else if (mvo2 !== null) {
-    t += `  MV O₂ = ${n(mvo2,1)}% (high SVC only)\n`;
-  } else {
-    t += '  MV O₂: insufficient data\n';
-  }
-
-  t += '\nO₂ STEP-UP ANALYSIS\n';
-  // Screening
-  if (svc_high !== null && pa_sat !== null) {
-    const su = pa_sat - svc_high;
-    t += `  Screening (SVC → PA): ${n(su,1)}% ${su >= 8 ? '(≥ 8%, significant)' : '(< 8%, no significant shunt)'}\n`;
-  }
-  // Atrial
-  const ra_vals_t = [ra_high_sat, ra_mid_sat, ra_low_sat].filter(x => x !== null);
-  const ra_mean_t = ra_vals_t.length > 0 ? ra_vals_t.reduce((a,b)=>a+b,0)/ra_vals_t.length : null;
-  if (svc_high !== null && ra_mean_t !== null) {
-    const su = ra_mean_t - svc_high;
-    t += `  Atrial (SVC → RA mean ${n(ra_mean_t,1)}%): ${n(su,1)}% ${su >= 7 ? '(≥ 7%, atrial-level shunt)' : '(< 7%)'}\n`;
-  }
-  // Ventricular
-  const rv_vals_t = [rv_mid_sat, rvot_sat].filter(x => x !== null);
-  const rv_mean_t = rv_vals_t.length > 0 ? rv_vals_t.reduce((a,b)=>a+b,0)/rv_vals_t.length : null;
-  if (ra_mean_t !== null && rv_mean_t !== null) {
-    const su = rv_mean_t - ra_mean_t;
-    t += `  Ventricular (RA → RV mean ${n(rv_mean_t,1)}%): ${n(su,1)}% ${su >= 5 ? '(≥ 5%, ventricular-level shunt)' : '(< 5%)'}\n`;
-  }
-  // Great vessel
-  if (rv_mean_t !== null && pa_sat !== null) {
-    const su = pa_sat - rv_mean_t;
-    t += `  Great vessel (RV → PA ${n(pa_sat,1)}%): ${n(su,1)}% ${su >= 5 ? '(≥ 5%, great vessel-level shunt)' : '(< 5%)'}\n`;
-  }
-
-  t += '\nSHUNT QUANTIFICATION\n';
-  if (qpqs !== null) {
-    t += `  Qp/Qs = (SA O₂ − MV O₂) / (PV O₂ − PA O₂)\n`;
-    t += `        = (${n(sao2_pct,1)} − ${n(mvo2,1)}) / (${n(pvo2_pct,1)} − ${n(pa_sat,1)})\n`;
-    t += `        = ${n(qpqs,2)}\n`;
-  } else {
-    t += '  Qp/Qs: insufficient data\n';
-  }
-
-  t += '\nABSOLUTE FLOWS (Fick-based)\n';
-  if (hb !== null) t += `  Hb (CBC): ${n(hb,1)} g/dL, O₂ binding constant: ${o2k}\n`;
-  if (vo2 !== null) t += `  VO₂: ${n(vo2,1)} mL/min\n`;
-  if (qp !== null) {
-    const pv_pa = (pvo2_pct !== null && pa_sat !== null) ? (pvo2_pct - pa_sat).toFixed(1) : '—';
-    t += `  Qp = VO₂ / [(Hb × ${o2k} × (PV O₂ − PA O₂)) × 10] = ${n(qp,2)} L/min\n`;
-  } else {
-    t += '  Qp: insufficient data\n';
-  }
-  if (qs !== null) {
-    t += `  Qs = VO₂ / [(Hb × ${o2k} × (SA O₂ − MV O₂)) × 10] = ${n(qs,2)} L/min\n`;
-  } else {
-    t += '  Qs: insufficient data\n';
-  }
-  if (qeff !== null) t += `  Q effective = ${n(qeff,2)} L/min\n`;
-  if (lr_shunt !== null) t += `  L→R shunt = Qp − Q effective = ${n(Math.max(0,lr_shunt),2)} L/min\n`;
-  if (rl_shunt !== null) t += `  R→L shunt = Qs − Q effective = ${n(Math.max(0,rl_shunt),2)} L/min\n`;
-
-  t += '\nSHUNT-ADJUSTED VASCULAR RESISTANCE\n';
-  if (pvr_shunt !== null) {
-    t += `  PVR = (mPAP − PCWP) / Qp = (${n(pa_mean,0)} − ${n(pcwp_mean,0)}) / ${n(qp,2)} = ${n(pvr_shunt,2)} WU\n`;
-  } else {
-    t += '  PVR: insufficient data\n';
-  }
-  if (svr_shunt !== null) {
-    t += `  SVR = (MAP − RAP) / Qs = (${n(ao_mean,0)} − ${n(ra_mean,0)}) / ${n(qs,2)} = ${n(svr_shunt,2)} WU\n`;
-  } else {
-    t += '  SVR: insufficient data\n';
-  }
-  if (pvr_svr_ratio !== null) {
-    t += `  PVR/SVR ratio = ${n(pvr_svr_ratio,2)}${pvr_svr_ratio > 0.67 ? ' — EISENMENGER CONCERN' : ''}\n`;
-  }
-
-  if (document.getElementById('shuntPlainTextToggle').checked) {
-    t = toPlainText(t);
-  }
-  document.getElementById('shuntCopyText').value = t;
-}
-
-// ===================== COPY SHUNT RESULTS =====================
-function copyShuntResults() {
-  const text = document.getElementById('shuntCopyText').value;
-  navigator.clipboard.writeText(text).then(() => {
-    const btn = document.getElementById('shuntCopyBtn');
-    btn.textContent = 'Copied!';
-    btn.classList.add('copied');
-    setTimeout(() => { btn.textContent = 'Copy to Clipboard'; btn.classList.remove('copied'); }, 2000);
+  // Resize handler
+  var resizeTimer;
+  window.addEventListener('resize', function() {
+    clearTimeout(resizeTimer);
+    resizeTimer = setTimeout(function() {
+      // Re-setup canvases on resize
+      rhcSetup = setupCanvas('canvasRhc');
+      pvSetup = setupCanvas('canvasPv');
+      ekgSetup = setupCanvas('canvasEkg');
+      // Redraw final frames if animations completed
+      if (rhcDone) drawRhcFrame(rhcSetup, 1);
+      if (pvDone) drawPvFrame(pvSetup, 1);
+      if (ekgDone) drawEkgFrame(ekgSetup, 1);
+    }, 200);
   });
-}
 
-// ===================== QUALITY CHECKS =====================
-function buildQualityChecks(hb, sao2, svo2, avo2, fickCO, td_co, vo2, ra_mean, papi,
-    sao2_pct, svo2_pct, pa_sys, pa_dia, pcwp_mean, ao_mean, lv_edp, lv_sys, ao_sys) {
-  const el = document.getElementById('qualityChecks');
-  const checks = [];
+  // Lazy init — canvases may not have dimensions yet
+  var rhcSetup, pvSetup, ekgSetup;
+  var rhcDone = false, pvDone = false, ekgDone = false;
+  var rhcRunning = false, pvRunning = false, ekgRunning = false;
 
-  // Decimal entry detection (Bug 1)
-  if (sao2_pct !== null && sao2_pct < 20) {
-    checks.push({type:'error', msg:`SaO₂ entered as ${sao2_pct} — did you enter as a decimal (e.g. 0.97) instead of percentage (97)?`});
-  }
-  if (svo2_pct !== null && svo2_pct < 20) {
-    checks.push({type:'error', msg:`SvO₂ entered as ${svo2_pct} — did you enter as a decimal instead of percentage?`});
+  function ensureSetup() {
+    if (!rhcSetup) rhcSetup = setupCanvas('canvasRhc');
+    if (!pvSetup) pvSetup = setupCanvas('canvasPv');
+    if (!ekgSetup) ekgSetup = setupCanvas('canvasEkg');
   }
 
-  // >100% detection (uses raw pct since sao2 is now nulled at >100)
-  if (sao2_pct !== null && sao2_pct > 100) {
-    checks.push({type:'error', msg:'SaO₂ > 100% — check input. Calculations suspended for this value.'});
-  }
-  if (svo2_pct !== null && svo2_pct > 100) {
-    checks.push({type:'error', msg:'SvO₂ > 100% — check input. Calculations suspended for this value.'});
-  }
-  if (sao2 !== null && svo2 !== null && svo2 >= sao2) {
-    checks.push({type:'error', msg:'SvO₂ ≥ SaO₂ — mixed venous sat cannot exceed arterial. Check samples.'});
-  }
 
-  // Negative pressures (Bug 2)
-  if (ra_mean !== null && ra_mean < 0) {
-    checks.push({type:'warn', msg:`Negative RA mean (${ra_mean} mmHg) — unusual. Confirm zeroing and transducer level.`});
-  }
-  if (pcwp_mean !== null && pcwp_mean < 0) {
-    checks.push({type:'warn', msg:`Negative PCWP (${pcwp_mean} mmHg) — unusual. Confirm zeroing and transducer level. Inflates TPG/PVR.`});
-  }
-  if (pa_sys !== null && pa_sys < 0) {
-    checks.push({type:'warn', msg:`Negative PA systolic (${pa_sys} mmHg) — check transducer.`});
-  }
-  if (ao_mean !== null && ao_mean < 0) {
-    checks.push({type:'warn', msg:`Negative Ao mean (${ao_mean} mmHg) — check transducer.`});
-  }
-
-  // PA sys < PA dia (Bug 3 companion)
-  if (pa_sys !== null && pa_dia !== null && pa_sys < pa_dia) {
-    checks.push({type:'error', msg:`PA systolic (${pa_sys}) < PA diastolic (${pa_dia}) — check values. PAPi will be negative.`});
-  }
-  if (avo2 !== null) {
-    if (avo2 < 0) checks.push({type:'error', msg:`Negative a-vO₂ difference (${fmt(avo2)}) — impossible. SvO₂ > SaO₂? Check sampling sites.`});
-    else if (avo2 > 5.5) checks.push({type:'warn', msg:`Wide a-vO₂ difference (${fmt(avo2)}) — suggests low cardiac output.`});
-    else if (avo2 < 3.5) checks.push({type:'warn', msg:`Narrow a-vO₂ difference (${fmt(avo2)}) — high output state, shunt, or sampling error?`});
-    else checks.push({type:'ok', msg:`a-vO₂ difference (${fmt(avo2)}) is in normal range.`});
-  }
-  if (fickCO !== null && td_co !== null && fickCO > 0 && td_co > 0) {
-    const diff = Math.abs(fickCO - td_co) / fickCO * 100;
-    if (diff > 20) {
-      checks.push({type:'warn', msg:`Fick–TD discordance ${fmt(diff,0)}%. Checklist: VO₂ estimated vs measured? TD accurate (TR, low output, shunt)? Mixed venous truly from PA?`});
-    }
-  }
-  if (vo2 !== null && document.getElementById('vo2source').value === 'estimated') {
-    checks.push({type:'warn', msg:'VO₂ estimated at 125 mL/min/m². ±25% error common. Use LaFarge if available.'});
-  }
-  if (ra_mean !== null && ra_mean < 3 && papi !== null) {
-    checks.push({type:'warn', msg:'RAP < 3 mmHg — PAPi may be unreliable (denominator artifact).'});
-  }
-  if (fickCO !== null && fickCO < 2.5) {
-    checks.push({type:'warn', msg:`Very low Fick CO (${fmt(fickCO)}). Confirm: is VO₂ reasonable? Are sats from correct sites?`});
-  }
-
-  if (checks.length === 0) {
-    el.innerHTML = '<div class="info-box">Enter values to see quality checks.</div>';
-    return;
-  }
-
-  el.innerHTML = checks.map(c => {
-    if (c.type === 'error') return `<div class="error-box">${c.msg}</div>`;
-    if (c.type === 'warn') return `<div class="warning-box">${c.msg}</div>`;
-    return `<div class="info-box">${c.msg}</div>`;
-  }).join('');
-}
-
-// ===================== COPY TEXT =====================
-function buildCopyText(bsa, hb, hr, o2k, useDissolved,
-  ra_a, ra_v, ra_mean, rv_sys, rv_dia, rv_edp,
-  pa_sys, pa_dia, pa_mean, pcwp_a, pcwp_v, pcwp_mean,
-  ao_sys, ao_dia, ao_mean, sao2_pct, svo2_pct,
-  cao2, cvo2, avo2, vo2, fickCO, fickCI, sv, svi,
-  td_co, tdCI, tpg, dpg, pvr, pvrDyn, pvri, svr, svrDyn, svri,
-  papi, rvswi, cpo, cpi, useFick,
-  ava, mva, ava_gradient, ava_sep, mva_gradient, mva_dfp, isAfib,
-  lv_sys, lv_dia, lv_edp, lv_ao_gradient) {
-
-  const vo2src = document.getElementById('vo2source');
-  const vo2label = vo2src.options[vo2src.selectedIndex].text;
-  const coMethod = useFick ? 'Fick CO' : 'TD CO';
-  const n = (val, dec) => (val !== null && val !== undefined && !isNaN(val) && isFinite(val)) ? val.toFixed(dec === undefined ? 2 : dec) : '—';
-
-  // Equipment info
-  const sheathEl = document.getElementById('venous_sheath');
-  const cathEl = document.getElementById('pa_catheter');
-  const injEl = document.getElementById('td_injectate');
-  const sheathFr = sheathEl.value ? sheathEl.options[sheathEl.selectedIndex].text : '';
-  const cathFr = cathEl.value ? cathEl.options[cathEl.selectedIndex].text : '';
-  const injLabel = injEl.options[injEl.selectedIndex].text;
-
-  let t = '';
-  t += 'RIGHT HEART CATHETERIZATION\n';
-
-  // Equipment line
-  if (sheathFr || cathFr) {
-    let equipLine = 'Equipment: ';
-    if (sheathFr) equipLine += `Venous sheath ${sheathFr}`;
-    if (sheathFr && cathFr) equipLine += ', ';
-    if (cathFr) equipLine += `PA catheter ${cathFr}`;
-    equipLine += `, TD injectate: ${injLabel}`;
-    t += equipLine + '\n';
-  }
-
-  t += '\nHemodynamics\n';
-  if (ra_a !== null || ra_mean !== null)
-    t += `RA ${n(ra_a,0)}/${n(ra_v,0)}/${n(ra_mean,0)} mmHg\n`;
-  if (rv_sys !== null)
-    t += `RV ${n(rv_sys,0)}/${n(rv_dia,0)}/${n(rv_edp,0)} mmHg\n`;
-  if (pa_sys !== null)
-    t += `PA ${n(pa_sys,0)}/${n(pa_dia,0)} mean ${n(pa_mean,0)} mmHg\n`;
-  if (pcwp_a !== null || pcwp_mean !== null)
-    t += `PCWP ${n(pcwp_a,0)}/${n(pcwp_v,0)} mean ${n(pcwp_mean,0)} mmHg\n`;
-  if (lv_sys !== null || lv_edp !== null)
-    t += `LV ${n(lv_sys,0)}/${n(lv_dia,0)}/${n(lv_edp,0)} mmHg\n`;
-  if (ao_sys !== null)
-    t += `AO ${n(ao_sys,0)}/${n(ao_dia,0)} mean ${n(ao_mean,0)} mmHg\n`;
-  if (hr !== null) t += `HR ${n(hr,0)} bpm\n`;
-  if (bsa !== null) t += `BSA ${n(bsa)} m²\n`;
-
-  // Age/Sex
-  const age = v('age');
-  const sex = document.getElementById('sex').value;
-
-  t += '\nOximetry\n';
-  if (sao2_pct !== null) t += `AO sat ${n(sao2_pct,1)}%\n`;
-  if (svo2_pct !== null) t += `PA sat ${n(svo2_pct,1)}%\n`;
-
-  if (hb !== null) {
-    t += `\nHemoglobin (CBC) ${n(hb,1)} g/dL\n`;
-  }
-
-  const vo2srcVal = vo2src.value;
-  if (vo2 !== null) {
-    if (vo2srcVal === 'lafarge' && age !== null) {
-      const k = (sex === 'female') ? 17.04 : 11.49;
-      const sexLabel = sex === 'female' ? 'F' : 'M';
-      t += `\nVO₂ LaFarge (${sexLabel}, age ${n(age,0)}) ${n(vo2,1)} mL/min\n`;
-      t += `  = [138.1 - (${k} × ln(${n(age,0)})) + (0.378 × ${n(hr,0)})] × ${n(bsa)} = ${n(vo2,1)} mL/min\n`;
+  /* ══════════════════════════════════════
+     RHC CARD — PA PRESSURE WAVEFORM
+     ══════════════════════════════════════ */
+  function paWaveform(beat) {
+    // PA waveform: systolic 25, diastolic 10, dicrotic notch
+    var v = 0;
+    if (beat < 0.07) {
+      v = 10 + (beat / 0.07) * 15;
+    } else if (beat < 0.14) {
+      v = 25 - ((beat - 0.07) / 0.07) * 9;
+    } else if (beat < 0.22) {
+      v = 16 + Math.sin(((beat - 0.14) / 0.08) * Math.PI) * 2;
+    } else if (beat < 0.90) {
+      v = 17 * Math.exp(-2.2 * ((beat - 0.22) / 0.68)) + 10;
     } else {
-      t += `\nVO₂ ${n(vo2,1)} mL/min (${vo2label})\n`;
+      v = 10;
+    }
+    return v;
+  }
+
+  function raWaveform(beat) {
+    var v = 4;
+    v += 3 * Math.exp(-0.5 * Math.pow((beat - 0.07) / 0.035, 2));
+    v -= 2 * Math.exp(-0.5 * Math.pow((beat - 0.19) / 0.04, 2));
+    v += 2 * Math.exp(-0.5 * Math.pow((beat - 0.42) / 0.05, 2));
+    v -= 1.5 * Math.exp(-0.5 * Math.pow((beat - 0.56) / 0.04, 2));
+    return Math.max(0, v);
+  }
+
+  function drawRhcFrame(s, progress) {
+    var ctx = s.ctx, W = s.w, H = s.h;
+    ctx.clearRect(0, 0, W, H);
+
+    // Draw y-axis scale marks
+    ctx.strokeStyle = 'rgba(255,255,255,0.06)';
+    ctx.lineWidth = 0.5;
+    for (var mmhg = 0; mmhg <= 30; mmhg += 10) {
+      var y = H * 0.92 - (mmhg / 30) * H * 0.82;
+      ctx.beginPath();
+      ctx.moveTo(W * 0.05, y);
+      ctx.lineTo(W * 0.95, y);
+      ctx.stroke();
+    }
+
+    // Scale labels
+    ctx.font = '9px DM Sans, sans-serif';
+    ctx.fillStyle = 'rgba(255,255,255,0.12)';
+    ctx.textAlign = 'right';
+    ctx.fillText('30', W * 0.04, H * 0.92 - (30/30) * H * 0.82 + 3);
+    ctx.fillText('10', W * 0.04, H * 0.92 - (10/30) * H * 0.82 + 3);
+    ctx.fillText('0', W * 0.04, H * 0.92 + 3);
+
+    // PA waveform (green) — 4 beats
+    var totalPts = Math.floor(W * 0.88);
+    var end = Math.floor(progress * totalPts);
+    if (end < 2) return;
+
+    // PA trace
+    ctx.save();
+    ctx.shadowColor = 'rgba(0,230,118,0.35)';
+    ctx.shadowBlur = 5;
+    ctx.strokeStyle = '#00e676';
+    ctx.lineWidth = 1.8;
+    ctx.lineJoin = 'round';
+    ctx.lineCap = 'round';
+    ctx.beginPath();
+    for (var i = 0; i <= end; i++) {
+      var t = (i / totalPts) * 4; // 4 beats
+      var mmhg = paWaveform(t % 1);
+      var x = W * 0.06 + (i / totalPts) * W * 0.88;
+      var y = H * 0.92 - (mmhg / 30) * H * 0.82;
+      if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+    }
+    ctx.stroke();
+    ctx.restore();
+
+    // RA trace (dimmer, below)
+    ctx.strokeStyle = 'rgba(0,230,118,0.25)';
+    ctx.lineWidth = 1.2;
+    ctx.lineJoin = 'round';
+    ctx.beginPath();
+    for (var i = 0; i <= end; i++) {
+      var t = (i / totalPts) * 4;
+      var mmhg = raWaveform(t % 1);
+      var x = W * 0.06 + (i / totalPts) * W * 0.88;
+      var y = H * 0.92 - (mmhg / 30) * H * 0.82;
+      if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+    }
+    ctx.stroke();
+
+    // Leading dot on PA
+    if (progress < 1 && end > 0) {
+      var lt = (end / totalPts) * 4;
+      var lmmhg = paWaveform(lt % 1);
+      var lx = W * 0.06 + (end / totalPts) * W * 0.88;
+      var ly = H * 0.92 - (lmmhg / 30) * H * 0.82;
+      ctx.save();
+      ctx.shadowColor = '#00e676';
+      ctx.shadowBlur = 10;
+      ctx.fillStyle = '#00e676';
+      ctx.beginPath();
+      ctx.arc(lx, ly, 2.5, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.restore();
+    }
+
+    // Labels
+    if (progress > 0.5) {
+      ctx.font = '600 10px DM Sans, sans-serif';
+      ctx.fillStyle = 'rgba(0,230,118,0.45)';
+      ctx.textAlign = 'left';
+      ctx.fillText('PA', W * 0.07, H * 0.18);
+      ctx.fillStyle = 'rgba(0,230,118,0.2)';
+      ctx.fillText('RA', W * 0.07, H * 0.72);
     }
   }
 
-  t += '\nFICK CARDIAC OUTPUT CALCULATION\n';
-  if (hb !== null) t += `Hb (CBC): ${n(hb,1)} g/dL\n`;
-  t += `O₂ binding constant: ${o2k} mL O₂/g Hb\n`;
-  if (cao2 !== null) t += `CaO₂: ${n(cao2)} mL O₂/dL\n`;
-  if (cvo2 !== null) t += `CvO₂: ${n(cvo2)} mL O₂/dL\n`;
-  if (avo2 !== null) t += `a-vO₂ difference: ${n(avo2)} mL O₂/dL\n`;
-  t += '\n';
-  if (fickCO !== null) t += `Fick CO = ${n(vo2,1)} / (${n(hb,1)} × ${n(o2k * 10, 1)} × (${n(sao2_pct !== null ? sao2_pct/100 : null, 3)} - ${n(svo2_pct !== null ? svo2_pct/100 : null, 3)})) = ${n(fickCO)} L/min\n`;
-  if (fickCI !== null) t += `Fick CI = ${n(fickCO)} / ${n(bsa)} = ${n(fickCI)} L/min/m²\n`;
-
-  if (td_co !== null) {
-    t += '\nTHERMODILUTION\n';
-    t += `CO ${n(td_co)} L/min\n`;
-    if (tdCI !== null) t += `CI ${n(tdCI)} L/min/m²\n`;
-  }
-
-  t += `\nDERIVED HEMODYNAMICS (using ${coMethod})\n`;
-  if (sv !== null) t += `SV ${n(sv,1)} mL/beat\n`;
-  if (svi !== null) t += `SVI ${n(svi,1)} mL/beat/m²\n`;
-  if (tpg !== null) t += `TPG = ${n(pa_mean,0)} - ${n(pcwp_mean,0)} = ${n(tpg,0)} mmHg\n`;
-  if (dpg !== null) t += `DPG = ${n(pa_dia,0)} - ${n(pcwp_mean,0)} = ${n(dpg,0)} mmHg\n`;
-  if (pvr !== null) t += `PVR = ${n(tpg,0)} / ${useFick ? n(fickCO) : n(td_co)} = ${n(pvr)} Wood units\n`;
-  if (pvrDyn !== null) t += `    = ${n(pvrDyn,0)} dyn·s·cm⁻⁵\n`;
-  if (svr !== null) t += `SVR = (${n(ao_mean,0)} - ${n(ra_mean,0)}) / ${useFick ? n(fickCO) : n(td_co)} = ${n(svr)} Wood units\n`;
-  if (svrDyn !== null) t += `    = ${n(svrDyn,0)} dyn·s·cm⁻⁵\n`;
-  if (papi !== null) t += `PAPi = (${n(pa_sys,0)} - ${n(pa_dia,0)}) / ${n(ra_mean,0)} = ${n(papi)}\n`;
-  if (rvswi !== null) t += `RVSWI = (${n(pa_mean,0)} - ${n(ra_mean,0)}) × ${n(svi,1)} × 0.0136 = ${n(rvswi)} g·m/m²/beat\n`;
-  if (cpo !== null) t += `CPO = ${n(ao_mean,0)} × ${useFick ? n(fickCO) : n(td_co)} / 451 = ${n(cpo)} W\n`;
-  if (cpi !== null) t += `CPI = ${n(ao_mean,0)} × ${useFick ? n(fickCI) : n(tdCI)} / 451 = ${n(cpi)} W/m²\n`;
-
-  // --- LV Pressures & Aortic Pullback ---
-  if (lv_sys !== null || lv_edp !== null) {
-    t += '\nLV PRESSURES & AORTIC PULLBACK\n';
-    if (lv_edp !== null) t += `LVEDP ${n(lv_edp,0)} mmHg\n`;
-    if (lv_ao_gradient !== null) t += `LV–Ao peak-to-peak gradient = ${n(lv_sys,0)} − ${n(ao_sys,0)} = ${n(lv_ao_gradient,0)} mmHg\n`;
-    if (lv_edp !== null && pcwp_mean !== null) {
-      const diff = lv_edp - pcwp_mean;
-      t += `LVEDP–PCWP comparison: ${n(lv_edp,0)} − ${n(pcwp_mean,0)} = ${diff} mmHg`;
-      if (diff > 5) t += ` (discordant > 5 mmHg)`;
-      t += '\n';
+  function startRhcAnimation() {
+    if (rhcRunning) return;
+    ensureSetup();
+    rhcDone = false; rhcRunning = true;
+    var dur = 2800, t0 = performance.now();
+    function frame() {
+      var p = Math.min((performance.now() - t0) / dur, 1);
+      drawRhcFrame(rhcSetup, p);
+      if (p < 1) requestAnimationFrame(frame);
+      else { rhcDone = true; rhcRunning = false; }
     }
+    requestAnimationFrame(frame);
   }
 
-  // --- Gorlin Valve Areas ---
-  const coUsed = useFick ? fickCO : td_co;
-  const coUsedStr = useFick ? n(fickCO) : n(td_co);
 
-  if (ava !== null || mva !== null) {
-    const afibNote = isAfib ? ' — AFib beat-by-beat averaging' : '';
-    t += `\nGORLIN VALVE AREA CALCULATIONS (using ${coMethod}: ${coUsedStr} L/min${afibNote})\n`;
-  }
+  /* ══════════════════════════════════════
+     PV LOOP CARD — PRESSURE-VOLUME LOOP
+     ══════════════════════════════════════ */
+  // Simplified elastance model
+  var PV_EDV = 125, PV_ESV = 50, PV_V0 = 10;
+  var PV_Ees = 2.5; // ESPVR slope
+  var PV_A = 0.3, PV_B = 0.03; // EDPVR exponential
 
-  if (isAfib && ava !== null) {
-    // AFib AVA: per-beat tabular data
-    t += `\nAortic Valve Area (AVA) — AFib per-beat method:\n`;
-    t += `  CO: ${coUsedStr} L/min, HR: ${n(hr,0)} bpm\n`;
-    t += `  Beat  ΔP(mmHg)  ET(s)    SEP      √ΔP     AVA(cm²)\n`;
-    const avaBeats = [];
-    for (let i = 1; i <= 10; i++) {
-      const grad = v('ava_af_grad_' + i);
-      const et = v('ava_af_et_' + i);
-      if (grad !== null && grad > 0 && et !== null && et > 0 && coUsed > 0 && hr > 0) {
-        const sep_i = et * hr;
-        const sqrtG = Math.sqrt(grad);
-        const ava_i = (coUsed * 1000) / (44.3 * sep_i * sqrtG);
-        avaBeats.push(ava_i);
-        const pad = (s, w) => s.toString().padStart(w);
-        t += `  ${pad(i,4)}  ${pad(n(grad,1),8)}  ${pad(n(et,2),5)}  ${pad(n(sep_i,1),7)}  ${pad(n(sqrtG),7)}  ${pad(n(ava_i),8)}\n`;
+  function edpvr(v) { return PV_A * (Math.exp(PV_B * (v - PV_V0)) - 1); }
+  function espvr(v) { return PV_Ees * (v - PV_V0); }
+
+  // Pre-compute PV loop points
+  var pvPts = [];
+  (function() {
+    var N = 200;
+    var EDP = edpvr(PV_EDV); // ~5.2
+    var ESP = espvr(PV_ESV); // ~100
+    var AOP = 80; // aortic opening pressure
+
+    // Phase 1: Isovolumic contraction (EDV constant, P rises from EDP to AOP)
+    for (var i = 0; i < N * 0.20; i++) {
+      var t = i / (N * 0.20);
+      var eased = t * t * (3 - 2 * t); // smoothstep
+      pvPts.push({ v: PV_EDV, p: EDP + eased * (AOP - EDP) });
+    }
+
+    // Phase 2: Ejection (V decreases from EDV to ESV, P arches up then down)
+    for (var i = 0; i < N * 0.30; i++) {
+      var t = i / (N * 0.30);
+      var v = PV_EDV - t * (PV_EDV - PV_ESV);
+      // Pressure follows a parabolic arch: rises to ~130 then falls to ESP
+      var peakP = 130;
+      var p;
+      if (t < 0.35) {
+        p = AOP + (t / 0.35) * (peakP - AOP);
+      } else {
+        var t2 = (t - 0.35) / 0.65;
+        p = peakP - t2 * (peakP - ESP);
+      }
+      pvPts.push({ v: v, p: p });
+    }
+
+    // Phase 3: Isovolumic relaxation (ESV constant, P drops from ESP to ~0)
+    for (var i = 0; i < N * 0.20; i++) {
+      var t = i / (N * 0.20);
+      var eased = t * t * (3 - 2 * t);
+      var endP = edpvr(PV_ESV); // ~0.6
+      pvPts.push({ v: PV_ESV, p: ESP - eased * (ESP - endP) });
+    }
+
+    // Phase 4: Filling (V increases from ESV to EDV along EDPVR)
+    for (var i = 0; i < N * 0.30; i++) {
+      var t = i / (N * 0.30);
+      var v = PV_ESV + t * (PV_EDV - PV_ESV);
+      pvPts.push({ v: v, p: edpvr(v) });
+    }
+  })();
+
+  function drawPvFrame(s, progress) {
+    var ctx = s.ctx, W = s.w, H = s.h;
+    ctx.clearRect(0, 0, W, H);
+
+    var margin = { l: W * 0.12, r: W * 0.06, t: H * 0.08, b: H * 0.12 };
+    var plotW = W - margin.l - margin.r;
+    var plotH = H - margin.t - margin.b;
+
+    function vToX(v) { return margin.l + ((v - 0) / 160) * plotW; }
+    function pToY(p) { return margin.t + plotH - (p / 160) * plotH; }
+
+    // Axis lines
+    ctx.strokeStyle = 'rgba(255,255,255,0.08)';
+    ctx.lineWidth = 0.5;
+    ctx.beginPath();
+    ctx.moveTo(margin.l, margin.t);
+    ctx.lineTo(margin.l, margin.t + plotH);
+    ctx.lineTo(margin.l + plotW, margin.t + plotH);
+    ctx.stroke();
+
+    // ESPVR line (dashed green)
+    ctx.strokeStyle = 'rgba(74,198,224,0.2)';
+    ctx.lineWidth = 1;
+    ctx.setLineDash([4, 4]);
+    ctx.beginPath();
+    ctx.moveTo(vToX(PV_V0), pToY(0));
+    ctx.lineTo(vToX(65), pToY(espvr(65)));
+    ctx.stroke();
+    ctx.setLineDash([]);
+
+    // EDPVR curve (dashed purple)
+    ctx.strokeStyle = 'rgba(156,106,222,0.18)';
+    ctx.setLineDash([4, 4]);
+    ctx.beginPath();
+    for (var v = PV_V0; v <= 145; v += 2) {
+      var x = vToX(v), y = pToY(edpvr(v));
+      if (v === PV_V0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+    }
+    ctx.stroke();
+    ctx.setLineDash([]);
+
+    // Ea line (dashed blue) — from (EDV, 0) to (ESV, ESP)
+    ctx.strokeStyle = 'rgba(74,144,217,0.15)';
+    ctx.setLineDash([4, 4]);
+    ctx.beginPath();
+    ctx.moveTo(vToX(PV_EDV), pToY(0));
+    ctx.lineTo(vToX(PV_ESV), pToY(espvr(PV_ESV)));
+    ctx.stroke();
+    ctx.setLineDash([]);
+
+    // PV Loop trace
+    var end = Math.floor(progress * pvPts.length);
+    if (end > 1) {
+      ctx.save();
+      ctx.shadowColor = 'rgba(74,198,224,0.3)';
+      ctx.shadowBlur = 6;
+      ctx.strokeStyle = '#4ac6e0';
+      ctx.lineWidth = 2;
+      ctx.lineJoin = 'round';
+      ctx.lineCap = 'round';
+      ctx.beginPath();
+      ctx.moveTo(vToX(pvPts[0].v), pToY(pvPts[0].p));
+      for (var i = 1; i < end; i++) {
+        ctx.lineTo(vToX(pvPts[i].v), pToY(pvPts[i].p));
+      }
+      ctx.stroke();
+      ctx.restore();
+
+      // Leading dot
+      if (progress < 1) {
+        var pt = pvPts[end - 1];
+        ctx.save();
+        ctx.shadowColor = '#4ac6e0';
+        ctx.shadowBlur = 10;
+        ctx.fillStyle = '#4ac6e0';
+        ctx.beginPath();
+        ctx.arc(vToX(pt.v), pToY(pt.p), 3, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.restore();
       }
     }
-    t += `  ──────────────────────────────────────────────────\n`;
-    t += `  Average AVA (${avaBeats.length} beats) = ${n(ava)} cm²\n`;
-    if (avaBeats.length < 5) t += `  ⚠ Only ${avaBeats.length} beat(s) — minimum 5 recommended in AFib\n`;
-    t += `  Interpretation: ${avaLabel(ava)}\n`;
-  } else if (!isAfib && ava !== null && ava_gradient !== null && ava_sep !== null) {
-    const sqrtG = Math.sqrt(ava_gradient);
-    const denom = 44.3 * ava_sep * sqrtG;
-    const ejTime = v('ava_ejtime');
-    t += `\nAortic Valve Area (AVA):\n`;
-    t += `  Mean transaortic gradient (ΔP): ${n(ava_gradient,1)} mmHg\n`;
-    if (ejTime !== null) {
-      t += `  Ejection time: ${n(ejTime,2)} sec/beat × ${n(hr,0)} HR = ${n(ava_sep,1)} sec/min (SEP)\n`;
-    } else {
-      t += `  SEP: ${n(ava_sep,1)} sec/min\n`;
+
+    // Axis labels
+    if (progress > 0.3) {
+      ctx.font = '9px DM Sans, sans-serif';
+      ctx.fillStyle = 'rgba(255,255,255,0.15)';
+      ctx.textAlign = 'center';
+      ctx.fillText('Volume (mL)', margin.l + plotW / 2, H - 4);
+      ctx.save();
+      ctx.translate(10, margin.t + plotH / 2);
+      ctx.rotate(-Math.PI / 2);
+      ctx.fillText('Pressure (mmHg)', 0, 0);
+      ctx.restore();
     }
-    t += `  √ΔP = √${n(ava_gradient,1)} = ${n(sqrtG)}\n`;
-    t += `\n`;
-    t += `  AVA = (CO × 1000) / (44.3 × SEP × √ΔP)\n`;
-    t += `      = (${coUsedStr} × 1000) / (44.3 × ${n(ava_sep,1)} × ${n(sqrtG)})\n`;
-    t += `      = ${n(coUsed * 1000, 0)} / ${n(denom, 0)}\n`;
-    t += `      = ${n(ava)} cm²\n`;
-    t += `  Interpretation: ${avaLabel(ava)}\n`;
+
+    // Line labels
+    if (progress > 0.6) {
+      ctx.font = '600 8px DM Sans, sans-serif';
+      ctx.textAlign = 'left';
+      ctx.fillStyle = 'rgba(74,198,224,0.35)';
+      ctx.fillText('ESPVR', vToX(48), pToY(espvr(55)) - 5);
+      ctx.fillStyle = 'rgba(156,106,222,0.3)';
+      ctx.fillText('EDPVR', vToX(120), pToY(edpvr(120)) - 5);
+      ctx.fillStyle = 'rgba(74,144,217,0.25)';
+      ctx.fillText('Ea', vToX(75), pToY(65));
+    }
   }
 
-  if (isAfib && mva !== null) {
-    // AFib MVA: per-beat tabular data
-    t += `\nMitral Valve Area (MVA) — AFib per-beat method:\n`;
-    t += `  CO: ${coUsedStr} L/min, HR: ${n(hr,0)} bpm\n`;
-    t += `  Beat  ΔP(mmHg)  FT(s)    DFP      √ΔP     MVA(cm²)\n`;
-    const mvaBeats = [];
-    for (let i = 1; i <= 10; i++) {
-      const grad = v('mva_af_grad_' + i);
-      const ft = v('mva_af_ft_' + i);
-      if (grad !== null && grad > 0 && ft !== null && ft > 0 && coUsed > 0 && hr > 0) {
-        const dfp_i = ft * hr;
-        const sqrtG = Math.sqrt(grad);
-        const mva_i = (coUsed * 1000) / (37.7 * dfp_i * sqrtG);
-        mvaBeats.push(mva_i);
-        const pad = (s, w) => s.toString().padStart(w);
-        t += `  ${pad(i,4)}  ${pad(n(grad,1),8)}  ${pad(n(ft,2),5)}  ${pad(n(dfp_i,1),7)}  ${pad(n(sqrtG),7)}  ${pad(n(mva_i),8)}\n`;
-      }
+  function startPvAnimation() {
+    if (pvRunning) return;
+    ensureSetup();
+    pvDone = false; pvRunning = true;
+    var dur = 2500, t0 = performance.now();
+    function frame() {
+      var p = Math.min((performance.now() - t0) / dur, 1);
+      drawPvFrame(pvSetup, p);
+      if (p < 1) requestAnimationFrame(frame);
+      else { pvDone = true; pvRunning = false; }
     }
-    t += `  ──────────────────────────────────────────────────\n`;
-    t += `  Average MVA (${mvaBeats.length} beats) = ${n(mva)} cm²\n`;
-    if (mvaBeats.length < 5) t += `  ⚠ Only ${mvaBeats.length} beat(s) — minimum 5 recommended in AFib\n`;
-    t += `  Interpretation: ${mvaLabel(mva)}\n`;
-  } else if (!isAfib && mva !== null && mva_gradient !== null && mva_dfp !== null) {
-    const sqrtG = Math.sqrt(mva_gradient);
-    const denom = 37.7 * mva_dfp * sqrtG;
-    const fillTime = v('mva_filltime');
-    t += `\nMitral Valve Area (MVA):\n`;
-    t += `  Mean transmitral gradient (ΔP): ${n(mva_gradient,1)} mmHg\n`;
-    if (fillTime !== null) {
-      t += `  Filling time: ${n(fillTime,2)} sec/beat × ${n(hr,0)} HR = ${n(mva_dfp,1)} sec/min (DFP)\n`;
-    } else {
-      t += `  DFP: ${n(mva_dfp,1)} sec/min\n`;
-    }
-    t += `  √ΔP = √${n(mva_gradient,1)} = ${n(sqrtG)}\n`;
-    t += `\n`;
-    t += `  MVA = (CO × 1000) / (37.7 × DFP × √ΔP)\n`;
-    t += `      = (${coUsedStr} × 1000) / (37.7 × ${n(mva_dfp,1)} × ${n(sqrtG)})\n`;
-    t += `      = ${n(coUsed * 1000, 0)} / ${n(denom, 0)}\n`;
-    t += `      = ${n(mva)} cm²\n`;
-    t += `  Interpretation: ${mvaLabel(mva)}\n`;
+    requestAnimationFrame(frame);
   }
 
-  if (document.getElementById('plainTextToggle').checked) {
-    t = toPlainText(t);
+
+  /* ══════════════════════════════════════
+     EKG CARD — LEAD II TRACE
+     ══════════════════════════════════════ */
+  function ekgLeadII(t) {
+    // t in [0, 1) = one beat cycle, returns mV (-0.5 to 1.5)
+    var v = 0;
+    // P wave
+    v += 0.12 * Math.exp(-0.5 * Math.pow((t - 0.10) / 0.025, 2));
+    // Q wave
+    v -= 0.06 * Math.exp(-1.0 * Math.pow((t - 0.195) / 0.007, 2));
+    // R wave
+    v += 1.20 * Math.exp(-1.2 * Math.pow((t - 0.21) / 0.011, 2));
+    // S wave
+    v -= 0.25 * Math.exp(-1.2 * Math.pow((t - 0.225) / 0.009, 2));
+    // T wave (asymmetric)
+    var tCenter = 0.36;
+    var tWidth = 0.048;
+    var dt = t - tCenter;
+    var tw = dt < 0
+      ? Math.exp(-0.45 * Math.pow(dt / tWidth, 2))
+      : Math.exp(-0.7 * Math.pow(dt / tWidth, 2));
+    v += 0.35 * tw;
+    return v;
   }
-  document.getElementById('copyText').value = t;
-}
 
-// ===================== PLAIN TEXT CONVERSION =====================
-function toPlainText(str) {
-  // Subscripts → normal
-  str = str.replace(/₀/g,'0').replace(/₁/g,'1').replace(/₂/g,'2').replace(/₃/g,'3')
-           .replace(/₄/g,'4').replace(/₅/g,'5').replace(/₆/g,'6').replace(/₇/g,'7')
-           .replace(/₈/g,'8').replace(/₉/g,'9');
-  // Superscripts → normal
-  str = str.replace(/⁰/g,'0').replace(/¹/g,'1').replace(/²/g,'2').replace(/³/g,'3')
-           .replace(/⁴/g,'4').replace(/⁵/g,'5').replace(/⁶/g,'6').replace(/⁷/g,'7')
-           .replace(/⁸/g,'8').replace(/⁹/g,'9').replace(/⁻/g,'-');
-  // Middle dot (·) left as-is — standard unit separator, widely supported
-  // Delta
-  str = str.replace(/ΔP/g,'dP').replace(/Δ/g,'d');
-  // Square root
-  str = str.replace(/√/g,'sqrt');
-  return str;
-}
+  function drawEkgFrame(s, progress) {
+    var ctx = s.ctx, W = s.w, H = s.h;
+    ctx.clearRect(0, 0, W, H);
 
-// ===================== COPY TO CLIPBOARD =====================
-function copyResults() {
-  const text = document.getElementById('copyText').value;
-  navigator.clipboard.writeText(text).then(() => {
-    const btn = document.getElementById('copyBtn');
-    btn.textContent = 'Copied!';
-    btn.classList.add('copied');
-    setTimeout(() => { btn.textContent = 'Copy to Clipboard'; btn.classList.remove('copied'); }, 2000);
+    // Draw baseline
+    var baseY = H * 0.58;
+    ctx.strokeStyle = 'rgba(255,255,255,0.04)';
+    ctx.lineWidth = 0.5;
+    ctx.beginPath();
+    ctx.moveTo(W * 0.04, baseY);
+    ctx.lineTo(W * 0.96, baseY);
+    ctx.stroke();
+
+    // EKG trace — 3.5 beats across the canvas
+    var totalPts = Math.floor(W * 0.90);
+    var end = Math.floor(progress * totalPts);
+    if (end < 2) return;
+
+    var mVScale = H * 0.28; // pixels per mV
+
+    // Glow layer
+    ctx.save();
+    ctx.shadowColor = 'rgba(240,160,50,0.4)';
+    ctx.shadowBlur = 5;
+    ctx.strokeStyle = '#f0a832';
+    ctx.lineWidth = 1.8;
+    ctx.lineJoin = 'round';
+    ctx.lineCap = 'round';
+    ctx.beginPath();
+    for (var i = 0; i <= end; i++) {
+      var t = (i / totalPts) * 3.5;
+      var mv = ekgLeadII(t % 1);
+      var x = W * 0.05 + (i / totalPts) * W * 0.90;
+      var y = baseY - mv * mVScale;
+      if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+    }
+    ctx.stroke();
+    ctx.restore();
+
+    // Leading dot
+    if (progress < 1 && end > 0) {
+      var lt = (end / totalPts) * 3.5;
+      var lmv = ekgLeadII(lt % 1);
+      var lx = W * 0.05 + (end / totalPts) * W * 0.90;
+      var ly = baseY - lmv * mVScale;
+      ctx.save();
+      ctx.shadowColor = '#f0a832';
+      ctx.shadowBlur = 12;
+      ctx.fillStyle = '#f0a832';
+      ctx.beginPath();
+      ctx.arc(lx, ly, 2.5, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.restore();
+    }
+
+    // Lead label
+    if (progress > 0.3) {
+      ctx.font = '600 10px DM Sans, sans-serif';
+      ctx.fillStyle = 'rgba(240,168,50,0.4)';
+      ctx.textAlign = 'left';
+      ctx.fillText('Lead II', W * 0.06, H * 0.14);
+    }
+
+    // Heart rate
+    if (progress > 0.7) {
+      ctx.font = '500 9px DM Sans, sans-serif';
+      ctx.fillStyle = 'rgba(240,168,50,0.25)';
+      ctx.textAlign = 'right';
+      ctx.fillText('75 bpm', W * 0.94, H * 0.14);
+    }
+  }
+
+  function startEkgAnimation() {
+    if (ekgRunning) return;
+    ensureSetup();
+    ekgDone = false; ekgRunning = true;
+    var dur = 3000, t0 = performance.now();
+    function frame() {
+      var p = Math.min((performance.now() - t0) / dur, 1);
+      drawEkgFrame(ekgSetup, p);
+      if (p < 1) requestAnimationFrame(frame);
+      else { ekgDone = true; ekgRunning = false; }
+    }
+    requestAnimationFrame(frame);
+  }
+
+
+  /* ══════════════════════════════════════
+     HOVER REPLAY
+     ══════════════════════════════════════ */
+  function addHoverReplay(cardId, startFn) {
+    var card = document.getElementById(cardId);
+    card.addEventListener('mouseenter', function() {
+      startFn();
+    });
+  }
+
+  // Wait for images to load before setting up hover
+  window.addEventListener('load', function() {
+    addHoverReplay('cardRhc', startRhcAnimation);
+    addHoverReplay('cardPv', startPvAnimation);
+    addHoverReplay('cardEkg', startEkgAnimation);
   });
-}
 
-// ===================== LOAD EXAMPLE =====================
-function loadExample() {
-  document.getElementById('age').value = '65';
-  document.getElementById('sex').value = 'male';
-  document.getElementById('bsa').value = '1.51';
-  document.getElementById('hb').value = '14.3';
-  document.getElementById('hr').value = '88';
-  document.getElementById('ra_a').value = '13';
-  document.getElementById('ra_v').value = '22';
-  document.getElementById('ra_mean').value = '16';
-  document.getElementById('rv_sys').value = '41';
-  document.getElementById('rv_dia').value = '6';
-  document.getElementById('rv_edp').value = '12';
-  document.getElementById('pa_sys').value = '47';
-  document.getElementById('pa_dia').value = '22';
-  document.getElementById('pa_mean').value = '32';
-  document.getElementById('pcwp_a').value = '18';
-  document.getElementById('pcwp_v').value = '17';
-  document.getElementById('pcwp_mean').value = '15';
-  document.getElementById('ao_sys').value = '121';
-  document.getElementById('ao_dia').value = '77';
-  document.getElementById('ao_mean').value = '96';
-  document.getElementById('lv_sys').value = '140';
-  document.getElementById('lv_dia').value = '12';
-  document.getElementById('lv_edp').value = '18';
-  document.getElementById('sao2').value = '92.8';
-  document.getElementById('svo2').value = '53.6';
-  document.getElementById('vo2source').value = 'lafarge';
-  handleVo2Source();
-  document.getElementById('venous_sheath').value = '8';
-  document.getElementById('pa_catheter').value = '7.5';
-  document.getElementById('td_injectate').value = 'room_10';
-  document.getElementById('td1').value = '1.42';
-  document.getElementById('td2').value = '1.48';
-  document.getElementById('td3').value = '1.45';
-  calcTD();
-
-  // Shunt oximetry example (ASD with PH — Hanna & Glancy, Ch. III)
-  document.getElementById('svc_high').value = '70';
-  document.getElementById('svc_low').value = '83';
-  document.getElementById('ivc_sat').value = '74';
-  document.getElementById('ra_high_sat').value = '84';
-  document.getElementById('ra_mid_sat').value = '84';
-  document.getElementById('ra_low_sat').value = '';
-  document.getElementById('rv_mid_sat').value = '82';
-  document.getElementById('rvot_sat').value = '';
-  document.getElementById('pa_main_sat').value = '84';
-  document.getElementById('pa_left_sat').value = '';
-  document.getElementById('pa_right_sat').value = '';
-  document.getElementById('pvo2_source').value = 'assume_sa';
-  handlePvO2Source();
-  document.getElementById('fio2').value = '21';
-
-  // Gorlin valve area example (low-flow low-gradient severe AS, severe MS)
-  document.getElementById('ava_gradient').value = '25';
-  document.getElementById('ava_ejtime').value = '0.32';
-  calcSEP();
-  document.getElementById('mva_gradient').value = '10';
-  document.getElementById('mva_filltime').value = '0.45';
-  calcDFP();
-
-  calc();
-}
-
-// ===================== CLEAR ALL =====================
-function clearAll() {
-  document.querySelectorAll('input[type="number"]').forEach(el => el.value = '');
-  document.getElementById('sex').value = 'male';
-  document.getElementById('vo2source').value = 'lafarge';
-  document.getElementById('o2const').value = '1.36';
-  document.getElementById('useDissolvedO2').checked = false;
-  document.getElementById('dissolvedRow').style.display = 'none';
-  document.getElementById('coFick').checked = true;
-  document.getElementById('venous_sheath').value = '8';
-  document.getElementById('pa_catheter').value = '7.5';
-  document.getElementById('td_injectate').value = 'room_10';
-  document.getElementById('tdAvgHint').textContent = '';
-  // Reset shunt-specific fields
-  document.getElementById('fio2').value = '21';
-  document.getElementById('pvo2_source').value = 'assume_sa';
-  document.getElementById('pvO2ManualRow').style.display = 'none';
-  document.getElementById('shuntPlainTextToggle').checked = false;
-  // Reset AFib toggle
-  document.getElementById('afibToggle').checked = false;
-  toggleAfib();
-  handleVo2Source();
-  calc();
-}
-
-// ===================== DARK MODE =====================
-function toggleDark() {
-  document.body.classList.toggle('dark');
-  const btn = document.getElementById('darkToggle');
-  const isDark = document.body.classList.contains('dark');
-  btn.textContent = isDark ? 'Light Mode' : 'Dark Mode';
-  try { localStorage.setItem('cathmath_dark', isDark ? '1' : '0'); } catch(e) {}
-  handleVo2Source();
-}
-// Default to dark mode (unless explicitly set to light)
-try {
-  const pref = localStorage.getItem('cathmath_dark');
-  if (pref === '0') {
-    // User explicitly chose light mode
-    document.body.classList.remove('dark');
-    document.getElementById('darkToggle').textContent = 'Dark Mode';
-  } else {
-    // Default: dark mode (first visit or pref === '1')
-    document.body.classList.add('dark');
-    document.getElementById('darkToggle').textContent = 'Light Mode';
-  }
-} catch(e) {
-  document.body.classList.add('dark');
-}
-
-// ===================== COLLAPSIBLE INTERPRETATION =====================
-function toggleInterpSection(sectionId) {
-  const section = document.getElementById(sectionId);
-  section.classList.toggle('collapsed');
-  // Expand report textarea when interpretation is collapsed
-  updateReportHeight();
-}
-function updateReportHeight() {
-  // RHC
-  const rhcInterp = document.getElementById('rhcInterpSection');
-  const rhcCopy = document.getElementById('rhcCopySection');
-  if (rhcInterp && rhcCopy) {
-    const ta = rhcCopy.querySelector('textarea');
-    if (ta) ta.style.minHeight = rhcInterp.classList.contains('collapsed') ? '65vh' : '';
-  }
-  // Shunt
-  const shuntInterp = document.getElementById('shuntInterpSection');
-  const shuntCopy = document.getElementById('shuntCopySection');
-  if (shuntInterp && shuntCopy) {
-    const ta = shuntCopy.querySelector('textarea');
-    if (ta) ta.style.minHeight = shuntInterp.classList.contains('collapsed') ? '65vh' : '';
-  }
-}
-
-// ===================== RHC INTERPRETATION =====================
-function buildRhcInterpretation(ci, fickCI, tdCI, useFick, ra_mean, pcwp_mean, pa_mean, pvr, papi, rvswi, cpo, cpi, avo2, fickCO, td_co, ava, mva, lv_edp, lv_sys, ao_sys, lv_ao_gradient) {
-  const el = document.getElementById('rhcInterpretation');
-  const bullets = [];
-
-  const co_val = useFick ? fickCO : td_co;
-  const ci_val = useFick ? fickCI : tdCI;
-
-  // Only generate if we have at least some data
-  if (co_val === null && ci_val === null && pa_mean === null && ra_mean === null) {
-    el.innerHTML = '<div class="info-box">Enter hemodynamic data to generate interpretation.</div>';
-    return;
-  }
-
-  // 1. Hemodynamic profile (CI-based)
-  if (ci_val !== null) {
-    if (ci_val < 2.2) {
-      bullets.push({type:'error', text:`Low cardiac output state: CI ${ci_val.toFixed(2)} L/min/m\xB2 (< 2.2). Consistent with impaired cardiac function or cardiogenic shock spectrum.`});
-    } else if (ci_val <= 4.0) {
-      bullets.push({type:'info', text:`Normal cardiac output: CI ${ci_val.toFixed(2)} L/min/m\xB2.`});
-    } else {
-      bullets.push({type:'warn', text:`High output state: CI ${ci_val.toFixed(2)} L/min/m\xB2 (> 4.0). Consider anemia, sepsis, AV fistula, liver disease, or hyperthyroidism.`});
-    }
-  }
-
-  // 2. Filling pressures
-  const ra_hi = ra_mean !== null && ra_mean > 7;
-  const pcwp_hi = pcwp_mean !== null && pcwp_mean > 12;
-  if (ra_hi && pcwp_hi) {
-    bullets.push({type:'warn', text:`Biventricular filling pressure elevation: RA mean ${ra_mean} mmHg (> 7), PCWP ${pcwp_mean} mmHg (> 12). Suggests biventricular dysfunction or volume overload.`});
-  } else if (ra_hi) {
-    bullets.push({type:'warn', text:`Elevated right-sided filling pressures: RA mean ${ra_mean} mmHg (> 7). Isolated right heart failure, tricuspid disease, or pericardial constraint.`});
-  } else if (pcwp_hi) {
-    bullets.push({type:'warn', text:`Elevated left-sided filling pressures: PCWP ${pcwp_mean} mmHg (> 12). Consistent with left heart disease or volume overload.`});
-  } else if (ra_mean !== null && pcwp_mean !== null) {
-    bullets.push({type:'info', text:`Normal filling pressures: RA mean ${ra_mean} mmHg, PCWP ${pcwp_mean} mmHg.`});
-  }
-
-  // 3. PH assessment
-  if (pa_mean !== null && pcwp_mean !== null && pvr !== null) {
-    if (pa_mean > 20) {
-      let phType = '';
-      if (pcwp_mean <= 15 && pvr > 2) phType = 'Pre-capillary pulmonary hypertension';
-      else if (pcwp_mean > 15 && pvr <= 2) phType = 'Isolated post-capillary pulmonary hypertension (IpcPH)';
-      else if (pcwp_mean > 15 && pvr > 2) phType = 'Combined pre- and post-capillary pulmonary hypertension (CpcPH)';
-      else phType = 'Pulmonary hypertension, borderline/exercise pattern (elevated mPAP, PCWP \u2264 15, PVR \u2264 2)';
-      bullets.push({type:'warn', text:`${phType}: mPAP ${pa_mean} mmHg, PCWP ${pcwp_mean} mmHg, PVR ${pvr.toFixed(2)} WU.`});
-    } else {
-      bullets.push({type:'info', text:`No pulmonary hypertension by hemodynamic criteria: mPAP ${pa_mean} mmHg (\u2264 20).`});
-    }
-  }
-
-  // 4. PVR severity
-  if (pvr !== null) {
-    let pvr_sev = '';
-    let pvr_type = 'info';
-    if (pvr < 2) { pvr_sev = 'normal (< 2 WU)'; pvr_type = 'info'; }
-    else if (pvr < 3) { pvr_sev = 'borderline elevated (2\u20133 WU)'; pvr_type = 'warn'; }
-    else if (pvr <= 5) { pvr_sev = 'moderately elevated (3\u20135 WU)'; pvr_type = 'warn'; }
-    else { pvr_sev = 'severely elevated (> 5 WU)'; pvr_type = 'error'; }
-    bullets.push({type: pvr_type, text:`PVR ${pvr.toFixed(2)} WU \u2014 ${pvr_sev}.`});
-  }
-
-  // 5. RV function (PAPi)
-  if (papi !== null) {
-    let rv_type = 'info';
-    let rv_text = '';
-    if (papi >= 1.0) {
-      rv_type = 'info';
-      rv_text = `Adequate RV function: PAPi ${papi.toFixed(2)} (\u2265 1.0).`;
-    } else if (papi >= 0.9) {
-      rv_type = 'warn';
-      rv_text = `Borderline RV function: PAPi ${papi.toFixed(2)} (0.9\u20131.0). Monitor closely.`;
-    } else {
-      rv_type = 'error';
-      rv_text = `RV dysfunction: PAPi ${papi.toFixed(2)} (< 0.9). Elevated risk of RV failure.`;
-    }
-    if (rvswi !== null) rv_text += ` RVSWI ${rvswi.toFixed(2)} g\u00B7m/m\xB2/beat.`;
-    bullets.push({type: rv_type, text: rv_text});
-  }
-
-  // 6. Shock indices
-  const shock_cpo = cpo !== null && cpo < 0.6;
-  const shock_cpi = cpi !== null && cpi < 0.33;
-  if (shock_cpo || shock_cpi) {
-    let shockText = 'Cardiogenic shock profile:';
-    if (shock_cpo) shockText += ` CPO ${cpo.toFixed(2)} W (< 0.6 W indicates poor prognosis).`;
-    if (shock_cpi) shockText += ` CPI ${cpi.toFixed(2)} W/m\xB2 (< 0.33 W/m\xB2 is strongest predictor of in-hospital mortality).`;
-    bullets.push({type:'error', text: shockText});
-  } else if (cpo !== null && cpi !== null) {
-    bullets.push({type:'info', text:`Cardiac power output: CPO ${cpo.toFixed(2)} W, CPI ${cpi.toFixed(2)} W/m\xB2 \u2014 above shock thresholds.`});
-  }
-
-  // 7. a-vO2 difference
-  if (avo2 !== null) {
-    if (avo2 > 5.5) {
-      bullets.push({type:'warn', text:`Wide a-vO\u2082 difference: ${avo2.toFixed(2)} mL O\u2082/dL (> 5.5) \u2014 consistent with low cardiac output and increased peripheral O\u2082 extraction.`});
-    }
-  }
-
-  // 8. Fick vs TD discordance
-  if (fickCO !== null && td_co !== null && fickCO > 0 && td_co > 0) {
-    const diff = Math.abs(fickCO - td_co) / fickCO * 100;
-    if (diff > 20) {
-      bullets.push({type:'warn', text:`Fick\u2013TD discordance: ${diff.toFixed(0)}% (Fick ${fickCO.toFixed(2)} vs TD ${td_co.toFixed(2)} L/min). Investigate: estimated VO\u2082? Tricuspid regurgitation? Low-output state?`});
-    }
-  }
-
-  // 9. Valve disease
-  if (ava !== null) {
-    let ava_sev = ava <= 0.6 ? 'critical aortic stenosis' : ava < 1.0 ? 'severe aortic stenosis' : ava < 1.5 ? 'moderate aortic stenosis' : ava <= 2.0 ? 'mild aortic stenosis' : 'normal aortic valve area';
-    const ava_type = ava < 1.0 ? 'error' : ava <= 2.0 ? 'warn' : 'info';
-    bullets.push({type: ava_type, text:`AVA ${ava.toFixed(2)} cm\xB2 \u2014 ${ava_sev}.`});
-  }
-  if (mva !== null) {
-    let mva_sev = mva < 1.0 ? 'severe mitral stenosis' : mva <= 1.5 ? 'moderate mitral stenosis' : mva <= 4.0 ? 'mild mitral stenosis' : 'normal mitral valve area';
-    const mva_type = mva < 1.0 ? 'error' : mva <= 1.5 ? 'warn' : 'info';
-    bullets.push({type: mva_type, text:`MVA ${mva.toFixed(2)} cm\xB2 \u2014 ${mva_sev}.`});
-  }
-
-  // 10. LV pressures
-  if (lv_edp !== null) {
-    if (lv_edp > 20) {
-      bullets.push({type:'error', text:`Elevated LVEDP: ${lv_edp} mmHg (> 20). Significant LV diastolic dysfunction or volume overload.`});
-    } else if (lv_edp > 12) {
-      bullets.push({type:'warn', text:`Borderline LVEDP: ${lv_edp} mmHg (13\u201320). Mildly elevated LV filling pressure.`});
-    } else {
-      bullets.push({type:'info', text:`Normal LVEDP: ${lv_edp} mmHg (\u2264 12).`});
-    }
-    if (pcwp_mean !== null) {
-      const diff = lv_edp - pcwp_mean;
-      if (diff > 5) {
-        bullets.push({type:'warn', text:`LVEDP\u2013PCWP discordance: ${lv_edp} \u2212 ${pcwp_mean} = ${diff} mmHg (> 5). Consider stiff LA, mitral stenosis, or non-compliant LV.`});
-      }
-    }
-  }
-  if (lv_ao_gradient !== null) {
-    if (lv_ao_gradient >= 50) {
-      bullets.push({type:'error', text:`Severe LV\u2013Ao peak-to-peak gradient: ${lv_ao_gradient} mmHg (\u2265 50). Hemodynamically significant aortic stenosis.`});
-    } else if (lv_ao_gradient >= 30) {
-      bullets.push({type:'warn', text:`Significant LV\u2013Ao peak-to-peak gradient: ${lv_ao_gradient} mmHg (\u2265 30). Consider aortic stenosis in clinical context.`});
-    }
-  }
-
-  // 11. AFib note
-  if (document.getElementById('afibToggle').checked && (ava !== null || mva !== null)) {
-    bullets.push({type:'info', text:'Gorlin valve areas computed by beat-to-beat averaging (AFib method).'});
-  }
-
-  if (bullets.length === 0) {
-    el.innerHTML = '<div class="info-box">Enter hemodynamic data to generate interpretation.</div>';
-    return;
-  }
-
-  el.innerHTML = bullets.map(b => {
-    if (b.type === 'error') return `<div class="error-box">${b.text}</div>`;
-    if (b.type === 'warn') return `<div class="warning-box">${b.text}</div>`;
-    return `<div class="info-box">${b.text}</div>`;
-  }).join('');
-}
-
-// ===================== SHUNT INTERPRETATION =====================
-function buildShuntInterpretation(svc_ref, pa_sat, ra_mean_sat, rv_mean_sat, qpqs, qp, qs, qeff, lr_shunt, rl_shunt, pvr_shunt, svr_shunt, pvr_svr_ratio) {
-  const el = document.getElementById('shuntInterpretation');
-  const bullets = [];
-  const n = (val, dec) => (val !== null && val !== undefined && !isNaN(val) && isFinite(val)) ? val.toFixed(dec === undefined ? 2 : dec) : '\u2014';
-
-  if (svc_ref === null && pa_sat === null && qpqs === null) {
-    el.innerHTML = '<div class="info-box">Enter oximetry data to generate interpretation.</div>';
-    return;
-  }
-
-  // 1. Screening
-  if (svc_ref !== null && pa_sat !== null) {
-    const su = pa_sat - svc_ref;
-    if (su >= 8) {
-      bullets.push({type:'warn', text:`Significant O\u2082 step-up detected: ${su.toFixed(1)}% from SVC (${n(svc_ref,1)}%) to PA (${n(pa_sat,1)}%). Threshold \u2265 8% — left-to-right shunt likely.`});
-    } else {
-      bullets.push({type:'info', text:`No significant screening step-up: ${su.toFixed(1)}% from SVC to PA (threshold < 8%). No major L\u2192R shunt on screening.`});
-    }
-  }
-
-  // 2. Localization
-  const atrialSU = (svc_ref !== null && ra_mean_sat !== null) ? ra_mean_sat - svc_ref : null;
-  const ventSU = (ra_mean_sat !== null && rv_mean_sat !== null) ? rv_mean_sat - ra_mean_sat : null;
-  const gvSU = (rv_mean_sat !== null && pa_sat !== null) ? pa_sat - rv_mean_sat : null;
-
-  const localHits = [];
-  if (atrialSU !== null && atrialSU >= 7) localHits.push(`atrial level (${n(atrialSU,1)}% step-up SVC\u2192RA \u2014 ASD, PAPVR, sinus venosus defect)`);
-  if (ventSU !== null && ventSU >= 5) localHits.push(`ventricular level (${n(ventSU,1)}% step-up RA\u2192RV \u2014 VSD)`);
-  if (gvSU !== null && gvSU >= 5) localHits.push(`great vessel level (${n(gvSU,1)}% step-up RV\u2192PA \u2014 PDA, aortopulmonary window)`);
-
-  if (localHits.length > 0) {
-    bullets.push({type:'warn', text:`Shunt localization: Step-up detected at ${localHits.join('; ')}.`});
-  } else if (atrialSU !== null || ventSU !== null || gvSU !== null) {
-    bullets.push({type:'info', text:`No level-specific step-up detected on full oximetry run.`});
-  }
-
-  // 3. Shunt direction and magnitude
-  if (qpqs !== null) {
-    let dir = '', mag = '', qpqs_type = 'info';
-    if (qpqs > 1.0) {
-      // L→R
-      mag = qpqs >= 2.0 ? 'large' : qpqs >= 1.5 ? 'moderate' : 'small';
-      dir = `Net left-to-right shunt: Qp/Qs ${n(qpqs,2)} (${mag}).`;
-      qpqs_type = qpqs >= 2.0 ? 'error' : qpqs >= 1.5 ? 'warn' : 'info';
-    } else if (qpqs < 0.95) {
-      dir = `Net right-to-left shunt: Qp/Qs ${n(qpqs,2)}. Check for R\u2192L shunt lesion or Eisenmenger physiology.`;
-      qpqs_type = 'error';
-    } else {
-      dir = `No significant net shunt: Qp/Qs ${n(qpqs,2)}.`;
-    }
-    bullets.push({type: qpqs_type, text: dir});
-  }
-
-  // 4. Q effective explanation
-  if (qeff !== null) {
-    let qeff_text = `Q effective ${n(qeff,2)} L/min represents the theoretical forward (non-shunted) flow.`;
-    if (lr_shunt !== null && lr_shunt > 0 && qp !== null) {
-      const pct = (lr_shunt / qp * 100).toFixed(0);
-      qeff_text += ` L\u2192R shunt flow = ${n(Math.max(0,lr_shunt),2)} L/min (${pct}% of pulmonary blood flow).`;
-    }
-    bullets.push({type:'info', text: qeff_text});
-  }
-
-  // 5. PVR assessment for closure
-  if (pvr_shunt !== null) {
-    let pvr_text = '', pvr_type = 'info';
-    if (pvr_shunt < 3) {
-      pvr_text = `PVR (Qp) ${n(pvr_shunt,2)} WU \u2014 favorable for shunt closure (< 3 WU).`;
-      pvr_type = 'info';
-    } else if (pvr_shunt <= 6) {
-      pvr_text = `PVR (Qp) ${n(pvr_shunt,2)} WU \u2014 borderline; evaluate further with vasodilator testing before closure (3\u20136 WU).`;
-      pvr_type = 'warn';
-    } else {
-      pvr_text = `PVR (Qp) ${n(pvr_shunt,2)} WU \u2014 severely elevated (> 6 WU). Eisenmenger physiology concern; closure likely contraindicated.`;
-      pvr_type = 'error';
-    }
-    if (pvr_svr_ratio !== null) {
-      pvr_text += ` PVR/SVR ratio ${n(pvr_svr_ratio,2)}${pvr_svr_ratio > 0.67 ? ' (> 0.67 \u2014 Eisenmenger concern)' : ' (\u2264 0.67)'}. `;
-    }
-    bullets.push({type: pvr_type, text: pvr_text});
-  }
-
-  // 6. Closure recommendation
-  if (qpqs !== null) {
-    let rec = '', rec_type = 'info';
-    if (qpqs < 1.5) {
-      rec = `Qp/Qs ${n(qpqs,2)} < 1.5: No intervention indicated based on shunt size alone.`;
-    } else if (qpqs < 2.0) {
-      rec = `Qp/Qs ${n(qpqs,2)} (1.5\u20132.0): Consider closure, particularly if symptomatic or with evidence of RV volume overload.`;
-      rec_type = 'warn';
-    } else {
-      rec = `Qp/Qs ${n(qpqs,2)} \u2265 2.0: Closure recommended if PVR is favorable. Confirm with full hemodynamic assessment.`;
-      rec_type = pvr_shunt !== null && pvr_shunt > 6 ? 'error' : 'warn';
-    }
-    bullets.push({type: rec_type, text: rec});
-  }
-
-  if (bullets.length === 0) {
-    el.innerHTML = '<div class="info-box">Enter oximetry data to generate interpretation.</div>';
-    return;
-  }
-
-  el.innerHTML = bullets.map(b => {
-    if (b.type === 'error') return `<div class="error-box">${b.text}</div>`;
-    if (b.type === 'warn') return `<div class="warning-box">${b.text}</div>`;
-    return `<div class="info-box">${b.text}</div>`;
-  }).join('');
-}
-
-// Initial setup on load
-handleVo2Source();
-calc();
+})();
 </script>
 
 </body>
