@@ -734,11 +734,11 @@ body {
       setTimeout(function() { c.classList.add('show'); }, 200 + i * 150);
     });
 
-    // Start card animations after cards are visible
+    // Start card animations after cards are visible (2 loops on initial play)
     setTimeout(function() {
-      startRhcAnimation();
-      startPvAnimation();
-      startEkgAnimation();
+      startRhcAnimation(2);
+      startPvAnimation(2);
+      startEkgAnimation(2);
     }, 600);
   }
 
@@ -987,18 +987,27 @@ body {
     }
   }
 
-  function startRhcAnimation() {
+  function startRhcAnimation(loops) {
     if (rhcRunning) return;
+    loops = loops || 1;
     ensureSetup();
     rhcDone = false; rhcRunning = true;
-    var dur = 2800, t0 = performance.now();
-    function frame() {
-      var p = Math.min((performance.now() - t0) / dur, 1);
-      drawRhcFrame(rhcSetup, p);
-      if (p < 1) requestAnimationFrame(frame);
-      else { rhcDone = true; rhcRunning = false; }
+    var dur = 2800, loopIdx = 0;
+    function runLoop() {
+      var t0 = performance.now();
+      function frame() {
+        var p = Math.min((performance.now() - t0) / dur, 1);
+        drawRhcFrame(rhcSetup, p);
+        if (p < 1) requestAnimationFrame(frame);
+        else {
+          loopIdx++;
+          if (loopIdx < loops) { setTimeout(runLoop, 200); }
+          else { rhcDone = true; rhcRunning = false; }
+        }
+      }
+      requestAnimationFrame(frame);
     }
-    requestAnimationFrame(frame);
+    runLoop();
   }
 
 
@@ -1168,18 +1177,27 @@ body {
     }
   }
 
-  function startPvAnimation() {
+  function startPvAnimation(loops) {
     if (pvRunning) return;
+    loops = loops || 1;
     ensureSetup();
     pvDone = false; pvRunning = true;
-    var dur = 2500, t0 = performance.now();
-    function frame() {
-      var p = Math.min((performance.now() - t0) / dur, 1);
-      drawPvFrame(pvSetup, p);
-      if (p < 1) requestAnimationFrame(frame);
-      else { pvDone = true; pvRunning = false; }
+    var dur = 2500, loopIdx = 0;
+    function runLoop() {
+      var t0 = performance.now();
+      function frame() {
+        var p = Math.min((performance.now() - t0) / dur, 1);
+        drawPvFrame(pvSetup, p);
+        if (p < 1) requestAnimationFrame(frame);
+        else {
+          loopIdx++;
+          if (loopIdx < loops) { setTimeout(runLoop, 200); }
+          else { pvDone = true; pvRunning = false; }
+        }
+      }
+      requestAnimationFrame(frame);
     }
-    requestAnimationFrame(frame);
+    runLoop();
   }
 
 
@@ -1280,18 +1298,27 @@ body {
     }
   }
 
-  function startEkgAnimation() {
+  function startEkgAnimation(loops) {
     if (ekgRunning) return;
+    loops = loops || 1;
     ensureSetup();
     ekgDone = false; ekgRunning = true;
-    var dur = 3000, t0 = performance.now();
-    function frame() {
-      var p = Math.min((performance.now() - t0) / dur, 1);
-      drawEkgFrame(ekgSetup, p);
-      if (p < 1) requestAnimationFrame(frame);
-      else { ekgDone = true; ekgRunning = false; }
+    var dur = 3000, loopIdx = 0;
+    function runLoop() {
+      var t0 = performance.now();
+      function frame() {
+        var p = Math.min((performance.now() - t0) / dur, 1);
+        drawEkgFrame(ekgSetup, p);
+        if (p < 1) requestAnimationFrame(frame);
+        else {
+          loopIdx++;
+          if (loopIdx < loops) { setTimeout(runLoop, 200); }
+          else { ekgDone = true; ekgRunning = false; }
+        }
+      }
+      requestAnimationFrame(frame);
     }
-    requestAnimationFrame(frame);
+    runLoop();
   }
 
 
@@ -1301,9 +1328,26 @@ body {
   function addHoverReplay(cardId, startFn) {
     var card = document.getElementById(cardId);
     card.addEventListener('mouseenter', function() {
-      startFn();
+      startFn(2);
     });
   }
+
+  // Balloon hover — pulse several loops
+  var balloonPulsing = false;
+  balloon.addEventListener('mouseenter', function() {
+    if (balloonPulsing) return;
+    if (!balloon.classList.contains('inflate')) return; // only after inflation
+    balloonPulsing = true;
+    pulseBalloon(5, 750, function() { balloonPulsing = false; });
+  });
+
+  // Pullback hover — replay the pullback tracing
+  var pullbackReplaying = false;
+  pullbackCanvas.addEventListener('mouseenter', function() {
+    if (pullbackReplaying || !cardsRevealed) return;
+    pullbackReplaying = true;
+    animatePullback(function() { pullbackReplaying = false; });
+  });
 
   // Wait for images to load before setting up hover
   window.addEventListener('load', function() {
