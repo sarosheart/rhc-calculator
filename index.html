@@ -682,11 +682,6 @@ body {
   }
 
   // ══════ TIMELINE ══════
-  // Skip animation if already seen on this device within 48 hours
-  if (animSeen) {
-    skipToEnd(true); // true = silent skip (no scroll)
-  }
-
   // 1. Logo reveal → EKG sweep
   if (!animSeen) setTimeout(function() {
     base.classList.add('revealed');
@@ -856,6 +851,11 @@ body {
   document.addEventListener('keydown', function(e) {
     if (e.key === ' ' || e.key === 'Escape') skipToEnd();
   });
+
+  // Auto-skip animation if already seen on this device within 48 hours
+  if (animSeen) {
+    skipToEnd(true);
+  }
 
 
   /* ══════════════════════════════════════
