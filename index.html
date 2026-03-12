@@ -269,12 +269,13 @@ body {
   width: 40px;
   height: 1px;
   background: var(--accent);
-  opacity: 0;
+  opacity: 0.3;
   margin: 0 auto 16px;
   transition: opacity 0.6s ease;
 }
 
-.section-divider.show { opacity: 0.3; }
+/* Hidden during animation, shown after */
+.section-divider.anim-hidden { opacity: 0; }
 
 .section-label {
   text-align: center;
@@ -284,12 +285,10 @@ body {
   text-transform: uppercase;
   color: var(--text-muted);
   margin-bottom: 24px;
-  opacity: 0;
-  transform: translateY(8px);
   transition: opacity 0.6s ease, transform 0.6s ease;
 }
 
-.section-label.show { opacity:1; transform:translateY(0); }
+.section-label.anim-hidden { opacity: 0; transform: translateY(8px); }
 
 .cards {
   display: grid;
@@ -306,12 +305,11 @@ body {
   cursor: pointer;
   text-decoration: none;
   color: inherit;
-  opacity: 0;
-  transform: translateY(24px);
   transition: opacity 0.5s ease, transform 0.5s ease, border-color 0.3s ease, box-shadow 0.3s ease;
 }
 
-.tool-card.show { opacity:1; transform:translateY(0); }
+/* Hidden during animation, shown after */
+.tool-card.anim-hidden { opacity: 0; transform: translateY(24px); }
 
 .tool-card:hover {
   border-color: var(--border-hover);
@@ -553,6 +551,15 @@ body {
     try { localStorage.setItem(ANIM_KEY, Date.now().toString()); } catch(e) {}
   }
 
+  // If animation will play, hide cards/divider/label until animation reveals them
+  if (!animSeen) {
+    document.querySelector('.section-divider').classList.add('anim-hidden');
+    document.getElementById('sectionLabel').classList.add('anim-hidden');
+    document.querySelectorAll('.tool-card').forEach(function(c) {
+      c.classList.add('anim-hidden');
+    });
+  }
+
   // ── Pullback waveform generators (mmHg on common 0-30 scale) ──
   function hPcwp(beat) {
     var v = 8;
@@ -745,15 +752,15 @@ body {
     if (cardsRevealed) return;
     cardsRevealed = true;
     markAnimSeen();
-    document.querySelector('.section-divider').classList.add('show');
-    document.getElementById('sectionLabel').classList.add('show');
+    document.querySelector('.section-divider').classList.remove('anim-hidden');
+    document.getElementById('sectionLabel').classList.remove('anim-hidden');
 
     var cards = document.querySelectorAll('.tool-card');
     if (instant) {
-      cards.forEach(function(c) { c.classList.add('show'); });
+      cards.forEach(function(c) { c.classList.remove('anim-hidden'); });
     } else {
       cards.forEach(function(c, i) {
-        setTimeout(function() { c.classList.add('show'); }, 200 + i * 150);
+        setTimeout(function() { c.classList.remove('anim-hidden'); }, 200 + i * 150);
       });
     }
 
