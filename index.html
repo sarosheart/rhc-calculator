@@ -852,10 +852,6 @@ body {
     if (e.key === ' ' || e.key === 'Escape') skipToEnd();
   });
 
-  // Auto-skip animation if already seen on this device within 48 hours
-  if (animSeen) {
-    skipToEnd(true);
-  }
 
 
   /* ══════════════════════════════════════
@@ -1388,6 +1384,11 @@ body {
     addHoverReplay('cardPv', startPvAnimation);
     addHoverReplay('cardEkg', startEkgAnimation);
   });
+
+  // Auto-skip animation if already seen on this device within 48 hours
+  if (animSeen) {
+    skipToEnd(true);
+  }
 
 })();
 </script>
