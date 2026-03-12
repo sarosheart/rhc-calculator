@@ -269,9 +269,12 @@ body {
   width: 40px;
   height: 1px;
   background: var(--accent);
-  opacity: 0.3;
+  opacity: 0;
   margin: 0 auto 16px;
+  transition: opacity 0.6s ease;
 }
+
+.section-divider.show { opacity: 0.3; }
 
 .section-label {
   text-align: center;
@@ -723,6 +726,7 @@ body {
   function revealCards() {
     if (cardsRevealed) return;
     cardsRevealed = true;
+    document.querySelector('.section-divider').classList.add('show');
     document.getElementById('sectionLabel').classList.add('show');
 
     var cards = document.querySelectorAll('.tool-card');
