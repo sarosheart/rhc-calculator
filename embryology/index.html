@@ -1,0 +1,1972 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CathMath — Cardiac Embryology</title>
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --navy: #0a1628; --navy-deep: #060e1a;
+  --panel-bg: #0e1a2e; --card-bg: #132240; --card-hover: #1a2d52;
+  --border: rgba(255,255,255,0.08); --border-active: rgba(74,144,217,0.4);
+  --text: rgba(255,255,255,0.92); --text-dim: rgba(255,255,255,0.55); --text-muted: rgba(255,255,255,0.3);
+  --accent: #4a90d9; --accent-glow: rgba(74,144,217,0.15);
+  --fhf: #4a90d9; --shf: #66bb6a; --defect: #ff1744; --amber: #ffa726;
+  --cushion: #ffa726; --septum-1: #42a5f5; --septum-2: #1565c0;
+}
+body {
+  font-family: -apple-system, "Helvetica Neue", Helvetica, Arial, sans-serif;
+  font-size: 14px; background: var(--navy-deep); color: var(--text);
+  overflow: hidden; height: 100vh; display: flex; flex-direction: column;
+}
+.site-nav {
+  background: var(--navy); color: #fff; display: flex; align-items: center;
+  padding: 0 24px; height: 42px; border-bottom: 1px solid var(--border); flex-shrink: 0;
+}
+.nav-brand { font-size: 16px; font-weight: 800; letter-spacing: 0.5px; margin-right: 32px; color: #fff; text-decoration: none; }
+.nav-tabs { display: flex; height: 100%; }
+.nav-tab {
+  display: flex; align-items: center; padding: 0 18px; height: 42px;
+  font-size: 13px; font-weight: 600; color: rgba(255,255,255,0.5);
+  text-decoration: none; border-bottom: 2px solid transparent; transition: color 0.2s;
+}
+.nav-tab:hover { color: rgba(255,255,255,0.85); }
+.nav-tab.active { color: #fff; border-bottom-color: var(--accent); }
+.nav-right { margin-left: auto; }
+.nav-credit { font-size: 11px; opacity: 0.5; }
+
+.main-container { display: flex; flex: 1; min-height: 0; }
+
+.left-panel {
+  width: 320px; min-width: 320px; background: var(--panel-bg);
+  border-right: 1px solid var(--border); display: flex; flex-direction: column;
+  overflow-y: auto; overflow-x: hidden;
+}
+.panel-header { padding: 18px 18px 10px; border-bottom: 1px solid var(--border); }
+.panel-header h2 { font-size: 17px; font-weight: 700; margin-bottom: 3px; }
+.panel-header .subtitle { font-size: 11px; color: var(--text-dim); }
+
+.stage-list { padding: 10px; flex: 1; overflow-y: auto; }
+.stage-item {
+  display: flex; align-items: flex-start; gap: 10px; padding: 8px 10px;
+  border-radius: 7px; cursor: pointer; border: 1px solid transparent;
+  margin-bottom: 2px; transition: background 0.2s; position: relative;
+}
+.stage-item:hover { background: var(--card-bg); }
+.stage-item.active { background: var(--card-bg); border-color: var(--border-active); box-shadow: 0 0 10px var(--accent-glow); }
+.stage-number {
+  width: 24px; height: 24px; border-radius: 50%; background: var(--card-bg);
+  border: 2px solid var(--text-muted); display: flex; align-items: center; justify-content: center;
+  font-size: 10px; font-weight: 700; flex-shrink: 0; transition: all 0.2s;
+}
+.stage-item.active .stage-number { border-color: var(--accent); background: var(--accent); color: #fff; }
+.stage-item.visited .stage-number { border-color: var(--accent); color: var(--accent); }
+.stage-name { font-size: 11px; font-weight: 600; line-height: 1.3; }
+.stage-days { font-size: 9px; color: var(--text-dim); }
+
+.defect-toggle { padding: 10px 14px; border-top: 1px solid var(--border); flex-shrink: 0; }
+.toggle-row { display: flex; align-items: center; gap: 10px; }
+.toggle-label { font-size: 12px; font-weight: 600; color: #ef5350; flex: 1; }
+.toggle-switch {
+  width: 38px; height: 20px; background: var(--card-bg); border: 1px solid var(--border);
+  border-radius: 10px; position: relative; cursor: pointer; transition: all 0.2s;
+}
+.toggle-switch.on { background: var(--defect); border-color: var(--defect); }
+.toggle-knob { width: 14px; height: 14px; border-radius: 50%; background: #fff; position: absolute; top: 2px; left: 2px; transition: transform 0.2s; }
+.toggle-switch.on .toggle-knob { transform: translateX(18px); }
+.defect-name { font-size: 10px; color: var(--text-dim); margin-top: 5px; line-height: 1.4; }
+.defect-name.has-defect { color: var(--defect); }
+.defect-select { display: block; width: 100%; margin-top: 6px; padding: 5px 8px; font-size: 11px; background: rgba(255,255,255,0.05); color: var(--text-light); border: 1px solid var(--border); border-radius: 6px; outline: none; cursor: pointer; appearance: auto; }
+.defect-select:focus { border-color: var(--defect); }
+.defect-select option { background: var(--panel-bg); color: var(--text-light); }
+
+.controls-bar { padding: 10px 14px; border-top: 1px solid var(--border); display: flex; gap: 6px; align-items: center; flex-shrink: 0; }
+.ctrl-btn {
+  background: var(--card-bg); border: 1px solid var(--border); color: var(--text);
+  padding: 6px 12px; border-radius: 5px; font-size: 11px; font-weight: 600;
+  cursor: pointer; transition: all 0.15s;
+}
+.ctrl-btn:hover { background: var(--card-hover); border-color: var(--border-active); }
+.ctrl-btn.primary { background: var(--accent); color: #fff; border-color: var(--accent); }
+.ctrl-btn:disabled { opacity: 0.3; cursor: not-allowed; }
+.ctrl-spacer { flex: 1; }
+
+.right-panel { flex: 1; display: flex; flex-direction: column; min-width: 0; position: relative; }
+.viewport-row { display: flex; flex: 1; min-height: 0; position: relative; }
+.canvas-wrap {
+  flex: 1; min-width: 0; position: relative; overflow: hidden;
+  background: radial-gradient(ellipse at 50% 40%, #0d1f3a 0%, #060e1a 70%);
+  transition: all 0.5s cubic-bezier(0.4,0,0.2,1);
+}
+/* PIP mode: 3D canvas shrinks to corner when cross-section is active */
+.viewport-row.has-xs .canvas-wrap {
+  position: absolute; top: 16px; right: 16px; z-index: 20;
+  width: 220px; height: 170px; min-width: 0; flex: none;
+  border-radius: 10px; border: 1px solid rgba(255,255,255,0.12);
+  box-shadow: 0 4px 24px rgba(0,0,0,0.6);
+  overflow: hidden;
+}
+.viewport-row.has-xs .stage-overlay { display: none; }
+.viewport-row.has-xs .rotate-hint { display: none; }
+.viewport-row.has-xs .label-3d { display: none; }
+
+/* 3D Labels */
+.label-3d {
+  position: absolute; pointer-events: none;
+  font-family: -apple-system, sans-serif; font-size: 11px; font-weight: 600;
+  color: rgba(255,255,255,0.8); white-space: nowrap; transform: translate(-50%, -50%);
+  text-shadow: 0 1px 6px rgba(0,0,0,0.9), 0 0 12px rgba(0,0,0,0.6);
+  transition: opacity 0.2s;
+}
+.label-3d.fhf { color: var(--fhf); }
+.label-3d.shf { color: var(--shf); }
+.label-3d.defect-label { color: var(--defect); }
+.label-3d.accent { color: var(--fhf); font-size: 10px; }
+.label-3d.small { font-size: 9px; font-weight: 400; color: rgba(255,255,255,0.5); }
+.label-3d.seg { font-size: 10px; font-weight: 700; padding: 2px 6px; border-radius: 3px; background: rgba(0,0,0,0.5); }
+
+/* Cross-Section Panel — expands to full viewport when active */
+.xsection-panel {
+  width: 0; min-width: 0; overflow: hidden; opacity: 0;
+  background: radial-gradient(ellipse at 50% 40%, #0d1f3a 0%, #060e1a 70%);
+  display: flex; flex-direction: row; align-items: stretch;
+  padding: 0;
+  transition: all 0.5s cubic-bezier(0.4,0,0.2,1);
+}
+.viewport-row.has-xs .xsection-panel {
+  flex: 1; width: auto; min-width: 0; opacity: 1; padding: 20px 24px;
+  gap: 20px;
+}
+/* Left: large cross-section canvas */
+.xs-canvas-area {
+  flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center;
+  min-width: 0;
+}
+.xs-panel-title {
+  font-size: 10px; text-transform: uppercase; letter-spacing: 1px;
+  color: var(--text-dim); font-weight: 700; margin-bottom: 10px;
+  white-space: nowrap; align-self: center;
+}
+.xsection-panel canvas {
+  width: 100%; max-width: 500px; aspect-ratio: 1; flex-shrink: 1;
+  border-radius: 8px;
+}
+.xs-panel-label {
+  font-size: 11px; color: var(--text-dim); margin-top: 8px; text-align: center; line-height: 1.5;
+  white-space: nowrap;
+}
+/* Right: info text — sits below the PIP */
+.xs-info-area {
+  width: 260px; min-width: 220px; flex-shrink: 0;
+  overflow-y: auto; display: flex; flex-direction: column; gap: 0;
+  padding-top: 185px; /* Clear the PIP (160px + gap) */
+}
+.xs-info-area h4 {
+  font-size: 9px; font-weight: 700; text-transform: uppercase;
+  letter-spacing: 0.8px; color: var(--text-dim); margin-bottom: 5px; margin-top: 0;
+}
+.xs-info-area .xs-desc { font-size: 11px; line-height: 1.55; margin-bottom: 14px; color: var(--text); }
+.xs-info-area .xs-pearls-list { list-style: none; margin: 0; padding: 0; }
+.xs-info-area .xs-pearls-list li { font-size: 10.5px; line-height: 1.5; margin-bottom: 3px; }
+.xs-info-area .xs-pearls-list li::before { content: '★ '; color: var(--amber); font-weight: 700; }
+.xs-info-area .xs-defect-area {
+  margin-top: 12px; padding: 10px 12px; border-radius: 6px;
+  background: rgba(255,23,68,0.08); border-left: 3px solid var(--defect);
+}
+.xs-info-area .xs-defect-area h4 { color: var(--defect); }
+.xs-info-area .xs-defect-area p { font-size: 10.5px; line-height: 1.5; margin: 0; }
+
+.stage-overlay { position: absolute; top: 16px; left: 20px; pointer-events: none; z-index: 10; max-width: 300px; }
+.stage-overlay h3 { font-size: 20px; font-weight: 700; text-shadow: 0 2px 10px rgba(0,0,0,0.7); }
+.stage-overlay .stage-time { font-size: 12px; color: var(--text-dim); margin-top: 3px; text-shadow: 0 1px 6px rgba(0,0,0,0.7); }
+
+.overlay-info {
+  margin-top: 14px; pointer-events: auto;
+  background: rgba(6,14,26,0.85); backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
+  border: 1px solid var(--border); border-radius: 8px;
+  padding: 12px 14px; max-height: 55vh; overflow-y: auto;
+}
+.overlay-info h4 {
+  font-size: 9px; font-weight: 700; text-transform: uppercase;
+  letter-spacing: 0.8px; color: var(--text-dim); margin-bottom: 5px;
+}
+.overlay-info .overlay-desc { font-size: 11px; line-height: 1.55; margin-bottom: 10px; color: var(--text); }
+.overlay-info .overlay-pearls ul { list-style: none; margin: 0; padding: 0; }
+.overlay-info .overlay-pearls li { font-size: 10.5px; line-height: 1.5; margin-bottom: 2px; }
+.overlay-info .overlay-pearls li::before { content: '★ '; color: var(--amber); font-weight: 700; }
+.overlay-info .overlay-defect {
+  margin-top: 10px; padding: 10px 12px; border-radius: 6px;
+  background: rgba(255,23,68,0.08); border-left: 3px solid var(--defect);
+}
+.overlay-info .overlay-defect h4 { color: var(--defect); }
+.overlay-info .overlay-defect p { font-size: 10.5px; line-height: 1.5; }
+
+.substep-bar { position: absolute; bottom: 14px; left: 50%; transform: translateX(-50%); display: flex; gap: 8px; align-items: center; z-index: 10; background: rgba(6,14,26,0.75); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); padding: 8px 16px; border-radius: 20px; border: 1px solid rgba(255,255,255,0.06); }
+.substep-dot { width: 9px; height: 9px; border-radius: 50%; background: var(--text-muted); transition: all 0.3s; cursor: pointer; }
+.substep-dot.active { background: var(--accent); transform: scale(1.4); box-shadow: 0 0 6px rgba(74,144,217,0.5); }
+.substep-dot:hover { background: var(--text-dim); }
+.substep-label { font-size: 13px; font-weight: 600; color: var(--text-light); margin-left: 8px; white-space: nowrap; letter-spacing: 0.2px; }
+.step-counter { font-size: 11px; color: var(--text-muted); margin-left: 12px; white-space: nowrap; padding-left: 12px; border-left: 1px solid rgba(255,255,255,0.1); }
+
+.rotate-hint { position: absolute; bottom: 40px; right: 16px; font-size: 10px; color: var(--text-muted); pointer-events: none; z-index: 10; transition: opacity 1s; }
+
+::-webkit-scrollbar { width: 5px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 3px; }
+</style>
+</head>
+<body>
+
+<nav class="site-nav">
+  <a class="nav-brand" href="/">CathMath</a>
+  <div class="nav-tabs">
+    <a class="nav-tab" href="/">Hemodynamics</a>
+    <a class="nav-tab" href="/pvloop/">PV Loops</a>
+    <a class="nav-tab" href="/ekg/">EKG Simulator</a>
+    <a class="nav-tab active" href="/embryology/">Embryology</a>
+  </div>
+  <div class="nav-right"><span class="nav-credit">Developer: Saro Avedikian, MD, MPH</span></div>
+</nav>
+
+<div class="main-container">
+  <div class="left-panel">
+    <div class="panel-header">
+      <h2>Cardiac Embryology</h2>
+      <div class="subtitle">Interactive Development — Days 15 to Birth</div>
+    </div>
+    <div class="stage-list" id="stageList"></div>
+    <div class="defect-toggle">
+      <div class="toggle-row">
+        <span class="toggle-label">⚠ What Goes Wrong</span>
+        <div class="toggle-switch" id="defectToggle"><div class="toggle-knob"></div></div>
+      </div>
+      <div class="defect-name" id="defectName"></div>
+      <select class="defect-select" id="defectSelect" style="display:none"></select>
+    </div>
+    <div class="controls-bar">
+      <button class="ctrl-btn" id="btnPrev">◀ Prev</button>
+      <button class="ctrl-btn primary" id="btnNext">Next ▶</button>
+      <div class="ctrl-spacer"></div>
+      <button class="ctrl-btn" id="btnPlay">▶ Play</button>
+    </div>
+  </div>
+
+  <div class="right-panel">
+    <div class="viewport-row" id="viewportRow">
+      <div class="canvas-wrap" id="canvasWrap">
+        <div class="stage-overlay">
+          <h3 id="stageTitle"></h3>
+          <div class="stage-time" id="stageTime"></div>
+          <div class="overlay-info">
+            <h4>What's Happening</h4>
+            <p class="overlay-desc" id="descText"></p>
+            <div class="overlay-pearls">
+              <h4>Board Pearls</h4>
+              <ul id="pearlsList"></ul>
+            </div>
+            <div class="overlay-defect" id="infoDefect" style="display:none">
+              <h4>Defect</h4>
+              <p id="defectText"></p>
+            </div>
+          </div>
+        </div>
+        <div class="rotate-hint" id="rotateHint">Drag to rotate · Scroll to zoom</div>
+      </div>
+      <div class="xsection-panel" id="xsPanel">
+        <div class="xs-canvas-area">
+          <div class="xs-panel-title" id="xsTitle">Cross-Section</div>
+          <canvas id="xsCanvas"></canvas>
+          <div class="xs-panel-label" id="xsLabel"></div>
+        </div>
+        <div class="xs-info-area" id="xsInfoArea">
+          <h4>What's Happening</h4>
+          <div class="xs-desc" id="xsDescText"></div>
+          <h4>Board Pearls</h4>
+          <ul class="xs-pearls-list" id="xsPearlsList"></ul>
+          <div class="xs-defect-area" id="xsDefectArea" style="display:none">
+            <h4>Defect</h4>
+            <p id="xsDefectText"></p>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="substep-bar" id="substepBar"></div>
+  </div>
+</div>
+
+<script type="importmap">
+{ "imports": {
+    "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+    "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
+} }
+</script>
+<script type="module">
+import * as THREE from 'three';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+
+// ===== CONSTANTS =====
+const FHF_COL = new THREE.Color(0x4a90d9);
+const SHF_COL = new THREE.Color(0x66bb6a);
+const TUBE_SEGS = 64, RAD_SEGS = 12, RADIUS = 0.14;
+
+// ===== STAGE DATA (10 stages) =====
+const STAGES = [
+  // Stage 1
+  { id:1, name:'Cardiac Crescent', days:'Days 15-18',
+    substeps:[
+      {name:'Progenitor Migration',desc:'Epiblast cells ingress through the primitive streak and migrate as splanchnic mesoderm. BMP2/4 induces cardiac specification. Wnt inhibitors (Crescent, DKK-1) are required.'},
+      {name:'Cells Converge',desc:'Cardiac progenitors converge anteriorly, arranging into a horseshoe-shaped collection in the splanchnic mesoderm — the cardiogenic plate — anterior to the developing neural plate.'},
+      {name:'Crescent Forming',desc:'The converged cells organize into a definitive cardiac crescent. The tubular structure materializes as cardiomyocyte progenitors differentiate and align.'},
+      {name:'Cardiac Crescent',desc:'The full cardiac crescent is established. Two populations emerge: First Heart Field (FHF) expressing Nkx2.5/Tbx5, and Second Heart Field (SHF) expressing Islet-1/FGF8.'},
+      {name:'Two Heart Fields',desc:'FHF → left ventricle + parts of atria. SHF (dorsal/medial) → right ventricle, outflow tract, parts of atria. This dual-origin is fundamental to congenital heart disease.'}
+    ],
+    pearls:['FHF → LV + atria; SHF → RV + OFT + atria','Nkx2.5 = earliest cardiac transcription factor','Wnt suppression required for cardiac commitment','Holt-Oram (TBX5) = secundum ASD + upper limb defects'],
+    defects:null,defectName:'',sliceT:null },
+  // Stage 2
+  { id:2, name:'Heart Tube Formation', days:'Days 18-22',
+    substeps:[
+      {name:'Paired Tubes',desc:'Angioblastic cords canalize to form paired endocardial tubes flanking the foregut.'},
+      {name:'Folding & Fusion',desc:'Lateral embryonic folding brings the tubes together at the ventral midline. They fuse into a single tube with three layers: endocardium, cardiac jelly, myocardium.'},
+      {name:'Fused Tube',desc:'A single straight heart tube. Organized cranial-to-caudal: Truncus Arteriosus → Bulbus Cordis → Primitive Ventricle → Primitive Atrium → Sinus Venosus.'},
+      {name:'Five Segments',desc:'Five distinct segments with FHF (blue: PV, PA, SV) and SHF (green: TA, BC) contributions labeled.'},
+      {name:'First Heartbeat',desc:'Day 21-22: peristaltic contractions begin caudally, propagate cranially. HR ~65-75 bpm. Earliest functioning organ in the human embryo.'}
+    ],
+    pearls:['Heart = first functioning organ (day 21-22)','Cranial→caudal: TA → BC → PV → PA → SV','Three layers: endocardium, cardiac jelly, myocardium','Peristalsis: caudal → cranial propagation'],
+    defects:null,defectName:'',sliceT:null },
+  // Stage 3
+  { id:3, name:'Cardiac Looping', days:'Days 23-28',
+    substeps:[
+      {name:'Early D-Loop',desc:'Heart tube begins rightward (dextral) bending — the first left-right asymmetry. Driven by Nodal, Lefty-2, Pitx2c on the left side.'},
+      {name:'C-Loop',desc:'The tube forms a C-shape with the bulbus cordis (future RV) displaced rightward and the primitive ventricle curving.'},
+      {name:'S-Loop Forming',desc:'Atrial region begins migrating cranially and dorsally behind the bulbus cordis. SHF cells continue adding at arterial and venous poles.'},
+      {name:'S-Loop Complete',desc:'Full S-loop: BC (future RV) right+anterior, PV (future LV) left+posterior, atria cranial+dorsal. Rotate the view to see!'},
+      {name:'Circulation Begins',desc:'Embryonic circulation established ~days 27-29. SV → PA → AV Canal → PV → BC → TA → Aortic Sac → Pharyngeal Arch Arteries.'}
+    ],
+    pearls:['D-loop = first left-right asymmetry','Pitx2c (left side) drives dextral looping','L-loop → L-TGA (cc-TGA): systemic RV, heart block 2%/yr','Heterotaxy = complex CHD > situs inversus totalis','Situs inversus totalis usually benign (Kartagener)'],
+    defects:{name:'L-TGA (cc-TGA)',desc:'L-loop → congenitally corrected TGA. Morphologic RV = systemic ventricle. Progressive AV block ~2%/yr.',ekg:'EKG: Q waves in V1-V2; absent Q in V5-V6/lead I.'},
+    defectName:'L-TGA (cc-TGA)',sliceT:null },
+  // Stage 4
+  { id:4, name:'Endocardial Cushions', days:'Days 27-35',
+    substeps:[
+      {name:'AV Canal — Open',desc:'The AV canal connects the common atrium to the common ventricle. It is lined by endocardium, surrounded by cardiac jelly and myocardium. A single undivided channel.'},
+      {name:'Superior Cushion',desc:'The superior (ventral) endocardial cushion forms as endocardial cells undergo EMT through cardiac jelly, driven by BMP2, TGF-β, and Notch signaling.'},
+      {name:'Both Cushions',desc:'The inferior (dorsal) cushion forms opposite the superior. Two lateral cushions also appear. The superior and inferior cushions grow toward each other.'},
+      {name:'Cushions Fuse',desc:'Cushions fuse, dividing the single AV canal into right and left AV orifices (future tricuspid and mitral). Cushion tissue contributes to: primum septum, inlet IVS, septal TV leaflet, anterior MV leaflet.'}
+    ],
+    pearls:['Cushions contribute to 4 structures: primum septum, inlet IVS, septal TV, anterior MV','LAD on EKG + ASD = primum ASD (cushion defect), not secundum','Complete AVSD: 40-50% have Trisomy 21','All neonates with Down syndrome need echo regardless of murmur'],
+    defects:{name:'Complete AVSD',desc:'Complete cushion fusion failure → large primum ASD + inlet VSD + single common AV valve. LAD + 1st degree AVB on EKG.',ekg:'EKG: Left axis deviation (AV node displaced posteroinferiorly) + 1st degree AVB.'},
+    defectName:'AVSD (Endocardial Cushion Defect)',sliceT:0.5 },
+  // Stage 5
+  { id:5, name:'Atrial Septation', days:'Days 28-55',
+    substeps:[
+      {name:'Common Atrium',desc:'The atrial chamber is a single undivided space. Blood flows freely from right to left side.'},
+      {name:'Septum Primum Grows',desc:'Septum primum, a thin membrane, grows from the atrial roof downward toward the endocardial cushions. The diminishing gap below = foramen primum (allows R→L shunt).'},
+      {name:'Foramen Secundum',desc:'Before the foramen primum closes, apoptosis perforates upper septum primum, creating foramen secundum — maintaining the essential R→L shunt.'},
+      {name:'Septum Secundum',desc:'Septum secundum, a thicker muscular wall, grows from the right atrial wall to the right of septum primum. It does not close completely — the gap = foramen ovale.'},
+      {name:'Valve Mechanism',desc:'Septum primum acts as a one-way flap valve over the foramen ovale. In utero: RA > LA pressure keeps it open (R→L flow). At birth: LA > RA pressure pushes septum primum shut. Fuses in ~75%; PFO persists in ~25%.'}
+    ],
+    pearls:['Fixed split S2 = chronic RV volume overload (secundum ASD)','Secundum ASD: rSR\' in V1 (incomplete RBBB), RIGHT axis','PFO persists in ~25% of population','Bubble study: bubbles in LA within 3-5 beats = PFO/ASD','Sinus venosus ASD: not true septation defect, associated PAPVR, cannot close percutaneously'],
+    defects:{name:'Secundum ASD',desc:'Excessive septum primum resorption or inadequate septum secundum → hole too large for the flap valve to cover. 75% of all ASDs.',ekg:'EKG: rSR\' in V1 (incomplete RBBB), RIGHT axis deviation. Fixed split S2 (pathognomonic).'},
+    defectName:'Secundum ASD',sliceT:0.68 },
+  // Stage 6
+  { id:6, name:'Ventricular Septation', days:'Weeks 4-8',
+    substeps:[
+      {name:'Common Ventricle',desc:'Single ventricular chamber before septation begins.'},
+      {name:'Muscular Septum',desc:'Thick muscular septum grows upward from the ventricular floor. Large gap remains at top = interventricular foramen.'},
+      {name:'Three Septa Converge',desc:'Three components approach a single junction: muscular septum (below), endocardial cushion tissue (inlet), conotruncal ridges (outlet).'},
+      {name:'Membranous Septum',desc:'All three fuse at one point → membranous septum (last to close, ~week 7). This junction explains why perimembranous VSDs are most common (80%).'}
+    ],
+    pearls:['Perimembranous VSD (~80%) = 3-component fusion failure','Muscular VSD: 80-90% close spontaneously by age 2','Outlet (supracristal) VSD: does NOT close, progressive AR','Murmur loudness INVERSELY related to VSD size (maladie de Roger)'],
+    defects:{name:'Perimembranous VSD',desc:'Failure of 3-component fusion at the membranous septum. Adjacent to aortic + tricuspid valves. 30-40% close spontaneously.'},
+    defectName:'VSD (Ventricular Septal Defect)',sliceT:0.42 },
+  // Stage 7
+  { id:7, name:'Outflow Tract Septation', days:'Weeks 5-7',
+    substeps:[
+      {name:'Neural Crest Migration',desc:'Cardiac neural crest cells migrate from rhombomeres 6-8 through pharyngeal arches 3, 4, 6 to the outflow tract.'},
+      {name:'Ridges Form',desc:'Paired truncal and bulbar (conal) ridges form in the OFT lumen from neural crest-derived mesenchyme.'},
+      {name:'Spiral & Fuse',desc:'Ridges spiral 180° and fuse → aorticopulmonary septum. This creates the normal crossing of aorta and PA.'},
+      {name:'Two Great Arteries',desc:'Truncus divided into posterior aorta + anterior pulmonary trunk. Conotruncal ridges extend inferiorly to complete the membranous IVS.'}
+    ],
+    pearls:['22q11.2 deletion (TBX1) → DiGeorge: conotruncal defects','TOF: single defect (anterior malalignment) → 4 components','D-TGA: failure to spiral → "blue baby, no murmur"','Tet spell: murmur gets SOFTER (less flow across obstruction)','Truncus arteriosus: screen for 22q11 (impacts surgical risk)'],
+    defects:[
+      {name:'Tetralogy of Fallot',desc:'Anterior/cephalad malalignment of infundibular septum → VSD + overriding aorta + RVOT obstruction + RVH. Boot-shaped heart on CXR. Single S2.',ekg:'15% have 22q11.2 deletion.'},
+      {name:'D-TGA',desc:'Failure of OFT ridges to spiral → aorta arises from RV (anterior), PA from LV (posterior). Parallel circulations incompatible with life unless mixing (ASD/VSD/PDA).',ekg:'EKG: RVH, RAD. "Blue baby, no murmur." Egg-on-a-string CXR.'},
+      {name:'Truncus Arteriosus',desc:'Single arterial trunk overriding both ventricles with VSD. Failure of OFT ridges to form/fuse. Associated with 22q11.2 deletion (35%).',ekg:'75% present in first weeks of life. Screen for DiGeorge (Ca²⁺, T-cells, FISH).'}
+    ],defectName:'TOF / D-TGA / Truncus',sliceT:0.15 },
+  // Stage 8
+  { id:8, name:'Aortic Arch Development', days:'Weeks 4-8',
+    substeps:[
+      {name:'Six Arch Pairs',desc:'Six pairs of pharyngeal arch arteries connect the aortic sac to paired dorsal aortae.'},
+      {name:'Selective Regression',desc:'Arches 1, 2, and 5 regress. Arches 3, 4, and 6 persist and remodel.'},
+      {name:'Asymmetric Remodeling',desc:'Right dorsal aorta regresses. Left 4th arch → aortic arch. Left 6th distal → ductus arteriosus. 3rd arches → common carotids.'},
+      {name:'Adult Configuration',desc:'Final: left aortic arch, brachiocephalic → R subclavian + R common carotid, L common carotid, L subclavian from arch.'}
+    ],
+    pearls:['Coarctation: juxtaductal, associated bicuspid AoV (50-85%), Turner','Type B IAA: 75% have 22q11.2 — check Ca²⁺, T-cells, FISH','Aberrant R subclavian (lusoria): usually asymptomatic','Vascular ring: double aortic arch most common symptomatic type'],
+    defects:[
+      {name:'Coarctation of Aorta',desc:'Juxtaductal narrowing. Upper extremity HTN + diminished femorals. Rib notching on CXR after age ~5.',ekg:'Associated: bicuspid AoV (50-85%), Turner syndrome.'},
+      {name:'Interrupted Aortic Arch',desc:'Complete discontinuity of the aortic arch. Type B (between L carotid & L subclavian) most common, 75% have 22q11.2 deletion. Ductal-dependent.',ekg:'Presents in neonatal period when DA closes. PGE1 is lifesaving.'},
+      {name:'Vascular Ring',desc:'Anomalous arch vessels encircle trachea/esophagus. Double aortic arch most common symptomatic type. Presents with stridor, dysphagia.',ekg:'Barium swallow shows posterior esophageal compression.'}
+    ],defectName:'Coarctation / IAA / Vascular Ring',sliceT:null },
+  // Stage 9
+  { id:9, name:'AV Valve Delamination', days:'Weeks 5-12',
+    substeps:[
+      {name:'Compact Myocardium',desc:'Inner myocardial layers of the ventricular inlet are solid, continuous with the outer wall.'},
+      {name:'Delamination',desc:'Inner layers progressively separate from the wall → thin, mobile leaflets. Chordae tendineae form as connections persist. Papillary muscles differentiate.'},
+      {name:'Mature Valve',desc:'Complete tricuspid and mitral valves with leaflets, chordae, and papillary muscles. Clear annulus defined.'}
+    ],
+    pearls:['Ebstein = CHD most commonly associated with WPW','Multiple accessory pathways common in Ebstein','Associated with maternal lithium exposure','Himalayan P waves, 1st degree AVB, RBBB on EKG'],
+    defects:{name:'Ebstein Anomaly',desc:'Failed delamination of septal + posterior TV leaflets → apically displaced annulus, "atrialized RV." WPW in 10-34%.',ekg:'EKG: Himalayan P waves (massive RA), 1st degree AVB, RBBB, WPW.'},
+    defectName:'Ebstein Anomaly',sliceT:0.38 },
+  // Stage 10
+  { id:10, name:'Fetal Circulation & Birth', days:'Fetal → Neonatal',
+    substeps:[
+      {name:'Three Fetal Shunts',desc:'Ductus venosus (UV bypasses liver → IVC), foramen ovale (oxygenated IVC blood → LA via Eustachian valve), ductus arteriosus (RV output bypasses lungs → descending aorta).'},
+      {name:'Fetal Flow Pattern',desc:'RV is dominant ventricle (~60% combined CO). Only 10-25% of RV output reaches lungs. Oxygenated blood preferentially streams to LV → brain via foramen ovale.'},
+      {name:'Birth Transition',desc:'First breath → ↓ PVR. Cord clamping → ↑ SVR. FO closes (LA > RA). DA closes (↑ PaO₂, ↓ PGE₂) → ligamentum arteriosum. DV closes → ligamentum venosum.'},
+      {name:'Postnatal Circulation',desc:'Series circulation established. FO fuses in ~75% (PFO in 25%). DA closes by 2-3 weeks. DV closes by 3-7 days.'}
+    ],
+    pearls:['PGE1 keeps PDA open (ductal-dependent lesions)','Obstructed TAPVR: PGE1 is HARMFUL (increases flow into obstruction)','HLHS: entire systemic circulation ductus-dependent','Restrictive/intact atrial septum in HLHS = emergency balloon septostomy'],
+    defects:[
+      {name:'PDA',desc:'Ductus arteriosus fails to close. Continuous L-to-R shunt (aorta → PA). Continuous "machinery" murmur. Wide pulse pressure, bounding pulses.',ekg:'Indomethacin/ibuprofen for pharmacologic closure.'},
+      {name:'Ductal-Dependent Lesions',desc:'Critical left-sided: HLHS, critical AS, critical coarctation, IAA — systemic flow depends on DA. Critical right-sided: critical PS, PA with intact IVS — pulmonary flow depends on DA.',ekg:'PGE1 keeps DA open. Obstructed TAPVR: PGE1 is HARMFUL.'}
+    ],defectName:'PDA / Ductal-Dependent Lesions',sliceT:null }
+];
+
+// ===== TUBE CONTROL POINTS =====
+const CP = {
+  crescent_pre: [
+    [-2.5,-0.3,0.15],[-2.0,0.2,0.1],[-1.3,0.6,0.05],[-0.4,0.8,0],[0,0.85,-0.02],
+    [0.4,0.8,0],[1.3,0.6,-0.05],[2.0,0.2,-0.1],[2.5,-0.3,-0.15]
+  ],
+  crescent: [
+    [-2.2,0.3,0.15],[-1.8,1.3,0.1],[-1.1,2.1,0.05],[-0.3,2.5,0],[0,2.6,-0.02],
+    [0.3,2.5,0],[1.1,2.1,-0.05],[1.8,1.3,-0.1],[2.2,0.3,-0.15]
+  ],
+  straight: [
+    [0.02,2.8,0.01],[0,2.1,-0.01],[-0.01,1.4,0.01],[0.01,0.7,-0.01],
+    [0,0,0.01],[-0.01,-0.7,-0.01],[0.01,-1.4,0.01],[0,-2.1,-0.01],[-0.01,-2.8,0.01]
+  ],
+  cloop: [
+    [0.2,2.8,0.02],[0.5,2.1,0.15],[1.0,1.4,0.3],[1.4,0.5,0.3],
+    [1.2,-0.3,0.15],[0.5,-1.0,0],[0,-1.6,-0.1],[-0.15,-2.1,-0.05],[-0.1,-2.7,0.02]
+  ],
+  sloop: [
+    [0.15,3.0,-0.1],[0.6,2.4,0.25],[1.4,1.4,0.55],[1.6,0.2,0.4],
+    [0.6,-0.5,0],[-0.3,0.1,-0.5],[-0.5,1.0,-0.85],[-0.3,1.7,-0.7],[-0.15,1.1,-0.5]
+  ],
+  lloop: [
+    [-0.15,3.0,-0.1],[-0.6,2.4,0.25],[-1.4,1.4,0.55],[-1.6,0.2,0.4],
+    [-0.6,-0.5,0],[0.3,0.1,-0.5],[0.5,1.0,-0.85],[0.3,1.7,-0.7],[0.15,1.1,-0.5]
+  ]
+};
+
+// Precompute intermediate shapes
+function lerpCP(a,b,t){return a.map((p,i)=>[p[0]+(b[i][0]-p[0])*t,p[1]+(b[i][1]-p[1])*t,p[2]+(b[i][2]-p[2])*t]);}
+CP.crescent_mid = lerpCP(CP.crescent_pre, CP.crescent, 0.15);
+CP.dloop_early = lerpCP(CP.straight, CP.cloop, 0.2);
+CP.sloop_early = lerpCP(CP.cloop, CP.sloop, 0.5);
+
+const SEG_NAMES = ['TA','BC','PV','PA','SV'];
+
+// Camera positions per stage
+const CAM = [
+  {p:[-1,1.5,7],t:[-0.3,1.0,0]},    // 1 — nudge right of overlay
+  {p:[-0.6,0,7],t:[-0.15,0,0]},     // 2 — nudge right of overlay
+  {p:[2.5,1,5.5],t:[0.3,0.5,-0.1]}, // 3
+  {p:[2,0.5,5.5],t:[0.3,0.3,-0.1]}, // 4
+  {p:[2,0.5,5.5],t:[0.3,0.3,-0.1]}, // 5
+  {p:[2,0.5,5.5],t:[0.3,0.3,-0.1]}, // 6
+  {p:[2,1,5.5],t:[0.3,0.5,-0.1]},   // 7
+  {p:[0,1,7],t:[0,0.5,0]},          // 8
+  {p:[2,0.5,5.5],t:[0.3,0.3,-0.1]}, // 9
+  {p:[0,1,6],t:[0,0.5,0]},          // 10
+];
+
+// ===== STATE =====
+let curStage=0,curSub=0,defectMode=false,defectIdx=0,autoPlaying=false,autoTimer=null;
+let morphing=false,morphStart=0,morphDuration=900;
+let morphFromCP=null,morphToCP=null;
+let currentCPs=CP.crescent_pre.map(p=>[...p]);
+let morphFromSep=0,morphToSep=0,currentSep=0;
+let needsRebuild=true,peristalticActive=false;
+
+function getDefect(stageIdx){const d=STAGES[stageIdx].defects;if(!d)return null;return Array.isArray(d)?d[defectIdx%d.length]:d;}
+function getDefects(stageIdx){const d=STAGES[stageIdx].defects;if(!d)return[];return Array.isArray(d)?d:[d];}
+function easeInOutCubic(t){return t<0.5?4*t*t*t:1-Math.pow(-2*t+2,3)/2;}
+function smoothstep(e0,e1,x){const t=Math.max(0,Math.min(1,(x-e0)/(e1-e0)));return t*t*(3-2*t);}
+function cpDist(a,b){let s=0;for(let i=0;i<a.length;i++){const dx=a[i][0]-b[i][0],dy=a[i][1]-b[i][1],dz=a[i][2]-b[i][2];s+=Math.sqrt(dx*dx+dy*dy+dz*dz);}return s;}
+
+// Map stage+substep → target CP and paired separation
+function getTarget(){
+  if(curStage===0){
+    if(curSub<=1) return {cp:CP.crescent_pre,sep:0};
+    if(curSub===2) return {cp:CP.crescent_mid,sep:0};
+    if(curSub===3) return {cp:CP.crescent,sep:0};
+    return {cp:CP.crescent,sep:0};
+  }
+  if(curStage===1){
+    if(curSub===0) return {cp:CP.straight,sep:0.45};
+    if(curSub===1) return {cp:CP.straight,sep:0};
+    return {cp:CP.straight,sep:0};
+  }
+  if(curStage===2){
+    if(curSub===0) return {cp:CP.dloop_early,sep:0};
+    if(curSub===1) return {cp:CP.cloop,sep:0};
+    if(curSub===2) return {cp:CP.sloop_early,sep:0};
+    return {cp:CP.sloop,sep:0};
+  }
+  return {cp:CP.sloop,sep:0}; // Stages 4-10: exterior stays as s-loop
+}
+
+// ===== THREE.JS SETUP =====
+const wrap=document.getElementById('canvasWrap');
+const scene=new THREE.Scene();
+scene.fog=new THREE.FogExp2(0x060e1a,0.035);
+const camera=new THREE.PerspectiveCamera(45,1,0.1,100);
+camera.position.set(0,1.5,7);
+const renderer=new THREE.WebGLRenderer({antialias:true});
+renderer.setPixelRatio(Math.min(window.devicePixelRatio,2));
+renderer.setClearColor(0x060e1a);
+renderer.toneMapping=THREE.ACESFilmicToneMapping;
+renderer.toneMappingExposure=1.0;
+wrap.appendChild(renderer.domElement);
+const controls=new OrbitControls(camera,renderer.domElement);
+controls.enableDamping=true;controls.dampingFactor=0.08;
+controls.minDistance=2;controls.maxDistance=15;
+controls.target.set(0,0.5,0);controls.enablePan=false;
+
+scene.add(new THREE.AmbientLight(0x445566,1.0));
+const keyL=new THREE.DirectionalLight(0xffeedd,1.0);keyL.position.set(3,5,4);scene.add(keyL);
+const fillL=new THREE.DirectionalLight(0x8899bb,0.4);fillL.position.set(-3,2,-2);scene.add(fillL);
+
+// Materials
+const tubeMat=new THREE.MeshPhysicalMaterial({vertexColors:true,roughness:0.5,metalness:0,clearcoat:0.2,clearcoatRoughness:0.5,transparent:true,opacity:0.93,side:THREE.DoubleSide});
+const glowMat=new THREE.MeshBasicMaterial({vertexColors:true,transparent:true,opacity:0.1,blending:THREE.AdditiveBlending,side:THREE.DoubleSide,depthWrite:false});
+const defectMat=new THREE.MeshPhysicalMaterial({color:0xff1744,roughness:0.6,transparent:true,opacity:0.3,side:THREE.DoubleSide});
+
+// Tube groups
+const tubeGroupA=new THREE.Group(),tubeGroupB=new THREE.Group(),defectGroup=new THREE.Group();
+scene.add(tubeGroupA,tubeGroupB,defectGroup);
+tubeGroupB.visible=false;defectGroup.visible=false;
+
+// Slice indicator ring
+const sliceGeo=new THREE.TorusGeometry(RADIUS*2.2,0.018,8,32);
+const sliceMat=new THREE.MeshBasicMaterial({color:0x4a90d9,transparent:true,opacity:0.7,blending:THREE.AdditiveBlending});
+const sliceMesh=new THREE.Mesh(sliceGeo,sliceMat);
+sliceMesh.visible=false;
+scene.add(sliceMesh);
+
+function makeCurve(pts){return new THREE.CatmullRomCurve3(pts.map(p=>new THREE.Vector3(p[0],p[1],p[2])),false,'catmullrom',0.5);}
+
+function segColor(t){const b=smoothstep(0.3,0.45,t);const c=new THREE.Color();c.lerpColors(SHF_COL,FHF_COL,b);return c;}
+
+function applyVertexColors(geo,colorFn){
+  const count=geo.attributes.position.count,colors=new Float32Array(count*3),rs=RAD_SEGS+1;
+  for(let i=0;i<=TUBE_SEGS;i++){const t=i/TUBE_SEGS,c=colorFn(t);for(let j=0;j<=RAD_SEGS;j++){const idx=i*rs+j;colors[idx*3]=c.r;colors[idx*3+1]=c.g;colors[idx*3+2]=c.b;}}
+  geo.setAttribute('color',new THREE.Float32BufferAttribute(colors,3));
+}
+
+// Chamber radius profile: varies tube width along length for stages 4+
+function chamberRadius(t){
+  // t=0 cranial (TA/OFT), t=1 caudal (SV/atria end)
+  // OFT narrow, BC(RV) wide, PV(LV) wide, PA(atria) moderate, SV taper
+  let r=1.0;
+  r-=0.25*(1-smoothstep(0.05,0.18,t));          // OFT narrow
+  r+=0.45*Math.exp(-(Math.pow((t-0.26)/0.09,2)));// BC → RV bulge
+  r+=0.4*Math.exp(-(Math.pow((t-0.48)/0.1,2)));  // PV → LV bulge
+  r+=0.2*Math.exp(-(Math.pow((t-0.7)/0.1,2)));   // PA → atrial bulge
+  r-=0.2*smoothstep(0.82,0.96,t);                // SV taper
+  return r;
+}
+function applyRadiusProfile(geo,curve){
+  const pos=geo.attributes.position,rs=RAD_SEGS+1;
+  for(let i=0;i<=TUBE_SEGS;i++){
+    const t=i/TUBE_SEGS,center=curve.getPointAt(t),s=chamberRadius(t);
+    for(let j=0;j<=RAD_SEGS;j++){const idx=i*rs+j;
+      const dx=pos.getX(idx)-center.x,dy=pos.getY(idx)-center.y,dz=pos.getZ(idx)-center.z;
+      pos.setXYZ(idx,center.x+dx*s,center.y+dy*s,center.z+dz*s);
+    }
+  }
+  pos.needsUpdate=true;
+}
+function buildTube(group,curve,radius,colorFn,bulge){
+  while(group.children.length){const c=group.children[0];if(c.geometry)c.geometry.dispose();group.remove(c);}
+  const geo=new THREE.TubeGeometry(curve,TUBE_SEGS,radius,RAD_SEGS,false);
+  if(bulge)applyRadiusProfile(geo,curve);
+  applyVertexColors(geo,colorFn);
+  group.add(new THREE.Mesh(geo,tubeMat));
+  const gg=new THREE.TubeGeometry(curve,TUBE_SEGS,radius*1.2,RAD_SEGS,false);
+  if(bulge)applyRadiusProfile(gg,curve);
+  applyVertexColors(gg,colorFn);
+  group.add(new THREE.Mesh(gg,glowMat));
+  return geo;
+}
+
+// Peristalsis
+let periMesh=null,periOrig=null;
+function setupPeri(group){if(!group.children.length)return;periMesh=group.children[0];periOrig=new Float32Array(periMesh.geometry.attributes.position.array);}
+function updatePeri(time){
+  if(!periMesh||!periOrig)return;
+  const pos=periMesh.geometry.attributes.position,nrm=periMesh.geometry.attributes.normal;
+  const wp=(time*0.0004)%1,rs=RAD_SEGS+1;
+  for(let i=0;i<=TUBE_SEGS;i++){const t=i/TUBE_SEGS,d=t-(1-wp),b=Math.exp(-d*d*60)*0.08;
+    for(let j=0;j<=RAD_SEGS;j++){const idx=i*rs+j;
+      pos.array[idx*3]=periOrig[idx*3]+nrm.array[idx*3]*b;
+      pos.array[idx*3+1]=periOrig[idx*3+1]+nrm.array[idx*3+1]*b;
+      pos.array[idx*3+2]=periOrig[idx*3+2]+nrm.array[idx*3+2]*b;
+    }}
+  pos.needsUpdate=true;
+}
+function clearPeri(){periMesh=null;periOrig=null;}
+
+// Blood particles
+const bloodParts=[];const pGroup=new THREE.Group();scene.add(pGroup);
+const pGeo=new THREE.SphereGeometry(0.035,6,6),pMat=new THREE.MeshBasicMaterial({color:0xc62828});
+for(let i=0;i<8;i++){const m=new THREE.Mesh(pGeo,pMat.clone());m.visible=false;pGroup.add(m);bloodParts.push({mesh:m,offset:i/8,speed:0.22+i*0.02});}
+let bloodCurve=null;
+function updateBlood(time,show){if(!show||!bloodCurve){bloodParts.forEach(p=>p.mesh.visible=false);return;}
+  for(const p of bloodParts){p.mesh.visible=true;const t=1-((p.offset+time*0.00008*p.speed)%1);const pt=bloodCurve.getPointAt(Math.max(0.02,Math.min(0.98,t)));p.mesh.position.copy(pt);}}
+
+// Migrating cells
+const cellGroup=new THREE.Group();scene.add(cellGroup);const cells=[];
+for(let i=0;i<16;i++){
+  const isF=i<8;const mat=new THREE.MeshBasicMaterial({color:isF?0x4a90d9:0x66bb6a,transparent:true,opacity:0.7});
+  const m=new THREE.Mesh(new THREE.SphereGeometry(0.06,8,8),mat);
+  m.add(new THREE.Mesh(new THREE.SphereGeometry(0.11,6,6),new THREE.MeshBasicMaterial({color:mat.color,transparent:true,opacity:0.2,blending:THREE.AdditiveBlending})));
+  m.visible=false;cellGroup.add(m);cells.push({mesh:m,angle:(i-8)*0.22,phase:i*0.0618});
+}
+// Cell convergence targets (positions along crescent_pre)
+const cellTargets=[];
+{const cc=makeCurve(CP.crescent_pre);for(let i=0;i<16;i++)cellTargets.push(cc.getPointAt(i/15));}
+let convergeT=0,convergeStart=0,tubeFadeT=1,tubeFadeStart=0;
+
+// mode: 0=hidden, 1=migrating, 2=converging
+function updateCells(time,mode){
+  if(mode===2)convergeT=Math.min(1,(performance.now()-convergeStart)/1500);
+  for(let idx=0;idx<cells.length;idx++){
+    const c=cells[idx];c.mesh.visible=mode>0;if(mode<=0)continue;
+    const pr=((c.phase+time*0.00006)%1),e=pr*pr*(3-2*pr);
+    const mx=Math.sin(c.angle)*2*e,my=-1.5+(2.7+Math.cos(c.angle)*1.1)*e,mz=Math.cos(c.angle)*0.25*e;
+    if(mode===2){
+      const ct=easeInOutCubic(convergeT),tgt=cellTargets[idx];
+      c.mesh.position.set(mx+(tgt.x-mx)*ct,my+(tgt.y-my)*ct,mz+(tgt.z-mz)*ct);
+      c.mesh.material.opacity=0.5+0.3*ct;
+    }else{
+      c.mesh.position.set(mx,my,mz);
+      c.mesh.material.opacity=pr<0.08?pr*9:(pr>0.88?(1-pr)*9:0.7);
+    }
+  }
+}
+
+// ===== LABELS =====
+const labelCont=document.createElement('div');
+labelCont.style.cssText='position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:50;overflow:hidden;';
+document.body.appendChild(labelCont);
+const POOL=30,labelPool=[];
+for(let i=0;i<POOL;i++){const el=document.createElement('div');el.className='label-3d';el.style.display='none';labelCont.appendChild(el);labelPool.push({el,pos:new THREE.Vector3(),active:false});}
+let labelIdx=0;
+function resetLabels(){labelIdx=0;labelPool.forEach(l=>{l.active=false;l.el.style.display='none';});}
+function setLabel(wp,text,cls){if(labelIdx>=POOL)return;const l=labelPool[labelIdx++];l.pos.copy(wp);l.el.innerHTML=text;l.el.className='label-3d '+(cls||'');l.el.style.display='';l.active=true;}
+function updateLabelPos(){const r=wrap.getBoundingClientRect(),hw=r.width/2,hh=r.height/2;
+  for(const l of labelPool){if(!l.active)continue;const v=l.pos.clone().project(camera);
+    const sx=v.x*hw+hw+r.left,sy=-v.y*hh+hh+r.top;
+    l.el.style.left=sx+'px';l.el.style.top=sy+'px';
+    const inBounds=v.z<=1&&sx>r.left+10&&sx<r.right-10&&sy>r.top+10&&sy<r.bottom-35;
+    l.el.style.opacity=inBounds?'1':'0';}}
+
+// ===== CROSS-SECTION ANIMATED CANVAS =====
+const viewportRow=document.getElementById('viewportRow');
+const xsPanel=document.getElementById('xsPanel');
+const xsCanvas=document.getElementById('xsCanvas');
+const xsCtx=xsCanvas.getContext('2d');
+const xsTitle=document.getElementById('xsTitle');
+const xsLabel=document.getElementById('xsLabel');
+const XS=260; // logical canvas size
+let xsActiveStage=-1;
+
+// --- Tween system ---
+let xsState={},xsFrom={},xsTo={},xsAnimStart=0,xsAnimDur=700;
+function xsSetTarget(params,dur=700){
+  xsFrom={};for(const k in params){xsFrom[k]=xsState[k]!==undefined?xsState[k]:params[k];}
+  xsTo=params;xsAnimStart=performance.now();xsAnimDur=dur;
+}
+function xsSetInstant(params){xsState={...params};xsFrom={...params};xsTo={...params};xsAnimStart=0;}
+function xsTick(){
+  if(!xsAnimStart)return;
+  const t=Math.min((performance.now()-xsAnimStart)/xsAnimDur,1);
+  const e=easeInOutCubic(t);
+  for(const k in xsTo){const f=xsFrom[k]!==undefined?xsFrom[k]:xsTo[k];xsState[k]=f+(xsTo[k]-f)*e;}
+}
+
+// --- Canvas DPR ---
+function resizeXS(){
+  const r=xsCanvas.getBoundingClientRect();
+  if(r.width<1)return;
+  const dpr=window.devicePixelRatio||1;
+  xsCanvas.width=r.width*dpr;xsCanvas.height=r.height*dpr;
+  xsCtx.setTransform(dpr*r.width/XS,0,0,dpr*r.height/XS,0,0);
+}
+new ResizeObserver(resizeXS).observe(xsCanvas);
+
+// --- Draw helpers ---
+function xsClear(){xsCtx.clearRect(0,0,XS,XS);}
+function xsText(text,x,y,opts={}){
+  const ctx=xsCtx;ctx.save();
+  ctx.font=`${opts.weight||'600'} ${opts.size||9}px -apple-system,sans-serif`;
+  ctx.fillStyle=opts.color||'rgba(255,255,255,0.5)';
+  ctx.textAlign=opts.align||'center';ctx.textBaseline=opts.baseline||'middle';
+  if(opts.rotate){ctx.translate(x,y);ctx.rotate(opts.rotate);ctx.fillText(text,0,0);}
+  else ctx.fillText(text,x,y);
+  ctx.restore();
+}
+function xsLeader(x1,y1,x2,y2,color='rgba(255,255,255,0.15)'){
+  const ctx=xsCtx;ctx.beginPath();ctx.moveTo(x1,y1);ctx.lineTo(x2,y2);
+  ctx.strokeStyle=color;ctx.lineWidth=0.8;ctx.setLineDash([2,2]);ctx.stroke();ctx.setLineDash([]);
+}
+function xsFlowArrow(pts,time,color='#e53935',opacity=0.6){
+  if(opacity<0.02)return;
+  const ctx=xsCtx;ctx.save();ctx.globalAlpha=opacity;
+  ctx.beginPath();ctx.moveTo(pts[0],pts[1]);
+  for(let i=2;i<pts.length;i+=2)ctx.lineTo(pts[i],pts[i+1]);
+  ctx.strokeStyle=color;ctx.lineWidth=2.5;ctx.lineCap='round';
+  ctx.setLineDash([6,8]);ctx.lineDashOffset=-time*0.015;ctx.stroke();ctx.setLineDash([]);
+  // Arrowhead at end
+  const n=pts.length;const ax=pts[n-2],ay=pts[n-1],bx=pts[n-4],by=pts[n-3];
+  const ang=Math.atan2(ay-by,ax-bx);
+  ctx.beginPath();ctx.moveTo(ax,ay);
+  ctx.lineTo(ax-8*Math.cos(ang-0.4),ay-8*Math.sin(ang-0.4));
+  ctx.lineTo(ax-8*Math.cos(ang+0.4),ay-8*Math.sin(ang+0.4));
+  ctx.closePath();ctx.fillStyle=color;ctx.fill();
+  ctx.restore();
+}
+
+// --- Heart outlines (organic bezier) ---
+function drawHeartCoronal(ctx,opts={}){
+  // Coronal view: RA (left), LA (right), ventricles below
+  ctx.save();ctx.beginPath();
+  ctx.moveTo(28,90);
+  ctx.bezierCurveTo(22,55,55,28,95,30); // RA roof
+  ctx.bezierCurveTo(115,26,120,24,130,22); // dip
+  ctx.bezierCurveTo(140,24,145,26,165,30); // LA roof
+  ctx.bezierCurveTo(205,28,238,55,232,90); // LA wall
+  ctx.bezierCurveTo(234,108,228,118,218,128); // AV groove right
+  ctx.bezierCurveTo(205,158,178,215,130,238); // LV apex
+  ctx.bezierCurveTo(82,215,55,158,42,128); // RV wall
+  ctx.bezierCurveTo(32,118,26,108,28,90); // AV groove left
+  ctx.closePath();
+  ctx.fillStyle=opts.wallFill||'#141e30';ctx.fill();
+  ctx.strokeStyle=opts.wallStroke||'rgba(255,255,255,0.1)';ctx.lineWidth=2;ctx.stroke();
+  // Inner chamber
+  ctx.beginPath();
+  ctx.moveTo(38,92);
+  ctx.bezierCurveTo(34,60,62,38,97,40);
+  ctx.bezierCurveTo(115,37,122,35,130,33);
+  ctx.bezierCurveTo(138,35,145,37,163,40);
+  ctx.bezierCurveTo(198,38,226,60,222,92);
+  ctx.bezierCurveTo(224,108,220,116,212,124);
+  ctx.bezierCurveTo(200,150,175,200,130,220);
+  ctx.bezierCurveTo(85,200,60,150,48,124);
+  ctx.bezierCurveTo(40,116,36,108,38,92);
+  ctx.closePath();
+  ctx.fillStyle=opts.chamberFill||'#080e1a';ctx.fill();
+  ctx.restore();
+}
+function drawHeartAVCanal(ctx){
+  // Short-axis view at AV canal level — shows the heart cross-section
+  ctx.save();
+  // Outer myocardium — organic heart shape in short axis
+  ctx.beginPath();
+  ctx.moveTo(50,70);
+  ctx.bezierCurveTo(40,50,60,25,100,28);
+  ctx.bezierCurveTo(120,26,130,30,140,28);
+  ctx.bezierCurveTo(180,25,215,40,220,70);
+  ctx.bezierCurveTo(225,95,220,130,205,155);
+  ctx.bezierCurveTo(190,180,165,210,130,225);
+  ctx.bezierCurveTo(95,210,70,180,55,155);
+  ctx.bezierCurveTo(40,130,35,95,50,70);
+  ctx.closePath();
+  ctx.fillStyle='#141e30';ctx.fill();
+  ctx.strokeStyle='rgba(255,255,255,0.1)';ctx.lineWidth=2;ctx.stroke();
+  // Myocardium thickness
+  ctx.beginPath();
+  ctx.moveTo(60,75);
+  ctx.bezierCurveTo(52,58,68,38,100,40);
+  ctx.bezierCurveTo(118,38,130,42,142,40);
+  ctx.bezierCurveTo(175,38,205,50,210,75);
+  ctx.bezierCurveTo(214,96,210,128,198,150);
+  ctx.bezierCurveTo(186,172,162,198,130,212);
+  ctx.bezierCurveTo(98,198,74,172,62,150);
+  ctx.bezierCurveTo(50,128,46,96,60,75);
+  ctx.closePath();
+  ctx.fillStyle='#0f1a2f';ctx.fill();
+  // Cardiac jelly ring (subtle)
+  ctx.strokeStyle='rgba(255,255,255,0.04)';ctx.lineWidth=12;ctx.stroke();
+  // Endocardium lining
+  ctx.beginPath();
+  ctx.moveTo(68,80);
+  ctx.bezierCurveTo(62,65,76,48,105,50);
+  ctx.bezierCurveTo(118,49,130,52,145,50);
+  ctx.bezierCurveTo(170,48,198,58,202,80);
+  ctx.bezierCurveTo(206,98,202,122,192,142);
+  ctx.bezierCurveTo(182,162,158,186,130,198);
+  ctx.bezierCurveTo(102,186,78,162,68,142);
+  ctx.bezierCurveTo(58,122,54,98,68,80);
+  ctx.closePath();
+  ctx.strokeStyle='rgba(229,115,115,0.15)';ctx.lineWidth=1.5;ctx.stroke();
+  // Lumen
+  ctx.fillStyle='#080e1a';ctx.fill();
+  ctx.restore();
+}
+function drawHeartOFT(ctx){
+  // Axial OFT: single truncus circle
+  ctx.save();
+  ctx.beginPath();ctx.arc(130,130,95,0,Math.PI*2);
+  ctx.fillStyle='#141e30';ctx.fill();ctx.strokeStyle='rgba(255,255,255,0.1)';ctx.lineWidth=2;ctx.stroke();
+  ctx.beginPath();ctx.arc(130,130,80,0,Math.PI*2);ctx.fillStyle='#080e1a';ctx.fill();
+  ctx.restore();
+}
+function drawHeartLongRV(ctx){
+  // Longitudinal section through RV/TV
+  ctx.save();ctx.beginPath();
+  ctx.moveTo(30,55);
+  ctx.bezierCurveTo(25,80,28,140,35,190);
+  ctx.bezierCurveTo(40,218,70,240,130,245);
+  ctx.bezierCurveTo(190,240,220,218,225,190);
+  ctx.bezierCurveTo(232,140,235,80,230,55);
+  ctx.closePath();
+  ctx.fillStyle='#141e30';ctx.fill();ctx.strokeStyle='rgba(255,255,255,0.1)';ctx.lineWidth=2;ctx.stroke();
+  // Inner
+  ctx.beginPath();
+  ctx.moveTo(42,60);
+  ctx.bezierCurveTo(38,85,40,140,46,186);
+  ctx.bezierCurveTo(50,210,76,230,130,234);
+  ctx.bezierCurveTo(184,230,210,210,214,186);
+  ctx.bezierCurveTo(220,140,222,85,218,60);
+  ctx.closePath();
+  ctx.fillStyle='#080e1a';ctx.fill();
+  ctx.restore();
+}
+function drawHeartVentricular(ctx){
+  // Coronal — lower portion (ventricles)
+  ctx.save();ctx.beginPath();
+  ctx.moveTo(35,40);
+  ctx.lineTo(35,140);
+  ctx.bezierCurveTo(35,175,60,220,95,235);
+  ctx.bezierCurveTo(115,242,130,245,130,245);
+  ctx.bezierCurveTo(130,245,145,242,165,235);
+  ctx.bezierCurveTo(200,220,225,175,225,140);
+  ctx.lineTo(225,40);
+  ctx.closePath();
+  ctx.fillStyle='#141e30';ctx.fill();ctx.strokeStyle='rgba(255,255,255,0.1)';ctx.lineWidth=2;ctx.stroke();
+  // Inner
+  ctx.beginPath();
+  ctx.moveTo(47,45);
+  ctx.lineTo(47,138);
+  ctx.bezierCurveTo(47,168,68,210,100,225);
+  ctx.bezierCurveTo(117,232,130,234,130,234);
+  ctx.bezierCurveTo(130,234,143,232,160,225);
+  ctx.bezierCurveTo(192,210,213,168,213,138);
+  ctx.lineTo(213,45);
+  ctx.closePath();
+  ctx.fillStyle='#080e1a';ctx.fill();
+  ctx.restore();
+}
+
+// ================= STAGE 4: ENDOCARDIAL CUSHIONS =================
+const XS4_PARAMS=[
+  {supH:0,infH:0,fused:0},
+  {supH:0.55,infH:0,fused:0},
+  {supH:0.75,infH:0.55,fused:0},
+  {supH:1,infH:1,fused:1}
+];
+function drawXS4(ctx,s,time){
+  drawHeartAVCanal(ctx);
+  xsText('Myocardium',48,35,{size:7,color:'rgba(255,255,255,0.25)',align:'left'});
+  xsText('Cardiac Jelly',200,42,{size:7,color:'rgba(255,255,255,0.25)',align:'right'});
+  xsText('Lumen',130,125,{size:7,color:'rgba(255,255,255,0.15)'});
+  const def=defectMode&&getDefect(3);
+  // Superior cushion
+  if(s.supH>0.01){
+    const depth=64+(130-64)*s.supH;
+    ctx.beginPath();ctx.moveTo(78,62);
+    ctx.bezierCurveTo(90,62+s.supH*25,110,depth-5,130,depth);
+    ctx.bezierCurveTo(150,depth-5,170,62+s.supH*25,182,62);
+    ctx.fillStyle='rgba(255,167,38,0.7)';ctx.fill();
+    ctx.strokeStyle='#ffa726';ctx.lineWidth=1;ctx.stroke();
+    if(s.fused<0.5)xsText('Superior Cushion',130,Math.min(depth-12,82),{size:8,color:'#ffa726',weight:'600'});
+  }
+  // Inferior cushion
+  if(s.infH>0.01){
+    const depth=198-(198-130)*s.infH;
+    ctx.beginPath();ctx.moveTo(78,198);
+    ctx.bezierCurveTo(90,198-s.infH*25,110,depth+5,130,depth);
+    ctx.bezierCurveTo(150,depth+5,170,198-s.infH*25,182,198);
+    ctx.fillStyle='rgba(255,167,38,0.7)';ctx.fill();
+    ctx.strokeStyle='#ffa726';ctx.lineWidth=1;ctx.stroke();
+    if(s.fused<0.5)xsText('Inferior Cushion',130,Math.max(depth+14,178),{size:8,color:'#ffa726',weight:'600'});
+  }
+  // Fused → two orifices
+  if(s.fused>0.5&&!def){
+    ctx.save();ctx.globalAlpha=s.fused;
+    ctx.beginPath();ctx.ellipse(95,130,24,32,0,0,Math.PI*2);
+    ctx.fillStyle='#080e1a';ctx.strokeStyle='rgba(255,255,255,0.15)';ctx.lineWidth=1;ctx.fill();ctx.stroke();
+    ctx.beginPath();ctx.ellipse(165,130,24,32,0,0,Math.PI*2);
+    ctx.fillStyle='#080e1a';ctx.strokeStyle='rgba(255,255,255,0.15)';ctx.fill();ctx.stroke();
+    xsText('R AV',95,127,{size:8,color:'#4a90d9'});xsText('(Tricuspid)',95,140,{size:6,color:'rgba(255,255,255,0.35)'});
+    xsText('L AV',165,127,{size:8,color:'#4a90d9'});xsText('(Mitral)',165,140,{size:6,color:'rgba(255,255,255,0.35)'});
+    ctx.restore();
+  }
+  // Defect: AVSD
+  if(def&&s.fused>0.5){
+    ctx.save();ctx.globalAlpha=s.fused;
+    ctx.beginPath();ctx.roundRect(108,118,44,24,6);
+    ctx.fillStyle='rgba(255,23,68,0.15)';ctx.strokeStyle='#ff1744';ctx.lineWidth=1.5;ctx.fill();ctx.stroke();
+    ctx.beginPath();ctx.ellipse(130,130,42,28,0,0,Math.PI*2);
+    ctx.fillStyle='#080e1a';ctx.strokeStyle='rgba(255,23,68,0.3)';ctx.lineWidth=1;ctx.fill();ctx.stroke();
+    xsText('Complete AVSD',130,105,{size:10,color:'#ff1744',weight:'700'});
+    xsText('Common AV Valve',130,155,{size:8,color:'#ff1744'});
+    ctx.restore();
+  }
+  // Open lumen label
+  if(s.supH<0.05&&s.infH<0.05){
+    xsText('AV Canal',130,125,{size:10,weight:'700',color:'rgba(255,255,255,0.8)'});
+    xsText('Single Channel',130,140,{size:8,color:'rgba(255,255,255,0.4)'});
+  }
+}
+
+// ================= STAGE 5: ATRIAL SEPTATION =================
+const XS5_PARAMS=[
+  {spLen:0,fsR1:0,fsR2:0,ssLen:0,ssOp:0,flowOp:0.7,valvePress:0,fpGap:0},
+  {spLen:0.72,fsR1:0,fsR2:0,ssLen:0,ssOp:0,flowOp:0.4,valvePress:0,fpGap:1},
+  {spLen:1.0,fsR1:1,fsR2:1,ssLen:0,ssOp:0,flowOp:0.3,valvePress:0,fpGap:0},
+  {spLen:1.0,fsR1:1,fsR2:1,ssLen:0.72,ssOp:1,flowOp:0.2,valvePress:0,fpGap:0},
+  {spLen:1.0,fsR1:0.5,fsR2:0.3,ssLen:0.88,ssOp:1,flowOp:0,valvePress:1,fpGap:0}
+];
+function drawXS5(ctx,s,time){
+  drawHeartCoronal(ctx);
+  // Endocardial cushions at AV groove
+  ctx.save();
+  ctx.beginPath();
+  ctx.moveTo(48,124);ctx.bezierCurveTo(70,128,100,130,130,132);
+  ctx.bezierCurveTo(160,130,190,128,212,124);
+  ctx.lineTo(212,136);ctx.bezierCurveTo(190,140,160,142,130,143);
+  ctx.bezierCurveTo(100,142,70,140,48,136);ctx.closePath();
+  ctx.fillStyle='rgba(255,167,38,0.45)';ctx.fill();
+  xsText('Cushions',130,155,{size:7,color:'rgba(255,167,38,0.5)'});
+  ctx.restore();
+  const def=defectMode&&getDefect(4);
+  // Chamber labels
+  if(s.spLen>0.1){
+    xsText('LA',80,78,{size:11,color:'rgba(255,255,255,0.4)'});
+    xsText('RA',180,78,{size:11,color:'rgba(255,255,255,0.4)'});
+  }else{
+    xsText('Common Atrium',130,78,{size:11,weight:'700',color:'rgba(255,255,255,0.7)'});
+  }
+  xsText('Ventricles',130,195,{size:9,color:'rgba(255,255,255,0.25)'});
+  // Septum primum (organic wavy line growing down from roof)
+  if(s.spLen>0.01){
+    const startY=33;const fullLen=132-33;const endY=startY+fullLen*s.spLen;
+    ctx.beginPath();ctx.moveTo(130,startY);
+    const mid1=startY+(endY-startY)*0.35;const mid2=startY+(endY-startY)*0.65;
+    ctx.bezierCurveTo(128,mid1-3,132,mid2+2,130,endY);
+    ctx.strokeStyle='#42a5f5';ctx.lineWidth=3.5;ctx.lineCap='round';ctx.stroke();
+    // Glow
+    ctx.save();ctx.globalAlpha=0.15;ctx.strokeStyle='#42a5f5';ctx.lineWidth=10;
+    ctx.beginPath();ctx.moveTo(130,startY);ctx.bezierCurveTo(128,mid1-3,132,mid2+2,130,endY);ctx.stroke();
+    ctx.restore();
+    // Label
+    xsLeader(110,68,122,startY+(endY-startY)*0.3,'rgba(66,165,245,0.3)');
+    xsText('Septum',100,62,{size:8,color:'#42a5f5',align:'right'});
+    xsText('Primum',100,73,{size:8,color:'#42a5f5',align:'right'});
+    // Foramen primum gap indicator
+    if(s.fpGap>0.3&&s.spLen<0.95){
+      const gY=endY+6;
+      xsText('Foramen Primum ↕',130,gY+8,{size:8,color:'#4a90d9',weight:'600'});
+      xsFlowArrow([140,gY-2,120,gY+6],time,'#c62828',s.fpGap*0.4);
+    }
+  }
+  // Blood flow (R→L in common atrium)
+  if(s.spLen<0.1){
+    xsFlowArrow([175,80,85,80],time,'#c62828',s.flowOp);
+    xsText('R → L flow',130,95,{size:8,color:'#c62828'});
+  }
+  // Foramen secundum (holes in upper septum primum)
+  if(s.fsR1>0.1){
+    ctx.save();
+    ctx.beginPath();ctx.arc(130,52,8*s.fsR1,0,Math.PI*2);
+    ctx.fillStyle='#080e1a';ctx.fill();ctx.strokeStyle='#42a5f5';ctx.lineWidth=1;ctx.setLineDash([2,2]);ctx.stroke();ctx.setLineDash([]);
+    ctx.beginPath();ctx.arc(130,68,6*s.fsR2,0,Math.PI*2);
+    ctx.fillStyle='#080e1a';ctx.fill();ctx.strokeStyle='#42a5f5';ctx.lineWidth=1;ctx.setLineDash([2,2]);ctx.stroke();ctx.setLineDash([]);
+    if(s.ssOp<0.3){
+      xsText('Foramen',157,54,{size:7,color:'#42a5f5',align:'left'});
+      xsText('Secundum',157,64,{size:7,color:'#42a5f5',align:'left'});
+    }
+    ctx.restore();
+  }
+  // Septum secundum (thicker, right side)
+  if(s.ssOp>0.01){
+    const ssStartY=33;const ssEndY=33+(130-33)*s.ssLen;
+    ctx.save();ctx.globalAlpha=s.ssOp;
+    ctx.beginPath();ctx.moveTo(139,ssStartY);
+    const sm1=ssStartY+(ssEndY-ssStartY)*0.3;const sm2=ssStartY+(ssEndY-ssStartY)*0.7;
+    ctx.bezierCurveTo(141,sm1,137,sm2,139,ssEndY);
+    ctx.strokeStyle='#1565c0';ctx.lineWidth=6;ctx.lineCap='round';ctx.stroke();
+    // Glow
+    ctx.globalAlpha=s.ssOp*0.12;ctx.lineWidth=14;ctx.stroke();
+    ctx.restore();
+    xsLeader(155,90,145,33+(ssEndY-33)*0.5,'rgba(21,101,192,0.3)');
+    xsText('Septum',168,85,{size:8,color:'#1565c0',weight:'600',align:'left'});
+    xsText('Secundum',168,96,{size:8,color:'#1565c0',weight:'600',align:'left'});
+    // Foramen ovale
+    if(s.ssLen>0.5){
+      xsText('Foramen Ovale',130,ssEndY+12,{size:7,color:'#4a90d9',weight:'600'});
+    }
+  }
+  // Birth: valve mechanism
+  if(s.valvePress>0.3){
+    ctx.save();ctx.globalAlpha=s.valvePress;
+    // Arrow showing septum pressed left
+    ctx.beginPath();ctx.moveTo(126,50);ctx.lineTo(122,60);ctx.lineTo(126,70);
+    ctx.strokeStyle='#42a5f5';ctx.lineWidth=1.5;ctx.stroke();
+    xsText('Flap valve',106,52,{size:7,color:'rgba(255,255,255,0.6)',align:'right'});
+    xsText('Birth: LA > RA → septum primum pressed shut',130,250,{size:7,weight:'600',color:'rgba(255,255,255,0.7)'});
+    ctx.restore();
+  }
+  // Defect: Secundum ASD
+  if(def&&s.ssOp>0.3){
+    ctx.save();ctx.globalAlpha=Math.min(s.ssOp,1);
+    ctx.beginPath();ctx.arc(130,62,16,0,Math.PI*2);
+    ctx.fillStyle='rgba(255,23,68,0.15)';ctx.fill();
+    ctx.strokeStyle='#ff1744';ctx.lineWidth=2;ctx.stroke();
+    xsText('Secundum ASD',130,26,{size:10,color:'#ff1744',weight:'700'});
+    xsFlowArrow([146,62,114,62],time,'#ff1744',0.6);
+    ctx.restore();
+  }
+}
+
+// ================= STAGE 6: VENTRICULAR SEPTATION =================
+const XS6_PARAMS=[
+  {muscH:0,inletH:0,outletH:0,membOp:0},
+  {muscH:0.45,inletH:0,outletH:0,membOp:0},
+  {muscH:0.72,inletH:0.6,outletH:0.5,membOp:0},
+  {muscH:1.0,inletH:1,outletH:1,membOp:1}
+];
+function drawXS6(ctx,s,time){
+  drawHeartVentricular(ctx);
+  // AV junction cushions at top
+  ctx.save();ctx.beginPath();
+  ctx.moveTo(35,38);ctx.lineTo(225,38);ctx.lineTo(225,52);ctx.lineTo(35,52);ctx.closePath();
+  ctx.fillStyle='rgba(255,167,38,0.35)';ctx.fill();
+  xsText('Endocardial Cushions (inlet)',130,32,{size:7,color:'rgba(255,255,255,0.3)'});
+  ctx.restore();
+  // Conal ridges at sides
+  ctx.save();
+  ctx.beginPath();ctx.roundRect(35,54,14,28,3);ctx.fillStyle='rgba(102,187,106,0.25)';ctx.fill();
+  ctx.beginPath();ctx.roundRect(211,54,14,28,3);ctx.fillStyle='rgba(102,187,106,0.25)';ctx.fill();
+  ctx.restore();
+  const def=defectMode&&getDefect(5);
+  // Chamber labels
+  xsText('LV',90,140,{size:10,color:'rgba(255,255,255,0.35)'});
+  xsText('RV',170,140,{size:10,color:'rgba(255,255,255,0.35)'});
+  if(s.muscH<0.05){
+    xsText('Common Ventricle',130,170,{size:10,weight:'700',color:'rgba(255,255,255,0.7)'});
+  }
+  // Muscular septum (grows upward from apex)
+  if(s.muscH>0.01){
+    const topY=235-(235-75)*s.muscH;
+    ctx.beginPath();
+    ctx.moveTo(124,235);ctx.bezierCurveTo(126,235-(235-topY)*0.4,128,topY+(235-topY)*0.2,130,topY);
+    ctx.bezierCurveTo(132,topY+(235-topY)*0.2,134,235-(235-topY)*0.4,136,235);
+    ctx.closePath();
+    ctx.fillStyle='rgba(92,107,194,0.75)';ctx.fill();
+    ctx.strokeStyle='#5c6bc0';ctx.lineWidth=0.8;ctx.stroke();
+    xsText('Muscular Septum',130,248,{size:7,color:'#5c6bc0'});
+    // IV foramen
+    if(s.muscH<0.6){
+      xsText('IV Foramen ↕',130,topY-12,{size:8,color:'#4a90d9',weight:'600'});
+      xsLeader(120,topY-2,140,topY-2,'rgba(255,255,255,0.2)');
+    }
+  }
+  // Three components converging
+  if(s.inletH>0.01){
+    const topY=235-(235-75)*s.muscH;
+    const inletY=52+(topY-52)*s.inletH;
+    // Inlet (cushion tissue from top)
+    ctx.save();ctx.globalAlpha=s.inletH;
+    ctx.beginPath();ctx.moveTo(118,52);ctx.bezierCurveTo(120,inletY-10,124,inletY,130,inletY+4);
+    ctx.strokeStyle='#ffa726';ctx.lineWidth=2.5;ctx.lineCap='round';ctx.stroke();
+    ctx.beginPath();ctx.moveTo(142,52);ctx.bezierCurveTo(140,inletY-10,136,inletY,130,inletY+4);
+    ctx.strokeStyle='#ffa726';ctx.lineWidth=2.5;ctx.stroke();
+    ctx.restore();
+    if(s.inletH<0.8){
+      xsText('Inlet',86,inletY-6,{size:7,color:'#ffa726',align:'right'});
+      xsText('Outlet',176,inletY-6,{size:7,color:'#66bb6a',align:'left'});
+    }
+  }
+  // Outlet (conal ridges from sides)
+  if(s.outletH>0.01){
+    const topY=235-(235-75)*s.muscH;
+    const targetY=52+(topY-52)*s.inletH;
+    ctx.save();ctx.globalAlpha=s.outletH;
+    ctx.beginPath();ctx.moveTo(49,72);ctx.bezierCurveTo(85,targetY-8,115,targetY,124,targetY+4);
+    ctx.strokeStyle='#66bb6a';ctx.lineWidth=2;ctx.lineCap='round';ctx.stroke();
+    ctx.beginPath();ctx.moveTo(211,72);ctx.bezierCurveTo(175,targetY-8,145,targetY,136,targetY+4);
+    ctx.strokeStyle='#66bb6a';ctx.lineWidth=2;ctx.stroke();
+    ctx.restore();
+    if(s.outletH>0.3&&s.inletH>0.3){
+      xsText('Conal Ridge',24,72,{size:6,color:'#66bb6a',align:'left'});
+      xsText('Conal Ridge',236,72,{size:6,color:'#66bb6a',align:'right'});
+    }
+  }
+  // Membranous septum
+  if(s.membOp>0.01){
+    const topY=235-(235-75)*1.0;
+    ctx.save();ctx.globalAlpha=s.membOp;
+    ctx.beginPath();ctx.ellipse(130,topY+2,10,7,0,0,Math.PI*2);
+    ctx.fillStyle='rgba(171,71,188,0.6)';ctx.fill();ctx.strokeStyle='#ab47bc';ctx.lineWidth=1;ctx.stroke();
+    xsText('Membranous',130,topY-14,{size:7,color:'#ab47bc',weight:'600'});
+    xsText('Septum',130,topY-5,{size:7,color:'#ab47bc',weight:'600'});
+    xsText('LVOT',100,topY+20,{size:7,color:'rgba(255,255,255,0.4)'});
+    xsText('RVOT',160,topY+20,{size:7,color:'rgba(255,255,255,0.4)'});
+    ctx.restore();
+  }
+  // Defect: Perimembranous VSD
+  if(def&&s.muscH>0.3){
+    const topY=235-(235-75)*s.muscH;const gapY=topY+8;
+    ctx.save();
+    ctx.beginPath();ctx.ellipse(130,gapY,9,6,0,0,Math.PI*2);
+    ctx.fillStyle='rgba(255,23,68,0.2)';ctx.fill();ctx.strokeStyle='#ff1744';ctx.lineWidth=1.5;ctx.stroke();
+    xsText('Perimembranous VSD',130,gapY-18,{size:8,color:'#ff1744',weight:'700'});
+    xsFlowArrow([118,gapY,142,gapY],time,'#ff1744',0.6);
+    xsText('L→R shunt',130,gapY+18,{size:7,color:'#ff1744'});
+    ctx.restore();
+  }
+}
+
+// ================= STAGE 7: OFT SEPTATION =================
+const XS7_PARAMS=[
+  {ridgeH:0,spiral:0,sep:0,nccOp:1},
+  {ridgeH:0.5,spiral:0,sep:0,nccOp:0.3},
+  {ridgeH:1.0,spiral:1,sep:0,nccOp:0},
+  {ridgeH:1.0,spiral:1,sep:1,nccOp:0}
+];
+function drawXS7(ctx,s,time){
+  const def=defectMode&&getDefect(6);
+  if(s.sep<0.5){
+    drawHeartOFT(ctx);
+    xsText('Truncus Arteriosus',130,20,{size:8,color:'rgba(255,255,255,0.3)'});
+  }
+  // Neural crest cells
+  if(s.nccOp>0.05){
+    ctx.save();ctx.globalAlpha=s.nccOp;
+    const ncAngles=[0.3,0.8,1.5,2.1,2.8,3.5,4.2,4.9,5.5];
+    for(let i=0;i<ncAngles.length;i++){
+      const a=ncAngles[i]+Math.sin(time*0.001+i)*0.15;
+      const r=86+Math.sin(time*0.0008+i*1.3)*4;
+      const x=130+Math.cos(a)*r,y=130+Math.sin(a)*r;
+      ctx.beginPath();ctx.arc(x,y,3,0,Math.PI*2);ctx.fillStyle='rgba(102,187,106,0.6)';ctx.fill();
+      // Glow
+      ctx.beginPath();ctx.arc(x,y,6,0,Math.PI*2);ctx.fillStyle='rgba(102,187,106,0.15)';ctx.fill();
+    }
+    xsText('Neural crest cells →',130,145,{size:7,color:'#66bb6a'});
+    ctx.restore();
+  }
+  if(s.ridgeH<0.05&&s.sep<0.05){
+    xsText('Single OFT Lumen',130,125,{size:10,weight:'700',color:'rgba(255,255,255,0.7)'});
+  }
+  // Ridges
+  if(s.ridgeH>0.01&&s.sep<0.5){
+    const h=s.ridgeH;const rot=s.spiral*Math.PI;
+    ctx.save();ctx.translate(130,130);ctx.rotate(rot*0.3);
+    // Ridge 1 (green/left)
+    ctx.beginPath();
+    const r1x=-80+h*35;
+    ctx.moveTo(-80,-(75*h));ctx.bezierCurveTo(r1x,-40*h,r1x,40*h,-80,75*h);
+    ctx.strokeStyle='rgba(102,187,106,0.65)';ctx.lineWidth=6*h+2;ctx.lineCap='round';ctx.stroke();
+    // Ridge 2 (orange/right)
+    ctx.beginPath();
+    const r2x=80-h*35;
+    ctx.moveTo(80,-(75*h));ctx.bezierCurveTo(r2x,-40*h,r2x,40*h,80,75*h);
+    ctx.strokeStyle='rgba(230,81,0,0.55)';ctx.lineWidth=6*h+2;ctx.lineCap='round';ctx.stroke();
+    ctx.restore();
+    if(s.spiral<0.3){
+      xsText('Ridge 1',40,130,{size:8,color:'#66bb6a',align:'right'});
+      xsText('Ridge 2',220,130,{size:8,color:'#e65100',align:'left'});
+      xsText('Lumen',130,125,{size:8,color:'rgba(255,255,255,0.4)'});
+    }
+    if(s.spiral>0.3&&s.sep<0.3){
+      xsText('Spiral 180°',130,125,{size:9,color:'#4a90d9',weight:'600'});
+      // Rotation arrows
+      ctx.save();ctx.globalAlpha=0.4;
+      ctx.beginPath();ctx.arc(130,130,65,Math.PI*0.8,Math.PI*1.1);
+      ctx.strokeStyle='rgba(255,255,255,0.4)';ctx.lineWidth=1.5;ctx.stroke();
+      ctx.beginPath();ctx.arc(130,130,65,Math.PI*1.8,Math.PI*0.1);
+      ctx.strokeStyle='rgba(255,255,255,0.4)';ctx.lineWidth=1.5;ctx.stroke();
+      ctx.restore();
+    }
+  }
+  // Separated vessels
+  if(s.sep>0.01){
+    const d=s.sep*28;
+    ctx.save();ctx.globalAlpha=s.sep;
+    // Aorta (posterior/left)
+    ctx.beginPath();ctx.arc(130-d*0.6,130+d*0.4,35*s.sep+45*(1-s.sep),0,Math.PI*2);
+    ctx.fillStyle='#141e30';ctx.fill();ctx.strokeStyle='rgba(255,255,255,0.2)';ctx.lineWidth=2;ctx.stroke();
+    ctx.beginPath();ctx.arc(130-d*0.6,130+d*0.4,28*s.sep+38*(1-s.sep),0,Math.PI*2);
+    ctx.fillStyle='rgba(198,40,40,0.15)';ctx.fill();
+    xsText('Ao',130-d*0.6,130+d*0.4-4,{size:10,weight:'700',color:'rgba(255,255,255,0.8)'});
+    xsText('Posterior',130-d*0.6,130+d*0.4+10,{size:6,color:'rgba(255,255,255,0.35)'});
+    // PA (anterior/right)
+    ctx.beginPath();ctx.arc(130+d*0.6,130-d*0.6,32*s.sep+45*(1-s.sep),0,Math.PI*2);
+    ctx.fillStyle='#141e30';ctx.fill();ctx.strokeStyle='rgba(255,255,255,0.2)';ctx.lineWidth=2;ctx.stroke();
+    ctx.beginPath();ctx.arc(130+d*0.6,130-d*0.6,25*s.sep+38*(1-s.sep),0,Math.PI*2);
+    ctx.fillStyle='rgba(21,101,192,0.15)';ctx.fill();
+    xsText('PA',130+d*0.6,130-d*0.6-4,{size:10,weight:'700',color:'rgba(255,255,255,0.8)'});
+    xsText('Anterior',130+d*0.6,130-d*0.6+10,{size:6,color:'rgba(255,255,255,0.35)'});
+    // AP septum line
+    if(s.sep>0.5){
+      ctx.beginPath();ctx.moveTo(130-d*0.3+15,130+d*0.1-20);ctx.lineTo(130+d*0.3-15,130-d*0.3+20);
+      ctx.strokeStyle='rgba(255,255,255,0.15)';ctx.lineWidth=2;ctx.stroke();
+      xsText('AP Septum',130,130-d*0.1,{size:7,color:'rgba(255,255,255,0.3)'});
+    }
+    ctx.restore();
+  }
+  // Defects
+  if(def&&s.sep>0.3){
+    const di=defectIdx%3;
+    ctx.save();ctx.globalAlpha=s.sep;
+    const d=s.sep*28;
+    if(di===0){
+      // TOF: anterior malalignment
+      xsText('TOF',130,20,{size:11,color:'#ff1744',weight:'700'});
+      ctx.beginPath();ctx.setLineDash([4,3]);
+      ctx.moveTo(130-d*0.6-20,130+d*0.4+35);ctx.lineTo(130-d*0.6+20,130+d*0.4+35);
+      ctx.strokeStyle='#ff1744';ctx.lineWidth=1.5;ctx.stroke();ctx.setLineDash([]);
+      xsText('Overriding Ao',130-d*0.6,130+d*0.4+48,{size:7,color:'#ff1744'});
+      xsText('RVOT ↓',130+d*0.6,130-d*0.6+26,{size:7,color:'#ff1744'});
+      ctx.beginPath();ctx.arc(130,130+5,6,0,Math.PI*2);
+      ctx.fillStyle='rgba(255,23,68,0.2)';ctx.fill();ctx.strokeStyle='#ff1744';ctx.lineWidth=1;ctx.stroke();
+      xsText('VSD',130,130+20,{size:7,color:'#ff1744'});
+    }else if(di===1){
+      // D-TGA: no spiral → parallel vessels
+      xsText('D-TGA',130,20,{size:11,color:'#ff1744',weight:'700'});
+      xsText('No spiral →',130,246,{size:7,color:'#ff1744'});
+      xsText('parallel circulations',130,256,{size:6,color:'rgba(255,23,68,0.7)'});
+      // Ao anterior (swap positions)
+      xsText('Ao anterior',130+d*0.6,130-d*0.6-18,{size:7,color:'#ff1744'});
+      xsText('PA posterior',130-d*0.6,130+d*0.4-18,{size:7,color:'#ff1744'});
+      // Red X over spiral indicator
+      ctx.beginPath();ctx.moveTo(120,120);ctx.lineTo(140,140);ctx.moveTo(140,120);ctx.lineTo(120,140);
+      ctx.strokeStyle='#ff1744';ctx.lineWidth=2;ctx.stroke();
+    }else{
+      // Truncus arteriosus: single vessel
+      xsText('Truncus Arteriosus',130,20,{size:10,color:'#ff1744',weight:'700'});
+      xsText('Single OFT',130,246,{size:7,color:'#ff1744'});
+      xsText('(no septation)',130,256,{size:6,color:'rgba(255,23,68,0.7)'});
+      // Red circle indicating unseparated vessel
+      ctx.beginPath();ctx.arc(130,130,42,0,Math.PI*2);
+      ctx.strokeStyle='rgba(255,23,68,0.4)';ctx.lineWidth=2;ctx.setLineDash([4,3]);ctx.stroke();ctx.setLineDash([]);
+      ctx.beginPath();ctx.arc(130,130+5,6,0,Math.PI*2);
+      ctx.fillStyle='rgba(255,23,68,0.2)';ctx.fill();ctx.strokeStyle='#ff1744';ctx.lineWidth=1;ctx.stroke();
+      xsText('VSD',130,130+20,{size:7,color:'#ff1744'});
+    }
+    ctx.restore();
+  }
+}
+
+// ================= STAGE 9: AV VALVE DELAMINATION =================
+const XS9_PARAMS=[
+  {wallThick:1,leafLen:0,chordOp:0,papOp:0,coaptOp:0},
+  {wallThick:0.4,leafLen:0.6,chordOp:0.5,papOp:0.5,coaptOp:0},
+  {wallThick:0,leafLen:1,chordOp:1,papOp:1,coaptOp:1}
+];
+function drawXS9(ctx,s,time){
+  drawHeartLongRV(ctx);
+  const def=defectMode&&getDefect(8);
+  // True AV annulus
+  ctx.beginPath();ctx.moveTo(30,55);ctx.lineTo(230,55);
+  ctx.strokeStyle='#ffa726';ctx.lineWidth=3;ctx.stroke();
+  xsText('True AV Annulus',130,44,{size:8,color:'#ffa726',weight:'600'});
+  // RA label above
+  ctx.save();ctx.beginPath();ctx.roundRect(55,15,150,35,8);
+  ctx.fillStyle='#141e30';ctx.fill();ctx.strokeStyle='rgba(255,255,255,0.08)';ctx.lineWidth=1;ctx.stroke();
+  xsText('RA',130,34,{size:9,color:'rgba(255,255,255,0.35)'});
+  ctx.restore();
+  xsText('RV',130,175,{size:9,color:'rgba(255,255,255,0.35)'});
+  // Compact myocardium
+  if(s.wallThick>0.01){
+    ctx.save();ctx.globalAlpha=s.wallThick*0.6;
+    ctx.beginPath();
+    ctx.moveTo(42,60);ctx.lineTo(42,195);
+    ctx.bezierCurveTo(42,220,65,225,130,235);
+    ctx.bezierCurveTo(195,225,218,220,218,195);ctx.lineTo(218,60);
+    const inset=20*s.wallThick;
+    ctx.lineTo(218-inset,60);ctx.lineTo(218-inset,185);
+    ctx.bezierCurveTo(218-inset,205,195-inset,215,130,225-inset*0.4);
+    ctx.bezierCurveTo(65+inset,215,42+inset,205,42+inset,185);ctx.lineTo(42+inset,60);
+    ctx.closePath();
+    ctx.fillStyle='#2a3a5c';ctx.fill();
+    ctx.restore();
+    if(s.wallThick>0.6){
+      xsText('Compact',130,128,{size:10,weight:'700',color:'rgba(255,255,255,0.7)'});
+      xsText('Myocardium',130,143,{size:10,weight:'700',color:'rgba(255,255,255,0.7)'});
+      xsText('Inner wall',50,145,{size:6,color:'rgba(255,255,255,0.3)',rotate:-Math.PI/2});
+      xsText('Inner wall',210,145,{size:6,color:'rgba(255,255,255,0.3)',rotate:Math.PI/2});
+    }
+  }
+  // Leaflets
+  if(s.leafLen>0.01){
+    const len=s.leafLen;
+    // Septal leaflet
+    ctx.beginPath();ctx.moveTo(70,55);
+    ctx.bezierCurveTo(75,55+len*55,88,55+len*85,95+len*15,55+len*95);
+    ctx.strokeStyle='#42a5f5';ctx.lineWidth=3+len;ctx.lineCap='round';ctx.stroke();
+    // Posterior leaflet
+    ctx.beginPath();ctx.moveTo(190,55);
+    ctx.bezierCurveTo(185,55+len*55,172,55+len*85,165-len*15,55+len*95);
+    ctx.strokeStyle='#42a5f5';ctx.lineWidth=3+len;ctx.lineCap='round';ctx.stroke();
+    // Labels
+    if(s.wallThick>0.1){
+      xsText('Septal',55,105,{size:7,color:'#42a5f5',align:'right'});
+      xsText('Leaflet',55,115,{size:7,color:'#42a5f5',align:'right'});
+      xsText('Posterior',205,105,{size:7,color:'#42a5f5',align:'left'});
+      xsText('Leaflet',205,115,{size:7,color:'#42a5f5',align:'left'});
+    }else{
+      xsText('Septal',55,90,{size:7,color:'#42a5f5',align:'right'});
+      xsText('Posterior',205,90,{size:7,color:'#42a5f5',align:'left'});
+      xsText('Tricuspid Valve',130,70,{size:8,color:'rgba(255,255,255,0.45)'});
+    }
+  }
+  // Coaptation point
+  if(s.coaptOp>0.01){
+    ctx.save();ctx.globalAlpha=s.coaptOp;
+    ctx.beginPath();ctx.arc(130,148,4,0,Math.PI*2);
+    ctx.fillStyle='rgba(66,165,245,0.5)';ctx.fill();
+    xsText('Coaptation',130,162,{size:6,color:'#42a5f5'});
+    ctx.restore();
+  }
+  // Chordae
+  if(s.chordOp>0.01){
+    ctx.save();ctx.globalAlpha=s.chordOp;ctx.strokeStyle='rgba(255,255,255,0.3)';ctx.lineWidth=1.2;
+    const solid=s.chordOp>0.7;
+    if(!solid){ctx.setLineDash([3,2]);}
+    const tipLY=55+s.leafLen*95;const tipRY=tipLY;
+    ctx.beginPath();ctx.moveTo(95+s.leafLen*5,tipLY-10);ctx.lineTo(85,200);ctx.stroke();
+    ctx.beginPath();ctx.moveTo(100+s.leafLen*10,tipLY);ctx.lineTo(90,210);ctx.stroke();
+    ctx.beginPath();ctx.moveTo(165-s.leafLen*5,tipRY-10);ctx.lineTo(175,200);ctx.stroke();
+    ctx.beginPath();ctx.moveTo(160-s.leafLen*10,tipRY);ctx.lineTo(170,210);ctx.stroke();
+    ctx.setLineDash([]);
+    if(s.chordOp<0.7)xsText('Chordae forming',130,200,{size:6,color:'rgba(255,255,255,0.3)'});
+    ctx.restore();
+  }
+  // Papillary muscles
+  if(s.papOp>0.01){
+    ctx.save();ctx.globalAlpha=s.papOp;
+    const r=s.papOp>0.7?12:10;
+    ctx.beginPath();ctx.ellipse(85,212,r,r*0.8,0,0,Math.PI*2);
+    ctx.fillStyle='#2a3a5c';ctx.fill();ctx.strokeStyle='rgba(255,255,255,0.15)';ctx.lineWidth=1.2;ctx.stroke();
+    ctx.beginPath();ctx.ellipse(175,212,r,r*0.8,0,0,Math.PI*2);
+    ctx.fillStyle='#2a3a5c';ctx.fill();ctx.strokeStyle='rgba(255,255,255,0.15)';ctx.stroke();
+    if(s.papOp>0.7){
+      xsText('Pap. muscle',85,232,{size:6,color:'rgba(255,255,255,0.35)'});
+      xsText('Pap. muscle',175,232,{size:6,color:'rgba(255,255,255,0.35)'});
+    }else{
+      xsText('Papillary muscles',130,232,{size:6,color:'rgba(255,255,255,0.3)'});
+    }
+    ctx.restore();
+  }
+  // Defect: Ebstein anomaly
+  if(def){
+    const dispY=55+s.leafLen*90;
+    if(s.leafLen>0.1){
+      ctx.save();
+      // Functional annulus displaced
+      ctx.beginPath();ctx.moveTo(50,dispY);ctx.lineTo(210,dispY);
+      ctx.strokeStyle='#ff1744';ctx.lineWidth=2.5;ctx.setLineDash([5,3]);ctx.stroke();ctx.setLineDash([]);
+      xsText('Functional Annulus ↓',130,dispY-8,{size:7,color:'#ff1744',weight:'700'});
+      // Atrialized RV
+      ctx.beginPath();ctx.rect(42,55,176,dispY-55);
+      ctx.fillStyle='rgba(255,23,68,0.06)';ctx.fill();
+      ctx.strokeStyle='rgba(255,23,68,0.12)';ctx.lineWidth=1;ctx.stroke();
+      xsText('Atrialized RV',130,(55+dispY)/2+4,{size:9,color:'#ff1744'});
+      // Sail-like leaflet
+      ctx.beginPath();ctx.moveTo(70,55);
+      ctx.bezierCurveTo(90,dispY-10,120,dispY+10,160,dispY);
+      ctx.strokeStyle='#ff1744';ctx.lineWidth=2;ctx.lineCap='round';ctx.stroke();
+      xsText('"Sail-like" adherent leaflet',130,dispY+22,{size:6,color:'#ff1744'});
+      if(s.leafLen>0.8) xsText('Ebstein Anomaly',130,248,{size:9,color:'#ff1744',weight:'700'});
+      ctx.restore();
+    }
+  }
+}
+
+// ================= STAGE 8: AORTIC ARCH DEVELOPMENT =================
+const XS8_PARAMS=[
+  {arch1:1,arch2:1,arch3:1,arch4:1,arch5:1,arch6:1,rDorsal:1,lArch:0,da:0,adult:0},
+  {arch1:0,arch2:0,arch3:1,arch4:1,arch5:0,arch6:1,rDorsal:1,lArch:0,da:0,adult:0},
+  {arch1:0,arch2:0,arch3:1,arch4:1,arch5:0,arch6:1,rDorsal:0,lArch:0.5,da:0.5,adult:0},
+  {arch1:0,arch2:0,arch3:1,arch4:1,arch5:0,arch6:0.3,rDorsal:0,lArch:1,da:1,adult:1}
+];
+function drawXS8(ctx,s,time){
+  const def=defectMode&&getDefect(7);
+  const cx=130,sacY=38,dorsalY=240;
+  // Aortic sac at top
+  ctx.beginPath();ctx.ellipse(cx,sacY,45,14,0,0,Math.PI*2);
+  ctx.fillStyle='rgba(198,40,40,0.2)';ctx.fill();ctx.strokeStyle='rgba(198,40,40,0.5)';ctx.lineWidth=2;ctx.stroke();
+  xsText('Aortic Sac',cx,sacY,{size:7,color:'rgba(255,255,255,0.5)'});
+  // Dorsal aortae at bottom
+  const daoW=40;
+  // Left dorsal aorta (always persists)
+  ctx.beginPath();ctx.ellipse(cx-daoW,dorsalY,18,8,0,0,Math.PI*2);
+  ctx.fillStyle='rgba(198,40,40,0.2)';ctx.fill();ctx.strokeStyle='rgba(198,40,40,0.5)';ctx.lineWidth=2;ctx.stroke();
+  xsText('L',cx-daoW,dorsalY,{size:6,color:'rgba(255,255,255,0.4)'});
+  // Right dorsal aorta (regresses)
+  if(s.rDorsal>0.05){
+    ctx.save();ctx.globalAlpha=s.rDorsal;
+    ctx.beginPath();ctx.ellipse(cx+daoW,dorsalY,18,8,0,0,Math.PI*2);
+    ctx.fillStyle='rgba(198,40,40,0.2)';ctx.fill();ctx.strokeStyle='rgba(198,40,40,0.5)';ctx.lineWidth=2;ctx.stroke();
+    xsText('R',cx+daoW,dorsalY,{size:6,color:'rgba(255,255,255,0.4)'});
+    ctx.restore();
+  }
+  if(s.rDorsal<0.5&&s.rDorsal>0.01){
+    xsText('regresses',cx+daoW,dorsalY+14,{size:5,color:'rgba(255,255,255,0.25)'});
+  }
+  if(s.rDorsal<0.05){
+    xsText('Dorsal Aorta',cx-daoW,dorsalY+14,{size:6,color:'rgba(255,255,255,0.3)'});
+  }
+  // 6 arch pairs — positioned left/right as mirror curves
+  const archColors=['rgba(255,255,255,0.25)','rgba(255,255,255,0.25)','#42a5f5','#e57373','rgba(255,255,255,0.25)','#66bb6a'];
+  const archLabels=['1st','2nd','3rd','4th','5th','6th'];
+  const archVals=[s.arch1,s.arch2,s.arch3,s.arch4,s.arch5,s.arch6];
+  const spacing=28;const startX=cx-75;
+  for(let i=0;i<6;i++){
+    if(archVals[i]<0.03)continue;
+    ctx.save();ctx.globalAlpha=archVals[i];
+    const x=startX+i*spacing;
+    const xR=cx+(cx-x); // Mirror
+    const col=archColors[i];
+    const lw=archVals[i]>0.5?2.5:1.5;
+    // Left arch
+    ctx.beginPath();ctx.moveTo(cx-15+i*-5,sacY+10);
+    ctx.bezierCurveTo(x-10,sacY+40,x-5,dorsalY-60,cx-daoW,dorsalY-8);
+    ctx.strokeStyle=col;ctx.lineWidth=lw;ctx.lineCap='round';ctx.stroke();
+    // Right arch
+    ctx.beginPath();ctx.moveTo(cx+15+i*5,sacY+10);
+    ctx.bezierCurveTo(xR+10,sacY+40,xR+5,dorsalY-60,cx+daoW,dorsalY-8);
+    ctx.strokeStyle=col;ctx.lineWidth=lw;ctx.lineCap='round';ctx.stroke();
+    // Label (on left side)
+    if(archVals[i]>0.4){
+      const ly=sacY+50+i*28;
+      xsText(archLabels[i],x-8,Math.min(ly,dorsalY-30),{size:6,color:col,align:'right'});
+    }
+    ctx.restore();
+  }
+  // Arch-specific annotations
+  if(s.arch1<0.5&&s.arch2<0.5&&s.arch5<0.5&&s.lArch<0.3){
+    xsText('1, 2, 5 regress',cx,130,{size:8,color:'rgba(255,255,255,0.4)'});
+    xsText('3, 4, 6 persist',cx,145,{size:8,color:'rgba(255,255,255,0.5)',weight:'700'});
+  }
+  // Left 4th arch → aortic arch highlight
+  if(s.lArch>0.1){
+    ctx.save();ctx.globalAlpha=s.lArch;
+    const archX=startX+3*spacing;
+    ctx.beginPath();ctx.moveTo(cx-15+3*-5,sacY+10);
+    ctx.bezierCurveTo(archX-10,sacY+40,archX-5,dorsalY-60,cx-daoW,dorsalY-8);
+    ctx.strokeStyle='#e57373';ctx.lineWidth=4;ctx.lineCap='round';ctx.stroke();
+    xsText('← Aortic Arch',archX-30,sacY+80,{size:7,color:'#e57373',weight:'700',align:'right'});
+    ctx.restore();
+  }
+  // Left 6th → ductus arteriosus
+  if(s.da>0.1){
+    ctx.save();ctx.globalAlpha=s.da;
+    const archX=startX+5*spacing;
+    ctx.beginPath();ctx.moveTo(cx-15+5*-5,sacY+10);
+    ctx.bezierCurveTo(archX-10,sacY+40,archX-5,dorsalY-60,cx-daoW,dorsalY-8);
+    ctx.strokeStyle='#66bb6a';ctx.lineWidth=3.5;ctx.lineCap='round';ctx.stroke();
+    xsText('DA →',archX+5,sacY+100,{size:7,color:'#66bb6a',weight:'700',align:'left'});
+    ctx.restore();
+  }
+  // 3rd arch → common carotids
+  if(s.adult>0.3){
+    ctx.save();ctx.globalAlpha=s.adult;
+    xsText('3rd → Carotids',startX+2*spacing-20,sacY+65,{size:6,color:'#42a5f5',align:'right'});
+    ctx.restore();
+  }
+  // Adult config labels
+  if(s.adult>0.5){
+    ctx.save();ctx.globalAlpha=s.adult;
+    xsText('Adult Configuration',cx,15,{size:9,color:'rgba(255,255,255,0.6)',weight:'700'});
+    xsText('L 4th → Aortic Arch',cx-50,190,{size:7,color:'#e57373',align:'center'});
+    xsText('L 6th → Lig. Arteriosum',cx+55,190,{size:7,color:'#66bb6a',align:'center'});
+    xsText('3rd → Common Carotids',cx,205,{size:6,color:'#42a5f5'});
+    ctx.restore();
+  }
+  // Defects
+  if(def&&s.lArch>0.3){
+    const di=defectIdx%3;
+    ctx.save();ctx.globalAlpha=s.lArch;
+    if(di===0){
+      // Coarctation
+      const coarcY=dorsalY-50;
+      ctx.beginPath();ctx.moveTo(cx-daoW-12,coarcY);ctx.lineTo(cx-daoW+12,coarcY);
+      ctx.strokeStyle='#ff1744';ctx.lineWidth=3;ctx.stroke();
+      ctx.beginPath();
+      ctx.moveTo(cx-daoW-6,coarcY-5);ctx.lineTo(cx-daoW,coarcY);ctx.lineTo(cx-daoW-6,coarcY+5);
+      ctx.moveTo(cx-daoW+6,coarcY-5);ctx.lineTo(cx-daoW,coarcY);ctx.lineTo(cx-daoW+6,coarcY+5);
+      ctx.strokeStyle='#ff1744';ctx.lineWidth=1.5;ctx.stroke();
+      xsText('Coarctation',cx-daoW,coarcY-12,{size:8,color:'#ff1744',weight:'700'});
+      xsText('Juxtaductal',cx-daoW,coarcY+12,{size:6,color:'#ff1744'});
+    }else if(di===1){
+      // IAA — gap in the arch
+      const gapY=dorsalY-80;
+      ctx.beginPath();ctx.moveTo(cx-daoW,gapY-8);ctx.lineTo(cx-daoW,gapY+8);
+      ctx.strokeStyle='#ff1744';ctx.lineWidth=3;ctx.setLineDash([3,3]);ctx.stroke();ctx.setLineDash([]);
+      ctx.beginPath();ctx.arc(cx-daoW,gapY,12,0,Math.PI*2);
+      ctx.strokeStyle='rgba(255,23,68,0.3)';ctx.lineWidth=1.5;ctx.stroke();
+      xsText('IAA',cx-daoW-20,gapY,{size:9,color:'#ff1744',weight:'700',align:'right'});
+      xsText('Complete interruption',cx-daoW,gapY+20,{size:6,color:'#ff1744'});
+      xsText('Ductal-dependent',cx-daoW,gapY+30,{size:6,color:'rgba(255,23,68,0.7)'});
+    }else{
+      // Vascular ring — double arch indicator
+      const archX=startX+3*spacing;
+      // Second arch on right side (abnormal)
+      ctx.beginPath();ctx.moveTo(cx+15+3*5,sacY+10);
+      ctx.bezierCurveTo(cx+daoW+30,sacY+40,cx+daoW+25,dorsalY-60,cx+daoW,dorsalY-8);
+      ctx.strokeStyle='#ff1744';ctx.lineWidth=3;ctx.lineCap='round';ctx.stroke();
+      xsText('Vascular Ring',cx+daoW+20,sacY+80,{size:8,color:'#ff1744',weight:'700',align:'left'});
+      xsText('Double arch',cx+daoW+20,sacY+92,{size:6,color:'rgba(255,23,68,0.7)',align:'left'});
+    }
+    ctx.restore();
+  }
+}
+
+// ================= STAGE 10: FETAL CIRCULATION & BIRTH =================
+const XS10_PARAMS=[
+  {dvOp:1,foOp:1,daOp:1,flowOp:0,closeOp:0,postOp:0},
+  {dvOp:1,foOp:1,daOp:1,flowOp:1,closeOp:0,postOp:0},
+  {dvOp:0.3,foOp:0.3,daOp:0.3,flowOp:0,closeOp:1,postOp:0},
+  {dvOp:0,foOp:0,daOp:0,flowOp:0,closeOp:0,postOp:1}
+];
+function drawXS10(ctx,s,time){
+  const def=defectMode&&getDefect(9);
+  const hx=130,hy=148;
+  // Outer heart shape
+  ctx.save();ctx.beginPath();
+  ctx.moveTo(hx,hy-60);
+  ctx.bezierCurveTo(hx-18,hy-70,hx-55,hy-65,hx-60,hy-38);
+  ctx.bezierCurveTo(hx-64,hy-12,hx-60,hy+10,hx-50,hy+28);
+  ctx.bezierCurveTo(hx-38,hy+50,hx-14,hy+65,hx,hy+72);
+  ctx.bezierCurveTo(hx+14,hy+65,hx+38,hy+50,hx+50,hy+28);
+  ctx.bezierCurveTo(hx+60,hy+10,hx+64,hy-12,hx+60,hy-38);
+  ctx.bezierCurveTo(hx+55,hy-65,hx+18,hy-70,hx,hy-60);
+  ctx.closePath();
+  ctx.fillStyle='#141e30';ctx.fill();ctx.strokeStyle='rgba(255,255,255,0.12)';ctx.lineWidth=2;ctx.stroke();
+  ctx.restore();
+  // Chamber dividers
+  ctx.beginPath();ctx.moveTo(hx,hy-50);ctx.lineTo(hx,hy+62);
+  ctx.strokeStyle='rgba(255,255,255,0.15)';ctx.lineWidth=1.5;ctx.stroke();
+  ctx.beginPath();ctx.moveTo(hx-55,hy-5);ctx.lineTo(hx+55,hy-5);
+  ctx.strokeStyle='rgba(255,255,255,0.15)';ctx.lineWidth=1.5;ctx.stroke();
+  // Chamber labels
+  xsText('RA',hx-26,hy-30,{size:9,color:'rgba(100,160,255,0.5)'});
+  xsText('LA',hx+26,hy-30,{size:9,color:'rgba(255,120,120,0.5)'});
+  xsText('RV',hx-26,hy+25,{size:9,color:'rgba(100,160,255,0.5)'});
+  xsText('LV',hx+26,hy+25,{size:9,color:'rgba(255,120,120,0.5)'});
+  // Great vessels — PA
+  ctx.beginPath();ctx.moveTo(hx-18,hy-60);ctx.bezierCurveTo(hx-22,hy-78,hx-32,hy-86,hx-48,hy-86);
+  ctx.strokeStyle='rgba(100,160,255,0.5)';ctx.lineWidth=5;ctx.lineCap='round';ctx.stroke();
+  xsText('PA',hx-58,hy-80,{size:7,color:'rgba(100,160,255,0.6)',align:'right'});
+  // Great vessels — Ao
+  ctx.beginPath();ctx.moveTo(hx+14,hy-60);ctx.bezierCurveTo(hx+18,hy-78,hx+32,hy-86,hx+52,hy-86);
+  ctx.strokeStyle='rgba(255,120,120,0.5)';ctx.lineWidth=4.5;ctx.lineCap='round';ctx.stroke();
+  xsText('Ao',hx+58,hy-80,{size:7,color:'rgba(255,120,120,0.6)',align:'left'});
+  // === FORAMEN OVALE ===
+  if(s.foOp>0.05){
+    ctx.save();ctx.globalAlpha=s.foOp;
+    ctx.beginPath();ctx.ellipse(hx,hy-26,5,9,0,0,Math.PI*2);
+    ctx.fillStyle='rgba(100,200,255,0.25)';ctx.fill();ctx.strokeStyle='rgba(100,200,255,0.6)';ctx.lineWidth=1.5;ctx.stroke();
+    xsText('FO',hx+11,hy-26,{size:7,color:'rgba(100,200,255,0.8)',align:'left',weight:'700'});
+    if(s.flowOp>0.3){
+      xsFlowArrow([hx-7,hy-26,hx+7,hy-26],time,'rgba(100,200,255,0.6)',s.flowOp*0.6);
+    }
+    ctx.restore();
+  }
+  // === DUCTUS ARTERIOSUS ===
+  if(s.daOp>0.05){
+    ctx.save();ctx.globalAlpha=s.daOp;
+    ctx.beginPath();
+    ctx.moveTo(hx-42,hy-84);ctx.bezierCurveTo(hx-32,hy-98,hx+28,hy-98,hx+46,hy-84);
+    ctx.strokeStyle='rgba(160,120,255,0.6)';ctx.lineWidth=4;ctx.lineCap='round';ctx.stroke();
+    xsText('DA',hx,hy-103,{size:8,color:'rgba(160,120,255,0.9)',weight:'700'});
+    if(s.flowOp>0.3){
+      xsFlowArrow([hx-30,hy-93,hx,hy-98,hx+30,hy-93],time,'rgba(160,120,255,0.5)',s.flowOp*0.5);
+    }
+    ctx.restore();
+  }
+  // === DUCTUS VENOSUS ===
+  if(s.dvOp>0.05){
+    ctx.save();ctx.globalAlpha=s.dvOp;
+    ctx.beginPath();
+    ctx.moveTo(hx+58,hy+68);ctx.bezierCurveTo(hx+48,hy+45,hx+15,hy+12,hx-8,hy-10);
+    ctx.strokeStyle='rgba(255,180,50,0.5)';ctx.lineWidth=3.5;ctx.lineCap='round';ctx.stroke();
+    xsText('DV',hx+48,hy+55,{size:7,color:'rgba(255,180,50,0.9)',weight:'700',align:'left'});
+    xsText('(UV→IVC)',hx+48,hy+66,{size:5,color:'rgba(255,180,50,0.5)',align:'left'});
+    ctx.restore();
+  }
+  // === CLOSING INDICATORS ===
+  if(s.closeOp>0.1){
+    ctx.save();ctx.globalAlpha=s.closeOp;
+    const drawClose=(x,y,lx,ly,label)=>{
+      // Red X
+      ctx.beginPath();ctx.moveTo(x-7,y-7);ctx.lineTo(x+7,y+7);ctx.moveTo(x+7,y-7);ctx.lineTo(x-7,y+7);
+      ctx.strokeStyle='#ff1744';ctx.lineWidth=3;ctx.stroke();
+      // Red circle around X
+      ctx.beginPath();ctx.arc(x,y,11,0,Math.PI*2);
+      ctx.strokeStyle='rgba(255,23,68,0.4)';ctx.lineWidth=1.5;ctx.stroke();
+      // Label with leader line
+      xsLeader(x+(lx>x?11:-11),y,lx,ly,'rgba(255,23,68,0.3)');
+      xsText(label,lx,ly,{size:7,color:'#ff1744',weight:'700',align:lx>x?'left':'right'});
+    };
+    if(s.foOp>0.1)drawClose(hx,hy-26,hx-25,hy-44,'FO closing');
+    if(s.daOp>0.1)drawClose(hx,hy-98,hx+30,hy-108,'DA closing');
+    if(s.dvOp>0.1)drawClose(hx+48,hy+55,hx+20,hy+50,'DV closing');
+    // Birth annotations
+    xsText('First Breath → ↓ PVR',hx,hy+85,{size:8,color:'rgba(255,255,255,0.55)',weight:'700'});
+    xsText('Cord Clamp → ↑ SVR',hx,hy+97,{size:8,color:'rgba(255,255,255,0.55)',weight:'700'});
+    ctx.restore();
+  }
+  // === POSTNATAL ===
+  if(s.postOp>0.1){
+    ctx.save();ctx.globalAlpha=s.postOp;
+    // Sealed septum — thicker line
+    ctx.beginPath();ctx.moveTo(hx,hy-50);ctx.lineTo(hx,hy-5);
+    ctx.strokeStyle='rgba(255,255,255,0.35)';ctx.lineWidth=3;ctx.stroke();
+    xsText('Septum fused (PFO 25%)',hx,hy-55,{size:6,color:'rgba(255,255,255,0.4)'});
+    // Lig arteriosum — dashed ghost of DA
+    ctx.beginPath();
+    ctx.moveTo(hx-42,hy-84);ctx.bezierCurveTo(hx-32,hy-98,hx+28,hy-98,hx+46,hy-84);
+    ctx.strokeStyle='rgba(255,255,255,0.1)';ctx.lineWidth=2;ctx.setLineDash([3,3]);ctx.stroke();ctx.setLineDash([]);
+    xsText('Lig. Arteriosum',hx,hy-103,{size:6,color:'rgba(255,255,255,0.3)'});
+    // Lig venosum — dashed ghost of DV
+    ctx.beginPath();
+    ctx.moveTo(hx+58,hy+68);ctx.bezierCurveTo(hx+48,hy+45,hx+15,hy+12,hx-8,hy-10);
+    ctx.strokeStyle='rgba(255,255,255,0.1)';ctx.lineWidth=1.5;ctx.setLineDash([3,3]);ctx.stroke();ctx.setLineDash([]);
+    xsText('Lig. Venosum',hx+50,hy+78,{size:5,color:'rgba(255,255,255,0.25)',align:'left'});
+    // Flow arrows: RA→RV, LV→LA
+    xsFlowArrow([hx-26,hy-12,hx-26,hy+8],time,'rgba(100,160,255,0.4)',s.postOp*0.4);
+    xsFlowArrow([hx+26,hy+8,hx+26,hy-12],time,'rgba(255,120,120,0.4)',s.postOp*0.4);
+    ctx.restore();
+  }
+  // Flow pattern annotations (sub 1)
+  if(s.flowOp>0.3&&s.closeOp<0.3){
+    ctx.save();ctx.globalAlpha=s.flowOp;
+    xsText('RV dominant (~60% CO)',hx,hy+85,{size:7,color:'rgba(100,160,255,0.5)'});
+    xsText('10-25% → lungs',hx-58,hy-70,{size:6,color:'rgba(100,160,255,0.5)',align:'right'});
+    xsText('O₂ → brain',hx+58,hy-70,{size:6,color:'rgba(255,120,120,0.5)',align:'left'});
+    ctx.restore();
+  }
+  // Defects
+  if(def&&s.postOp>0.3){
+    const di=defectIdx%2;
+    ctx.save();ctx.globalAlpha=s.postOp;
+    if(di===0){
+      // PDA
+      ctx.beginPath();
+      ctx.moveTo(hx-42,hy-84);ctx.bezierCurveTo(hx-32,hy-98,hx+28,hy-98,hx+46,hy-84);
+      ctx.strokeStyle='#ff1744';ctx.lineWidth=4;ctx.lineCap='round';ctx.stroke();
+      xsText('PDA',hx,hy-103,{size:9,color:'#ff1744',weight:'700'});
+      xsFlowArrow([hx+38,hy-91,hx,hy-98,hx-32,hy-91],time,'#ff1744',0.6);
+      xsText('L→R shunt',hx,hy-86,{size:6,color:'#ff1744'});
+    }else{
+      // Ductal-dependent lesions — DA stays open, is lifeline
+      ctx.beginPath();
+      ctx.moveTo(hx-42,hy-84);ctx.bezierCurveTo(hx-32,hy-98,hx+28,hy-98,hx+46,hy-84);
+      ctx.strokeStyle='#ff1744';ctx.lineWidth=5;ctx.lineCap='round';ctx.stroke();
+      // Glow around DA
+      ctx.beginPath();
+      ctx.moveTo(hx-42,hy-84);ctx.bezierCurveTo(hx-32,hy-98,hx+28,hy-98,hx+46,hy-84);
+      ctx.strokeStyle='rgba(255,23,68,0.2)';ctx.lineWidth=12;ctx.stroke();
+      xsText('DA = Lifeline',hx,hy-103,{size:9,color:'#ff1744',weight:'700'});
+      xsText('PGE₁ required',hx,hy-86,{size:7,color:'#ff1744'});
+      // Annotations
+      xsText('HLHS / Critical AS',hx-50,hy+85,{size:6,color:'#ff1744',align:'center'});
+      xsText('Critical PS / PA-IVS',hx+50,hy+85,{size:6,color:'#ff1744',align:'center'});
+    }
+    ctx.restore();
+  }
+}
+
+// ================= DISPATCHER =================
+const XS_STAGE_MAP={3:{params:XS4_PARAMS,draw:drawXS4},4:{params:XS5_PARAMS,draw:drawXS5},5:{params:XS6_PARAMS,draw:drawXS6},6:{params:XS7_PARAMS,draw:drawXS7},7:{params:XS8_PARAMS,draw:drawXS8},8:{params:XS9_PARAMS,draw:drawXS9},9:{params:XS10_PARAMS,draw:drawXS10}};
+
+function updateCrossSection(){
+  const stage=STAGES[curStage];
+  const entry=XS_STAGE_MAP[curStage];
+  const hasXS=!!entry;
+  viewportRow.classList.toggle('has-xs',hasXS);
+  if(!hasXS){sliceMesh.visible=false;xsLabel.textContent='';xsActiveStage=-1;return;}
+  // Slice ring on 3D model (only for stages with sliceT)
+  if(stage.sliceT&&bloodCurve){
+    try{const pt=bloodCurve.getPointAt(stage.sliceT),tan=bloodCurve.getTangentAt(stage.sliceT).normalize();
+      sliceMesh.position.copy(pt);const q=new THREE.Quaternion();q.setFromUnitVectors(new THREE.Vector3(0,1,0),tan);
+      sliceMesh.quaternion.copy(q);sliceMesh.visible=true;
+    }catch(e){sliceMesh.visible=false;}
+  }else{sliceMesh.visible=false;}
+  const stageChanged=xsActiveStage!==curStage;
+  xsActiveStage=curStage;
+  // Set title
+  const titles={3:'AV Canal Cross-Section',4:'Atrial Septation — Coronal View',5:'Ventricular Septation — Coronal View',6:'Outflow Tract — Axial Section',7:'Aortic Arch — Anterior View',8:'AV Valve Delamination — Longitudinal',9:'Fetal Circulation — Schematic'};
+  xsTitle.textContent=titles[curStage]||'Cross-Section';
+  // Get target params
+  const sub=Math.min(curSub,entry.params.length-1);
+  const target={...entry.params[sub]};
+  if(stageChanged){xsSetInstant(target);resizeXS();}
+  else xsSetTarget(target,700);
+}
+
+// Called from renderScene
+function drawXSFrame(time){
+  if(xsActiveStage<0)return;
+  const entry=XS_STAGE_MAP[xsActiveStage];
+  if(!entry)return;
+  xsTick();
+  if(xsCanvas.width<1)resizeXS();
+  xsClear();
+  entry.draw(xsCtx,xsState,time);
+}
+
+// ===== MORPH SYSTEM =====
+function startMorph(toCP,toSep){
+  morphFromCP=currentCPs.map(p=>[...p]);
+  morphToCP=toCP;
+  morphFromSep=currentSep;
+  morphToSep=toSep;
+  const dist=cpDist(morphFromCP,morphToCP)+Math.abs(morphFromSep-morphToSep)*5;
+  morphDuration=Math.max(400,Math.min(1200,dist*180));
+  morphStart=performance.now();
+  morphing=true;
+  clearPeri();
+}
+function updateMorph(){
+  if(!morphing)return false;
+  const el=performance.now()-morphStart;
+  let t=Math.min(el/morphDuration,1);t=easeInOutCubic(t);
+  currentCPs=lerpCP(morphFromCP,morphToCP,t);
+  currentSep=morphFromSep+(morphToSep-morphFromSep)*t;
+  if(t>=1){morphing=false;currentCPs=morphToCP.map(p=>[...p]);currentSep=morphToSep;}
+  return true;
+}
+
+// Camera animation
+let camAnim=false,camS=0,camFP,camTP,camFT,camTT;
+function animCam(idx){
+  const c=CAM[Math.min(idx,CAM.length-1)];
+  camFP=camera.position.clone();camTP=new THREE.Vector3(...c.p);
+  camFT=controls.target.clone();camTT=new THREE.Vector3(...c.t);
+  camS=performance.now();camAnim=true;
+}
+function updateCam(){if(!camAnim)return;const el=performance.now()-camS;let t=Math.min(el/800,1);t=easeInOutCubic(t);
+  camera.position.lerpVectors(camFP,camTP,t);controls.target.lerpVectors(camFT,camTT,t);if(t>=1)camAnim=false;}
+
+// ===== NAVIGATION =====
+function onStateChange(){
+  const{cp,sep}=getTarget();
+  const cpChanged=JSON.stringify(cp)!==JSON.stringify(currentCPs)||sep!==currentSep;
+  if(cpChanged)startMorph(cp,sep);else needsRebuild=true;
+  // Slow, organic crescent growth (substep 2→3)
+  if(curStage===0&&curSub===3&&morphing)morphDuration=Math.max(morphDuration,1500);
+  peristalticActive=(curStage===1&&curSub===4)||(curStage===2&&curSub>=3);
+  // Cell convergence → tube fade-in transitions
+  if(curStage===0&&curSub===1){convergeT=0;convergeStart=performance.now();}
+  if(curStage===0&&curSub===2){tubeFadeT=0;tubeFadeStart=performance.now();}
+  if(curStage!==0||curSub>2){tubeMat.opacity=0.93;glowMat.opacity=0.1;}
+  updateUI();updateCrossSection();
+}
+function goToStage(i){if(i<0||i>=STAGES.length)return;const ch=i!==curStage;curStage=i;curSub=0;defectIdx=0;if(ch)animCam(i);onStateChange();}
+function goToSub(i){const s=STAGES[curStage];if(i<0||i>=s.substeps.length)return;curSub=i;onStateChange();}
+function nextStep(){const s=STAGES[curStage];if(curSub<s.substeps.length-1)goToSub(curSub+1);else if(curStage<STAGES.length-1)goToStage(curStage+1);else goToStage(0);}
+function prevStep(){if(curSub>0)goToSub(curSub-1);else if(curStage>0){curStage--;curSub=STAGES[curStage].substeps.length-1;animCam(curStage);onStateChange();}}
+function toggleDefect(){defectMode=!defectMode;needsRebuild=true;updateUI();updateCrossSection();}
+function togglePlay(){autoPlaying=!autoPlaying;document.getElementById('btnPlay').textContent=autoPlaying?'⏸ Pause':'▶ Play';
+  if(autoPlaying){autoTimer=setInterval(()=>nextStep(),4000);}
+  else if(autoTimer){clearInterval(autoTimer);autoTimer=null;}}
+
+document.getElementById('btnNext').onclick=nextStep;
+document.getElementById('btnPrev').onclick=prevStep;
+document.getElementById('btnPlay').onclick=togglePlay;
+document.getElementById('defectToggle').onclick=toggleDefect;
+document.getElementById('defectSelect').onchange=function(){defectIdx=parseInt(this.value);needsRebuild=true;updateUI();updateCrossSection();};
+document.addEventListener('keydown',e=>{
+  if(e.key==='ArrowRight'||e.key===' '){e.preventDefault();nextStep();}
+  else if(e.key==='ArrowLeft'){e.preventDefault();prevStep();}
+  else if(e.key==='ArrowUp'){e.preventDefault();if(curStage>0)goToStage(curStage-1);}
+  else if(e.key==='ArrowDown'){e.preventDefault();if(curStage<STAGES.length-1)goToStage(curStage+1);}
+  else if(e.key==='d'||e.key==='D')toggleDefect();
+});
+controls.addEventListener('start',()=>{const h=document.getElementById('rotateHint');if(h.style.opacity!=='0')h.style.opacity='0';});
+
+// ===== UI =====
+function buildStageList(){
+  const list=document.getElementById('stageList');list.innerHTML='';
+  STAGES.forEach((s,i)=>{
+    const item=document.createElement('div');
+    item.className='stage-item'+(i===curStage?' active':'')+(i<curStage?' visited':'');
+    item.innerHTML=`<div class="stage-number">${s.id}</div><div><div class="stage-name">${s.name}</div><div class="stage-days">${s.days}</div></div>`;
+    item.onclick=()=>goToStage(i);list.appendChild(item);
+  });
+}
+function getGlobalStep(){let n=0;for(let i=0;i<curStage;i++)n+=STAGES[i].substeps.length;return n+curSub+1;}
+function getTotalSteps(){let n=0;STAGES.forEach(s=>n+=s.substeps.length);return n;}
+function buildSubBar(){
+  const bar=document.getElementById('substepBar'),s=STAGES[curStage];bar.innerHTML='';
+  if(s.substeps.length>1){
+    s.substeps.forEach((ss,i)=>{const d=document.createElement('div');d.className='substep-dot'+(i===curSub?' active':'');d.onclick=()=>goToSub(i);d.title=ss.name;bar.appendChild(d);});
+    const l=document.createElement('span');l.className='substep-label';l.textContent=s.substeps[curSub].name;bar.appendChild(l);
+  }
+  const c=document.createElement('span');c.className='step-counter';c.textContent='Step '+getGlobalStep()+' of '+getTotalSteps();bar.appendChild(c);
+}
+function updateUI(){
+  const s=STAGES[curStage];
+  document.getElementById('stageTitle').textContent=s.name;
+  document.getElementById('stageTime').textContent=s.days;
+  document.getElementById('descText').textContent=s.substeps[curSub]?.desc||'';
+  const pl=document.getElementById('pearlsList');pl.innerHTML='';
+  (s.pearls||[]).forEach(p=>{const li=document.createElement('li');li.textContent=p;pl.appendChild(li);});
+  const dp=document.getElementById('infoDefect'),dn=document.getElementById('defectName');
+  const activeDefect=getDefect(curStage);
+  const allDefects=getDefects(curStage);
+  const sel=document.getElementById('defectSelect');
+  if(activeDefect&&defectMode){dp.style.display='';
+    document.getElementById('defectText').innerHTML=activeDefect.desc+(activeDefect.ekg?'<br><br><strong>'+activeDefect.ekg+'</strong>':'');
+    dn.textContent=activeDefect.name;dn.className='defect-name has-defect';
+  }else{dp.style.display='none';dn.textContent=s.defects?s.defectName:'No defects at this stage';dn.className='defect-name';}
+  // Defect dropdown for multi-variant stages
+  if(allDefects.length>1){
+    sel.style.display='';sel.innerHTML='';
+    allDefects.forEach((d,i)=>{const o=document.createElement('option');o.value=i;o.textContent=d.name;if(i===defectIdx%allDefects.length)o.selected=true;sel.appendChild(o);});
+  }else{sel.style.display='none';}
+  document.getElementById('defectToggle').className='toggle-switch'+(defectMode?' on':'');
+  document.getElementById('btnPrev').disabled=(curStage===0&&curSub===0);
+  // Populate XS info area (shown when cross-section is active)
+  document.getElementById('xsDescText').textContent=s.substeps[curSub]?.desc||'';
+  const xpl=document.getElementById('xsPearlsList');xpl.innerHTML='';
+  (s.pearls||[]).forEach(p=>{const li=document.createElement('li');li.textContent=p;xpl.appendChild(li);});
+  const xdp=document.getElementById('xsDefectArea');
+  if(activeDefect&&defectMode){xdp.style.display='';
+    document.getElementById('xsDefectText').innerHTML=activeDefect.desc+(activeDefect.ekg?'<br><br><strong>'+activeDefect.ekg+'</strong>':'');
+  }else{xdp.style.display='none';}
+  buildStageList();buildSubBar();
+}
+
+// ===== RENDER =====
+function renderScene(time){
+  const didMorph=updateMorph();
+  const showTube=curStage>=1||(curStage===0&&curSub>=2);
+  const showPaired=curStage===1&&curSub<=1;
+  const cellMode=curStage===0?(curSub===0?1:curSub===1?2:0):0;
+  const showBlood=(curStage===1&&curSub===4)||(curStage===2&&curSub===4);
+  const showDefect3D=defectMode&&curStage===2&&STAGES[2].defects;
+
+  if((didMorph||needsRebuild)&&showTube){
+    const curve=makeCurve(currentCPs);bloodCurve=curve;
+    if(showPaired){
+      const lcp=currentCPs.map(p=>[p[0]-currentSep,p[1],p[2]]);
+      const rcp=currentCPs.map(p=>[p[0]+currentSep,p[1],p[2]]);
+      buildTube(tubeGroupA,makeCurve(lcp),RADIUS*0.85,()=>FHF_COL.clone());
+      buildTube(tubeGroupB,makeCurve(rcp),RADIUS*0.85,()=>FHF_COL.clone());
+      tubeGroupA.visible=true;tubeGroupB.visible=true;
+    }else{
+      const cf=curStage===0?(()=>FHF_COL.clone()):segColor;
+      const bulge=curStage>=3;
+      buildTube(tubeGroupA,curve,RADIUS,cf,bulge);tubeGroupA.visible=true;tubeGroupB.visible=false;
+      if(peristalticActive&&!morphing)setupPeri(tubeGroupA);
+    }
+    if(showDefect3D){
+      while(defectGroup.children.length){const c=defectGroup.children[0];if(c.geometry)c.geometry.dispose();defectGroup.remove(c);}
+      const dg=new THREE.TubeGeometry(makeCurve(CP.lloop),TUBE_SEGS,RADIUS*1.05,RAD_SEGS,false);
+      defectGroup.add(new THREE.Mesh(dg,defectMat));defectGroup.visible=true;
+    }else{defectGroup.visible=false;}
+    // Slice indicator
+    const stage=STAGES[curStage];
+    if(stage.sliceT&&curve){
+      try{const pt=curve.getPointAt(stage.sliceT),tan=curve.getTangentAt(stage.sliceT).normalize();
+        sliceMesh.position.copy(pt);const q=new THREE.Quaternion();q.setFromUnitVectors(new THREE.Vector3(0,1,0),tan);
+        sliceMesh.quaternion.copy(q);sliceMesh.visible=true;
+      }catch(e){sliceMesh.visible=false;}
+    }else{sliceMesh.visible=false;}
+    needsRebuild=false;
+  }
+  if(!showTube){tubeGroupA.visible=false;tubeGroupB.visible=false;}
+  // Tube fade-in when first appearing (stage 1, substep 2)
+  if(curStage===0&&curSub===2&&tubeFadeT<1){
+    tubeFadeT=Math.min(1,(performance.now()-tubeFadeStart)/800);
+    const f=easeInOutCubic(tubeFadeT);
+    tubeMat.opacity=0.93*f;glowMat.opacity=0.1*f;
+  }
+  if(peristalticActive&&!morphing&&periMesh)updatePeri(time);
+  if(defectGroup.visible){defectGroup.children.forEach(c=>{if(c.material)c.material.opacity=0.2+0.12*Math.sin(time*0.003);});}
+  updateCells(time,cellMode);updateBlood(time,showBlood);updateCam();
+  resetLabels();buildLabels();updateLabelPos();
+  drawXSFrame(time);
+}
+
+function buildLabels(){
+  const curve=bloodCurve||makeCurve(currentCPs);
+  if(curStage===0){
+    if(curSub===0){setLabel(new THREE.Vector3(0,-1.5,0),'Primitive Streak','small');}
+    if(curSub>=4){
+      setLabel(new THREE.Vector3(-2.2,-0.1,0.1),'FHF','fhf seg');setLabel(new THREE.Vector3(-2.2,-0.5,0.1),'(LV, atria)','small');
+      setLabel(new THREE.Vector3(2.2,-0.1,-0.1),'SHF','shf seg');setLabel(new THREE.Vector3(2.2,-0.5,-0.1),'(RV, OFT)','small');
+    }
+  }
+  if(curStage===1){
+    if(curSub===0){setLabel(new THREE.Vector3(-0.5,0,0.5),'Left Tube','small');setLabel(new THREE.Vector3(0.5,0,0.5),'Right Tube','small');}
+    if(curSub===1){setLabel(new THREE.Vector3(0.3,0,0.8),'Lateral Folding','accent');}
+    if(curSub>=3){
+      try{const st=[0.08,0.25,0.45,0.65,0.88];for(let i=0;i<5;i++){const pt=curve.getPointAt(st[i]);
+        setLabel(new THREE.Vector3(pt.x+0.4,pt.y,pt.z),SEG_NAMES[i],i<2?'shf seg':'fhf seg');}}catch(e){}
+    }
+    if(curSub===4)setLabel(new THREE.Vector3(0.5,-1.6,0),'↑ Flow','accent');
+  }
+  if(curStage===2){
+    if(curSub===0){setLabel(new THREE.Vector3(1.2,0.5,0.3),'D-Loop begins','accent');}
+    if(curSub===1){setLabel(new THREE.Vector3(1.5,0.5,0.4),'C-Loop','accent');}
+    if(curSub===2){setLabel(new THREE.Vector3(0.5,2.0,-0.3),'Atria ↑ dorsally','accent');}
+    if(curSub>=3){
+      try{const bc=curve.getPointAt(0.25),pv=curve.getPointAt(0.48),pa=curve.getPointAt(0.68);
+        setLabel(new THREE.Vector3(bc.x+0.5,bc.y,bc.z+0.3),'BC → RV','shf seg');
+        setLabel(new THREE.Vector3(pv.x-0.5,pv.y,pv.z-0.3),'PV → LV','fhf seg');
+        setLabel(new THREE.Vector3(pa.x-0.5,pa.y+0.3,pa.z-0.3),'PA → Atria','fhf seg');
+      }catch(e){}}
+    if(defectMode&&getDefect(2)){try{const dc=makeCurve(CP.lloop),lp=dc.getPointAt(0.3);
+      setLabel(new THREE.Vector3(lp.x-0.5,lp.y,lp.z),'⚠ L-Loop','defect-label seg');
+    }catch(e){}}
+  }
+  if(curStage>=3&&curStage<=9){
+    // For stages 4-10, show chamber labels on sloop
+    try{const bc=curve.getPointAt(0.25),pv=curve.getPointAt(0.48);
+      setLabel(new THREE.Vector3(bc.x+0.4,bc.y+0.2,bc.z+0.2),'RV','shf seg');
+      setLabel(new THREE.Vector3(pv.x-0.4,pv.y,pv.z-0.2),'LV','fhf seg');
+    }catch(e){}
+    // Slice location label
+    const sl=STAGES[curStage].sliceT;
+    if(sl){try{const sp=curve.getPointAt(sl);
+      setLabel(new THREE.Vector3(sp.x,sp.y-0.3,sp.z+0.3),'✂ Section','accent');
+    }catch(e){}}
+  }
+}
+
+// ===== RESIZE =====
+function onResize(){const w=wrap.clientWidth,h=wrap.clientHeight;if(w===0||h===0)return;camera.aspect=w/h;camera.updateProjectionMatrix();renderer.setSize(w,h);}
+window.addEventListener('resize',onResize);
+new ResizeObserver(onResize).observe(wrap);
+
+// ===== ANIMATE =====
+function animate(time){requestAnimationFrame(animate);controls.update();renderScene(time);renderer.render(scene,camera);}
+
+// ===== INIT =====
+onResize();needsRebuild=true;updateUI();updateCrossSection();animate(0);
+</script>
+</body>
+</html>

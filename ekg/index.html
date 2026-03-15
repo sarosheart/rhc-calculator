@@ -330,9 +330,10 @@ body.dark .vessel-tab.active { color: #64b5f6; border-bottom-color: #64b5f6; }
 <div class="site-nav">
   <a href="/" class="nav-brand" style="text-decoration:none;color:#fff;">CathMath</a>
   <div class="nav-tabs">
-    <a href="/rhc/" class="nav-tab">RHC Calculator</a>
+    <a href="/" class="nav-tab">Hemodynamics</a>
     <a href="/pvloop/" class="nav-tab">PV Loops</a>
     <a href="/ekg/" class="nav-tab active">EKG Simulator</a>
+    <a href="/embryology/" class="nav-tab">Embryology</a>
   </div>
   <div class="nav-right">
     <div class="nav-credit">Developer: Saro Avedikian, MD, MPH</div>
@@ -537,7 +538,7 @@ const OCCLUSIONS = {
     name: 'Proximal LAD', territory: 'Anterior + Anteroseptal + High Lateral', aha: 6,
     st: { V1:+0.30, V2:+0.40, V3:+0.45, V4:+0.35, aVL:+0.15, I:+0.10, II:-0.10, III:-0.15, aVF:-0.12 },
     tMult: { V1:1.8, V2:2.2, V3:2.2, V4:1.8 },
-    qW: { V1:-0.12, V2:-0.18, V3:-0.18, V4:-0.12 },
+    qW: { V1:-0.35, V2:-0.50, V3:-0.50, V4:-0.35 },
     leads: 'V1-V4, aVL, I (STE) + II, III, aVF (reciprocal)',
     notes: 'Largest territory at risk. STE aVL/I + inferior reciprocal STD = proximal. New RBBB = septal perforator compromise.',
     conduction: 'New RBBB possible'
@@ -546,7 +547,7 @@ const OCCLUSIONS = {
     name: 'Mid LAD', territory: 'Anterior', aha: 7,
     st: { V2:+0.35, V3:+0.40, V4:+0.35, V5:+0.20, III:-0.05, aVF:-0.05 },
     tMult: { V2:2.0, V3:2.2, V4:2.0, V5:1.5 },
-    qW: { V2:-0.15, V3:-0.18, V4:-0.12 },
+    qW: { V2:-0.40, V3:-0.45, V4:-0.30 },
     leads: 'V2-V5 (STE), minimal inferior reciprocal',
     notes: 'Spares aVL/I (D1 territory intact). May mimic pericarditis if wrap-around (diffuse STE without reciprocal changes).',
     conduction: null
@@ -555,7 +556,7 @@ const OCCLUSIONS = {
     name: 'Distal LAD (Wrap-around)', territory: 'Anterior + Apical-Inferior', aha: 8,
     st: { V3:+0.25, V4:+0.30, V5:+0.20, V6:+0.10, II:+0.10, III:+0.10, aVF:+0.10, aVL:-0.08 },
     tMult: { V4:1.6, V5:1.3, II:1.3 },
-    qW: { V4:-0.10, V5:-0.08 },
+    qW: { V4:-0.25, V5:-0.20 },
     leads: 'V3-V6 + II, III, aVF (STE), aVL (reciprocal)',
     notes: 'Anterior + inferior STE without lateral involvement = distal LAD wrap-around. Smaller territory, better prognosis.',
     conduction: null
@@ -564,7 +565,7 @@ const OCCLUSIONS = {
     name: 'First Diagonal (D1)', territory: 'High Lateral', aha: 9,
     st: { aVL:+0.20, I:+0.12, V2:+0.08, III:-0.20, aVF:-0.12 },
     tMult: { aVL:-1.2 },
-    qW: { aVL:-0.10 },
+    qW: { aVL:-0.20, I:-0.15 },
     leads: 'aVL, I + subtle V2 (STE) + III, aVF (reciprocal)',
     notes: 'STE V2 differentiates D1 from OM1 (which has STD V2). PPV 100% for this distinction.',
     conduction: null
@@ -582,7 +583,7 @@ const OCCLUSIONS = {
     name: 'Proximal LCx', territory: 'Lateral + Posterolateral', aha: 11,
     st: { I:+0.10, aVL:+0.12, V5:+0.12, V6:+0.10, V1:-0.15, V2:-0.20, V3:-0.15 },
     tMult: { V1:1.5, V2:1.5 },
-    qW: { I:-0.08, aVL:-0.10 },
+    qW: { I:-0.20, aVL:-0.25, V5:-0.15, V6:-0.12 },
     leads: 'I, aVL, V5-V6 (STE) + V1-V3 (reciprocal/posterior)',
     notes: '30% of LCx occlusions have non-diagnostic ECG! Frequently missed. Consider posterior leads V7-V9.',
     conduction: null
@@ -600,7 +601,7 @@ const OCCLUSIONS = {
     name: 'First Obtuse Marginal (OM1)', territory: 'High Lateral', aha: 13,
     st: { aVL:+0.18, I:+0.10, V5:+0.08, V2:-0.12, III:-0.15, aVF:-0.10 },
     tMult: { aVL:-1.2 },
-    qW: { aVL:-0.10 },
+    qW: { aVL:-0.20, I:-0.12 },
     leads: 'aVL, I (STE) + V2 (STD!) + III, aVF (reciprocal)',
     notes: 'STD in V2 differentiates OM1 from D1 (which has STE V2). STE aVL + STD V2 = OM1 (PPV 100%, NPV 98%).',
     conduction: null
@@ -609,7 +610,7 @@ const OCCLUSIONS = {
     name: 'Second Obtuse Marginal (OM2)', territory: 'Lateral', aha: 14,
     st: { V5:+0.12, V6:+0.10, I:+0.05, V1:-0.05, V2:-0.08, V3:-0.05 },
     tMult: { V5:-1.0, V6:-1.0 },
-    qW: {},
+    qW: { V5:-0.15, V6:-0.12 },
     leads: 'V5-V6 (STE) + V1-V3 (mild reciprocal)',
     notes: 'Small territory. Less high-lateral involvement than OM1. May be ECG-silent.',
     conduction: null
@@ -618,7 +619,7 @@ const OCCLUSIONS = {
     name: 'Proximal RCA', territory: 'Inferior + RV', aha: 1,
     st: { III:+0.30, aVF:+0.25, II:+0.20, V1:+0.10, I:-0.12, aVL:-0.18 },
     tMult: { III:1.8, aVF:1.5, II:1.5 },
-    qW: { III:-0.15, aVF:-0.12, II:-0.08 },
+    qW: { III:-0.35, aVF:-0.30, II:-0.20 },
     leads: 'III > II, aVF (STE) + V1 (RV) + I, aVL (reciprocal)',
     notes: 'STE III > II = hallmark of RCA. STE V1 = RV involvement. AV block common. Avoid nitrates/preload reducers if RV.',
     conduction: 'AV block possible (AV nodal artery)'
@@ -627,7 +628,7 @@ const OCCLUSIONS = {
     name: 'Mid RCA', territory: 'Inferior', aha: 2,
     st: { III:+0.25, aVF:+0.22, II:+0.18, I:-0.10, aVL:-0.15 },
     tMult: { III:1.5, aVF:1.3, II:1.3 },
-    qW: { III:-0.12, aVF:-0.10, II:-0.06 },
+    qW: { III:-0.30, aVF:-0.25, II:-0.15 },
     leads: 'III > II, aVF (STE) + I, aVL (reciprocal)',
     notes: 'Classic inferior STEMI without RV involvement (RV branches already given off). No V1 or V4R elevation.',
     conduction: null
@@ -636,7 +637,7 @@ const OCCLUSIONS = {
     name: 'Distal RCA', territory: 'Inferior + Posterior (at crux)', aha: 3,
     st: { III:+0.15, aVF:+0.12, II:+0.10, I:-0.06, aVL:-0.10, V1:-0.05, V2:-0.08, V3:-0.05 },
     tMult: { V1:1.3, V2:1.3 },
-    qW: { III:-0.08, aVF:-0.06 },
+    qW: { III:-0.20, aVF:-0.15, II:-0.10 },
     leads: 'III, aVF, II (modest STE) + V1-V3 (posterior reciprocal)',
     notes: 'Less STE than proximal/mid. May extend posterior at crux. If non-dominant RCA, minimal changes.',
     conduction: null
@@ -645,7 +646,7 @@ const OCCLUSIONS = {
     name: 'PDA', territory: 'Inferior + Posterior', aha: 4,
     st: { III:+0.20, aVF:+0.18, II:+0.15, V1:-0.15, V2:-0.20, V3:-0.15, I:-0.08, aVL:-0.10 },
     tMult: { V1:1.5, V2:1.5 },
-    qW: { III:-0.10, aVF:-0.08 },
+    qW: { III:-0.25, aVF:-0.20, II:-0.12 },
     leads: 'II, III, aVF (STE) + V1-V3 (posterior reciprocal)',
     notes: 'Inferior + posterior MI. Tall R waves V1-V2 develop (reciprocal Q waves). R/S > 1 in V2.',
     conduction: null
@@ -1298,14 +1299,20 @@ function generateBeat(lead, hr, vessel, phase, opts) {
       if (tMultiplier !== 1) {
         const tVal = tWave(t, tCenter, params.T[2], params.T[0]);
         if (Math.abs(tVal) > 0.005) {
-          let effectiveMult;
-          if (phaseTMult < 0) effectiveMult = phaseTMult;
-          else effectiveMult = tMultiplier * (phaseTMult - 1);
-          data[i] += tVal * effectiveMult * 0.5;
+          let addition;
+          if (phaseTMult < 0) {
+            // Inversion: target net T = tVal × phaseTMult
+            // addition = tVal × (phaseTMult - 1) to cancel original + invert
+            addition = tVal * (phaseTMult - 1);
+          } else {
+            // Amplification: boost T by vessel multiplier
+            addition = tVal * tMultiplier * (phaseTMult - 1) * 0.5;
+          }
+          data[i] += addition;
         }
       }
       if (qAdd !== 0) {
-        data[i] += qWavePulse(t, params.Q[1], 0.014, qAdd);
+        data[i] += qWavePulse(t, params.Q[1], 0.018, qAdd);
       }
     }
   }
