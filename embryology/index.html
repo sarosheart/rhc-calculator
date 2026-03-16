@@ -834,7 +834,7 @@ function xsFlowArrow(pts,time,color='#e53935',opacity=0.6){
   ctx.beginPath();ctx.moveTo(pts[0],pts[1]);
   for(let i=2;i<pts.length;i+=2)ctx.lineTo(pts[i],pts[i+1]);
   ctx.strokeStyle=color;ctx.lineWidth=2.5;ctx.lineCap='round';
-  ctx.setLineDash([6,8]);ctx.lineDashOffset=time*0.015;ctx.stroke();ctx.setLineDash([]);
+  ctx.setLineDash([6,8]);ctx.lineDashOffset=-time*0.015;ctx.stroke();ctx.setLineDash([]);
   // Arrowhead at end
   const n=pts.length;const ax=pts[n-2],ay=pts[n-1],bx=pts[n-4],by=pts[n-3];
   const ang=Math.atan2(ay-by,ax-bx);
@@ -1062,8 +1062,8 @@ function drawXS5(ctx,s,time){
   const def=defectMode&&getDefect(4);
   // Chamber labels
   if(s.spLen>0.1){
-    xsText('LA',68,100,{size:11,color:'rgba(255,255,255,0.4)'});
-    xsText('RA',195,115,{size:11,color:'rgba(255,255,255,0.4)'});
+    xsText('RA',68,100,{size:11,color:'rgba(255,255,255,0.4)'});
+    xsText('LA',195,115,{size:11,color:'rgba(255,255,255,0.4)'});
   }else{
     xsText('Common Atrium',130,68,{size:11,weight:'700',color:'rgba(255,255,255,0.7)'});
   }
@@ -1087,12 +1087,12 @@ function drawXS5(ctx,s,time){
     if(s.fpGap>0.3&&s.spLen<0.95){
       const gY=endY+6;
       xsText('Foramen Primum ↕',130,gY+8,{size:8,color:'#4a90d9',weight:'600'});
-      xsFlowArrow([140,gY-2,120,gY+6],time,'#c62828',s.fpGap*0.4);
+      xsFlowArrow([120,gY+6,140,gY-2],time,'#c62828',s.fpGap*0.4);
     }
   }
   // Blood flow (R→L in common atrium)
   if(s.spLen<0.1){
-    xsFlowArrow([175,90,85,90],time,'#c62828',s.flowOp);
+    xsFlowArrow([85,90,175,90],time,'#c62828',s.flowOp);
     xsText('R → L flow',130,105,{size:8,color:'#c62828'});
   }
   // Foramen secundum (holes in upper septum primum)
