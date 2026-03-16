@@ -214,6 +214,99 @@ body {
 ::-webkit-scrollbar { width: 5px; }
 ::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 3px; }
+
+/* Mobile bar — hidden on desktop */
+.mobile-bar { display: none; }
+
+@media (max-width: 768px) {
+  body { height: 100vh; height: 100dvh; }
+
+  /* Nav compact */
+  .site-nav { padding: 0 10px; height: 36px; overflow-x: auto; -webkit-overflow-scrolling: touch; }
+  .nav-brand { margin-right: 10px; font-size: 13px; flex-shrink: 0; }
+  .nav-tabs { flex-shrink: 0; }
+  .nav-tab { padding: 0 7px; font-size: 10px; height: 36px; white-space: nowrap; }
+  .nav-right { display: none; }
+
+  /* Mobile bar */
+  .mobile-bar {
+    display: flex; flex-wrap: wrap; align-items: center; gap: 6px;
+    padding: 6px 10px; background: var(--panel-bg);
+    border-bottom: 1px solid var(--border); flex-shrink: 0;
+  }
+  .mobile-stage-select {
+    flex: 1; min-width: 0; padding: 7px 8px; font-size: 13px; font-weight: 600;
+    background: var(--card-bg); color: var(--text); border: 1px solid var(--border);
+    border-radius: 6px; outline: none; appearance: auto;
+  }
+  .mobile-stage-select option { background: var(--panel-bg); color: var(--text); }
+  .mobile-controls { display: flex; gap: 4px; align-items: center; flex-shrink: 0; }
+  .m-btn {
+    width: 36px; height: 36px; background: var(--card-bg); border: 1px solid var(--border);
+    color: var(--text); border-radius: 6px; font-size: 14px; cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .m-btn.m-primary { background: var(--accent); color: #fff; border-color: var(--accent); }
+  .m-defect-toggle {
+    width: 36px; height: 36px; background: var(--card-bg); border: 1px solid var(--border);
+    color: var(--defect); border-radius: 6px; font-size: 14px; cursor: pointer;
+    display: flex; align-items: center; justify-content: center; opacity: 0.5;
+    transition: all 0.2s;
+  }
+  .m-defect-toggle.on { background: rgba(255,23,68,0.15); border-color: var(--defect); opacity: 1; }
+  .mobile-defect-select {
+    width: 100%; padding: 5px 8px; font-size: 11px;
+    background: rgba(255,23,68,0.08); color: var(--text); border: 1px solid rgba(255,23,68,0.3);
+    border-radius: 6px; outline: none; appearance: auto;
+  }
+  .mobile-defect-select option { background: var(--panel-bg); color: var(--text); }
+
+  /* Hide left panel */
+  .left-panel { display: none !important; }
+
+  /* Stage overlay compact */
+  .stage-overlay { max-width: 200px; top: 8px; left: 10px; }
+  .stage-overlay h3 { font-size: 15px; }
+  .stage-overlay .stage-time { font-size: 10px; }
+  .overlay-info { max-height: 35vh; padding: 8px 10px; margin-top: 10px; }
+  .overlay-info h4 { font-size: 8px; }
+  .overlay-info .overlay-desc { font-size: 10px; }
+  .overlay-info .overlay-pearls li { font-size: 9px; }
+  .overlay-info .overlay-defect p { font-size: 9px; }
+
+  /* Viewport stacks vertically */
+  .viewport-row { flex-direction: column; }
+
+  /* PIP mode on mobile: strip at top instead of floating corner */
+  .viewport-row.has-xs .canvas-wrap {
+    position: relative; top: auto; right: auto;
+    width: 100%; height: 120px; min-width: 0; flex: none;
+    border-radius: 0; border: none; box-shadow: none;
+    border-bottom: 1px solid var(--border);
+  }
+
+  /* Cross-section panel stacks vertically */
+  .viewport-row.has-xs .xsection-panel {
+    flex-direction: column; padding: 10px 12px; gap: 10px;
+    padding-bottom: 56px; overflow-y: auto;
+  }
+  .xs-canvas-area { flex: none; }
+  .xsection-panel canvas { max-width: 250px; margin: 0 auto; }
+  .xs-panel-title { font-size: 9px; }
+  .xs-info-area {
+    width: 100% !important; min-width: 0 !important;
+    padding-top: 0 !important; flex-shrink: 1;
+  }
+
+  /* Substep bar */
+  .substep-bar { bottom: 6px; padding: 6px 10px; gap: 5px; max-width: 92vw; }
+  .substep-label { font-size: 10px; max-width: 110px; overflow: hidden; text-overflow: ellipsis; }
+  .substep-dot { width: 10px; height: 10px; min-width: 10px; }
+  .step-counter { font-size: 9px; margin-left: 6px; padding-left: 6px; }
+
+  /* Rotate hint */
+  .rotate-hint { bottom: 46px; font-size: 9px; }
+}
 </style>
 </head>
 <body>
@@ -228,6 +321,17 @@ body {
   </div>
   <div class="nav-right"><span class="nav-credit">Developer: Saro Avedikian, MD, MPH</span></div>
 </nav>
+
+<div class="mobile-bar" id="mobileBar">
+  <select class="mobile-stage-select" id="mobileStageSelect"></select>
+  <div class="mobile-controls">
+    <button class="m-btn" id="mBtnPrev" title="Previous">◀</button>
+    <button class="m-btn m-primary" id="mBtnNext" title="Next">▶</button>
+    <button class="m-btn" id="mBtnPlay" title="Auto-play">⏵</button>
+    <div class="m-defect-toggle" id="mDefectToggle" title="Defect mode">⚠</div>
+  </div>
+  <select class="mobile-defect-select" id="mobileDefectSelect" style="display:none"></select>
+</div>
 
 <div class="main-container">
   <div class="left-panel">
@@ -1789,6 +1893,7 @@ function nextStep(){const s=STAGES[curStage];if(curSub<s.substeps.length-1)goToS
 function prevStep(){if(curSub>0)goToSub(curSub-1);else if(curStage>0){curStage--;curSub=STAGES[curStage].substeps.length-1;animCam(curStage);onStateChange();}}
 function toggleDefect(){defectMode=!defectMode;needsRebuild=true;updateUI();updateCrossSection();}
 function togglePlay(){autoPlaying=!autoPlaying;document.getElementById('btnPlay').textContent=autoPlaying?'⏸ Pause':'▶ Play';
+  document.getElementById('mBtnPlay').textContent=autoPlaying?'⏸':'⏵';
   if(autoPlaying){autoTimer=setInterval(()=>nextStep(),4000);}
   else if(autoTimer){clearInterval(autoTimer);autoTimer=null;}}
 
@@ -1797,6 +1902,18 @@ document.getElementById('btnPrev').onclick=prevStep;
 document.getElementById('btnPlay').onclick=togglePlay;
 document.getElementById('defectToggle').onclick=toggleDefect;
 document.getElementById('defectSelect').onchange=function(){defectIdx=parseInt(this.value);needsRebuild=true;updateUI();updateCrossSection();};
+
+// Mobile controls
+const mStageSelect=document.getElementById('mobileStageSelect');
+const mDefectToggle=document.getElementById('mDefectToggle');
+const mDefectSelect=document.getElementById('mobileDefectSelect');
+STAGES.forEach((s,i)=>{const o=document.createElement('option');o.value=i;o.textContent=s.id+'. '+s.name;mStageSelect.appendChild(o);});
+mStageSelect.onchange=function(){goToStage(parseInt(this.value));};
+document.getElementById('mBtnPrev').onclick=prevStep;
+document.getElementById('mBtnNext').onclick=nextStep;
+document.getElementById('mBtnPlay').onclick=togglePlay;
+mDefectToggle.onclick=toggleDefect;
+mDefectSelect.onchange=function(){defectIdx=parseInt(this.value);needsRebuild=true;updateUI();updateCrossSection();};
 document.addEventListener('keydown',e=>{
   if(e.key==='ArrowRight'||e.key===' '){e.preventDefault();nextStep();}
   else if(e.key==='ArrowLeft'){e.preventDefault();prevStep();}
@@ -1856,6 +1973,13 @@ function updateUI(){
   if(activeDefect&&defectMode){xdp.style.display='';
     document.getElementById('xsDefectText').innerHTML=activeDefect.desc+(activeDefect.ekg?'<br><br><strong>'+activeDefect.ekg+'</strong>':'');
   }else{xdp.style.display='none';}
+  // Sync mobile controls
+  mStageSelect.value=curStage;
+  mDefectToggle.className='m-defect-toggle'+(defectMode?' on':'');
+  if(defectMode&&allDefects.length>1){
+    mDefectSelect.style.display='';mDefectSelect.innerHTML='';
+    allDefects.forEach((d,i)=>{const o=document.createElement('option');o.value=i;o.textContent=d.name;if(i===defectIdx%allDefects.length)o.selected=true;mDefectSelect.appendChild(o);});
+  }else{mDefectSelect.style.display='none';}
   buildStageList();buildSubBar();
 }
 
