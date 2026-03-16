@@ -1062,8 +1062,8 @@ function drawXS5(ctx,s,time){
   const def=defectMode&&getDefect(4);
   // Chamber labels
   if(s.spLen>0.1){
-    xsText('LA',72,78,{size:11,color:'rgba(255,255,255,0.4)'});
-    xsText('RA',185,78,{size:11,color:'rgba(255,255,255,0.4)'});
+    xsText('LA',68,100,{size:11,color:'rgba(255,255,255,0.4)'});
+    xsText('RA',192,100,{size:11,color:'rgba(255,255,255,0.4)'});
   }else{
     xsText('Common Atrium',130,68,{size:11,weight:'700',color:'rgba(255,255,255,0.7)'});
   }
@@ -1229,8 +1229,9 @@ function drawXS6(ctx,s,time){
     ctx.save();ctx.globalAlpha=s.membOp;
     ctx.beginPath();ctx.ellipse(130,topY+2,10,7,0,0,Math.PI*2);
     ctx.fillStyle='rgba(171,71,188,0.6)';ctx.fill();ctx.strokeStyle='#ab47bc';ctx.lineWidth=1;ctx.stroke();
-    xsText('Membranous',130,topY-20,{size:7,color:'#ab47bc',weight:'600'});
-    xsText('Septum',130,topY-11,{size:7,color:'#ab47bc',weight:'600'});
+    xsLeader(120,topY,55,topY-5,'rgba(171,71,188,0.35)');
+    xsText('Membranous',45,topY-13,{size:7,color:'#ab47bc',weight:'600',align:'right'});
+    xsText('Septum',45,topY-3,{size:7,color:'#ab47bc',weight:'600',align:'right'});
     xsText('LVOT',100,topY+20,{size:7,color:'rgba(255,255,255,0.4)'});
     xsText('RVOT',160,topY+20,{size:7,color:'rgba(255,255,255,0.4)'});
     ctx.restore();
@@ -1578,7 +1579,7 @@ function drawXS8(ctx,s,time){
     ctx.beginPath();ctx.moveTo(cx-15+3*-5,sacY+10);
     ctx.bezierCurveTo(archX-10,sacY+40,archX-5,dorsalY-60,cx-daoW,dorsalY-8);
     ctx.strokeStyle='#e57373';ctx.lineWidth=4;ctx.lineCap='round';ctx.stroke();
-    xsText('Aortic Arch →',18,sacY+70,{size:7,color:'#e57373',weight:'700',align:'left'});
+    xsText('← Aortic Arch (L 4th)',18,dorsalY-20,{size:7,color:'#e57373',weight:'700',align:'left'});
     ctx.restore();
   }
   // Left 6th → ductus arteriosus
@@ -1588,22 +1589,23 @@ function drawXS8(ctx,s,time){
     ctx.beginPath();ctx.moveTo(cx-15+5*-5,sacY+10);
     ctx.bezierCurveTo(archX-10,sacY+40,archX-5,dorsalY-60,cx-daoW,dorsalY-8);
     ctx.strokeStyle='#66bb6a';ctx.lineWidth=3.5;ctx.lineCap='round';ctx.stroke();
-    xsText('DA →',archX+5,sacY+100,{size:7,color:'#66bb6a',weight:'700',align:'left'});
+    xsText('DA → (L 6th)',cx+daoW+18,dorsalY-20,{size:7,color:'#66bb6a',weight:'700',align:'left'});
     ctx.restore();
   }
   // 3rd arch → common carotids
-  if(s.adult>0.3){
+  if(s.adult>0.3&&s.adult<0.6){
     ctx.save();ctx.globalAlpha=s.adult;
-    xsText('3rd → Carotids',startX+2*spacing-20,sacY+65,{size:7,color:'#42a5f5',align:'right'});
+    xsText('3rd → Carotids',18,dorsalY-35,{size:7,color:'#42a5f5',align:'left'});
     ctx.restore();
   }
   // Adult config labels
   if(s.adult>0.5){
     ctx.save();ctx.globalAlpha=s.adult;
     xsText('Adult Configuration',cx,15,{size:9,color:'rgba(255,255,255,0.6)',weight:'700'});
-    xsText('L 4th → Aortic Arch',cx-50,195,{size:7,color:'#e57373',align:'center'});
-    xsText('L 6th → Lig. Arteriosum',cx+55,210,{size:7,color:'#66bb6a',align:'center'});
-    xsText('3rd → Common Carotids',cx,215,{size:7,color:'#42a5f5'});
+    // Derivative legend — clean area below dorsal aorta
+    xsText('● 3rd → Common Carotids',18,dorsalY+18,{size:7,color:'#42a5f5',align:'left'});
+    xsText('● L 4th → Aortic Arch',18,dorsalY+31,{size:7,color:'#e57373',align:'left'});
+    xsText('● L 6th → Lig. Arteriosum',18,dorsalY+44,{size:7,color:'#66bb6a',align:'left'});
     ctx.restore();
   }
   // Defects
