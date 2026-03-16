@@ -998,7 +998,7 @@ function drawXS4(ctx,s,time){
     ctx.bezierCurveTo(150,depth-5,170,62+s.supH*25,182,62);
     ctx.fillStyle='rgba(255,167,38,0.7)';ctx.fill();
     ctx.strokeStyle='#ffa726';ctx.lineWidth=1;ctx.stroke();
-    if(s.fused<0.5)xsText('Superior Cushion',130,Math.min(depth-12,82),{size:8,color:'#ffa726',weight:'600'});
+    if(s.fused<0.5){xsText('Superior Cushion',130,55,{size:8,color:'#ffa726',weight:'600'});}
   }
   // Inferior cushion
   if(s.infH>0.01){
@@ -1062,10 +1062,10 @@ function drawXS5(ctx,s,time){
   const def=defectMode&&getDefect(4);
   // Chamber labels
   if(s.spLen>0.1){
-    xsText('LA',80,78,{size:11,color:'rgba(255,255,255,0.4)'});
-    xsText('RA',180,78,{size:11,color:'rgba(255,255,255,0.4)'});
+    xsText('LA',72,78,{size:11,color:'rgba(255,255,255,0.4)'});
+    xsText('RA',185,78,{size:11,color:'rgba(255,255,255,0.4)'});
   }else{
-    xsText('Common Atrium',130,78,{size:11,weight:'700',color:'rgba(255,255,255,0.7)'});
+    xsText('Common Atrium',130,68,{size:11,weight:'700',color:'rgba(255,255,255,0.7)'});
   }
   xsText('Ventricles',130,195,{size:9,color:'rgba(255,255,255,0.25)'});
   // Septum primum (organic wavy line growing down from roof)
@@ -1080,9 +1080,9 @@ function drawXS5(ctx,s,time){
     ctx.beginPath();ctx.moveTo(130,startY);ctx.bezierCurveTo(128,mid1-3,132,mid2+2,130,endY);ctx.stroke();
     ctx.restore();
     // Label
-    xsLeader(110,68,122,startY+(endY-startY)*0.3,'rgba(66,165,245,0.3)');
-    xsText('Septum',100,62,{size:8,color:'#42a5f5',align:'right'});
-    xsText('Primum',100,73,{size:8,color:'#42a5f5',align:'right'});
+    xsLeader(95,68,122,startY+(endY-startY)*0.3,'rgba(66,165,245,0.3)');
+    xsText('Septum',85,62,{size:8,color:'#42a5f5',align:'right'});
+    xsText('Primum',85,73,{size:8,color:'#42a5f5',align:'right'});
     // Foramen primum gap indicator
     if(s.fpGap>0.3&&s.spLen<0.95){
       const gY=endY+6;
@@ -1092,8 +1092,8 @@ function drawXS5(ctx,s,time){
   }
   // Blood flow (R→L in common atrium)
   if(s.spLen<0.1){
-    xsFlowArrow([175,80,85,80],time,'#c62828',s.flowOp);
-    xsText('R → L flow',130,95,{size:8,color:'#c62828'});
+    xsFlowArrow([175,90,85,90],time,'#c62828',s.flowOp);
+    xsText('R → L flow',130,105,{size:8,color:'#c62828'});
   }
   // Foramen secundum (holes in upper septum primum)
   if(s.fsR1>0.1){
@@ -1229,8 +1229,8 @@ function drawXS6(ctx,s,time){
     ctx.save();ctx.globalAlpha=s.membOp;
     ctx.beginPath();ctx.ellipse(130,topY+2,10,7,0,0,Math.PI*2);
     ctx.fillStyle='rgba(171,71,188,0.6)';ctx.fill();ctx.strokeStyle='#ab47bc';ctx.lineWidth=1;ctx.stroke();
-    xsText('Membranous',130,topY-14,{size:7,color:'#ab47bc',weight:'600'});
-    xsText('Septum',130,topY-5,{size:7,color:'#ab47bc',weight:'600'});
+    xsText('Membranous',130,topY-20,{size:7,color:'#ab47bc',weight:'600'});
+    xsText('Septum',130,topY-11,{size:7,color:'#ab47bc',weight:'600'});
     xsText('LVOT',100,topY+20,{size:7,color:'rgba(255,255,255,0.4)'});
     xsText('RVOT',160,topY+20,{size:7,color:'rgba(255,255,255,0.4)'});
     ctx.restore();
@@ -1312,27 +1312,27 @@ function drawXS7(ctx,s,time){
   }
   // Separated vessels
   if(s.sep>0.01){
-    const d=s.sep*28;
+    const d=s.sep*35;
     ctx.save();ctx.globalAlpha=s.sep;
     // Aorta (posterior/left)
     ctx.beginPath();ctx.arc(130-d*0.6,130+d*0.4,35*s.sep+45*(1-s.sep),0,Math.PI*2);
     ctx.fillStyle='#141e30';ctx.fill();ctx.strokeStyle='rgba(255,255,255,0.2)';ctx.lineWidth=2;ctx.stroke();
     ctx.beginPath();ctx.arc(130-d*0.6,130+d*0.4,28*s.sep+38*(1-s.sep),0,Math.PI*2);
     ctx.fillStyle='rgba(198,40,40,0.15)';ctx.fill();
-    xsText('Ao',130-d*0.6,130+d*0.4-4,{size:10,weight:'700',color:'rgba(255,255,255,0.8)'});
-    xsText('Posterior',130-d*0.6,130+d*0.4+10,{size:6,color:'rgba(255,255,255,0.35)'});
+    xsText('Ao',130-d*0.6,130+d*0.4-4,{size:12,weight:'700',color:'rgba(255,255,255,0.8)'});
+    xsText('Posterior',130-d*0.6,130+d*0.4+12,{size:7,color:'rgba(255,255,255,0.35)'});
     // PA (anterior/right)
     ctx.beginPath();ctx.arc(130+d*0.6,130-d*0.6,32*s.sep+45*(1-s.sep),0,Math.PI*2);
     ctx.fillStyle='#141e30';ctx.fill();ctx.strokeStyle='rgba(255,255,255,0.2)';ctx.lineWidth=2;ctx.stroke();
     ctx.beginPath();ctx.arc(130+d*0.6,130-d*0.6,25*s.sep+38*(1-s.sep),0,Math.PI*2);
     ctx.fillStyle='rgba(21,101,192,0.15)';ctx.fill();
-    xsText('PA',130+d*0.6,130-d*0.6-4,{size:10,weight:'700',color:'rgba(255,255,255,0.8)'});
-    xsText('Anterior',130+d*0.6,130-d*0.6+10,{size:6,color:'rgba(255,255,255,0.35)'});
+    xsText('PA',130+d*0.6,130-d*0.6-4,{size:12,weight:'700',color:'rgba(255,255,255,0.8)'});
+    xsText('Anterior',130+d*0.6,130-d*0.6+12,{size:7,color:'rgba(255,255,255,0.35)'});
     // AP septum line
     if(s.sep>0.5){
       ctx.beginPath();ctx.moveTo(130-d*0.3+15,130+d*0.1-20);ctx.lineTo(130+d*0.3-15,130-d*0.3+20);
       ctx.strokeStyle='rgba(255,255,255,0.15)';ctx.lineWidth=2;ctx.stroke();
-      xsText('AP Septum',130,130-d*0.1,{size:7,color:'rgba(255,255,255,0.3)'});
+      xsText('AP Septum',130,130-d*0.1+5,{size:7,color:'rgba(255,255,255,0.3)'});
     }
     ctx.restore();
   }
@@ -1559,10 +1559,10 @@ function drawXS8(ctx,s,time){
     ctx.beginPath();ctx.moveTo(cx+15+i*5,sacY+10);
     ctx.bezierCurveTo(xR+10,sacY+40,xR+5,dorsalY-60,cx+daoW,dorsalY-8);
     ctx.strokeStyle=col;ctx.lineWidth=lw;ctx.lineCap='round';ctx.stroke();
-    // Label (on left side)
+    // Label (stacked on far left)
     if(archVals[i]>0.4){
-      const ly=sacY+50+i*28;
-      xsText(archLabels[i],x-8,Math.min(ly,dorsalY-30),{size:6,color:col,align:'right'});
+      const ly=sacY+50+i*22;
+      xsText(archLabels[i],18,Math.min(ly,dorsalY-30),{size:7,color:col,align:'left'});
     }
     ctx.restore();
   }
@@ -1578,7 +1578,7 @@ function drawXS8(ctx,s,time){
     ctx.beginPath();ctx.moveTo(cx-15+3*-5,sacY+10);
     ctx.bezierCurveTo(archX-10,sacY+40,archX-5,dorsalY-60,cx-daoW,dorsalY-8);
     ctx.strokeStyle='#e57373';ctx.lineWidth=4;ctx.lineCap='round';ctx.stroke();
-    xsText('← Aortic Arch',archX-30,sacY+80,{size:7,color:'#e57373',weight:'700',align:'right'});
+    xsText('Aortic Arch →',18,sacY+70,{size:7,color:'#e57373',weight:'700',align:'left'});
     ctx.restore();
   }
   // Left 6th → ductus arteriosus
@@ -1594,16 +1594,16 @@ function drawXS8(ctx,s,time){
   // 3rd arch → common carotids
   if(s.adult>0.3){
     ctx.save();ctx.globalAlpha=s.adult;
-    xsText('3rd → Carotids',startX+2*spacing-20,sacY+65,{size:6,color:'#42a5f5',align:'right'});
+    xsText('3rd → Carotids',startX+2*spacing-20,sacY+65,{size:7,color:'#42a5f5',align:'right'});
     ctx.restore();
   }
   // Adult config labels
   if(s.adult>0.5){
     ctx.save();ctx.globalAlpha=s.adult;
     xsText('Adult Configuration',cx,15,{size:9,color:'rgba(255,255,255,0.6)',weight:'700'});
-    xsText('L 4th → Aortic Arch',cx-50,190,{size:7,color:'#e57373',align:'center'});
-    xsText('L 6th → Lig. Arteriosum',cx+55,190,{size:7,color:'#66bb6a',align:'center'});
-    xsText('3rd → Common Carotids',cx,205,{size:6,color:'#42a5f5'});
+    xsText('L 4th → Aortic Arch',cx-50,195,{size:7,color:'#e57373',align:'center'});
+    xsText('L 6th → Lig. Arteriosum',cx+55,210,{size:7,color:'#66bb6a',align:'center'});
+    xsText('3rd → Common Carotids',cx,215,{size:7,color:'#42a5f5'});
     ctx.restore();
   }
   // Defects
@@ -1674,7 +1674,7 @@ function drawXS10(ctx,s,time){
   ctx.strokeStyle='rgba(255,255,255,0.15)';ctx.lineWidth=1.5;ctx.stroke();
   // Chamber labels
   xsText('RA',hx-26,hy-30,{size:9,color:'rgba(100,160,255,0.5)'});
-  xsText('LA',hx+26,hy-30,{size:9,color:'rgba(255,120,120,0.5)'});
+  xsText('LA',hx+30,hy-38,{size:9,color:'rgba(255,120,120,0.5)'});
   xsText('RV',hx-26,hy+25,{size:9,color:'rgba(100,160,255,0.5)'});
   xsText('LV',hx+26,hy+25,{size:9,color:'rgba(255,120,120,0.5)'});
   // Great vessels — PA
@@ -1690,7 +1690,7 @@ function drawXS10(ctx,s,time){
     ctx.save();ctx.globalAlpha=s.foOp;
     ctx.beginPath();ctx.ellipse(hx,hy-26,5,9,0,0,Math.PI*2);
     ctx.fillStyle='rgba(100,200,255,0.25)';ctx.fill();ctx.strokeStyle='rgba(100,200,255,0.6)';ctx.lineWidth=1.5;ctx.stroke();
-    xsText('FO',hx+11,hy-26,{size:7,color:'rgba(100,200,255,0.8)',align:'left',weight:'700'});
+    xsText('FO',hx+14,hy-30,{size:7,color:'rgba(100,200,255,0.8)',align:'left',weight:'700'});
     if(s.flowOp>0.3){
       xsFlowArrow([hx-7,hy-26,hx+7,hy-26],time,'rgba(100,200,255,0.6)',s.flowOp*0.6);
     }
@@ -1714,8 +1714,8 @@ function drawXS10(ctx,s,time){
     ctx.beginPath();
     ctx.moveTo(hx+58,hy+68);ctx.bezierCurveTo(hx+48,hy+45,hx+15,hy+12,hx-8,hy-10);
     ctx.strokeStyle='rgba(255,180,50,0.5)';ctx.lineWidth=3.5;ctx.lineCap='round';ctx.stroke();
-    xsText('DV',hx+48,hy+55,{size:7,color:'rgba(255,180,50,0.9)',weight:'700',align:'left'});
-    xsText('(UV→IVC)',hx+48,hy+66,{size:5,color:'rgba(255,180,50,0.5)',align:'left'});
+    xsText('DV',hx+52,hy+50,{size:7,color:'rgba(255,180,50,0.9)',weight:'700',align:'left'});
+    xsText('(UV→IVC)',hx+52,hy+61,{size:5,color:'rgba(255,180,50,0.5)',align:'left'});
     ctx.restore();
   }
   // === CLOSING INDICATORS ===
@@ -1723,11 +1723,11 @@ function drawXS10(ctx,s,time){
     ctx.save();ctx.globalAlpha=s.closeOp;
     const drawClose=(x,y,lx,ly,label)=>{
       // Red X
-      ctx.beginPath();ctx.moveTo(x-7,y-7);ctx.lineTo(x+7,y+7);ctx.moveTo(x+7,y-7);ctx.lineTo(x-7,y+7);
-      ctx.strokeStyle='#ff1744';ctx.lineWidth=3;ctx.stroke();
+      ctx.beginPath();ctx.moveTo(x-6,y-6);ctx.lineTo(x+6,y+6);ctx.moveTo(x+6,y-6);ctx.lineTo(x-6,y+6);
+      ctx.strokeStyle='#ff1744';ctx.lineWidth=2;ctx.stroke();
       // Red circle around X
-      ctx.beginPath();ctx.arc(x,y,11,0,Math.PI*2);
-      ctx.strokeStyle='rgba(255,23,68,0.4)';ctx.lineWidth=1.5;ctx.stroke();
+      ctx.beginPath();ctx.arc(x,y,9,0,Math.PI*2);
+      ctx.strokeStyle='rgba(255,23,68,0.4)';ctx.lineWidth=1;ctx.stroke();
       // Label with leader line
       xsLeader(x+(lx>x?11:-11),y,lx,ly,'rgba(255,23,68,0.3)');
       xsText(label,lx,ly,{size:7,color:'#ff1744',weight:'700',align:lx>x?'left':'right'});
@@ -2024,7 +2024,8 @@ function renderScene(time){
   if(!showTube){tubeGroupA.visible=false;tubeGroupB.visible=false;}
   // Tube fade-in when first appearing (stage 1, substep 2)
   if(curStage===0&&curSub===2&&tubeFadeT<1){
-    tubeFadeT=Math.min(1,(performance.now()-tubeFadeStart)/800);
+    const elapsed=performance.now()-tubeFadeStart-300;
+    tubeFadeT=elapsed<0?0:Math.min(1,elapsed/1200);
     const f=easeInOutCubic(tubeFadeT);
     tubeMat.opacity=0.93*f;glowMat.opacity=0.1*f;
   }
