@@ -1218,9 +1218,9 @@ function drawXS6(ctx,s,time){
     ctx.beginPath();ctx.moveTo(211,72);ctx.bezierCurveTo(175,targetY-8,145,targetY,136,targetY+4);
     ctx.strokeStyle='#66bb6a';ctx.lineWidth=2;ctx.stroke();
     ctx.restore();
-    if(s.outletH>0.3&&s.inletH>0.3){
-      xsText('Conal Ridge',24,72,{size:6,color:'#66bb6a',align:'left'});
-      xsText('Conal Ridge',236,72,{size:6,color:'#66bb6a',align:'right'});
+    if(s.outletH>0.3&&s.inletH>0.3&&s.membOp<0.5){
+      xsText('Conal Ridge',42,86,{size:6,color:'#66bb6a'});
+      xsText('Conal Ridge',218,86,{size:6,color:'#66bb6a'});
     }
   }
   // Membranous septum
@@ -1229,11 +1229,9 @@ function drawXS6(ctx,s,time){
     ctx.save();ctx.globalAlpha=s.membOp;
     ctx.beginPath();ctx.ellipse(130,topY+2,10,7,0,0,Math.PI*2);
     ctx.fillStyle='rgba(171,71,188,0.6)';ctx.fill();ctx.strokeStyle='#ab47bc';ctx.lineWidth=1;ctx.stroke();
-    xsLeader(120,topY,55,topY-5,'rgba(171,71,188,0.35)');
-    xsText('Membranous',45,topY-13,{size:7,color:'#ab47bc',weight:'600',align:'right'});
-    xsText('Septum',45,topY-3,{size:7,color:'#ab47bc',weight:'600',align:'right'});
-    xsText('LVOT',100,topY+20,{size:7,color:'rgba(255,255,255,0.4)'});
-    xsText('RVOT',160,topY+20,{size:7,color:'rgba(255,255,255,0.4)'});
+    xsText('Membranous Septum',130,topY+18,{size:7,color:'#ab47bc',weight:'600'});
+    xsText('LVOT',92,topY+32,{size:7,color:'rgba(255,255,255,0.4)'});
+    xsText('RVOT',168,topY+32,{size:7,color:'rgba(255,255,255,0.4)'});
     ctx.restore();
   }
   // Defect: Perimembranous VSD
