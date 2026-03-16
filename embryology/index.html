@@ -988,7 +988,6 @@ function drawXS4(ctx,s,time){
   drawHeartAVCanal(ctx);
   xsText('Myocardium',48,35,{size:7,color:'rgba(255,255,255,0.25)',align:'left'});
   xsText('Cardiac Jelly',200,42,{size:7,color:'rgba(255,255,255,0.25)',align:'right'});
-  xsText('Lumen',130,125,{size:7,color:'rgba(255,255,255,0.15)'});
   const def=defectMode&&getDefect(3);
   // Superior cushion
   if(s.supH>0.01){
@@ -1032,6 +1031,8 @@ function drawXS4(ctx,s,time){
     xsText('Common AV Valve',130,155,{size:8,color:'#ff1744'});
     ctx.restore();
   }
+  // Lumen label (only when visible, not overlapping cushions)
+  if(s.supH>=0.05&&s.fused<0.5&&!def) xsText('Lumen',130,125,{size:7,color:'rgba(255,255,255,0.2)'});
   // Open lumen label
   if(s.supH<0.05&&s.infH<0.05){
     xsText('AV Canal',130,125,{size:10,weight:'700',color:'rgba(255,255,255,0.8)'});
@@ -1062,7 +1063,7 @@ function drawXS5(ctx,s,time){
   const def=defectMode&&getDefect(4);
   // Chamber labels
   if(s.spLen>0.1){
-    xsText('RA',68,100,{size:11,color:'rgba(255,255,255,0.4)'});
+    xsText('RA',68,s.ssOp>0.5?114:100,{size:11,color:'rgba(255,255,255,0.4)'});
     xsText('LA',195,115,{size:11,color:'rgba(255,255,255,0.4)'});
   }else{
     xsText('Common Atrium',130,68,{size:11,weight:'700',color:'rgba(255,255,255,0.7)'});
@@ -1108,23 +1109,23 @@ function drawXS5(ctx,s,time){
     }
     ctx.restore();
   }
-  // Septum secundum (thicker, right side)
+  // Septum secundum (thicker, RA/left side)
   if(s.ssOp>0.01){
     const ssStartY=33;const ssEndY=33+(130-33)*s.ssLen;
     ctx.save();ctx.globalAlpha=s.ssOp;
-    ctx.beginPath();ctx.moveTo(139,ssStartY);
+    ctx.beginPath();ctx.moveTo(121,ssStartY);
     const sm1=ssStartY+(ssEndY-ssStartY)*0.3;const sm2=ssStartY+(ssEndY-ssStartY)*0.7;
-    ctx.bezierCurveTo(141,sm1,137,sm2,139,ssEndY);
+    ctx.bezierCurveTo(119,sm1,123,sm2,121,ssEndY);
     ctx.strokeStyle='#1565c0';ctx.lineWidth=6;ctx.lineCap='round';ctx.stroke();
     // Glow
     ctx.globalAlpha=s.ssOp*0.12;ctx.lineWidth=14;ctx.stroke();
     ctx.restore();
-    xsLeader(155,90,145,33+(ssEndY-33)*0.5,'rgba(21,101,192,0.3)');
-    xsText('Septum',168,85,{size:8,color:'#1565c0',weight:'600',align:'left'});
-    xsText('Secundum',168,96,{size:8,color:'#1565c0',weight:'600',align:'left'});
+    xsLeader(105,90,115,33+(ssEndY-33)*0.5,'rgba(21,101,192,0.3)');
+    xsText('Septum',60,85,{size:8,color:'#1565c0',weight:'600',align:'left'});
+    xsText('Secundum',60,96,{size:8,color:'#1565c0',weight:'600',align:'left'});
     // Foramen ovale
     if(s.ssLen>0.5){
-      xsText('Foramen Ovale',130,ssEndY+12,{size:7,color:'#4a90d9',weight:'600'});
+      xsText('Foramen Ovale',130,Math.min(ssEndY+12,116),{size:7,color:'#4a90d9',weight:'600'});
     }
   }
   // Birth: valve mechanism
@@ -1134,7 +1135,7 @@ function drawXS5(ctx,s,time){
     ctx.beginPath();ctx.moveTo(126,50);ctx.lineTo(122,60);ctx.lineTo(126,70);
     ctx.strokeStyle='#42a5f5';ctx.lineWidth=1.5;ctx.stroke();
     xsText('Flap valve',106,52,{size:7,color:'rgba(255,255,255,0.6)',align:'right'});
-    xsText('Birth: LA > RA → septum primum pressed shut',130,250,{size:7,weight:'600',color:'rgba(255,255,255,0.7)'});
+    xsText('Birth: LA > RA → septum primum pressed shut',130,244,{size:7,weight:'600',color:'rgba(255,255,255,0.7)'});
     ctx.restore();
   }
   // Defect: Secundum ASD
@@ -1143,7 +1144,7 @@ function drawXS5(ctx,s,time){
     ctx.beginPath();ctx.arc(130,62,16,0,Math.PI*2);
     ctx.fillStyle='rgba(255,23,68,0.15)';ctx.fill();
     ctx.strokeStyle='#ff1744';ctx.lineWidth=2;ctx.stroke();
-    xsText('Secundum ASD',130,26,{size:10,color:'#ff1744',weight:'700'});
+    xsText('Secundum ASD',130,18,{size:10,color:'#ff1744',weight:'700'});
     xsFlowArrow([146,62,114,62],time,'#ff1744',0.6);
     ctx.restore();
   }
@@ -1171,8 +1172,8 @@ function drawXS6(ctx,s,time){
   ctx.restore();
   const def=defectMode&&getDefect(5);
   // Chamber labels
-  xsText('LV',90,140,{size:10,color:'rgba(255,255,255,0.35)'});
-  xsText('RV',170,140,{size:10,color:'rgba(255,255,255,0.35)'});
+  xsText('RV',90,140,{size:10,color:'rgba(255,255,255,0.35)'});
+  xsText('LV',170,140,{size:10,color:'rgba(255,255,255,0.35)'});
   if(s.muscH<0.05){
     xsText('Common Ventricle',130,170,{size:10,weight:'700',color:'rgba(255,255,255,0.7)'});
   }
@@ -1185,9 +1186,9 @@ function drawXS6(ctx,s,time){
     ctx.closePath();
     ctx.fillStyle='rgba(92,107,194,0.75)';ctx.fill();
     ctx.strokeStyle='#5c6bc0';ctx.lineWidth=0.8;ctx.stroke();
-    xsText('Muscular Septum',130,248,{size:7,color:'#5c6bc0'});
+    xsText('Muscular Septum',130,242,{size:7,color:'#5c6bc0'});
     // IV foramen
-    if(s.muscH<0.6){
+    if(s.muscH<0.6&&!def){
       xsText('IV Foramen ↕',130,topY-12,{size:8,color:'#4a90d9',weight:'600'});
       xsLeader(120,topY-2,140,topY-2,'rgba(255,255,255,0.2)');
     }
@@ -1230,8 +1231,8 @@ function drawXS6(ctx,s,time){
     ctx.beginPath();ctx.ellipse(130,topY+2,10,7,0,0,Math.PI*2);
     ctx.fillStyle='rgba(171,71,188,0.6)';ctx.fill();ctx.strokeStyle='#ab47bc';ctx.lineWidth=1;ctx.stroke();
     xsText('Membranous Septum',130,topY+18,{size:7,color:'#ab47bc',weight:'600'});
-    xsText('LVOT',92,topY+32,{size:7,color:'rgba(255,255,255,0.4)'});
-    xsText('RVOT',168,topY+32,{size:7,color:'rgba(255,255,255,0.4)'});
+    xsText('RVOT',92,topY+32,{size:7,color:'rgba(255,255,255,0.4)'});
+    xsText('LVOT',168,topY+32,{size:7,color:'rgba(255,255,255,0.4)'});
     ctx.restore();
   }
   // Defect: Perimembranous VSD
@@ -1241,7 +1242,7 @@ function drawXS6(ctx,s,time){
     ctx.beginPath();ctx.ellipse(130,gapY,9,6,0,0,Math.PI*2);
     ctx.fillStyle='rgba(255,23,68,0.2)';ctx.fill();ctx.strokeStyle='#ff1744';ctx.lineWidth=1.5;ctx.stroke();
     xsText('Perimembranous VSD',130,gapY-18,{size:8,color:'#ff1744',weight:'700'});
-    xsFlowArrow([118,gapY,142,gapY],time,'#ff1744',0.6);
+    xsFlowArrow([142,gapY,118,gapY],time,'#ff1744',0.6);
     xsText('L→R shunt',130,gapY+18,{size:7,color:'#ff1744'});
     ctx.restore();
   }
@@ -1319,19 +1320,19 @@ function drawXS7(ctx,s,time){
     ctx.beginPath();ctx.arc(130-d*0.6,130+d*0.4,28*s.sep+38*(1-s.sep),0,Math.PI*2);
     ctx.fillStyle='rgba(198,40,40,0.15)';ctx.fill();
     xsText('Ao',130-d*0.6,130+d*0.4-4,{size:12,weight:'700',color:'rgba(255,255,255,0.8)'});
-    xsText('Posterior',130-d*0.6,130+d*0.4+12,{size:7,color:'rgba(255,255,255,0.35)'});
+    if(!(def&&defectIdx%3===1)) xsText('Posterior',130-d*0.6,130+d*0.4+12,{size:7,color:'rgba(255,255,255,0.35)'});
     // PA (anterior/right)
     ctx.beginPath();ctx.arc(130+d*0.6,130-d*0.6,32*s.sep+45*(1-s.sep),0,Math.PI*2);
     ctx.fillStyle='#141e30';ctx.fill();ctx.strokeStyle='rgba(255,255,255,0.2)';ctx.lineWidth=2;ctx.stroke();
     ctx.beginPath();ctx.arc(130+d*0.6,130-d*0.6,25*s.sep+38*(1-s.sep),0,Math.PI*2);
     ctx.fillStyle='rgba(21,101,192,0.15)';ctx.fill();
     xsText('PA',130+d*0.6,130-d*0.6-4,{size:12,weight:'700',color:'rgba(255,255,255,0.8)'});
-    xsText('Anterior',130+d*0.6,130-d*0.6+12,{size:7,color:'rgba(255,255,255,0.35)'});
+    if(!(def&&defectIdx%3===1)) xsText('Anterior',130+d*0.6,130-d*0.6+12,{size:7,color:'rgba(255,255,255,0.35)'});
     // AP septum line
     if(s.sep>0.5){
       ctx.beginPath();ctx.moveTo(130-d*0.3+15,130+d*0.1-20);ctx.lineTo(130+d*0.3-15,130-d*0.3+20);
       ctx.strokeStyle='rgba(255,255,255,0.15)';ctx.lineWidth=2;ctx.stroke();
-      xsText('AP Septum',130,130-d*0.1+5,{size:7,color:'rgba(255,255,255,0.3)'});
+      if(!def) xsText('AP Septum',130,130-d*0.1,{size:7,color:'rgba(255,255,255,0.3)'});
     }
     ctx.restore();
   }
@@ -1354,8 +1355,8 @@ function drawXS7(ctx,s,time){
     }else if(di===1){
       // D-TGA: no spiral → parallel vessels
       xsText('D-TGA',130,20,{size:11,color:'#ff1744',weight:'700'});
-      xsText('No spiral →',130,246,{size:7,color:'#ff1744'});
-      xsText('parallel circulations',130,256,{size:6,color:'rgba(255,23,68,0.7)'});
+      xsText('No spiral →',130,238,{size:7,color:'#ff1744'});
+      xsText('parallel circulations',130,248,{size:6,color:'rgba(255,23,68,0.7)'});
       // Ao anterior (swap positions)
       xsText('Ao anterior',130+d*0.6,130-d*0.6-18,{size:7,color:'#ff1744'});
       xsText('PA posterior',130-d*0.6,130+d*0.4-18,{size:7,color:'#ff1744'});
@@ -1365,8 +1366,8 @@ function drawXS7(ctx,s,time){
     }else{
       // Truncus arteriosus: single vessel
       xsText('Truncus Arteriosus',130,20,{size:10,color:'#ff1744',weight:'700'});
-      xsText('Single OFT',130,246,{size:7,color:'#ff1744'});
-      xsText('(no septation)',130,256,{size:6,color:'rgba(255,23,68,0.7)'});
+      xsText('Single OFT',130,238,{size:7,color:'#ff1744'});
+      xsText('(no septation)',130,248,{size:6,color:'rgba(255,23,68,0.7)'});
       // Red circle indicating unseparated vessel
       ctx.beginPath();ctx.arc(130,130,42,0,Math.PI*2);
       ctx.strokeStyle='rgba(255,23,68,0.4)';ctx.lineWidth=2;ctx.setLineDash([4,3]);ctx.stroke();ctx.setLineDash([]);
@@ -1442,7 +1443,7 @@ function drawXS9(ctx,s,time){
     }
   }
   // Coaptation point
-  if(s.coaptOp>0.01){
+  if(s.coaptOp>0.01&&!def){
     ctx.save();ctx.globalAlpha=s.coaptOp;
     ctx.beginPath();ctx.arc(130,148,4,0,Math.PI*2);
     ctx.fillStyle='rgba(66,165,245,0.5)';ctx.fill();
@@ -1498,7 +1499,7 @@ function drawXS9(ctx,s,time){
       ctx.bezierCurveTo(90,dispY-10,120,dispY+10,160,dispY);
       ctx.strokeStyle='#ff1744';ctx.lineWidth=2;ctx.lineCap='round';ctx.stroke();
       xsText('"Sail-like" adherent leaflet',130,dispY+22,{size:6,color:'#ff1744'});
-      if(s.leafLen>0.8) xsText('Ebstein Anomaly',130,248,{size:9,color:'#ff1744',weight:'700'});
+      if(s.leafLen>0.8) xsText('Ebstein Anomaly',130,20,{size:9,color:'#ff1744',weight:'700'});
       ctx.restore();
     }
   }
@@ -1533,10 +1534,10 @@ function drawXS8(ctx,s,time){
     ctx.restore();
   }
   if(s.rDorsal<0.5&&s.rDorsal>0.01){
-    xsText('regresses',cx+daoW,dorsalY+14,{size:5,color:'rgba(255,255,255,0.25)'});
+    xsText('regresses',cx+daoW,dorsalY+12,{size:6,color:'rgba(255,255,255,0.3)'});
   }
   if(s.rDorsal<0.05){
-    xsText('Dorsal Aorta',cx-daoW,dorsalY+14,{size:6,color:'rgba(255,255,255,0.3)'});
+    xsText('Dorsal Aorta',cx-daoW,dorsalY+8,{size:6,color:'rgba(255,255,255,0.3)'});
   }
   // 6 arch pairs — positioned left/right as mirror curves
   const archColors=['rgba(255,255,255,0.25)','rgba(255,255,255,0.25)','#42a5f5','#e57373','rgba(255,255,255,0.25)','#66bb6a'];
@@ -1567,8 +1568,8 @@ function drawXS8(ctx,s,time){
   }
   // Arch-specific annotations
   if(s.arch1<0.5&&s.arch2<0.5&&s.arch5<0.5&&s.lArch<0.3){
-    xsText('1, 2, 5 regress',cx,130,{size:8,color:'rgba(255,255,255,0.4)'});
-    xsText('3, 4, 6 persist',cx,145,{size:8,color:'rgba(255,255,255,0.5)',weight:'700'});
+    xsText('1, 2, 5 regress',238,130,{size:8,color:'rgba(255,255,255,0.4)',align:'right'});
+    xsText('3, 4, 6 persist',238,145,{size:8,color:'rgba(255,255,255,0.5)',weight:'700',align:'right'});
   }
   // Left 4th arch → aortic arch highlight
   if(s.lArch>0.1){
@@ -1600,10 +1601,10 @@ function drawXS8(ctx,s,time){
   if(s.adult>0.5){
     ctx.save();ctx.globalAlpha=s.adult;
     xsText('Adult Configuration',cx,15,{size:9,color:'rgba(255,255,255,0.6)',weight:'700'});
-    // Derivative legend — clean area below dorsal aorta
-    xsText('● 3rd → Common Carotids',18,dorsalY+18,{size:7,color:'#42a5f5',align:'left'});
-    xsText('● L 4th → Aortic Arch',18,dorsalY+31,{size:7,color:'#e57373',align:'left'});
-    xsText('● L 6th → Lig. Arteriosum',18,dorsalY+44,{size:7,color:'#66bb6a',align:'left'});
+    // Derivative legend — right side, clear of arch curves
+    xsText('● 3rd → Carotids',245,170,{size:7,color:'#42a5f5',align:'right'});
+    xsText('● L 4th → Ao Arch',245,183,{size:7,color:'#e57373',align:'right'});
+    xsText('● L 6th → Lig. Art.',245,196,{size:7,color:'#66bb6a',align:'right'});
     ctx.restore();
   }
   // Defects
@@ -1746,20 +1747,20 @@ function drawXS10(ctx,s,time){
     // Sealed septum — thicker line
     ctx.beginPath();ctx.moveTo(hx,hy-50);ctx.lineTo(hx,hy-5);
     ctx.strokeStyle='rgba(255,255,255,0.35)';ctx.lineWidth=3;ctx.stroke();
-    xsText('Septum fused (PFO 25%)',hx,hy-55,{size:6,color:'rgba(255,255,255,0.4)'});
+    xsText('Septum fused (PFO 25%)',hx,hy-55,{size:7,color:'rgba(255,255,255,0.45)'});
     // Lig arteriosum — dashed ghost of DA
     ctx.beginPath();
     ctx.moveTo(hx-42,hy-84);ctx.bezierCurveTo(hx-32,hy-98,hx+28,hy-98,hx+46,hy-84);
     ctx.strokeStyle='rgba(255,255,255,0.1)';ctx.lineWidth=2;ctx.setLineDash([3,3]);ctx.stroke();ctx.setLineDash([]);
-    xsText('Lig. Arteriosum',hx,hy-103,{size:6,color:'rgba(255,255,255,0.3)'});
+    if(!def) xsText('Lig. Arteriosum',hx,hy-103,{size:6,color:'rgba(255,255,255,0.3)'});
     // Lig venosum — dashed ghost of DV
     ctx.beginPath();
     ctx.moveTo(hx+58,hy+68);ctx.bezierCurveTo(hx+48,hy+45,hx+15,hy+12,hx-8,hy-10);
     ctx.strokeStyle='rgba(255,255,255,0.1)';ctx.lineWidth=1.5;ctx.setLineDash([3,3]);ctx.stroke();ctx.setLineDash([]);
-    xsText('Lig. Venosum',hx+50,hy+78,{size:5,color:'rgba(255,255,255,0.25)',align:'left'});
-    // Flow arrows: RA→RV, LV→LA
-    xsFlowArrow([hx-26,hy-12,hx-26,hy+8],time,'rgba(100,160,255,0.4)',s.postOp*0.4);
-    xsFlowArrow([hx+26,hy+8,hx+26,hy-12],time,'rgba(255,120,120,0.4)',s.postOp*0.4);
+    xsText('Lig. Venosum',hx+50,hy+78,{size:6,color:'rgba(255,255,255,0.3)',align:'left'});
+    // Flow arrows: RA→RV, LA→LV (series circulation)
+    xsFlowArrow([hx-26,hy-12,hx-26,hy+8],time,'rgba(100,160,255,0.6)',s.postOp*0.5);
+    xsFlowArrow([hx+26,hy-12,hx+26,hy+8],time,'rgba(255,120,120,0.6)',s.postOp*0.5);
     ctx.restore();
   }
   // Flow pattern annotations (sub 1)
