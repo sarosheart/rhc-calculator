@@ -185,43 +185,6 @@ body {
   transform: scale(1);
 }
 
-/* Pullback waveform canvas */
-#pullbackCanvas {
-  display: block;
-  width: 700px;
-  max-width: 85vw;
-  height: 100px;
-  margin-top: 8px;
-  opacity: 0;
-  transition: opacity 0.4s ease;
-}
-
-/* Chamber labels */
-.chamber-labels {
-  width: 700px;
-  max-width: 85vw;
-  display: flex;
-  justify-content: space-around;
-  margin-top: 2px;
-  opacity: 0;
-  transition: opacity 0.8s ease;
-}
-
-.chamber-labels.show { opacity: 1; }
-
-.chamber-label {
-  font-family: 'DM Sans', -apple-system, sans-serif;
-  font-size: 9px;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-  opacity: 0;
-  transition: opacity 0.5s ease;
-}
-
-.chamber-label.show { opacity: 1; }
-
-.lbl-pcwp, .lbl-pa, .lbl-rv, .lbl-ra { color: rgba(220,80,80,0.5); }
-
 /* Scroll indicator */
 .scroll-hint {
   position: absolute;
@@ -448,13 +411,6 @@ body {
       <ellipse id="swanBalloon" class="swan-balloon" cx="500" cy="8" rx="6" ry="4.5" />
     </svg>
   </div>
-  <canvas id="pullbackCanvas" width="1400" height="200"></canvas>
-  <div class="chamber-labels" id="chamberLabels">
-    <span class="chamber-label lbl-pcwp" id="lblPcwp">PCWP</span>
-    <span class="chamber-label lbl-pa" id="lblPa">PA</span>
-    <span class="chamber-label lbl-rv" id="lblRv">RV</span>
-    <span class="chamber-label lbl-ra" id="lblRa">RA</span>
-  </div>
   <div class="scroll-hint" id="scrollHint">
     <span>Explore</span>
     <div class="scroll-chevron"></div>
@@ -467,23 +423,6 @@ body {
   <div class="section-label" id="sectionLabel">Interactive Hemodynamic Tools</div>
 
   <div class="cards">
-    <!-- Hemodynamic Waveforms -->
-    <a class="tool-card" id="cardHemo" href="/hemodynamics/">
-      <div class="card-canvas-wrap">
-        <canvas id="canvasHemo"></canvas>
-      </div>
-      <div class="card-info">
-        <div class="card-title">Hemodynamic Waveforms <span class="card-arrow">&rarr;</span></div>
-        <div class="card-desc">Interactive hemodynamic waveform simulator with 12 lessons covering valvular disease, HOCM, constrictive vs restrictive, tamponade, and pulmonary hypertension.</div>
-        <div class="card-tags">
-          <span class="card-tag">12 Lessons</span>
-          <span class="card-tag">HOCM / PVC</span>
-          <span class="card-tag">Resp Variation</span>
-          <span class="card-tag">Gorlin / Hakki</span>
-        </div>
-      </div>
-    </a>
-
     <!-- RHC Calculator -->
     <a class="tool-card" id="cardRhc" href="/rhc/">
       <div class="card-canvas-wrap">
@@ -497,6 +436,23 @@ body {
           <span class="card-tag">PVR / SVR</span>
           <span class="card-tag">Gorlin</span>
           <span class="card-tag">PH Class</span>
+        </div>
+      </div>
+    </a>
+
+    <!-- Hemodynamic Waveforms -->
+    <a class="tool-card" id="cardHemo" href="/hemodynamics/">
+      <div class="card-canvas-wrap">
+        <canvas id="canvasHemo"></canvas>
+      </div>
+      <div class="card-info">
+        <div class="card-title">Hemodynamic Waveforms <span class="card-arrow">&rarr;</span></div>
+        <div class="card-desc">Interactive hemodynamic waveform simulator with 12 lessons covering valvular disease, HOCM, constrictive vs restrictive, tamponade, and pulmonary hypertension.</div>
+        <div class="card-tags">
+          <span class="card-tag">Valvular Disease</span>
+          <span class="card-tag">HOCM</span>
+          <span class="card-tag">CP / RCM / Tamponade</span>
+          <span class="card-tag">Pulm HTN</span>
         </div>
       </div>
     </a>
@@ -568,8 +524,7 @@ body {
   var base = document.getElementById('logoBase');
   var ekg = document.getElementById('logoEkg');
   var balloon = document.getElementById('swanBalloon');
-  var pullbackCanvas = document.getElementById('pullbackCanvas');
-  var pullbackCtx = pullbackCanvas.getContext('2d');
+  // Pullback waveform data (used by hemodynamics card animation)
   var TOP = 58, BOT = 76;
 
   // ── Animation cache: play once per device, refresh after 48 hours ──
@@ -640,64 +595,14 @@ body {
     else{return hRa((((t-0.82)/0.18)*3)%1);}
   }
 
-  // Pre-compute pullback points
-  var PW=700, PH=100, PDPR=2;
-  pullbackCtx.scale(PDPR,PDPR);
-  var pullPts=[];
-  for(var i=0;i<=PW;i++){
-    var t=i/PW, mmhg=pullbackValue(t);
-    var yFrac=mmhg/30;
-    pullPts.push({x:i, y:PH*0.95-yFrac*PH*0.88});
+  // Pre-compute pullback data points (normalized — used by card animation)
+  var PULL_N = 700;
+  var pullData = [];
+  for (var i = 0; i <= PULL_N; i++) {
+    var t = i / PULL_N;
+    pullData.push({ t: t, mmhg: pullbackValue(t) });
   }
 
-  function animatePullback(cb) {
-    pullbackCanvas.style.opacity='1';
-    var dur=4000, t0=performance.now();
-    function frame(){
-      var now=performance.now(), p=Math.min((now-t0)/dur,1);
-      var end=Math.floor(p*PW);
-      pullbackCtx.clearRect(0,0,PW,PH);
-      if(end>1){
-        pullbackCtx.save();
-        pullbackCtx.shadowColor='rgba(255,50,50,0.4)';
-        pullbackCtx.shadowBlur=6;
-        pullbackCtx.strokeStyle='rgba(220,50,50,0.8)';
-        pullbackCtx.lineWidth=2.2;
-        pullbackCtx.lineCap='round';
-        pullbackCtx.lineJoin='round';
-        pullbackCtx.beginPath();
-        pullbackCtx.moveTo(pullPts[0].x,pullPts[0].y);
-        for(var i=1;i<=end;i++) pullbackCtx.lineTo(pullPts[i].x,pullPts[i].y);
-        pullbackCtx.stroke();
-        pullbackCtx.restore();
-        pullbackCtx.strokeStyle='rgba(220,50,50,0.8)';
-        pullbackCtx.lineWidth=1.6;
-        pullbackCtx.lineCap='round';
-        pullbackCtx.lineJoin='round';
-        pullbackCtx.beginPath();
-        pullbackCtx.moveTo(pullPts[0].x,pullPts[0].y);
-        for(var i=1;i<=end;i++) pullbackCtx.lineTo(pullPts[i].x,pullPts[i].y);
-        pullbackCtx.stroke();
-        if(p<1){
-          pullbackCtx.save();
-          pullbackCtx.shadowColor='rgba(255,60,60,0.9)';
-          pullbackCtx.shadowBlur=12;
-          pullbackCtx.fillStyle='rgba(255,60,60,0.9)';
-          pullbackCtx.beginPath();
-          pullbackCtx.arc(pullPts[end].x,pullPts[end].y,2.5,0,Math.PI*2);
-          pullbackCtx.fill();
-          pullbackCtx.restore();
-        }
-      }
-      if(p>0.05) document.getElementById('lblPcwp').classList.add('show');
-      if(p>0.30) document.getElementById('lblPa').classList.add('show');
-      if(p>0.58) document.getElementById('lblRv').classList.add('show');
-      if(p>0.84) document.getElementById('lblRa').classList.add('show');
-      if(p<1) requestAnimationFrame(frame);
-      else if(cb) cb();
-    }
-    requestAnimationFrame(frame);
-  }
 
   function pulseBalloon(beats,beatMs,cb) {
     var count=0;
@@ -754,18 +659,13 @@ body {
       // Balloon inflates
       setTimeout(function() {
         balloon.classList.add('inflate');
-        // 3. Balloon pulses (PA pulsation)
+        // 3. Balloon pulses (PA pulsation) then reveal cards
         setTimeout(function() {
           pulseBalloon(3, 750, function() {
-            // 4. Show chamber labels + start pullback
-            document.getElementById('chamberLabels').classList.add('show');
-            animatePullback(function() {
-              // 5. After pullback, show scroll hint + reveal cards
-              setTimeout(function() {
-                document.getElementById('scrollHint').classList.add('show');
-                revealCards();
-              }, 400);
-            });
+            setTimeout(function() {
+              document.getElementById('scrollHint').classList.add('show');
+              revealCards();
+            }, 400);
           });
         }, 500);
       }, 1700);
@@ -848,29 +748,6 @@ body {
     balloon.style.transform = 'scale(1)';
     balloon.classList.add('inflate');
 
-    // Show pullback fully
-    pullbackCanvas.style.opacity = '1';
-    pullbackCtx.clearRect(0, 0, PW, PH);
-    pullbackCtx.save();
-    pullbackCtx.shadowColor = 'rgba(255,50,50,0.4)';
-    pullbackCtx.shadowBlur = 6;
-    pullbackCtx.strokeStyle = 'rgba(220,50,50,0.8)';
-    pullbackCtx.lineWidth = 2.2;
-    pullbackCtx.lineCap = 'round';
-    pullbackCtx.lineJoin = 'round';
-    pullbackCtx.beginPath();
-    pullbackCtx.moveTo(pullPts[0].x, pullPts[0].y);
-    for (var i = 1; i < pullPts.length; i++) pullbackCtx.lineTo(pullPts[i].x, pullPts[i].y);
-    pullbackCtx.stroke();
-    pullbackCtx.restore();
-
-    // Show chamber labels
-    document.getElementById('chamberLabels').classList.add('show');
-    document.getElementById('lblPcwp').classList.add('show');
-    document.getElementById('lblPa').classList.add('show');
-    document.getElementById('lblRv').classList.add('show');
-    document.getElementById('lblRa').classList.add('show');
-
     // Show scroll hint
     scrollHintEl.classList.add('show');
 
@@ -944,94 +821,59 @@ body {
   /* ══════════════════════════════════════
      HEMODYNAMIC WAVEFORMS CARD — RA + LV overlay
      ══════════════════════════════════════ */
-  function hemoRA(beat) {
-    var v = 4;
-    v += 3.5 * Math.exp(-0.5 * Math.pow((beat - 0.06) / 0.032, 2)); // a wave
-    v -= 2.0 * Math.exp(-0.5 * Math.pow((beat - 0.18) / 0.038, 2)); // x descent
-    v += 2.5 * Math.exp(-0.5 * Math.pow((beat - 0.40) / 0.048, 2)); // v wave
-    v -= 2.0 * Math.exp(-0.5 * Math.pow((beat - 0.55) / 0.038, 2)); // y descent
-    return Math.max(0, v);
-  }
-
-  function hemoLV(beat) {
-    if (beat < 0.04) return 10 + (beat / 0.04) * 110;
-    if (beat < 0.25) return 120;
-    if (beat < 0.35) return 120 - ((beat - 0.25) / 0.10) * 110;
-    // Diastole
-    var diaT = (beat - 0.35) / 0.65;
-    return 10 + 4 * Math.exp(-0.5 * Math.pow((diaT - 0.85) / 0.12, 2)); // a-wave bump at end-diastole
-  }
-
   function drawHemoFrame(s, progress) {
     var ctx = s.ctx, W = s.w, H = s.h;
     ctx.clearRect(0, 0, W, H);
 
-    // Grid
-    ctx.strokeStyle = 'rgba(255,255,255,0.04)';
-    ctx.lineWidth = 0.5;
-    for (var mmhg = 0; mmhg <= 120; mmhg += 20) {
-      var gy = H * 0.92 - (mmhg / 140) * H * 0.82;
-      ctx.beginPath(); ctx.moveTo(W * 0.05, gy); ctx.lineTo(W * 0.95, gy); ctx.stroke();
-    }
+    // Wipe reveal — draw pullback into card canvas
+    var reveal = Math.min(progress * 1.2, 1);
+    var endIdx = Math.floor(reveal * PULL_N);
+    if (endIdx < 2) return;
 
-    // Wipe reveal
-    var reveal = Math.min(progress * 1.3, 1);
-    var maxX = W * 0.06 + reveal * W * 0.88;
-
-    // RA trace (blue, low amplitude)
+    // Map pullback data to card canvas coordinates
+    var maxMmhg = 30; // pullback scale
     ctx.save();
-    ctx.beginPath();
-    ctx.rect(0, 0, maxX, H);
-    ctx.clip();
-    ctx.shadowColor = 'rgba(74,144,217,0.4)';
+    ctx.shadowColor = 'rgba(255,50,50,0.4)';
     ctx.shadowBlur = 6;
-    ctx.strokeStyle = '#4a90d9';
+    ctx.strokeStyle = 'rgba(220,50,50,0.8)';
     ctx.lineWidth = 2;
+    ctx.lineCap = 'round';
+    ctx.lineJoin = 'round';
     ctx.beginPath();
-    for (var px = 0; px < W; px++) {
-      var b = ((px / W) * 2.2) % 1;
-      var ra = hemoRA(b);
-      var y = H * 0.92 - (ra / 140) * H * 0.82;
-      if (px === 0) ctx.moveTo(px, y); else ctx.lineTo(px, y);
+    for (var i = 0; i <= endIdx; i++) {
+      var x = (i / PULL_N) * W;
+      var y = H * 0.92 - (pullData[i].mmhg / maxMmhg) * H * 0.78;
+      if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
     }
     ctx.stroke();
     ctx.restore();
 
-    // LV trace (red, full amplitude)
-    ctx.save();
-    ctx.beginPath();
-    ctx.rect(0, 0, maxX, H);
-    ctx.clip();
-    ctx.shadowColor = 'rgba(255,82,82,0.4)';
-    ctx.shadowBlur = 6;
-    ctx.strokeStyle = '#ff5252';
-    ctx.lineWidth = 2;
-    ctx.beginPath();
-    for (var px2 = 0; px2 < W; px2++) {
-      var b2 = ((px2 / W) * 2.2) % 1;
-      var lv = hemoLV(b2);
-      var y2 = H * 0.92 - (lv / 140) * H * 0.82;
-      if (px2 === 0) ctx.moveTo(px2, y2); else ctx.lineTo(px2, y2);
+    // Glowing leading dot
+    if (progress < 1) {
+      var dotX = (endIdx / PULL_N) * W;
+      var dotY = H * 0.92 - (pullData[endIdx].mmhg / maxMmhg) * H * 0.78;
+      ctx.save();
+      ctx.shadowColor = 'rgba(255,60,60,0.9)';
+      ctx.shadowBlur = 10;
+      ctx.fillStyle = 'rgba(255,60,60,0.9)';
+      ctx.beginPath();
+      ctx.arc(dotX, dotY, 2.5, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.restore();
     }
-    ctx.stroke();
-    ctx.restore();
 
-    // Labels
-    if (progress > 0.3) {
-      ctx.font = '600 10px DM Sans, sans-serif';
-      ctx.textAlign = 'left';
-      ctx.globalAlpha = Math.min((progress - 0.3) * 3, 0.6);
-      ctx.fillStyle = '#4a90d9';
-      ctx.fillText('RA', W * 0.06, H * 0.78);
-      ctx.fillStyle = '#ff5252';
-      ctx.fillText('LV', W * 0.06, H * 0.22);
-      ctx.globalAlpha = 1;
-    }
-    if (progress > 0.6) {
-      ctx.font = '500 9px DM Sans, sans-serif';
-      ctx.fillStyle = 'rgba(124,77,255,0.4)';
-      ctx.textAlign = 'right';
-      ctx.fillText('12 lessons', W * 0.94, H * 0.14);
+    // Chamber labels — fade in as trace reaches each segment
+    if (progress > 0.05) {
+      ctx.save();
+      ctx.font = '600 9px DM Sans, sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillStyle = 'rgba(220,80,80,0.5)';
+      var labelY = H * 0.98;
+      if (progress > 0.05) { ctx.globalAlpha = Math.min((progress - 0.05) * 8, 0.7); ctx.fillText('PCWP', W * 0.11, labelY); }
+      if (progress > 0.28) { ctx.globalAlpha = Math.min((progress - 0.28) * 6, 0.7); ctx.fillText('PA', W * 0.38, labelY); }
+      if (progress > 0.55) { ctx.globalAlpha = Math.min((progress - 0.55) * 6, 0.7); ctx.fillText('RV', W * 0.66, labelY); }
+      if (progress > 0.82) { ctx.globalAlpha = Math.min((progress - 0.82) * 6, 0.7); ctx.fillText('RA', W * 0.91, labelY); }
+      ctx.restore();
     }
   }
 
@@ -1640,13 +1482,6 @@ body {
     pulseBalloon(5, 750, function() { balloonPulsing = false; });
   });
 
-  // Pullback hover — replay the pullback tracing
-  var pullbackReplaying = false;
-  pullbackCanvas.addEventListener('mouseenter', function() {
-    if (pullbackReplaying || !cardsRevealed) return;
-    pullbackReplaying = true;
-    animatePullback(function() { pullbackReplaying = false; });
-  });
 
   // Wait for images to load before setting up hover
   window.addEventListener('load', function() {
