@@ -1,0 +1,3074 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CathMath — Hemodynamic Waveforms</title>
+<style>
+/* ===== RESET & BASE ===== */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { height: 100%; overflow: hidden; }
+body {
+  font-family: -apple-system, "Helvetica Neue", Helvetica, Arial, sans-serif;
+  font-size: 14px;
+  background: var(--bg);
+  color: var(--text);
+}
+
+/* ===== CSS VARIABLES — DARK (default) ===== */
+:root {
+  --bg: #0b0e14;
+  --bg2: #101520;
+  --bg3: #161b26;
+  --panel: #131922;
+  --panel2: #1a2030;
+  --border: rgba(255,255,255,0.08);
+  --border2: rgba(255,255,255,0.12);
+  --text: #c8cdd6;
+  --text-hi: #e8ecf2;
+  --text-dim: #6b7a8d;
+  --navy: #0d2240;
+  --accent: #4a90d9;
+  --ecg-green: #00e676;
+  --right-blue: #42a5f5;
+  --left-red: #ef5350;
+  --clr-ra: #26c6da;
+  --clr-rv: #42a5f5;
+  --clr-pa: #ab47bc;
+  --clr-pcwp: #ec407a;
+  --clr-lv: #ef5350;
+  --clr-ao: #ffa726;
+  --gradient-fill: rgba(255,193,7,0.18);
+  --grid-minor: rgba(255,255,255,0.04);
+  --grid-major: rgba(255,255,255,0.09);
+  --normal-ghost: rgba(255,255,255,0.55);
+  --sidebar-w: 180px;
+  --nav-h: 42px;
+  --header-h: 38px;
+  --controls-h: 54px;
+}
+
+/* ===== LIGHT MODE ===== */
+body.light {
+  --bg: #f0f2f5;
+  --bg2: #e4e8ec;
+  --bg3: #dce0e6;
+  --panel: #ffffff;
+  --panel2: #f6f7f9;
+  --border: rgba(0,0,0,0.10);
+  --border2: rgba(0,0,0,0.16);
+  --text: #1a1a2e;
+  --text-hi: #0d0d1a;
+  --text-dim: #6b7280;
+  --ecg-green: #2e7d32;
+  --right-blue: #1565c0;
+  --left-red: #c62828;
+  --clr-ra: #00838f;
+  --clr-rv: #1565c0;
+  --clr-pa: #7b1fa2;
+  --clr-pcwp: #ad1457;
+  --clr-lv: #c62828;
+  --clr-ao: #e65100;
+  --gradient-fill: rgba(255,152,0,0.22);
+  --grid-minor: rgba(0,0,0,0.05);
+  --grid-major: rgba(0,0,0,0.12);
+  --normal-ghost: rgba(0,0,0,0.40);
+}
+
+/* ===== SITE NAV ===== */
+.site-nav {
+  background: #0a1628; color: #fff;
+  display: flex; align-items: center;
+  padding: 0 24px; height: var(--nav-h);
+  position: relative; z-index: 200;
+  border-bottom: 1px solid rgba(255,255,255,0.06);
+}
+body.light .site-nav { background: #0a1628; color: #fff; }
+.nav-brand { font-size: 16px; font-weight: 800; letter-spacing: 0.5px; margin-right: 32px; color: #fff; text-decoration: none; }
+.nav-tabs { display: flex; gap: 0; height: 100%; }
+.nav-tab {
+  display: flex; align-items: center; padding: 0 18px; height: var(--nav-h);
+  font-size: 13px; font-weight: 600; color: rgba(255,255,255,0.5);
+  text-decoration: none; border-bottom: 2px solid transparent;
+  transition: color 0.2s, border-color 0.2s;
+}
+.nav-tab:hover { color: rgba(255,255,255,0.85); }
+.nav-tab.active { color: #fff; border-bottom-color: #4a90d9; }
+.nav-right { margin-left: auto; display: flex; align-items: center; gap: 16px; }
+.nav-credit { font-size: 11px; opacity: 0.5; font-weight: 400; }
+.nav-right button {
+  background: rgba(255,255,255,0.1); color: #fff;
+  border: 1px solid rgba(255,255,255,0.2);
+  padding: 4px 12px; border-radius: 4px; cursor: pointer;
+  font-size: 11px; font-weight: 600; transition: background 0.2s;
+}
+.nav-right button:hover { background: rgba(255,255,255,0.2); }
+
+/* ===== PAGE HEADER ===== */
+.page-header {
+  background: var(--bg2);
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 0 24px; height: var(--header-h);
+  border-bottom: 1px solid var(--border);
+}
+.page-header h1 { font-size: 15px; font-weight: 700; color: var(--text-hi); }
+.page-header .page-sub { font-size: 11px; color: var(--text-dim); margin-left: 12px; }
+
+/* ===== LAYOUT ===== */
+.app-body {
+  display: flex;
+  height: calc(100vh - var(--nav-h) - var(--header-h));
+}
+
+/* ===== SIDEBAR ===== */
+.sidebar {
+  width: var(--sidebar-w); min-width: var(--sidebar-w);
+  background: var(--panel);
+  border-right: 1px solid var(--border);
+  overflow-y: auto;
+  padding: 10px 0;
+}
+.sidebar-label {
+  font-size: 9px; font-weight: 700; letter-spacing: 1.2px; text-transform: uppercase;
+  color: var(--text-dim); padding: 12px 16px 4px; user-select: none;
+}
+.sidebar-sep { height: 1px; background: var(--border); margin: 6px 12px; }
+.lesson-btn {
+  display: flex; align-items: center; gap: 8px;
+  width: 100%; padding: 7px 16px; border: none; background: none;
+  font-size: 12.5px; font-weight: 500; color: var(--text);
+  cursor: pointer; text-align: left; transition: background 0.15s;
+  border-left: 3px solid transparent;
+}
+.lesson-btn:hover { background: var(--bg2); }
+.lesson-btn.active { background: var(--bg2); color: var(--text-hi); font-weight: 700; border-left-color: var(--accent); }
+.lesson-btn .ldot {
+  width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0;
+}
+
+/* ===== MAIN AREA ===== */
+.main-area {
+  flex: 1; display: flex; flex-direction: column;
+  overflow: hidden; background: var(--bg);
+}
+
+/* ===== CANVAS AREA ===== */
+.canvas-area { flex: 1; position: relative; overflow: hidden; }
+#ecgCanvas { width: 100%; height: 50px; display: block; border-bottom: 1px solid var(--border); }
+#waveCanvas { width: 100%; display: block; }
+
+/* ===== CONTROLS ROW ===== */
+.controls-row {
+  display: flex; align-items: center; gap: 20px; flex-wrap: wrap;
+  padding: 8px 20px; height: auto; min-height: var(--controls-h);
+  background: var(--panel); border-top: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
+}
+.ctrl-group { display: flex; align-items: center; gap: 6px; }
+.ctrl-label { font-size: 11px; font-weight: 600; color: var(--text-dim); white-space: nowrap; }
+.ctrl-val { font-size: 11px; font-weight: 700; color: var(--text-hi); min-width: 32px; text-align: center; }
+input[type="range"] {
+  -webkit-appearance: none; appearance: none;
+  height: 4px; border-radius: 2px; background: var(--border2);
+  outline: none; cursor: pointer;
+}
+input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none; width: 14px; height: 14px;
+  border-radius: 50%; background: var(--accent); border: 2px solid var(--bg);
+  cursor: pointer;
+}
+.ctrl-check { display: flex; align-items: center; gap: 5px; cursor: pointer; }
+.ctrl-check input { cursor: pointer; }
+.ctrl-check label { font-size: 11px; font-weight: 500; color: var(--text); cursor: pointer; }
+
+/* Trace toggles */
+.trace-toggles { display: flex; gap: 3px; }
+.trace-tog {
+  font-size: 10px; font-weight: 700; padding: 3px 8px;
+  border: 1px solid var(--border2); border-radius: 3px;
+  cursor: pointer; background: none; color: var(--text-dim);
+  transition: all 0.15s;
+}
+.trace-tog.on { border-color: currentColor; }
+
+/* ===== TEACHING PANEL ===== */
+.teaching-panel {
+  height: 200px; min-height: 120px;
+  overflow-y: auto; padding: 14px 20px;
+  background: var(--panel2); border-top: 1px solid var(--border);
+}
+.teaching-panel h3 {
+  font-size: 13px; font-weight: 700; color: var(--text-hi);
+  margin-bottom: 8px; display: flex; align-items: center; gap: 8px;
+}
+.teaching-panel h3 .tag {
+  font-size: 9px; font-weight: 700; padding: 2px 6px; border-radius: 3px;
+  background: var(--accent); color: #fff; text-transform: uppercase; letter-spacing: 0.5px;
+}
+.tp-grid { display: grid; grid-template-columns: 280px 1fr; gap: 16px; }
+.tp-pearls { list-style: none; }
+.tp-pearls li {
+  font-size: 12px; line-height: 1.5; color: var(--text);
+  padding: 3px 0; padding-left: 14px; position: relative;
+}
+.tp-pearls li::before {
+  content: "▸"; position: absolute; left: 0; color: var(--accent); font-size: 11px;
+}
+.tp-body { font-size: 12px; line-height: 1.6; color: var(--text); }
+.tp-body strong { color: var(--text-hi); }
+.tp-body .highlight { color: #ffc107; font-weight: 600; }
+
+/* ===== CALCULATOR PANEL ===== */
+.calc-panel {
+  background: var(--panel); border: 1px solid var(--border);
+  border-radius: 6px; padding: 12px 16px; margin-top: 10px;
+}
+.calc-panel h4 { font-size: 12px; font-weight: 700; color: var(--accent); margin-bottom: 8px; }
+.calc-row { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; }
+.calc-row label { font-size: 11px; color: var(--text-dim); min-width: 80px; }
+.calc-row input[type="number"] {
+  width: 72px; padding: 3px 6px; border: 1px solid var(--border2);
+  border-radius: 3px; background: var(--bg); color: var(--text-hi);
+  font-size: 12px; font-weight: 600; text-align: center;
+}
+.calc-row input[type="number"]:focus { outline: none; border-color: var(--accent); }
+.calc-result {
+  font-size: 13px; font-weight: 700; padding: 6px 10px;
+  background: var(--bg2); border-radius: 4px; margin-top: 8px;
+  color: var(--text-hi);
+}
+.calc-result .val { color: #ffc107; font-size: 15px; }
+.calc-result .sev { font-size: 11px; font-weight: 600; margin-left: 8px; }
+.sev-mild { color: #66bb6a; }
+.sev-mod { color: #ffa726; }
+.sev-sev { color: #ef5350; }
+.sev-crit { color: #ff1744; }
+
+/* ===== EQUATIONS PANEL ===== */
+#equationsPanel {
+  position: absolute; inset: 0; overflow-y: auto; overflow-x: hidden;
+  background: var(--bg); padding: 24px 28px; display: none; z-index: 5;
+}
+#equationsPanel.active { display: block; }
+.eq-header {
+  margin-bottom: 20px; padding-bottom: 14px; border-bottom: 1px solid var(--border2);
+}
+.eq-header h2 { font-size: 16px; font-weight: 700; color: var(--text-hi); margin-bottom: 4px; }
+.eq-header p { font-size: 11.5px; color: var(--text-dim); line-height: 1.5; }
+.eq-header a { color: var(--accent); text-decoration: none; }
+.eq-header a:hover { text-decoration: underline; }
+.eq-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+@media (max-width: 900px) { .eq-grid { grid-template-columns: 1fr; } }
+.eq-card {
+  background: var(--panel); border: 1px solid var(--border);
+  border-radius: 8px; padding: 16px 18px; display: flex; flex-direction: column;
+}
+.eq-card h3 {
+  font-size: 12px; font-weight: 700; color: var(--accent); margin-bottom: 10px;
+  text-transform: uppercase; letter-spacing: 0.6px;
+}
+.eq-formula {
+  background: var(--bg2); border-radius: 6px; padding: 12px 16px; margin-bottom: 10px;
+  text-align: center; font-size: 15px; color: var(--text-hi); line-height: 1.8;
+}
+.eq-formula .frac { display: inline-flex; flex-direction: column; align-items: center; vertical-align: middle; margin: 0 3px; }
+.eq-formula .frac-num { border-bottom: 1.5px solid var(--text-dim); padding: 0 6px 2px; }
+.eq-formula .frac-den { padding: 2px 6px 0; }
+.eq-formula .eq-sym { color: var(--text-dim); margin: 0 4px; }
+.eq-formula .eq-var { color: #ffc107; font-weight: 600; }
+.eq-formula .eq-const { color: var(--text-dim); }
+.eq-explain {
+  font-size: 11.5px; color: var(--text); line-height: 1.65; margin-bottom: 10px;
+}
+.eq-explain strong { color: var(--text-hi); }
+.eq-explain .eq-tip { color: #66bb6a; font-style: italic; }
+.eq-mini-calc {
+  background: var(--bg); border: 1px solid var(--border); border-radius: 5px;
+  padding: 8px 10px; margin-top: auto;
+}
+.eq-mini-calc .mc-title { font-size: 10px; text-transform: uppercase; letter-spacing: 0.5px; color: var(--text-dim); margin-bottom: 6px; font-weight: 600; }
+.eq-mini-calc .mc-row { display: flex; align-items: center; gap: 6px; margin-bottom: 4px; flex-wrap: wrap; }
+.eq-mini-calc label { font-size: 10.5px; color: var(--text-dim); min-width: 55px; }
+.eq-mini-calc input[type="number"] {
+  width: 58px; padding: 2px 4px; border: 1px solid var(--border2);
+  border-radius: 3px; background: var(--bg2); color: var(--text-hi);
+  font-size: 11px; font-weight: 600; text-align: center;
+}
+.eq-mini-calc input[type="number"]:focus { outline: none; border-color: var(--accent); }
+.eq-mini-calc .mc-result {
+  font-size: 12px; font-weight: 700; color: #ffc107; padding: 4px 0 0;
+}
+.eq-interp { font-size: 10.5px; line-height: 1.5; margin-top: 8px; color: var(--text); }
+.eq-interp strong { color: var(--text-hi); }
+.eq-norm { color: #66bb6a; }
+.eq-warn { color: #ffa726; }
+.eq-alert { color: #ef5350; }
+
+/* ===== RESIZE HANDLE ===== */
+.resize-handle {
+  height: 6px; cursor: ns-resize; background: var(--border);
+  transition: background 0.15s; position: relative;
+  display: flex; align-items: center; justify-content: center;
+}
+.resize-handle::after {
+  content: ''; width: 36px; height: 3px; border-radius: 2px;
+  background: var(--text-dim); opacity: 0.4; transition: opacity 0.2s;
+}
+.resize-handle:hover { background: var(--accent); }
+.resize-handle:hover::after { opacity: 0.9; background: #fff; }
+.resize-hint {
+  position: absolute; top: -22px; left: 50%; transform: translateX(-50%);
+  font-size: 10px; color: var(--text-dim); pointer-events: none;
+  opacity: 0; transition: opacity 0.3s;
+  white-space: nowrap;
+}
+.resize-handle:hover .resize-hint { opacity: 1; }
+@keyframes handlePulse {
+  0%, 100% { background: var(--border); }
+  50% { background: var(--accent); }
+}
+.resize-handle.pulse { animation: handlePulse 0.8s ease 2; }
+
+/* ===== SCROLLBAR ===== */
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: var(--text-dim); }
+</style>
+</head>
+<body>
+
+<!-- SITE NAV -->
+<div class="site-nav">
+  <a href="/" class="nav-brand">CathMath</a>
+  <div class="nav-tabs">
+    <a href="/rhc/" class="nav-tab">RHC Calculator</a>
+    <a href="/pvloop/" class="nav-tab">PV Loops</a>
+    <a href="/ekg/" class="nav-tab">EKG Simulator</a>
+    <a href="/embryology/" class="nav-tab">Embryology</a>
+    <a href="/hemodynamics/" class="nav-tab active">Hemodynamics</a>
+  </div>
+  <div class="nav-right">
+    <div class="nav-credit">Developer: Saro Avedikian, MD, MPH</div>
+    <button id="modeToggle" onclick="toggleMode()">Light Mode</button>
+  </div>
+</div>
+
+<!-- PAGE HEADER -->
+<div class="page-header">
+  <div style="display:flex;align-items:baseline;gap:12px;">
+    <h1>Hemodynamic Waveforms</h1>
+    <span class="page-sub">Interactive Waveform Atlas &amp; Teaching Tool</span>
+  </div>
+</div>
+
+<!-- APP BODY -->
+<div class="app-body">
+
+  <!-- SIDEBAR -->
+  <div class="sidebar">
+    <div class="sidebar-label">Valvular</div>
+    <button class="lesson-btn active" data-lesson="normal" onclick="switchLesson('normal')">
+      <span class="ldot" style="background:#666"></span> Normal Waveforms
+    </button>
+    <button class="lesson-btn" data-lesson="as" onclick="switchLesson('as')">
+      <span class="ldot" style="background:#ef5350"></span> Aortic Stenosis
+    </button>
+    <button class="lesson-btn" data-lesson="ms" onclick="switchLesson('ms')">
+      <span class="ldot" style="background:#ef5350"></span> Mitral Stenosis
+    </button>
+    <button class="lesson-btn" data-lesson="mr" onclick="switchLesson('mr')">
+      <span class="ldot" style="background:#ef5350"></span> Mitral Regurg
+    </button>
+    <button class="lesson-btn" data-lesson="ar" onclick="switchLesson('ar')">
+      <span class="ldot" style="background:#ef5350"></span> Aortic Regurg
+    </button>
+    <button class="lesson-btn" data-lesson="tr" onclick="switchLesson('tr')">
+      <span class="ldot" style="background:#42a5f5"></span> Tricuspid Regurg
+    </button>
+    <div class="sidebar-sep"></div>
+    <div class="sidebar-label">Myopathic</div>
+    <button class="lesson-btn" data-lesson="hocm" onclick="switchLesson('hocm')">
+      <span class="ldot" style="background:#ffa726"></span> HOCM
+    </button>
+    <div class="sidebar-sep"></div>
+    <div class="sidebar-label">Pericardial</div>
+    <button class="lesson-btn" data-lesson="cp" onclick="switchLesson('cp')">
+      <span class="ldot" style="background:#66bb6a"></span> Constrictive
+    </button>
+    <button class="lesson-btn" data-lesson="rcm" onclick="switchLesson('rcm')">
+      <span class="ldot" style="background:#ffca28"></span> Restrictive
+    </button>
+    <button class="lesson-btn" data-lesson="tamp" onclick="switchLesson('tamp')">
+      <span class="ldot" style="background:#ef5350"></span> Tamponade
+    </button>
+    <div class="sidebar-sep"></div>
+    <div class="sidebar-label">Other</div>
+    <button class="lesson-btn" data-lesson="ph" onclick="switchLesson('ph')">
+      <span class="ldot" style="background:#ab47bc"></span> Pulm Hypertension
+    </button>
+    <button class="lesson-btn" data-lesson="eq" onclick="switchLesson('eq')">
+      <span class="ldot" style="background:#ffc107"></span> Equations
+    </button>
+  </div>
+
+  <!-- MAIN AREA -->
+  <div class="main-area">
+    <div class="canvas-area" id="canvasArea">
+      <canvas id="ecgCanvas"></canvas>
+      <canvas id="waveCanvas"></canvas>
+      <div id="equationsPanel"></div>
+    </div>
+
+    <!-- CONTROLS ROW -->
+    <div class="controls-row">
+      <div class="ctrl-group">
+        <span class="ctrl-label">HR</span>
+        <input type="range" id="hrSlider" min="40" max="140" value="72" style="width:100px" oninput="updateHR(this.value)">
+        <span class="ctrl-val" id="hrVal">72</span>
+        <span class="ctrl-label">bpm</span>
+      </div>
+      <div class="ctrl-group" id="severityGroup" style="display:none">
+        <span class="ctrl-label">Severity</span>
+        <input type="range" id="sevSlider" min="0" max="100" value="80" style="width:110px" oninput="updateSeverity(this.value)">
+        <span class="ctrl-val" id="sevVal">Severe</span>
+      </div>
+      <div class="ctrl-group">
+        <button class="trace-tog on" id="pauseBtn" onclick="togglePause()" style="min-width:28px;font-size:13px" title="Pause/Play (Space)">⏸</button>
+      </div>
+      <div class="ctrl-group">
+        <span class="ctrl-label">Speed</span>
+        <button class="trace-tog" id="speed25" onclick="setSpeed(25)">25mm/s</button>
+        <button class="trace-tog on" id="speed50" onclick="setSpeed(50)">50mm/s</button>
+      </div>
+      <div class="ctrl-group">
+        <span class="ctrl-label">Traces</span>
+        <div class="trace-toggles" id="traceToggles"></div>
+      </div>
+      <div class="ctrl-group" id="pvcGroup" style="display:none">
+        <button class="trace-tog" id="pvcBtn" onclick="triggerPVC()" style="background:rgba(255,23,68,0.15);color:#ff1744;border-color:#ff1744">Trigger PVC</button>
+      </div>
+      <div class="ctrl-group" id="provocationGroup" style="display:none">
+        <span class="ctrl-label">Provocation</span>
+        <input type="range" id="provSlider" min="-100" max="100" value="0" style="width:90px" oninput="updateProvocation(this.value)">
+        <span class="ctrl-val" id="provVal" style="min-width:60px;font-size:10px">Baseline</span>
+      </div>
+      <div class="ctrl-group" id="acuteGroup" style="display:none">
+        <button class="trace-tog on" id="acuteBtn" onclick="setAcute(true)">Acute</button>
+        <button class="trace-tog" id="chronicBtn" onclick="setAcute(false)">Chronic</button>
+      </div>
+      <div class="ctrl-group" id="phTypeGroup" style="display:none">
+        <button class="trace-tog on" id="phPreBtn" onclick="setPHType('pre')" style="font-size:10px">Pre-cap</button>
+        <button class="trace-tog" id="phPostBtn" onclick="setPHType('post')" style="font-size:10px">Post-cap</button>
+        <button class="trace-tog" id="phCombBtn" onclick="setPHType('combined')" style="font-size:10px">Combined</button>
+      </div>
+      <div class="ctrl-group" id="respGroup" style="display:none">
+        <button class="trace-tog" id="respBtn" onclick="toggleResp()" style="background:rgba(102,187,106,0.15);color:#66bb6a;border-color:#66bb6a">Respiration</button>
+      </div>
+      <div class="ctrl-check" id="compareGroup" style="display:none">
+        <input type="checkbox" id="compareNormal" onchange="toggleCompare()">
+        <label for="compareNormal">Compare Normal</label>
+      </div>
+      <div class="ctrl-check">
+        <input type="checkbox" id="showLabels" checked onchange="redrawNeeded=true">
+        <label for="showLabels">Labels</label>
+      </div>
+      <div class="ctrl-check">
+        <input type="checkbox" id="showAnnotations" checked onchange="redrawNeeded=true">
+        <label for="showAnnotations">a-c-v-x-y</label>
+      </div>
+    </div>
+
+    <!-- TEACHING PANEL -->
+    <div class="resize-handle" id="resizeHandle"><span class="resize-hint">Drag to resize</span></div>
+    <div class="teaching-panel" id="teachingPanel"></div>
+  </div>
+</div>
+
+<script>
+// ════════════════════════════════════════════════════════════════════
+// HEMODYNAMIC WAVEFORMS — Phase 1: Core Engine + Normal + AS + MS
+// ════════════════════════════════════════════════════════════════════
+
+// ── State ──
+let currentLesson = 'normal';
+let HR = 72;
+let speed = 50; // mm/s
+let severity = 80; // 0-100
+let compareNormal = false;
+let isDark = true;
+let redrawNeeded = true;
+let animId = null;
+let paused = false;
+let scrollX = 0;
+
+// HOCM post-PVC state
+let pvcState = 'none'; // 'none' | 'pvc' | 'pause' | 'post'
+let pvcBeatCountdown = 0; // beats remaining in current PVC state
+let pvcScrollStart = 0;
+let hocmProvocation = 0; // -1 to +1: negative=squat/phenylephrine, positive=valsalva/amyl
+
+// Respiratory cycle state (Phase 4: CP/RCM/Tamponade)
+let respPhase = 0; // 0→2π continuous respiratory cycle
+const RESP_RATE = 15; // breaths per minute
+let respEnabled = false; // only active for CP/RCM/Tamponade lessons
+
+const DPR = window.devicePixelRatio || 1;
+
+// Trace visibility
+let traceVis = {};
+
+// ── DOM refs ──
+const ecgCanvas = document.getElementById('ecgCanvas');
+const waveCanvas = document.getElementById('waveCanvas');
+const ecgCtx = ecgCanvas.getContext('2d');
+const waveCtx = waveCanvas.getContext('2d');
+const canvasArea = document.getElementById('canvasArea');
+const teachingPanel = document.getElementById('teachingPanel');
+
+// ════════════════════════════════════════════════════════════════════
+// WAVEFORM GENERATORS — Parameterized (extending landing page approach)
+// ════════════════════════════════════════════════════════════════════
+
+function gauss(beat, center, width) {
+  return Math.exp(-0.5 * Math.pow((beat - center) / width, 2));
+}
+
+function generateRA(beat, p) {
+  let v = p.mean;
+  v += p.aAmp * gauss(beat, p.aCenter, p.aWidth);
+  if (p.cAmp) v += p.cAmp * gauss(beat, p.cCenter || 0.12, p.cWidth || 0.02);
+  v -= p.xDepth * gauss(beat, p.xCenter, p.xWidth || 0.04);
+  v += p.vAmp * gauss(beat, p.vCenter, p.vWidth || 0.05);
+  v -= p.yDepth * gauss(beat, p.yCenter, p.yWidth || 0.04);
+  return Math.max(0, v);
+}
+
+function generateRV(beat, p) {
+  const uEnd = p.upEnd || 0.05;
+  const peakT = 0.08;               // Brief peak (more triangular than LV)
+  const ejectEnd = 0.22;            // End of ejection
+  const descEnd = p.descEnd || 0.30; // End of rapid descent
+  const diaEnd = p.diaEnd || 0.88;
+  if (beat < uEnd) {
+    // Rapid upstroke
+    return p.RVEDP + (beat / uEnd) * (p.RVSP - p.RVEDP);
+  } else if (beat < peakT) {
+    // Brief rounded peak
+    return p.RVSP;
+  } else if (beat < ejectEnd) {
+    // More triangular descent than LV — RV ejects into low-resistance pulmonary bed
+    const t = (beat - peakT) / (ejectEnd - peakT);
+    const dropTarget = p.RVSP * 0.4; // drops more during ejection than LV
+    return p.RVSP - t * (p.RVSP - dropTarget);
+  } else if (beat < descEnd) {
+    // Rapid final descent to diastolic
+    const t = (beat - ejectEnd) / (descEnd - ejectEnd);
+    const start = p.RVSP * 0.4;
+    const dipTarget = p.dipMin != null ? p.dipMin : p.RVEDP;
+    return start - (start - dipTarget) * (1 - Math.pow(1 - t, 2));
+  } else if (beat < diaEnd) {
+    // Gradual diastolic rise
+    const t = (beat - descEnd) / (diaEnd - descEnd);
+    const dipTarget = p.dipMin != null ? p.dipMin : p.RVEDP;
+    const endDia = p.RVEDP + (p.diaRise || 1);
+    return dipTarget + t * (endDia - dipTarget);
+  } else {
+    const t = (beat - diaEnd) / (1 - diaEnd);
+    const endDia = p.RVEDP + (p.diaRise || 1);
+    return endDia * (1 - t) + p.RVEDP * t;
+  }
+}
+
+function generatePA(beat, p) {
+  const uEnd = p.upEnd || 0.08;
+  const nStart = p.notchStart || 0.16;
+  const nEnd = p.notchEnd || 0.24;
+  if (beat < uEnd) {
+    return p.PADP + (beat / uEnd) * (p.PASP - p.PADP);
+  } else if (beat < nStart) {
+    const t = (beat - uEnd) / (nStart - uEnd);
+    const postPeak = p.PASP - t * (p.PASP - p.PADP) * 0.55;
+    return postPeak;
+  } else if (beat < nEnd) {
+    const mid = (nStart + nEnd) / 2;
+    const base = p.PADP + (p.PASP - p.PADP) * 0.35;
+    return base + (p.notchAmp || 2) * Math.sin(((beat - nStart) / (nEnd - nStart)) * Math.PI);
+  } else if (beat < 0.85) {
+    const decayStart = p.PADP + (p.PASP - p.PADP) * 0.4;
+    const t = (beat - nEnd) / (0.85 - nEnd);
+    return (decayStart - p.PADP) * Math.exp(-(p.decayRate || 2.0) * t) + p.PADP;
+  }
+  return p.PADP;
+}
+
+function generatePCWP(beat, p) {
+  let b = beat - (p.timeDelay || 0.06);
+  if (b < 0) b += 1;
+  let v = p.mean;
+  v += p.aAmp * gauss(b, p.aCenter || 0.08, p.aWidth || 0.04);
+  v -= (p.xDepth || 3) * gauss(b, p.xCenter || 0.20, p.xWidth || 0.05);
+  v += p.vAmp * gauss(b, p.vCenter || 0.42, p.vWidth || 0.06);
+  v -= (p.yDepth || 4) * gauss(b, p.yCenter || 0.58, p.yWidth || p.yWidthVal || 0.05);
+  return Math.max(0, v);
+}
+
+function generateLV(beat, p) {
+  const uEnd = p.upEnd || 0.05;    // End of isovolumic contraction
+  const peakT = 0.09;               // Brief systolic peak
+  const ejectEnd = 0.27;            // End of ejection phase
+  const ivrEnd = 0.34;              // End of isovolumic relaxation
+  const rapidFillEnd = 0.44;        // End of rapid early filling
+  const diastasisEnd = 0.82;        // End of diastasis (slow fill)
+  // Pre-systolic a wave
+  const aWave = (p.aAmp || 3) * gauss(beat, 0.92, 0.03);
+  const ejectDrop = p.LVSP * 0.06;  // ~6% decline during ejection
+
+  if (beat < uEnd) {
+    // Isovolumic contraction — rapid upstroke
+    const t = beat / uEnd;
+    const rate = p.upRate || 1;
+    return p.LVEDP + Math.pow(t, 1 / rate) * (p.LVSP - p.LVEDP);
+  } else if (beat < peakT) {
+    // Rounded peak — brief at max pressure
+    const t = (beat - uEnd) / (peakT - uEnd);
+    // Smooth rounded peak using cosine
+    return p.LVSP - ejectDrop * 0.15 * (1 - Math.cos(t * Math.PI)) / 2;
+  } else if (beat < ejectEnd) {
+    // Ejection phase — gradual decline as blood exits
+    const t = (beat - peakT) / (ejectEnd - peakT);
+    const startP = p.LVSP - ejectDrop * 0.15;
+    return startP - t * (ejectDrop * 0.85);
+  } else if (beat < ivrEnd) {
+    // Isovolumic relaxation — rapid curved descent
+    const t = (beat - ejectEnd) / (ivrEnd - ejectEnd);
+    const startP = p.LVSP - ejectDrop;
+    const diaMin = p.diaMin || 1;
+    // Exponential-like rapid drop
+    return startP - (startP - diaMin) * (1 - Math.pow(1 - t, 2.5));
+  } else if (beat < rapidFillEnd) {
+    // Rapid early filling — slight dip then rise
+    const t = (beat - ivrEnd) / (rapidFillEnd - ivrEnd);
+    const diaMin = p.diaMin || 1;
+    const rfTarget = p.LVEDP * 0.5; // rises to ~half of LVEDP
+    return diaMin + t * (rfTarget - diaMin);
+  } else if (beat < diastasisEnd) {
+    // Diastasis — slow/flat filling
+    const t = (beat - rapidFillEnd) / (diastasisEnd - rapidFillEnd);
+    const rfTarget = p.LVEDP * 0.5;
+    const preA = p.LVEDP - (p.aAmp || 3); // just before a-wave
+    return rfTarget + t * (preA - rfTarget);
+  } else {
+    // Atrial contraction (a-wave) bump at end-diastole
+    return (p.LVEDP - (p.aAmp || 3)) + aWave;
+  }
+}
+
+function generateAo(beat, p) {
+  const uEnd = p.upEnd || 0.08;
+  const peakT = p.peakTime || 0.12;
+  const nStart = p.notchStart || 0.30;
+  const nEnd = p.notchEnd || 0.36;
+
+  if (beat < uEnd) {
+    const t = beat / uEnd;
+    const rate = p.upRate || 1;
+    return p.DBP + Math.pow(t, 1 / rate) * (p.SBP - p.DBP) * 0.85;
+  } else if (beat < peakT) {
+    const t = (beat - uEnd) / (peakT - uEnd);
+    const pre = p.DBP + (p.SBP - p.DBP) * 0.85;
+    return pre + t * (p.SBP - pre);
+  } else if (beat < nStart) {
+    const t = (beat - peakT) / (nStart - peakT);
+    const postPeak = p.SBP;
+    const preNotch = p.DBP + (p.SBP - p.DBP) * 0.45;
+    return postPeak - t * (postPeak - preNotch);
+  } else if (beat < nEnd) {
+    const base = p.DBP + (p.SBP - p.DBP) * 0.38;
+    const nd = p.notchDepth != null ? p.notchDepth : 4;
+    return base + nd * Math.sin(((beat - nStart) / (nEnd - nStart)) * Math.PI);
+  } else if (beat < 0.92) {
+    const postNotch = p.DBP + (p.SBP - p.DBP) * 0.42;
+    const t = (beat - nEnd) / (0.92 - nEnd);
+    return (postNotch - p.DBP) * Math.exp(-(p.decayRate || 2.5) * t) + p.DBP;
+  }
+  return p.DBP;
+}
+
+// Spike-and-dome aortic waveform for HOCM
+function generateAoHOCM(beat, p) {
+  const spikeEnd = 0.07;    // Initial rapid spike
+  const dipCenter = 0.14;   // Mid-systolic dip (SAM-septal contact)
+  const domeEnd = 0.30;     // Late systolic dome
+  const dipDepth = p.dipDepth || 0.35; // fraction of spike height lost at dip
+
+  if (beat < spikeEnd) {
+    // Rapid initial upstroke (spike) — before SAM causes obstruction
+    const t = beat / spikeEnd;
+    return p.DBP + t * (p.SBP - p.DBP);
+  } else if (beat < 0.10) {
+    // Brief plateau at spike peak
+    return p.SBP;
+  } else if (beat < 0.18) {
+    // Mid-systolic dip — SAM contacts septum
+    const t = (beat - 0.10) / 0.08;
+    const dipVal = p.SBP - (p.SBP - p.DBP) * dipDepth;
+    const dip = dipVal + (p.SBP - dipVal) * 4 * t * (1 - t) * (-0.3); // parabolic dip
+    // Use smooth sine dip
+    return p.SBP - (p.SBP - dipVal) * Math.sin(t * Math.PI);
+  } else if (beat < domeEnd) {
+    // Late systolic dome — partial recovery
+    const t = (beat - 0.18) / (domeEnd - 0.18);
+    const dipVal = p.SBP - (p.SBP - p.DBP) * dipDepth;
+    const domeHeight = dipVal + (p.SBP - dipVal) * 0.6; // dome doesn't reach full spike
+    return domeHeight - t * (domeHeight - (p.DBP + (p.SBP - p.DBP) * 0.3));
+  } else if (beat < 0.36) {
+    // Dicrotic region (minimal notch in HOCM)
+    const base = p.DBP + (p.SBP - p.DBP) * 0.28;
+    return base;
+  } else if (beat < 0.90) {
+    // Diastolic decay
+    const postSys = p.DBP + (p.SBP - p.DBP) * 0.28;
+    const t = (beat - 0.36) / (0.90 - 0.36);
+    return (postSys - p.DBP) * Math.exp(-2.5 * t) + p.DBP;
+  }
+  return p.DBP;
+}
+
+// LV with intraventricular gradient for HOCM
+function generateLVHOCM(beat, p) {
+  const baseP = generateLV(beat, p);
+  // Add mid-systolic pressure bump from dynamic obstruction
+  if (beat > 0.08 && beat < 0.28) {
+    const t = (beat - 0.08) / 0.20;
+    const gradientBump = (p.gradient || 30) * Math.sin(t * Math.PI) * 0.6;
+    return baseP + gradientBump;
+  }
+  return baseP;
+}
+
+function generateECG(beat, p) {
+  let v = 0;
+  const hr = p.HR || 72;
+  const isPVC = p.isPVC;
+  if (isPVC) {
+    // PVC: no P wave, wide bizarre QRS, discordant T
+    v -= 0.10 * gauss(beat, 0.03, 0.010);
+    v += 0.60 * gauss(beat, 0.05, 0.018);
+    v -= 0.90 * gauss(beat, 0.08, 0.016);
+    v += 0.15 * gauss(beat, 0.10, 0.012);
+    v += 0.35 * gauss(beat, 0.18, 0.040);
+    return v;
+  }
+  // P wave — placed at 0.88 (end of previous cycle) for proper PR interval
+  // Wrap-around Gaussian: compute shortest distance accounting for beat boundary
+  const pCenter = 0.88;
+  const pDist = Math.min(Math.abs(beat - pCenter), Math.abs(beat - pCenter + 1), Math.abs(beat - pCenter - 1));
+  v += 0.22 * Math.exp(-0.5 * Math.pow(pDist / 0.022, 2));
+  // QRS
+  v -= 0.06 * gauss(beat, 0.065, 0.005); // Q
+  v += 1.0 * gauss(beat, 0.072, 0.008);  // R
+  v -= 0.18 * gauss(beat, 0.085, 0.007); // S
+  // T wave — asymmetric, center shifts with HR (Bazett-like)
+  const rrSec = 60 / hr;
+  const qtFrac = 0.38 * Math.sqrt(rrSec) / rrSec;
+  const tCenter = 0.072 + qtFrac * 0.7;
+  v += 0.25 * gauss(beat, Math.min(tCenter, 0.42), 0.035);
+  return v;
+}
+
+// ════════════════════════════════════════════════════════════════════
+// LESSON CONFIGURATIONS
+// ════════════════════════════════════════════════════════════════════
+
+const NORMAL_PARAMS = {
+  ra: { mean: 4, aAmp: 3, aCenter: 0.08, aWidth: 0.05, cAmp: 0.5, cCenter: 0.14, cWidth: 0.025, xDepth: 2.5, xCenter: 0.22, xWidth: 0.055, vAmp: 2.5, vCenter: 0.44, vWidth: 0.07, yDepth: 2, yCenter: 0.60, yWidth: 0.055 },
+  rv: { RVSP: 25, RVEDP: 4, platDrop: 2, diaRise: 1.5 },
+  pa: { PASP: 25, PADP: 10, decayRate: 2.0, notchAmp: 2 },
+  pcwp: { mean: 9, aAmp: 4, aWidth: 0.05, vAmp: 5, vWidth: 0.07, xDepth: 2.5, xWidth: 0.06, yDepth: 3, yWidth: 0.06, timeDelay: 0.06 },
+  lv: { LVSP: 120, LVEDP: 10, aAmp: 3, upRate: 1, diaMin: 2 },
+  ao: { SBP: 120, DBP: 80, upRate: 1, peakTime: 0.12, notchDepth: 4, decayRate: 2.5 }
+};
+
+function lerp(a, b, t) { return a + (b - a) * t; }
+function lerpObj(a, b, t) {
+  const r = {};
+  for (const k of Object.keys(a)) {
+    if (typeof a[k] === 'number' && typeof b[k] === 'number') r[k] = lerp(a[k], b[k], t);
+    else r[k] = t > 0.5 ? b[k] : a[k];
+  }
+  for (const k of Object.keys(b)) { if (!(k in r)) r[k] = b[k]; }
+  return r;
+}
+
+// AS severity presets
+const AS_MILD =   { SBP: 130, DBP: 78, upRate: 0.7, peakTime: 0.16, notchDepth: 3, decayRate: 2.5 };
+const AS_MOD =    { SBP: 115, DBP: 76, upRate: 0.45, peakTime: 0.20, notchDepth: 1.5, decayRate: 2.5 };
+const AS_SEVERE = { SBP: 100, DBP: 74, upRate: 0.28, peakTime: 0.25, notchDepth: 0.5, decayRate: 2.5 };
+const AS_LV_MILD =   { LVSP: 140, LVEDP: 12, aAmp: 3, upRate: 1, diaMin: 2 };
+const AS_LV_MOD =    { LVSP: 165, LVEDP: 15, aAmp: 4, upRate: 1, diaMin: 2 };
+const AS_LV_SEVERE = { LVSP: 200, LVEDP: 20, aAmp: 5, upRate: 1, diaMin: 3 };
+
+// MS severity presets
+const MS_MILD_PCWP =   { mean: 12, aAmp: 6, vAmp: 7, xDepth: 3, yDepth: 3, yWidthVal: 0.06, timeDelay: 0.06 };
+const MS_MOD_PCWP =    { mean: 18, aAmp: 8, vAmp: 8, xDepth: 3, yDepth: 2.5, yWidthVal: 0.07, timeDelay: 0.06 };
+const MS_SEVERE_PCWP = { mean: 25, aAmp: 12, vAmp: 10, xDepth: 2, yDepth: 2, yWidthVal: 0.08, timeDelay: 0.06 };
+
+// MR severity presets (PCWP with V waves)
+const MR_MILD_PCWP =   { mean: 12, aAmp: 5, vAmp: 12, xDepth: 3, yDepth: 5, yWidthVal: 0.05, timeDelay: 0.06 };
+const MR_MOD_PCWP =    { mean: 16, aAmp: 5, vAmp: 22, xDepth: 3, yDepth: 6, yWidthVal: 0.045, timeDelay: 0.06 };
+const MR_SEV_PCWP =    { mean: 22, aAmp: 5, vAmp: 38, xDepth: 2, yDepth: 8, yWidthVal: 0.04, timeDelay: 0.06 };
+// Chronic MR: compliant LA absorbs volume → modest V waves
+const MR_CHRONIC_PCWP = { mean: 18, aAmp: 6, vAmp: 16, xDepth: 3, yDepth: 5, yWidthVal: 0.05, timeDelay: 0.06 };
+
+// AR severity presets
+const AR_MILD_AO =   { SBP: 135, DBP: 72, upRate: 1, peakTime: 0.11, notchDepth: 3, decayRate: 2.8 };
+const AR_MOD_AO =    { SBP: 150, DBP: 60, upRate: 1.1, peakTime: 0.10, notchDepth: 1.5, decayRate: 3.5 };
+const AR_SEV_AO =    { SBP: 170, DBP: 45, upRate: 1.2, peakTime: 0.09, notchDepth: 0.3, decayRate: 4.5 };
+const AR_MILD_LV =   { LVSP: 135, LVEDP: 12, aAmp: 3, upRate: 1, diaMin: 2 };
+const AR_MOD_LV =    { LVSP: 150, LVEDP: 16, aAmp: 4, upRate: 1, diaMin: 3 };
+const AR_SEV_LV =    { LVSP: 170, LVEDP: 22, aAmp: 5, upRate: 1, diaMin: 4 };
+
+// TR severity presets (RA with CV waves)
+const TR_MILD_RA =   { mean: 6, aAmp: 3.5, aCenter: 0.06, aWidth: 0.035, cAmp: 0.8, cCenter: 0.12, cWidth: 0.02, xDepth: 1.5, xCenter: 0.18, vAmp: 5, vCenter: 0.35, vWidth: 0.07, yDepth: 3, yCenter: 0.55 };
+const TR_MOD_RA =    { mean: 10, aAmp: 3, aCenter: 0.06, aWidth: 0.035, cAmp: 2, cCenter: 0.12, cWidth: 0.03, xDepth: 0.5, xCenter: 0.18, vAmp: 10, vCenter: 0.30, vWidth: 0.10, yDepth: 4, yCenter: 0.55 };
+const TR_SEV_RA =    { mean: 16, aAmp: 2, aCenter: 0.06, aWidth: 0.035, cAmp: 4, cCenter: 0.14, cWidth: 0.04, xDepth: 0, xCenter: 0.18, vAmp: 16, vCenter: 0.25, vWidth: 0.12, yDepth: 5, yCenter: 0.52 };
+
+// HOCM severity presets
+const HOCM_MILD_AO = { SBP: 115, DBP: 75, dipDepth: 0.15 };
+const HOCM_MOD_AO =  { SBP: 110, DBP: 72, dipDepth: 0.28 };
+const HOCM_SEV_AO =  { SBP: 100, DBP: 70, dipDepth: 0.40 };
+const HOCM_MILD_LV = { LVSP: 145, LVEDP: 14, aAmp: 4, upRate: 1, diaMin: 3, gradient: 30 };
+const HOCM_MOD_LV =  { LVSP: 170, LVEDP: 18, aAmp: 5, upRate: 1, diaMin: 3, gradient: 55 };
+const HOCM_SEV_LV =  { LVSP: 200, LVEDP: 22, aAmp: 6, upRate: 1, diaMin: 4, gradient: 80 };
+
+function getSeverityT() {
+  return severity / 100;
+}
+
+function getASParams() {
+  const t = getSeverityT();
+  let ao, lv;
+  if (t < 0.33) {
+    const s = t / 0.33;
+    ao = lerpObj(NORMAL_PARAMS.ao, AS_MILD, s);
+    lv = lerpObj(NORMAL_PARAMS.lv, AS_LV_MILD, s);
+  } else if (t < 0.66) {
+    const s = (t - 0.33) / 0.33;
+    ao = lerpObj(AS_MILD, AS_MOD, s);
+    lv = lerpObj(AS_LV_MILD, AS_LV_MOD, s);
+  } else {
+    const s = (t - 0.66) / 0.34;
+    ao = lerpObj(AS_MOD, AS_SEVERE, s);
+    lv = lerpObj(AS_LV_MOD, AS_LV_SEVERE, s);
+  }
+  return { ao, lv };
+}
+
+function getMSParams() {
+  const t = getSeverityT();
+  let pcwp;
+  if (t < 0.33) {
+    pcwp = lerpObj(NORMAL_PARAMS.pcwp, MS_MILD_PCWP, t / 0.33);
+  } else if (t < 0.66) {
+    pcwp = lerpObj(MS_MILD_PCWP, MS_MOD_PCWP, (t - 0.33) / 0.33);
+  } else {
+    pcwp = lerpObj(MS_MOD_PCWP, MS_SEVERE_PCWP, (t - 0.66) / 0.34);
+  }
+  return { pcwp, lv: NORMAL_PARAMS.lv };
+}
+
+let mrAcute = true; // toggle for acute vs chronic MR
+
+function getMRParams() {
+  const t = getSeverityT();
+  let pcwp;
+  if (mrAcute) {
+    if (t < 0.33) pcwp = lerpObj(NORMAL_PARAMS.pcwp, MR_MILD_PCWP, t / 0.33);
+    else if (t < 0.66) pcwp = lerpObj(MR_MILD_PCWP, MR_MOD_PCWP, (t - 0.33) / 0.33);
+    else pcwp = lerpObj(MR_MOD_PCWP, MR_SEV_PCWP, (t - 0.66) / 0.34);
+  } else {
+    // Chronic: V waves less dramatic
+    if (t < 0.5) pcwp = lerpObj(NORMAL_PARAMS.pcwp, MR_CHRONIC_PCWP, t / 0.5);
+    else pcwp = lerpObj(MR_CHRONIC_PCWP, MR_MOD_PCWP, (t - 0.5) / 0.5);
+  }
+  return { pcwp, lv: NORMAL_PARAMS.lv };
+}
+
+function getARParams() {
+  const t = getSeverityT();
+  let ao, lv;
+  if (t < 0.33) {
+    ao = lerpObj(NORMAL_PARAMS.ao, AR_MILD_AO, t / 0.33);
+    lv = lerpObj(NORMAL_PARAMS.lv, AR_MILD_LV, t / 0.33);
+  } else if (t < 0.66) {
+    ao = lerpObj(AR_MILD_AO, AR_MOD_AO, (t - 0.33) / 0.33);
+    lv = lerpObj(AR_MILD_LV, AR_MOD_LV, (t - 0.33) / 0.33);
+  } else {
+    ao = lerpObj(AR_MOD_AO, AR_SEV_AO, (t - 0.66) / 0.34);
+    lv = lerpObj(AR_MOD_LV, AR_SEV_LV, (t - 0.66) / 0.34);
+  }
+  return { ao, lv };
+}
+
+function getTRParams() {
+  const t = getSeverityT();
+  let ra;
+  if (t < 0.33) ra = lerpObj(NORMAL_PARAMS.ra, TR_MILD_RA, t / 0.33);
+  else if (t < 0.66) ra = lerpObj(TR_MILD_RA, TR_MOD_RA, (t - 0.33) / 0.33);
+  else ra = lerpObj(TR_MOD_RA, TR_SEV_RA, (t - 0.66) / 0.34);
+  return { ra, rv: NORMAL_PARAMS.rv };
+}
+
+// Get RA or PCWP params for the current lesson (used by annotation rendering)
+function getAnnotationParams(traceId) {
+  const lesson = currentLesson;
+  if (traceId === 'ra') {
+    if (lesson === 'tr') return getTRParams().ra;
+    if (lesson === 'cp') return CP_PARAMS.ra;
+    if (lesson === 'rcm') return RCM_PARAMS.ra;
+    if (lesson === 'tamp') return TAMP_PARAMS.ra;
+    if (lesson === 'ph') return getPHParams().ra;
+    return NORMAL_PARAMS.ra;
+  }
+  if (traceId === 'pcwp') {
+    if (lesson === 'mr') return getMRParams().pcwp;
+    if (lesson === 'ms') return getMSParams().pcwp;
+    if (lesson === 'ph') return getPHParams().pcwp;
+    return NORMAL_PARAMS.pcwp;
+  }
+  return null;
+}
+
+function getHOCMParams() {
+  let t = getSeverityT();
+  // Provocation shifts effective severity
+  t = Math.max(0, Math.min(1, t + hocmProvocation * 0.3));
+  let ao, lv;
+  if (t < 0.33) {
+    ao = lerpObj(HOCM_MILD_AO, HOCM_MILD_AO, 0);
+    lv = lerpObj(HOCM_MILD_LV, HOCM_MILD_LV, 0);
+    const s = t / 0.33;
+    ao = lerpObj({ SBP: 125, DBP: 78, dipDepth: 0.05 }, HOCM_MILD_AO, s);
+    lv = lerpObj({ LVSP: 130, LVEDP: 12, aAmp: 3, upRate: 1, diaMin: 2, gradient: 15 }, HOCM_MILD_LV, s);
+  } else if (t < 0.66) {
+    const s = (t - 0.33) / 0.33;
+    ao = lerpObj(HOCM_MILD_AO, HOCM_MOD_AO, s);
+    lv = lerpObj(HOCM_MILD_LV, HOCM_MOD_LV, s);
+  } else {
+    const s = (t - 0.66) / 0.34;
+    ao = lerpObj(HOCM_MOD_AO, HOCM_SEV_AO, s);
+    lv = lerpObj(HOCM_MOD_LV, HOCM_SEV_LV, s);
+  }
+  return { ao, lv };
+}
+
+// Post-PVC modified params: enhanced contractility → worsened obstruction
+function getHOCMPostPVCParams() {
+  const base = getHOCMParams();
+  // Post-PVC: LV pressure INCREASES but Ao pulse pressure DECREASES
+  return {
+    ao: { ...base.ao, SBP: base.ao.SBP - 15, dipDepth: base.ao.dipDepth + 0.15 },
+    lv: { ...base.lv, LVSP: base.lv.LVSP + 20, gradient: base.lv.gradient + 25 }
+  };
+}
+
+// Fixed AS post-PVC for comparison: pulse pressure INCREASES (normal response)
+function getASPostPVCParams() {
+  const { ao, lv } = getASParams();
+  return {
+    ao: { ...ao, SBP: ao.SBP + 12 },
+    lv: { ...lv, LVSP: lv.LVSP + 15 }
+  };
+}
+
+// ════════════════════════════════════════════════════════════════════
+// PHASE 4: CONSTRICTIVE PERICARDITIS / RCM / TAMPONADE
+// ════════════════════════════════════════════════════════════════════
+
+// Respiratory modulation: returns -1 (peak inspiration) to +1 (peak expiration)
+function getRespMod() {
+  return Math.sin(respPhase);
+}
+
+// Dip-and-plateau ventricular generator (square-root sign)
+function generateVent_DipPlateau(beat, p) {
+  const uEnd = p.upEnd || 0.05;
+  const peakT = 0.09;
+  const ejectEnd = 0.27;
+  const ivrEnd = 0.34;
+  const dipEnd = p.dipEnd || 0.42;
+  const plateauEnd = p.plateauEnd || 0.88;
+  const aWave = (p.aAmp || 3) * gauss(beat, 0.92, 0.03);
+  const ejectDrop = p.SP * 0.06;
+  const dipTarget = p.dipMin != null ? p.dipMin : p.EDP * 0.3;
+  const plateau = p.EDP;
+
+  if (beat < uEnd) {
+    return plateau + aWave + Math.pow(beat / uEnd, 1 / (p.upRate || 1)) * (p.SP - plateau);
+  } else if (beat < peakT) {
+    return p.SP - ejectDrop * 0.15 * (1 - Math.cos((beat - uEnd) / (peakT - uEnd) * Math.PI)) / 2;
+  } else if (beat < ejectEnd) {
+    const t = (beat - peakT) / (ejectEnd - peakT);
+    return p.SP - ejectDrop * 0.15 - ejectDrop * 0.85 * t;
+  } else if (beat < ivrEnd) {
+    const t = (beat - ejectEnd) / (ivrEnd - ejectEnd);
+    const start = p.SP - ejectDrop;
+    return start - (start - dipTarget) * (1 - Math.pow(1 - t, 2));
+  } else if (beat < dipEnd) {
+    // THE DIP: rapid early diastolic filling → sharp nadir, then square-root rise
+    const t = (beat - ivrEnd) / (dipEnd - ivrEnd);
+    return dipTarget + (plateau - dipTarget) * Math.pow(t, 0.5);
+  } else {
+    // THE PLATEAU: filling halted by rigid pericardium/stiff myocardium
+    return plateau + aWave;
+  }
+}
+
+// CP parameters
+const CP_PARAMS = {
+  ra: { mean: 20, aAmp: 4, aCenter: 0.08, aWidth: 0.04, cAmp: 1.2, cCenter: 0.14, cWidth: 0.02,
+        xDepth: 6, xCenter: 0.22, xWidth: 0.045,
+        vAmp: 3, vCenter: 0.44, vWidth: 0.06,
+        yDepth: 7, yCenter: 0.58, yWidth: 0.04 },
+  rv: { SP: 40, EDP: 20, dipMin: 5, upRate: 1, aAmp: 4 },
+  lv: { SP: 120, EDP: 22, dipMin: 5, upRate: 1, aAmp: 5 },
+  respRV: 10, respLV: -14,
+};
+
+// RCM parameters
+const RCM_PARAMS = {
+  ra: { mean: 18, aAmp: 5, aCenter: 0.08, aWidth: 0.045, cAmp: 0.5, cCenter: 0.14, cWidth: 0.02,
+        xDepth: 3, xCenter: 0.22, xWidth: 0.045,
+        vAmp: 3, vCenter: 0.44, vWidth: 0.06,
+        yDepth: 4, yCenter: 0.58, yWidth: 0.05 },
+  rv: { SP: 58, EDP: 16, dipMin: 4, upRate: 1, aAmp: 3 },
+  lv: { SP: 130, EDP: 28, dipMin: 6, upRate: 1, aAmp: 5 },
+  respRV: -6, respLV: -6,
+};
+
+// Tamponade parameters
+const TAMP_PARAMS = {
+  ra: { mean: 18, aAmp: 3, aCenter: 0.08, aWidth: 0.04, cAmp: 0.5, cCenter: 0.14, cWidth: 0.02,
+        xDepth: 5, xCenter: 0.22, xWidth: 0.04,
+        vAmp: 2, vCenter: 0.44, vWidth: 0.06,
+        yDepth: 0.5, yCenter: 0.58, yWidth: 0.04 },
+  rv: { SP: 35, EDP: 18, dipMin: 14, upRate: 1, aAmp: 2 },
+  lv: { SP: 110, EDP: 20, dipMin: 16, upRate: 1, aAmp: 2 },
+  ao: { SBP: 105, DBP: 75, upRate: 1, peakTime: 0.12, notchDepth: 3, decayRate: 2.5 },
+  pulsus: 14, respRV: 7, respLV: -10,  // pulsus = half-amplitude; full swing = 2x = ~28 mmHg
+};
+
+// ── PH parameters ──────────────────────────────────────────────
+let phType = 'pre'; // 'pre', 'post', 'combined'
+
+const PH_PRE = {
+  pa: { PASP: 65, PADP: 30, upEnd: 0.07, notchStart: 0.15, notchEnd: 0.22, notchAmp: 3, decayRate: 1.8 },
+  rv: { RVSP: 65, RVEDP: 8, upEnd: 0.06 },
+  pcwp: { mean: 12, aAmp: 5, vAmp: 6, xDepth: 3, yDepth: 4, timeDelay: 0.06 },
+  ra: { mean: 8, aAmp: 3.5, aCenter: 0.06, aWidth: 0.04, cAmp: 0.8, cCenter: 0.13, cWidth: 0.02,
+        xDepth: 2, xCenter: 0.18, xWidth: 0.045,
+        vAmp: 2.5, vCenter: 0.40, vWidth: 0.06,
+        yDepth: 2, yCenter: 0.55, yWidth: 0.04 },
+};
+
+const PH_POST = {
+  pa: { PASP: 50, PADP: 25, upEnd: 0.08, notchStart: 0.16, notchEnd: 0.23, notchAmp: 2.5, decayRate: 2.0 },
+  rv: { RVSP: 50, RVEDP: 12, upEnd: 0.06 },
+  pcwp: { mean: 22, aAmp: 7, vAmp: 8, xDepth: 2, yDepth: 3, timeDelay: 0.06 },
+  ra: { mean: 10, aAmp: 4, aCenter: 0.06, aWidth: 0.04, cAmp: 0.8, cCenter: 0.13, cWidth: 0.02,
+        xDepth: 2, xCenter: 0.18, xWidth: 0.045,
+        vAmp: 3, vCenter: 0.40, vWidth: 0.06,
+        yDepth: 2.5, yCenter: 0.55, yWidth: 0.04 },
+};
+
+const PH_COMBINED = {
+  pa: { PASP: 70, PADP: 35, upEnd: 0.07, notchStart: 0.15, notchEnd: 0.22, notchAmp: 3.5, decayRate: 1.6 },
+  rv: { RVSP: 70, RVEDP: 14, upEnd: 0.06 },
+  pcwp: { mean: 22, aAmp: 7, vAmp: 8, xDepth: 2, yDepth: 3, timeDelay: 0.06 },
+  ra: { mean: 12, aAmp: 4.5, aCenter: 0.06, aWidth: 0.04, cAmp: 0.8, cCenter: 0.13, cWidth: 0.02,
+        xDepth: 2, xCenter: 0.18, xWidth: 0.045,
+        vAmp: 3, vCenter: 0.40, vWidth: 0.06,
+        yDepth: 2, yCenter: 0.55, yWidth: 0.04 },
+};
+
+function getPHParams() {
+  if (phType === 'post') return PH_POST;
+  if (phType === 'combined') return PH_COMBINED;
+  return PH_PRE;
+}
+
+function setPHType(type) {
+  phType = type;
+  document.getElementById('phPreBtn').classList.toggle('on', type === 'pre');
+  document.getElementById('phPostBtn').classList.toggle('on', type === 'post');
+  document.getElementById('phCombBtn').classList.toggle('on', type === 'combined');
+  updateTeaching();
+  redrawNeeded = true;
+}
+
+// Apply respiratory modulation to systolic pressure
+// If respPhaseVal is provided, use it; otherwise use current global respPhase
+function applyRespMod(baseP, respAmp, respPhaseVal) {
+  if (!respEnabled) return baseP;
+  const mod = Math.sin(respPhaseVal != null ? respPhaseVal : respPhase);
+  return baseP + respAmp * (-mod);
+}
+
+// ── Waveform pixel buffer (strip-chart model) ──
+// For respiratory lessons: each pixel is generated ONCE at the leading edge
+// and frozen. The render loop reads from the buffer, not from gen().
+// This ensures past data never changes when respPhase evolves.
+const waveBuffer = new Map(); // worldX (int) → { traceId: mmHg, ... }
+let bufferHead = -1;
+let bufferActive = false;
+
+function clearWaveBuffer() {
+  waveBuffer.clear();
+  bufferHead = -1;
+  bufferActive = false;
+}
+
+// Snapshot the entire visible canvas into the buffer (called when resp toggled ON).
+// This freezes all currently-visible pixels so they won't shift when respPhase changes.
+function prefillWaveBuffer() {
+  const lesson = LESSONS[currentLesson];
+  const traces = typeof lesson.traces === 'function' ? lesson.traces() : lesson.traces;
+  const scrollDPR = getScrollDPR();
+  const w = waveCanvas.width;
+  const beatDuration = 60 / HR;
+  const pxPerSec = speed * 3.78 * DPR;
+  const pxPerBeat = beatDuration * pxPerSec;
+
+  for (let px = 0; px < w; px++) {
+    const wx = Math.round(px + scrollDPR);
+    if (waveBuffer.has(wx)) continue;
+    const beatFrac = ((wx / pxPerBeat) % 1 + 1) % 1;
+    const entry = {};
+    traces.forEach(tr => { entry[tr.id] = tr.gen(beatFrac); });
+    // Store ECG value too (normal — no PVC for prefilled/past data)
+    entry._ecg = generateECG(beatFrac, { HR });
+    waveBuffer.set(wx, entry);
+  }
+  bufferHead = Math.round(w - 1 + scrollDPR);
+  bufferActive = true;
+}
+
+// Generate new pixels at the leading edge (called each frame from animation loop).
+function advanceWaveBuffer() {
+  if (!bufferActive) return;
+  const scrollDPR = getScrollDPR();
+  const w = waveCanvas.width;
+  const newHead = Math.round(scrollDPR + w - 1);
+  if (newHead <= bufferHead) return;
+
+  const lesson = LESSONS[currentLesson];
+  const traces = typeof lesson.traces === 'function' ? lesson.traces() : lesson.traces;
+  const beatDuration = 60 / HR;
+  const pxPerSec = speed * 3.78 * DPR;
+  const pxPerBeat = beatDuration * pxPerSec;
+
+  for (let wx = bufferHead + 1; wx <= newHead; wx++) {
+    const beatFrac = ((wx / pxPerBeat) % 1 + 1) % 1;
+    const entry = {};
+    traces.forEach(tr => { entry[tr.id] = tr.gen(beatFrac); });
+    // Store ECG with current PVC state (leading edge = real-time state)
+    const isPVC = pvcState === 'pvc' || pvcState === 'pause';
+    entry._ecg = generateECG(beatFrac, { HR, isPVC });
+    waveBuffer.set(wx, entry);
+  }
+  bufferHead = newHead;
+
+  // Prune: keep 2x canvas width behind
+  const minKeep = Math.round(scrollDPR) - w;
+  for (const k of waveBuffer.keys()) {
+    if (k < minKeep) waveBuffer.delete(k);
+  }
+}
+
+// ════════════════════════════════════════════════════════════════════
+// LESSON DEFINITIONS
+// ════════════════════════════════════════════════════════════════════
+
+const LESSONS = {
+  normal: {
+    title: 'Normal Waveforms',
+    traces: [
+      { id: 'ra',   label: 'RA',   color: 'var(--clr-ra)',   gen: (b) => generateRA(b, NORMAL_PARAMS.ra) },
+      { id: 'rv',   label: 'RV',   color: 'var(--clr-rv)',   gen: (b) => generateRV(b, NORMAL_PARAMS.rv) },
+      { id: 'pa',   label: 'PA',   color: 'var(--clr-pa)',   gen: (b) => generatePA(b, NORMAL_PARAMS.pa) },
+      { id: 'pcwp', label: 'PCWP', color: 'var(--clr-pcwp)', gen: (b) => generatePCWP(b, NORMAL_PARAMS.pcwp) },
+      { id: 'lv',   label: 'LV',   color: 'var(--clr-lv)',   gen: (b) => generateLV(b, NORMAL_PARAMS.lv) },
+      { id: 'ao',   label: 'Ao',   color: 'var(--clr-ao)',   gen: (b) => generateAo(b, NORMAL_PARAMS.ao) },
+    ],
+    defaultOn: ['ra', 'pa'],
+    scale: { min: 0, max: 40, step: 5 },
+    hasSeverity: false,
+    hasCompare: false,
+    teaching: function() {
+      return `
+        <h3>Normal Hemodynamic Waveforms <span class="tag">Lesson 1</span></h3>
+        <div class="tp-grid">
+          <ul class="tp-pearls">
+            <li><strong>RA:</strong> a &gt; v wave; x descent dominant</li>
+            <li><strong>a wave</strong> follows P wave (~80ms); absent in AFib</li>
+            <li><strong>c wave</strong> = AV valve closure (follows QRS)</li>
+            <li><strong>x descent</strong> = atrial relaxation + annular descent</li>
+            <li><strong>v wave</strong> peaks at end-systole (passive filling)</li>
+            <li><strong>y descent</strong> = AV valve opens → atrial emptying</li>
+            <li><strong>PCWP</strong> mirrors LA with 50-150ms delay</li>
+            <li><strong>LVEDP:</strong> peak of a wave (or at R wave in AFib)</li>
+          </ul>
+          <div class="tp-body">
+            <p><strong>Normal values:</strong> RA mean 0-6, RV 25/0-8, PA 25/10, PCWP 4-12, LV 120/3-12, Ao 120/80 mmHg</p>
+            <p style="margin-top:6px">Toggle traces above to isolate individual chambers. The <span class="highlight">right heart (blue)</span> operates at low pressures (0-30 mmHg) while the <span class="highlight">left heart (red)</span> operates at systemic pressures (0-140 mmHg).</p>
+            <p style="margin-top:6px">Key relationship: <strong>PA diastolic ≈ PCWP</strong> (within 1-4 mmHg normally). When PA diastolic exceeds PCWP by &gt;5, consider pre-capillary PH component.</p>
+          </div>
+        </div>`;
+    }
+  },
+  as: {
+    title: 'Aortic Stenosis',
+    traces: function() {
+      const { ao, lv } = getASParams();
+      return [
+        { id: 'lv', label: 'LV', color: 'var(--clr-lv)',  gen: (b) => generateLV(b, lv) },
+        { id: 'ao', label: 'Ao', color: '#ffa726',          gen: (b) => generateAo(b, ao) },
+      ];
+    },
+    gradient: function(beat) {
+      const { ao, lv } = getASParams();
+      const lvP = generateLV(beat, lv);
+      const aoP = generateAo(beat, ao);
+      // Only shade during systole when LV > Ao
+      if (beat > 0.02 && beat < 0.32 && lvP > aoP) return { top: aoP, bottom: lvP };
+      return null;
+    },
+    normalTraces: [
+      { id: 'lv_n', label: 'LV (normal)', color: 'var(--normal-ghost)', gen: (b) => generateLV(b, NORMAL_PARAMS.lv) },
+      { id: 'ao_n', label: 'Ao (normal)', color: 'var(--normal-ghost)', gen: (b) => generateAo(b, NORMAL_PARAMS.ao) },
+    ],
+    defaultOn: ['lv', 'ao'],
+    scale: { min: 0, max: 220, step: 20 },
+    hasSeverity: true,
+    hasCompare: true,
+    teaching: function() {
+      const t = getSeverityT();
+      let label = 'Mild', cls = 'sev-mild';
+      if (t > 0.66) { label = 'Severe'; cls = 'sev-sev'; }
+      else if (t > 0.33) { label = 'Moderate'; cls = 'sev-mod'; }
+
+      const { ao, lv } = getASParams();
+      const grad = Math.round(lv.LVSP - ao.SBP);
+      const pp = Math.round(ao.SBP - ao.DBP);
+
+      return `
+        <h3>Aortic Stenosis <span class="tag">Lesson 2</span></h3>
+        <div class="tp-grid">
+          <ul class="tp-pearls">
+            <li>Current: <strong class="${cls}">${label}</strong> — peak-to-peak gradient ≈ <strong>${grad} mmHg</strong></li>
+            <li>Ao pulse pressure: <strong>${pp} mmHg</strong> (parvus = reduced amplitude)</li>
+            <li><strong>Parvus et tardus:</strong> slow upstroke + reduced amplitude</li>
+            <li><strong>Late systolic peak</strong> (more severe = later peak)</li>
+            <li>Reduced/absent dicrotic notch in severe AS</li>
+            <li><strong>Gradient shading</strong> (gold) = LV-Ao pressure difference</li>
+            <li>Mean gradient &gt;40 mmHg or AVA &lt;1.0 cm² = severe</li>
+            <li><strong>Carabello sign:</strong> LVEDP ≈ Ao diastolic → severely impaired LV</li>
+          </ul>
+          <div class="tp-body">
+            <p><strong>Post-PVC response:</strong> In fixed AS, pulse pressure <span class="highlight">increases</span> after PVC (unlike HOCM where it decreases). This is the Brockenbrough-Braunwald sign.</p>
+            <p style="margin-top:6px"><strong>Low-flow, low-gradient AS:</strong> EF &lt;40%, mean gradient &lt;40, AVA &lt;1.0 — dobutamine challenge distinguishes true severe (AVA stays &lt;1.0) from pseudo-severe.</p>
+            ${getGorlinCalcHTML()}
+          </div>
+        </div>`;
+    }
+  },
+  ms: {
+    title: 'Mitral Stenosis',
+    traces: function() {
+      const { pcwp, lv } = getMSParams();
+      return [
+        { id: 'lv',   label: 'LV',   color: 'var(--clr-lv)', gen: (b) => generateLV(b, lv) },
+        { id: 'pcwp', label: 'PCWP', color: 'var(--clr-pcwp)', gen: (b) => generatePCWP(b, pcwp) },
+      ];
+    },
+    gradient: function(beat) {
+      const { pcwp, lv } = getMSParams();
+      const lvP = generateLV(beat, lv);
+      const pcwpP = generatePCWP(beat, pcwp);
+      // Diastolic gradient: shade when PCWP > LV in diastole
+      if (beat > 0.38 && pcwpP > lvP) return { top: lvP, bottom: pcwpP };
+      return null;
+    },
+    normalTraces: [
+      { id: 'pcwp_n', label: 'PCWP (normal)', color: 'var(--normal-ghost)', gen: (b) => generatePCWP(b, NORMAL_PARAMS.pcwp) },
+    ],
+    defaultOn: ['lv', 'pcwp'],
+    scale: { min: 0, max: 40, step: 5 },
+    hasSeverity: true,
+    hasCompare: true,
+    teaching: function() {
+      const t = getSeverityT();
+      let label = 'Mild', cls = 'sev-mild';
+      if (t > 0.66) { label = 'Severe'; cls = 'sev-sev'; }
+      else if (t > 0.33) { label = 'Moderate'; cls = 'sev-mod'; }
+
+      const { pcwp } = getMSParams();
+      return `
+        <h3>Mitral Stenosis <span class="tag">Lesson 3</span></h3>
+        <div class="tp-grid">
+          <ul class="tp-pearls">
+            <li>Current: <strong class="${cls}">${label}</strong> — PCWP mean ≈ <strong>${Math.round(pcwp.mean)} mmHg</strong></li>
+            <li><strong>Gradient shading</strong> (gold) = diastolic PCWP-LV pressure difference</li>
+            <li><strong>Prominent a wave</strong> (forceful atrial contraction vs stenotic valve)</li>
+            <li><strong>Slow y descent</strong> = impaired LA emptying (pathognomonic)</li>
+            <li>PCWP overestimates true LA gradient by 2-3 mmHg (time delay)</li>
+            <li>Gradient <strong>increases with tachycardia</strong> (shorter DFP)</li>
+            <li>MVA &lt;1.0 cm² or mean gradient &gt;10 = severe MS</li>
+            <li>In AFib: loss of a wave, variable diastolic filling — average multiple beats</li>
+          </ul>
+          <div class="tp-body">
+            <p>The <span class="highlight">diastolic gradient</span> between PCWP and LV persists throughout diastole in significant MS. Normally, PCWP equalizes with LV diastolic rapidly after y descent.</p>
+            <p style="margin-top:6px"><strong>Exercise hemodynamics:</strong> Gradient doubles with tachycardia because DFP shortens more than proportionally. This unmasks occult MS.</p>
+            ${getGorlinMVACalcHTML()}
+          </div>
+        </div>`;
+    }
+  },
+  // ── PHASE 2 LESSONS ──────────────────────────────────────────────
+  mr: {
+    title: 'Mitral Regurgitation',
+    traces: function() {
+      const { pcwp, lv } = getMRParams();
+      return [
+        { id: 'lv',   label: 'LV',   color: 'var(--clr-lv)', gen: (b) => generateLV(b, lv) },
+        { id: 'pcwp', label: 'PCWP', color: 'var(--clr-pcwp)', gen: (b) => generatePCWP(b, pcwp) },
+      ];
+    },
+    normalTraces: [
+      { id: 'pcwp_n', label: 'PCWP (normal)', color: 'var(--normal-ghost)', gen: (b) => generatePCWP(b, NORMAL_PARAMS.pcwp) },
+    ],
+    defaultOn: ['lv', 'pcwp'],
+    scale: { min: 0, max: 70, step: 10 },
+    hasSeverity: true,
+    hasCompare: true,
+    hasAcuteToggle: true,
+    teaching: function() {
+      const t = getSeverityT();
+      let label = 'Mild', cls = 'sev-mild';
+      if (t > 0.66) { label = 'Severe'; cls = 'sev-sev'; }
+      else if (t > 0.33) { label = 'Moderate'; cls = 'sev-mod'; }
+      const { pcwp } = getMRParams();
+      const vWaveH = Math.round(pcwp.vAmp);
+      const acuteLabel = mrAcute ? 'Acute' : 'Chronic';
+      return `
+        <h3>Mitral Regurgitation <span class="tag">Lesson 4</span></h3>
+        <div class="tp-grid">
+          <ul class="tp-pearls">
+            <li>Current: <strong class="${cls}">${label} ${acuteLabel}</strong> — V wave ≈ <strong>${vWaveH} mmHg</strong> above mean</li>
+            <li><strong>Giant V waves</strong> = hallmark (but NOT specific for MR)</li>
+            <li>V wave &gt;2× mean PCWP suggestive; &gt;3× more specific</li>
+            <li><strong>Acute MR:</strong> non-compliant LA → explosive V waves → pulmonary edema</li>
+            <li><strong>Chronic MR:</strong> dilated, compliant LA → modest V waves → tolerated</li>
+            <li>V waves also seen in: VSD, severe HF, reduced LA compliance</li>
+            <li>V wave &gt;10 above mean: <strong>sens 27%, spec 94%</strong> for severe MR</li>
+            <li><strong>PA bifid peak:</strong> transmitted V wave creates bifid PA systolic waveform in acute severe MR</li>
+          </ul>
+          <div class="tp-body">
+            <p><strong class="highlight">CRITICAL TEACHING POINT:</strong> V waves are NOT specific for MR. Any condition with elevated LVEDP or reduced LA compliance produces V waves. Use the Acute/Chronic toggle to see how LA compliance affects V wave height.</p>
+            <p style="margin-top:6px"><strong>Regurgitant fraction</strong> = (Total SV − Forward SV) / Total SV. RF &gt;55% = severe MR. Angiographic grading (1-4+) based on LV opacification.</p>
+            <p style="margin-top:6px"><strong>Post mitral clip:</strong> V wave diminishes ("reverse V wave sign") — real-time hemodynamic feedback during intervention.</p>
+          </div>
+        </div>`;
+    }
+  },
+  ar: {
+    title: 'Aortic Regurgitation',
+    traces: function() {
+      const { ao, lv } = getARParams();
+      return [
+        { id: 'lv', label: 'LV', color: 'var(--clr-lv)',  gen: (b) => generateLV(b, lv) },
+        { id: 'ao', label: 'Ao', color: '#ffa726',          gen: (b) => generateAo(b, ao) },
+      ];
+    },
+    normalTraces: [
+      { id: 'lv_n', label: 'LV (normal)', color: 'var(--normal-ghost)', gen: (b) => generateLV(b, NORMAL_PARAMS.lv) },
+      { id: 'ao_n', label: 'Ao (normal)', color: 'var(--normal-ghost)', gen: (b) => generateAo(b, NORMAL_PARAMS.ao) },
+    ],
+    defaultOn: ['lv', 'ao'],
+    scale: { min: 0, max: 200, step: 20 },
+    hasSeverity: true,
+    hasCompare: true,
+    teaching: function() {
+      const t = getSeverityT();
+      let label = 'Mild', cls = 'sev-mild';
+      if (t > 0.66) { label = 'Severe'; cls = 'sev-sev'; }
+      else if (t > 0.33) { label = 'Moderate'; cls = 'sev-mod'; }
+      const { ao, lv } = getARParams();
+      const pp = Math.round(ao.SBP - ao.DBP);
+      const arIdx = ((ao.DBP - lv.LVEDP) / ao.SBP * 100).toFixed(0);
+      return `
+        <h3>Aortic Regurgitation <span class="tag">Lesson 5</span></h3>
+        <div class="tp-grid">
+          <ul class="tp-pearls">
+            <li>Current: <strong class="${cls}">${label}</strong> — pulse pressure = <strong>${pp} mmHg</strong></li>
+            <li><strong>Wide pulse pressure:</strong> ↑SBP (large SV) + ↓DBP (diastolic runoff)</li>
+            <li><strong>Rapid diastolic decay</strong> of aortic pressure (blood regurgitates into LV)</li>
+            <li><strong>LVEDP rises:</strong> currently ≈ ${Math.round(lv.LVEDP)} mmHg (volume loading)</li>
+            <li>Severe chronic: Ao DBP approaches LVEDP (<strong>diastolic equalization</strong>)</li>
+            <li><strong>Bisferiens pulse:</strong> double systolic peak (percussion + tidal wave)</li>
+            <li>Reduced/absent dicrotic notch (incompetent valve)</li>
+            <li><strong>AR Index</strong> = (AoDBP − LVEDP) / AoSBP = <strong>${arIdx}%</strong> ${parseInt(arIdx) < 25 ? '<span class="sev-sev">(significant!)</span>' : ''}</li>
+          </ul>
+          <div class="tp-body">
+            <p><strong>AR Index &lt;25%</strong> = significant AR (used post-TAVR to assess paravalvular leak). Current: ${arIdx}%.</p>
+            <p style="margin-top:6px"><strong>Acute vs Chronic AR:</strong></p>
+            <p>• <strong>Acute:</strong> Non-compliant LV → rapid LVEDP rise → premature MV closure → pulmonary edema. Low-normal SBP, short diastolic murmur.</p>
+            <p>• <strong>Chronic:</strong> Eccentric hypertrophy → large SV → hyperdynamic, wide PP. Long diastolic murmur. Hill sign: femoral SBP &gt; brachial by &gt;20 mmHg.</p>
+            <p style="margin-top:6px"><strong>Mixed AS/AR:</strong> Gradient + wide pulse pressure produces complex waveform morphology.</p>
+          </div>
+        </div>`;
+    }
+  },
+  tr: {
+    title: 'Tricuspid Regurgitation',
+    traces: function() {
+      const { ra, rv } = getTRParams();
+      return [
+        { id: 'ra', label: 'RA', color: 'var(--clr-ra)', gen: (b) => generateRA(b, ra) },
+        { id: 'rv', label: 'RV', color: 'var(--clr-rv)',     gen: (b) => generateRV(b, rv) },
+      ];
+    },
+    normalTraces: [
+      { id: 'ra_n', label: 'RA (normal)', color: 'var(--normal-ghost)', gen: (b) => generateRA(b, NORMAL_PARAMS.ra) },
+    ],
+    defaultOn: ['ra', 'rv'],
+    scale: { min: 0, max: 40, step: 5 },
+    hasSeverity: true,
+    hasCompare: true,
+    teaching: function() {
+      const t = getSeverityT();
+      let label = 'Mild', cls = 'sev-mild';
+      if (t > 0.66) { label = 'Severe'; cls = 'sev-sev'; }
+      else if (t > 0.33) { label = 'Moderate'; cls = 'sev-mod'; }
+      const { ra } = getTRParams();
+      return `
+        <h3>Tricuspid Regurgitation <span class="tag">Lesson 6</span></h3>
+        <div class="tp-grid">
+          <ul class="tp-pearls">
+            <li>Current: <strong class="${cls}">${label}</strong> — RA mean ≈ <strong>${Math.round(ra.mean)} mmHg</strong></li>
+            <li><strong>Giant CV wave:</strong> merger of c + v waves → single large systolic wave</li>
+            <li><strong>Loss of x descent:</strong> regurgitant flow fills RA during systole</li>
+            <li><strong>Ventricularization:</strong> RA tracing resembles RV (systolic rise)</li>
+            <li>Prominent <strong>y descent</strong> remains (rapid RV filling in early diastole)</li>
+            <li>Elevated mean RA (&gt;15 mmHg in severe)</li>
+            <li><strong>Kussmaul sign:</strong> RA pressure ↑ with inspiration (also CP, RV infarct)</li>
+            <li><strong>Hepatic vein reversal:</strong> systolic flow reversal corresponds to CV waves</li>
+          </ul>
+          <div class="tp-body">
+            <p>Progressive TR transforms the RA tracing: normal <strong>a &gt; v</strong> pattern → <strong>CV fusion</strong> (c and v merge) → complete <strong>"ventricularization"</strong> where RA mirrors RV systolic contour.</p>
+            <p style="margin-top:6px">Use <strong>Compare Normal</strong> to see the loss of x descent. In normal RA, the x descent is the dominant descent. In severe TR, the x descent is completely obliterated by the regurgitant systolic wave.</p>
+            <p style="margin-top:6px"><strong>Clinical correlation:</strong> Pulsatile hepatomegaly on exam = CV waves. Inspiratory augmentation of V wave supports TR diagnosis. Severe TR can mimic constrictive pericarditis hemodynamically.</p>
+          </div>
+        </div>`;
+    }
+  },
+  // ── PHASE 3: HOCM ────────────────────────────────────────────────
+  hocm: {
+    title: 'HOCM',
+    traces: function() {
+      const isPost = pvcState === 'post';
+      const { ao, lv } = isPost ? getHOCMPostPVCParams() : getHOCMParams();
+      return [
+        { id: 'lv', label: 'LV', color: 'var(--clr-lv)',  gen: (b) => generateLVHOCM(b, lv) },
+        { id: 'ao', label: 'Ao', color: '#ffa726',          gen: (b) => generateAoHOCM(b, ao) },
+      ];
+    },
+    gradient: function(beat) {
+      const isPost = pvcState === 'post';
+      const { ao, lv } = isPost ? getHOCMPostPVCParams() : getHOCMParams();
+      const lvP = generateLVHOCM(beat, lv);
+      const aoP = generateAoHOCM(beat, ao);
+      if (beat > 0.05 && beat < 0.32 && lvP > aoP) return { top: aoP, bottom: lvP };
+      return null;
+    },
+    normalTraces: [
+      { id: 'ao_n', label: 'Ao (normal)', color: 'var(--normal-ghost)', gen: (b) => generateAo(b, NORMAL_PARAMS.ao) },
+    ],
+    defaultOn: ['lv', 'ao'],
+    scale: { min: 0, max: 240, step: 20 },
+    hasSeverity: true,
+    hasCompare: true,
+    hasProvocation: true,
+    teaching: function() {
+      const t = getSeverityT();
+      let label = 'Mild', cls = 'sev-mild';
+      if (t > 0.66) { label = 'Severe'; cls = 'sev-sev'; }
+      else if (t > 0.33) { label = 'Moderate'; cls = 'sev-mod'; }
+      const { ao, lv } = getHOCMParams();
+      const grad = Math.round(lv.LVSP + (lv.gradient || 30) * 0.6 - ao.SBP);
+      const pvcNote = pvcState === 'post'
+        ? '<li class="highlight" style="color:#ff1744"><strong>POST-PVC BEAT:</strong> Pulse pressure DECREASED despite ↑ LV pressure — Brockenbrough sign!</li>'
+        : '<li>Click <strong>"Trigger PVC"</strong> to demonstrate the Brockenbrough-Braunwald-Morrow sign</li>';
+      return `
+        <h3>HOCM — Hypertrophic Obstructive Cardiomyopathy <span class="tag">Lesson 7</span></h3>
+        <div class="tp-grid">
+          <ul class="tp-pearls">
+            <li>Current: <strong class="${cls}">${label}</strong> — LVOT gradient ≈ <strong>${grad} mmHg</strong></li>
+            ${pvcNote}
+            <li><strong>Spike-and-dome</strong> aortic waveform = pathognomonic for dynamic LVOT obstruction</li>
+            <li><strong>Spike:</strong> initial rapid upstroke (before SAM causes obstruction)</li>
+            <li><strong>Mid-systolic dip:</strong> SAM contacts septum → sudden flow reduction</li>
+            <li><strong>Dome:</strong> late systolic partial recovery of forward flow</li>
+            <li>Gradient is <strong>dynamic</strong> — changes with loading conditions</li>
+            <li>Resting gradient ≥30 = significant; provocable ≥50 = indication for septal reduction</li>
+          </ul>
+          <div class="tp-body">
+            <p><strong class="highlight">Brockenbrough-Braunwald-Morrow Sign:</strong></p>
+            <p>• Normal/Fixed AS: post-PVC → pulse pressure <strong>increases</strong> (Frank-Starling)</p>
+            <p>• HOCM: post-PVC → pulse pressure <strong>DECREASES</strong> (paradoxical!)</p>
+            <p style="margin-top:4px">Mechanism: post-extrasystolic potentiation → ↑ contractility → worsened SAM → ↑ obstruction → ↓ forward flow</p>
+            <p style="margin-top:8px"><strong>Provocation maneuvers:</strong></p>
+            <p>• <strong>Worsen gradient:</strong> Valsalva, standing, post-PVC, amyl nitrite, isoproterenol (↓ preload/afterload)</p>
+            <p>• <strong>Reduce gradient:</strong> Squatting, phenylephrine, volume, beta-blockers (↑ preload/afterload)</p>
+            <p style="margin-top:4px">Use the provocation slider to simulate these maneuvers. Bifid apical impulse on exam corresponds to spike-and-dome.</p>
+          </div>
+        </div>`;
+    }
+  },
+  // ── PHASE 4: CP / RCM / TAMPONADE ─────────────────────────────────
+  cp: {
+    title: 'Constrictive Pericarditis',
+    traces: function() {
+      const p = CP_PARAMS;
+      return [
+        { id: 'ra', label: 'RA', color: 'var(--clr-ra)', gen: (b) => generateRA(b, p.ra) },
+        { id: 'rv', label: 'RV', color: 'var(--clr-rv)', gen: (b) => generateVent_DipPlateau(b, { ...p.rv, SP: applyRespMod(p.rv.SP, p.respRV) }) },
+        { id: 'lv', label: 'LV', color: 'var(--clr-lv)', gen: (b) => generateVent_DipPlateau(b, { ...p.lv, SP: applyRespMod(p.lv.SP, p.respLV) }) },
+      ];
+    },
+    defaultOn: ['rv', 'lv'],
+    scale: { min: 0, max: 50, step: 5 },
+    hasSeverity: false,
+    hasCompare: false,
+    hasResp: true,
+    teaching: function() {
+      return `
+        <h3>Constrictive Pericarditis <span class="tag">Lesson 8</span></h3>
+        <div class="tp-grid">
+          <ul class="tp-pearls">
+            <li><strong>Dip-and-plateau</strong> (square root sign) = rapid early filling then abrupt halt</li>
+            <li><strong>M / W pattern RA:</strong> prominent x AND y descents</li>
+            <li><strong>Friedrich's sign:</strong> deep y descent = rapid early filling</li>
+            <li><strong>Kussmaul sign:</strong> RA fails to decrease (or ↑) with inspiration</li>
+            <li><strong>Diastolic equalization:</strong> RA ≈ RVEDP ≈ LVEDP (within 5 mmHg)</li>
+            <li>RVEDP/RVSP &gt; 1/3 → RVEDP ${CP_PARAMS.rv.EDP} / RVSP ${CP_PARAMS.rv.SP} = ${(CP_PARAMS.rv.EDP / CP_PARAMS.rv.SP).toFixed(2)}</li>
+            <li>PASP typically <strong>&lt;55 mmHg</strong> (here: ${CP_PARAMS.rv.SP})</li>
+            <li><strong>SAI &gt;1.1:</strong> Sensitivity 97%, Specificity ~100%</li>
+          </ul>
+          <div class="tp-body">
+            <p><strong class="highlight">VENTRICULAR DISCORDANCE</strong> (the crown jewel):</p>
+            <p>On <strong>inspiration</strong>: RV systolic ↑, LV systolic ↓ (opposite directions!)</p>
+            <p>Mechanism: fixed pericardial volume → septal shift left → RV filling ↑ at LV's expense.</p>
+            <p style="margin-top:6px">Toggle respiration ON to see RV and LV traces move in opposite directions.</p>
+            <p style="margin-top:8px"><strong>Key differentiators from RCM:</strong></p>
+            <p>• Discordant (not concordant) respiratory variation</p>
+            <p>• LVEDP ≈ RVEDP (not LVEDP >> RVEDP)</p>
+            <p>• PASP &lt;55 (not &gt;55)</p>
+            <p>• RVEDP/RVSP &gt;1/3</p>
+          </div>
+        </div>
+        <div class="tp-body" style="margin-top:10px;padding-top:10px;border-top:1px solid var(--border)">
+          <h4 style="font-size:12px;color:var(--accent);margin-bottom:6px">Echo Findings — Constrictive Pericarditis</h4>
+          <ul class="tp-pearls">
+            <li><strong>Septal bounce:</strong> respirophasic ventricular septal shift (leftward on inspiration, rightward on expiration)</li>
+            <li><strong>Annulus reversus:</strong> medial e' ≥ lateral e' (opposite of normal)</li>
+            <li><strong>Medial e' PRESERVED or INCREASED</strong> (&gt;9 cm/s) — key contrast with RCM</li>
+            <li><strong>Hepatic vein:</strong> prominent diastolic flow reversal in <strong>expiration</strong></li>
+            <li><strong>IVC:</strong> dilated, plethoric, NO respirophasic collapse (&lt;50% sniff)</li>
+            <li><strong>Mitral inflow:</strong> E/A &gt;1.5 with &gt;25% respiratory variation in E velocity</li>
+            <li><strong>Pericardium:</strong> thickened (&gt;3mm), may calcify; CT/CMR confirms</li>
+            <li><strong>Strain:</strong> global longitudinal strain may be preserved; regional anterolateral ↓</li>
+            <li><strong>Chamber geometry:</strong> conical deformity of ventricles, biatrial enlargement</li>
+          </ul>
+        </div>`;
+    }
+  },
+  rcm: {
+    title: 'Restrictive Cardiomyopathy',
+    traces: function() {
+      const p = RCM_PARAMS;
+      return [
+        { id: 'ra', label: 'RA', color: 'var(--clr-ra)', gen: (b) => generateRA(b, p.ra) },
+        { id: 'rv', label: 'RV', color: 'var(--clr-rv)', gen: (b) => generateVent_DipPlateau(b, { ...p.rv, SP: applyRespMod(p.rv.SP, p.respRV) }) },
+        { id: 'lv', label: 'LV', color: 'var(--clr-lv)', gen: (b) => generateVent_DipPlateau(b, { ...p.lv, SP: applyRespMod(p.lv.SP, p.respLV) }) },
+      ];
+    },
+    defaultOn: ['rv', 'lv'],
+    scale: { min: 0, max: 70, step: 10 },
+    hasSeverity: false,
+    hasCompare: false,
+    hasResp: true,
+    teaching: function() {
+      return `
+        <h3>Restrictive Cardiomyopathy <span class="tag">Lesson 9</span></h3>
+        <div class="tp-grid">
+          <ul class="tp-pearls">
+            <li><strong>VENTRICULAR CONCORDANCE:</strong> RV and LV move in SAME direction with respiration</li>
+            <li><strong>LVEDP &gt; RVEDP</strong> by &gt;5 mmHg → LVEDP ${RCM_PARAMS.lv.EDP} vs RVEDP ${RCM_PARAMS.rv.EDP} = <strong>Δ${RCM_PARAMS.lv.EDP - RCM_PARAMS.rv.EDP} mmHg</strong></li>
+            <li><strong>PASP &gt;55 mmHg</strong> (here: <strong>${RCM_PARAMS.rv.SP}</strong>) — contrast with CP (&lt;55)</li>
+            <li>RVEDP/RVSP <strong>&lt;1/3</strong> → ${RCM_PARAMS.rv.EDP}/${RCM_PARAMS.rv.SP} = ${(RCM_PARAMS.rv.EDP / RCM_PARAMS.rv.SP).toFixed(2)}</li>
+            <li>Dip-and-plateau MAY be present (not specific — also in CP)</li>
+            <li>Prominent <strong>a wave</strong> in RA (atrial kick against stiff ventricle)</li>
+            <li>Kussmaul sign: variable (may or may not be present)</li>
+            <li><strong>SAI &lt;1.1</strong> (concordant → no differential area change)</li>
+          </ul>
+          <div class="tp-body">
+            <p><strong class="highlight">VENTRICULAR CONCORDANCE</strong> = both ventricles move together:</p>
+            <p><strong>Inspiration</strong>: RV ↓, LV ↓ (both decrease — normal coupling to intrathoracic pressure)</p>
+            <p><strong>Expiration</strong>: RV ↑, LV ↑ (both increase)</p>
+            <p style="margin-top:6px">Toggle respiration ON and compare with CP: concordant (same direction) vs discordant (opposite).</p>
+            <p style="margin-top:8px"><strong>Key differentiators from CP:</strong></p>
+            <p>• Concordant (not discordant) respiratory variation</p>
+            <p>• LVEDP >> RVEDP (&gt;5 mmHg difference)</p>
+            <p>• PASP &gt;55 (pulmonary hypertension common)</p>
+            <p>• RVEDP/RVSP &lt;1/3</p>
+            <p style="margin-top:6px"><strong>Etiologies:</strong> Amyloidosis, sarcoidosis, hemochromatosis, radiation, Fabry, endomyocardial fibrosis</p>
+          </div>
+        </div>
+        <div class="tp-body" style="margin-top:10px;padding-top:10px;border-top:1px solid var(--border)">
+          <h4 style="font-size:12px;color:var(--accent);margin-bottom:6px">Echo Findings — Restrictive Cardiomyopathy</h4>
+          <ul class="tp-pearls">
+            <li><strong>Medial e' REDUCED</strong> (&lt;8 cm/s) — KEY contrast with CP (where e' is preserved)</li>
+            <li><strong>No annulus reversus:</strong> medial e' &lt; lateral e' (normal pattern)</li>
+            <li><strong>No septal bounce:</strong> normal respiratory septal motion</li>
+            <li><strong>Wall thickness:</strong> may be increased (amyloid "sparkling" myocardium, LVH)</li>
+            <li><strong>Diastolic dysfunction:</strong> grade III (restrictive) — tall E, small A, E/A &gt;2, short DT</li>
+            <li><strong>Mitral inflow:</strong> &lt;15% respiratory variation in E velocity (vs &gt;25% in CP)</li>
+            <li><strong>Tissue Doppler:</strong> E/e' markedly elevated (&gt;15) → high filling pressures</li>
+            <li><strong>Strain:</strong> global longitudinal strain reduced; apical sparing in amyloid ("cherry on top")</li>
+            <li><strong>Biatrial enlargement:</strong> common; ventricles may be normal or small</li>
+            <li><strong>IVC:</strong> dilated, but may show some respirophasic variation (unlike CP)</li>
+          </ul>
+        </div>`;
+    }
+  },
+  tamp: {
+    title: 'Cardiac Tamponade',
+    traces: function() {
+      const p = TAMP_PARAMS;
+      return [
+        { id: 'ra', label: 'RA', color: 'var(--clr-ra)', gen: (b) => generateRA(b, p.ra) },
+        { id: 'rv', label: 'RV', color: 'var(--clr-rv)', gen: (b) => generateVent_DipPlateau(b, { ...p.rv, SP: applyRespMod(p.rv.SP, p.respRV) }) },
+        { id: 'ao', label: 'Ao', color: 'var(--clr-ao)', gen: (b) => {
+          const mod = respEnabled ? Math.sin(respPhase) : 0;
+          return generateAo(b, { ...p.ao, SBP: p.ao.SBP + p.pulsus * mod });
+        }},
+      ];
+    },
+    defaultOn: ['ra', 'ao'],
+    scale: { min: 0, max: 50, step: 5 },
+    hasSeverity: false,
+    hasCompare: false,
+    hasResp: true,
+    teaching: function() {
+      return `
+        <h3>Cardiac Tamponade <span class="tag">Lesson 10</span></h3>
+        <div class="tp-grid">
+          <ul class="tp-pearls">
+            <li><strong>Pulsus paradoxus:</strong> &gt;10 mmHg inspiratory SBP drop (here: ~${TAMP_PARAMS.pulsus * 2} mmHg swing)</li>
+            <li><strong>BLUNTED y descent</strong> — THE key RA finding (contrast with deep y in CP)</li>
+            <li><strong>Prominent x descent</strong> preserved (systolic atrial relaxation unimpeded)</li>
+            <li><strong>Diastolic equalization:</strong> RA ≈ RVEDP ≈ PCWP ≈ pericardial pressure</li>
+            <li><strong>NO dip-and-plateau</strong> (filling impeded throughout diastole)</li>
+            <li><strong>NO Kussmaul sign</strong> (RA decreases with inspiration — contrast CP)</li>
+            <li>Beck's triad: hypotension + JVD + muffled heart sounds</li>
+            <li><strong>Low-pressure tamponade:</strong> can occur at intrapericardial 6-12 mmHg if hypovolemic</li>
+          </ul>
+          <div class="tp-body">
+            <p><strong class="highlight">PULSUS PARADOXUS MECHANISM:</strong></p>
+            <p>Inspiration → ↑ venous return to RV → septum shifts left (within fixed pericardium) → ↓ LV output → ↓ SBP</p>
+            <p style="margin-top:6px">Toggle respiration ON to see the arterial SBP swing with breathing.</p>
+            <p style="margin-top:8px"><strong>Tamponade vs Constriction:</strong></p>
+            <table style="font-size:10.5px;border-collapse:collapse;width:100%;margin-top:4px">
+              <tr style="border-bottom:1px solid var(--border)"><th style="text-align:left;padding:2px 6px">Feature</th><th style="padding:2px 6px">Tamponade</th><th style="padding:2px 6px">CP</th></tr>
+              <tr><td style="padding:2px 6px">y descent</td><td style="padding:2px 6px;text-align:center;color:#ff5252"><strong>Blunted</strong></td><td style="padding:2px 6px;text-align:center;color:#00e676"><strong>Deep</strong></td></tr>
+              <tr><td style="padding:2px 6px">Kussmaul</td><td style="padding:2px 6px;text-align:center">Absent</td><td style="padding:2px 6px;text-align:center">Present</td></tr>
+              <tr><td style="padding:2px 6px">Pulsus</td><td style="padding:2px 6px;text-align:center;color:#ff5252"><strong>&gt;10 mmHg</strong></td><td style="padding:2px 6px;text-align:center">Rare</td></tr>
+              <tr><td style="padding:2px 6px">Dip-plateau</td><td style="padding:2px 6px;text-align:center">Absent</td><td style="padding:2px 6px;text-align:center">Present</td></tr>
+            </table>
+          </div>
+        </div>
+        <div class="tp-body" style="margin-top:10px;padding-top:10px;border-top:1px solid var(--border)">
+          <h4 style="font-size:12px;color:var(--accent);margin-bottom:6px">Echo Findings — Cardiac Tamponade</h4>
+          <ul class="tp-pearls">
+            <li><strong>RA collapse:</strong> systolic RA free wall inversion (&gt;1/3 cardiac cycle = specific)</li>
+            <li><strong>RV diastolic collapse:</strong> early diastolic RV free wall inversion (most specific sign)</li>
+            <li><strong>Swinging heart:</strong> pendulum-like motion within large effusion → electrical alternans on ECG</li>
+            <li><strong>IVC:</strong> dilated (&gt;2.1 cm) with &lt;50% respiratory collapse</li>
+            <li><strong>Mitral inflow:</strong> &gt;25% inspiratory decrease in E velocity (respirophasic)</li>
+            <li><strong>Tricuspid inflow:</strong> &gt;40% inspiratory increase in E velocity</li>
+            <li><strong>Hepatic vein:</strong> diastolic flow reversal in <strong>expiration</strong></li>
+            <li><strong>Pericardial effusion:</strong> circumferential; fibrin strands may indicate exudate</li>
+            <li><strong>Effusive-constrictive:</strong> post-pericardiocentesis → constrictive physiology emerges (y descent appears, dip-plateau develops)</li>
+          </ul>
+        </div>`;
+    }
+  },
+  ph: {
+    title: 'Pulmonary Hypertension',
+    traces: function() {
+      const p = getPHParams();
+      return [
+        { id: 'pa', label: 'PA', color: 'var(--clr-pa)', gen: (b) => generatePA(b, p.pa) },
+        { id: 'rv', label: 'RV', color: 'var(--clr-rv)', gen: (b) => generateRV(b, p.rv) },
+        { id: 'pcwp', label: 'PCWP', color: 'var(--clr-pcwp)', gen: (b) => generatePCWP(b, p.pcwp) },
+        { id: 'ra', label: 'RA', color: 'var(--clr-ra)', gen: (b) => generateRA(b, p.ra) },
+      ];
+    },
+    normalTraces: [
+      { id: 'pa', label: 'PA (N)', color: 'var(--normal-ghost)', gen: (b) => generatePA(b, NORMAL_PARAMS.pa) },
+      { id: 'rv', label: 'RV (N)', color: 'var(--normal-ghost)', gen: (b) => generateRV(b, NORMAL_PARAMS.rv) },
+      { id: 'pcwp', label: 'PCWP (N)', color: 'var(--normal-ghost)', gen: (b) => generatePCWP(b, NORMAL_PARAMS.pcwp) },
+      { id: 'ra', label: 'RA (N)', color: 'var(--normal-ghost)', gen: (b) => generateRA(b, NORMAL_PARAMS.ra) },
+    ],
+    defaultOn: ['pa', 'rv', 'pcwp'],
+    scale: { min: 0, max: 80, step: 10 },
+    hasSeverity: false,
+    hasCompare: true,
+    hasPHType: true,
+    hasResp: false,
+    teaching: function() {
+      const p = getPHParams();
+      const mPAP = Math.round(p.pa.PADP + (p.pa.PASP - p.pa.PADP) / 3);
+      const TPG = mPAP - p.pcwp.mean;
+      const DPG = p.pa.PADP - p.pcwp.mean;
+      const CO = 5.0;
+      const PVR = ((mPAP - p.pcwp.mean) / CO).toFixed(1);
+      const PAPi = ((p.pa.PASP - p.pa.PADP) / p.ra.mean).toFixed(1);
+      const PAC = (70 / (p.pa.PASP - p.pa.PADP)).toFixed(1); // SV~70 / PP
+
+      const typeLabel = phType === 'pre' ? 'PRE-CAPILLARY' : phType === 'post' ? 'POST-CAPILLARY (Isolated)' : 'COMBINED PRE+POST';
+      const groupLabel = phType === 'pre' ? 'Group 1, 3, 4, 5' : phType === 'post' ? 'Group 2 (isolated)' : 'Group 2 (combined)';
+
+      return `
+        <h3>Pulmonary Hypertension <span class="tag">Lesson 11</span></h3>
+        <div class="tp-grid">
+          <ul class="tp-pearls">
+            <li><strong class="highlight">${typeLabel}</strong> — ${groupLabel}</li>
+            <li>PA ${p.pa.PASP}/${p.pa.PADP} — <strong>mPAP ${mPAP}</strong> mmHg ${mPAP > 20 ? '(>20 ✓)' : ''}</li>
+            <li>PCWP <strong>${p.pcwp.mean}</strong> mmHg — ${p.pcwp.mean <= 15 ? '≤15 (pre-capillary)' : '>15 (post-capillary)'}</li>
+            <li>TPG = mPAP - PCWP = <strong>${TPG}</strong> ${TPG > 12 ? '<span style="color:#ff5252">(>12 — pre-capillary component)</span>' : '(≤12)'}</li>
+            <li>DPG = PADP - PCWP = <strong>${DPG}</strong> ${DPG >= 7 ? '<span style="color:#ff5252">(≥7 — pre-capillary component)</span>' : '(<7)'}</li>
+            <li>PVR = TPG / CO = ${TPG} / ${CO} = <strong>${PVR} WU</strong> ${parseFloat(PVR) > 2 ? '<span style="color:#ff5252">(>2 WU)</span>' : '(≤2 WU)'}</li>
+            <li>PAPi = PP / RAP = ${p.pa.PASP - p.pa.PADP} / ${p.ra.mean} = <strong>${PAPi}</strong> ${parseFloat(PAPi) < 0.9 ? '<span style="color:#ff5252">(<0.9 — RV failure risk)</span>' : '(>0.9)'}</li>
+            <li>PA compliance = SV / PP ≈ <strong>${PAC} mL/mmHg</strong></li>
+          </ul>
+          <div class="tp-body">
+            <p><strong>2022 ESC/ERS Updated Criteria:</strong></p>
+            <p>PH defined as <strong>mPAP >20 mmHg</strong> (revised from >25)</p>
+            <p style="margin-top:6px"><strong>Classification:</strong></p>
+            <table style="font-size:10.5px;border-collapse:collapse;width:100%;margin-top:4px">
+              <tr style="border-bottom:1px solid var(--border)"><th style="text-align:left;padding:2px 6px">Type</th><th style="padding:2px 6px">PCWP</th><th style="padding:2px 6px">PVR</th></tr>
+              <tr ${phType === 'pre' ? 'style="color:var(--accent);font-weight:bold"' : ''}><td style="padding:2px 6px">Pre-capillary</td><td style="padding:2px 6px;text-align:center">≤15</td><td style="padding:2px 6px;text-align:center">>2 WU</td></tr>
+              <tr ${phType === 'post' ? 'style="color:var(--accent);font-weight:bold"' : ''}><td style="padding:2px 6px">Post-cap (isolated)</td><td style="padding:2px 6px;text-align:center">>15</td><td style="padding:2px 6px;text-align:center">≤2 WU</td></tr>
+              <tr ${phType === 'combined' ? 'style="color:var(--accent);font-weight:bold"' : ''}><td style="padding:2px 6px">Combined</td><td style="padding:2px 6px;text-align:center">>15</td><td style="padding:2px 6px;text-align:center">>2 WU</td></tr>
+            </table>
+            <p style="margin-top:8px"><strong>Acute vs Chronic RV:</strong> RV cannot acutely generate PASP >50 mmHg. PASP >50 = subacute/chronic remodeling.</p>
+            <p style="margin-top:6px"><strong>PCWP pitfall:</strong> hybrid PA-PCWP tracing common in severe PH. PCWP underestimates LVEDP in >50% of PH — always measure LVEDP directly.</p>
+          </div>
+        </div>
+        <div class="tp-body" style="margin-top:10px;padding-top:10px;border-top:1px solid var(--border)">
+          <h4 style="font-size:12px;color:var(--accent);margin-bottom:6px">Clinical Pearls</h4>
+          <ul class="tp-pearls">
+            <li><strong>Vasoreactivity testing</strong> (Group 1 PAH only): iNO, epoprostenol, or adenosine. Positive = ↓mPAP ≥10 to absolute <40 without ↓CO. Only ~10% respond → CCB candidates.</li>
+            <li><strong>Exercise PH:</strong> mPAP/CO slope >3 mmHg/L/min during exercise (emerging concept)</li>
+            <li><strong>RV-PA coupling:</strong> Ees/Ea ratio; uncoupling = RV failure despite stable pressures</li>
+            <li><strong>REVEAL 2.0 risk score:</strong> WHO FC, 6MWD, BNP, renal function, hemodynamics → 1-year mortality</li>
+            <li><strong>Volume loading test:</strong> 500mL saline → PCWP >18 suggests occult Group 2 (HFpEF)</li>
+          </ul>
+        </div>`;
+    }
+  },
+  eq: {
+    title: 'Equations & Calculations',
+    traces: function() { return []; },
+    defaultOn: [],
+    scale: { min: 0, max: 100, step: 10 },
+    hasSeverity: false,
+    hasCompare: false,
+    hasResp: false,
+    isEquations: true,
+    teaching: function() { return ''; }
+  }
+};
+
+// ════════════════════════════════════════════════════════════════════
+// EQUATIONS PANEL BUILDER
+// ════════════════════════════════════════════════════════════════════
+
+function buildEquationsPanel() {
+  return `
+    <div class="eq-header">
+      <h2>Hemodynamic Equations & Calculations</h2>
+      <p>Quick-reference formulas for the cath lab. For full calculations with report generation, use the <a href="/rhc/" target="_blank">RHC Calculator</a>.</p>
+    </div>
+    <div class="eq-grid">
+
+      <!-- FICK CARDIAC OUTPUT -->
+      <div class="eq-card">
+        <h3>Fick Cardiac Output</h3>
+        <div class="eq-formula">
+          CO <span class="eq-sym">=</span>
+          <span class="frac">
+            <span class="frac-num"><span class="eq-var">VO₂</span></span>
+            <span class="frac-den">(<span class="eq-var">CaO₂</span> <span class="eq-sym">−</span> <span class="eq-var">CvO₂</span>) <span class="eq-sym">×</span> <span class="eq-const">10</span></span>
+          </span>
+        </div>
+        <div class="eq-explain">
+          <strong>"Oxygen consumed ÷ oxygen extracted per pass."</strong><br>
+          <strong>Numerator</strong> = total O₂ consumption (mL/min). Assumed = 125 × BSA, or directly measured.<br>
+          <strong>Denominator</strong> = arteriovenous O₂ difference per liter of blood.<br>
+          CaO₂ = 1.36 × Hb × SaO₂/100 &nbsp; | &nbsp; CvO₂ = 1.36 × Hb × SvO₂/100<br>
+          <span class="eq-tip">The ×10 converts dL→L. SvO₂ = PA sat (true mixed venous).</span>
+        </div>
+        <div class="eq-mini-calc">
+          <div class="mc-title">Quick Calculator</div>
+          <div class="mc-row">
+            <label>Hb (g/dL)</label><input type="number" id="eqFickHb" value="14" step="0.1" oninput="calcFick()">
+            <label>BSA (m²)</label><input type="number" id="eqFickBSA" value="1.9" step="0.1" oninput="calcFick()">
+          </div>
+          <div class="mc-row">
+            <label>SaO₂ (%)</label><input type="number" id="eqFickSaO2" value="98" step="1" oninput="calcFick()">
+            <label>SvO₂ (%)</label><input type="number" id="eqFickSvO2" value="65" step="1" oninput="calcFick()">
+          </div>
+          <div class="mc-result" id="eqFickResult">CO = — &nbsp; CI = —</div>
+        </div>
+        <div class="eq-interp">
+          <strong>Normal:</strong> <span class="eq-norm">CO 4–8 L/min, CI 2.5–4.2 L/min/m²</span><br>
+          CI &lt;2.2 = cardiogenic shock range. Thermodilution unreliable in TR, low CO, shunts.
+        </div>
+      </div>
+
+      <!-- Qp/Qs SHUNT -->
+      <div class="eq-card">
+        <h3>Qp/Qs — Shunt Calculation</h3>
+        <div class="eq-formula">
+          Qp/Qs <span class="eq-sym">=</span>
+          <span class="frac">
+            <span class="frac-num"><span class="eq-var">SaO₂</span> <span class="eq-sym">−</span> <span class="eq-var">SvO₂</span></span>
+            <span class="frac-den"><span class="eq-var">SpvO₂</span> <span class="eq-sym">−</span> <span class="eq-var">SpaO₂</span></span>
+          </span>
+        </div>
+        <div class="eq-explain">
+          <strong>"Body spends, lungs reload."</strong><br>
+          <strong>Numerator</strong> = body spend (aorta − mixed venous). How much O₂ the body extracts per pass.<br>
+          <strong>Denominator</strong> = lung reload (pulmonary vein − PA). How much O₂ the lungs add per pass.<br>
+          <span class="eq-tip">SpvO₂ ≈ SaO₂ if no R→L shunt (use 98% if not measured). SvO₂ = Flamm: (3×SVC + IVC)/4.</span>
+        </div>
+        <div class="eq-mini-calc">
+          <div class="mc-title">Quick Calculator</div>
+          <div class="mc-row">
+            <label>SaO₂ (%)</label><input type="number" id="eqQpSaO2" value="98" step="1" oninput="calcQpQs()">
+            <label>SvO₂ (%)</label><input type="number" id="eqQpSvO2" value="65" step="1" oninput="calcQpQs()">
+          </div>
+          <div class="mc-row">
+            <label>SpvO₂ (%)</label><input type="number" id="eqQpSpvO2" value="98" step="1" oninput="calcQpQs()">
+            <label>SpaO₂ (%)</label><input type="number" id="eqQpSpaO2" value="75" step="1" oninput="calcQpQs()">
+          </div>
+          <div class="mc-result" id="eqQpQsResult">Qp/Qs = —</div>
+        </div>
+        <div class="eq-interp">
+          Qp:Qs <strong>1.0</strong> = no shunt &nbsp;|&nbsp; <strong class="eq-warn">>1.5</strong> = significant L→R (consider closure) &nbsp;|&nbsp; <strong class="eq-alert">&lt;1.0</strong> = R→L shunt<br>
+          <strong>Step-up localization:</strong> >7% at atrial level, >5% at ventricular, >5% at PA.<br>
+          Use true Fick (not thermodilution) for Qp in PVR calculation.
+        </div>
+      </div>
+
+      <!-- GORLIN VALVE AREA -->
+      <div class="eq-card">
+        <h3>Gorlin — Valve Area</h3>
+        <div class="eq-formula">
+          AVA <span class="eq-sym">=</span>
+          <span class="frac">
+            <span class="frac-num"><span class="eq-var">CO</span></span>
+            <span class="frac-den"><span class="eq-const">44.3</span> <span class="eq-sym">×</span> <span class="eq-var">HR</span> <span class="eq-sym">×</span> <span class="eq-var">SEP</span> <span class="eq-sym">×</span> √<span class="eq-var">ΔP</span></span>
+          </span>
+        </div>
+        <div class="eq-explain">
+          <strong>"Flow across the valve ÷ how hard it has to push."</strong><br>
+          <strong>Numerator</strong> = cardiac output (mL/min).<br>
+          <strong>Denominator</strong> = flow rate × hydraulic resistance. SEP = systolic ejection period (seconds/beat).<br>
+          For <strong>MVA</strong>: use constant <strong>37.7</strong> and <strong>DFP</strong> (diastolic filling period) instead of SEP.<br>
+          <span class="eq-tip">Hakki shortcut: AVA ≈ CO / √ΔP<sub>peak</sub> (only valid HR 60–100).</span>
+        </div>
+        <div class="eq-mini-calc">
+          <div class="mc-title">Quick Calculator</div>
+          <div class="mc-row">
+            <label>CO (L/min)</label><input type="number" id="eqGorCO" value="5.0" step="0.1" oninput="calcGorlin()">
+            <label>HR</label><input type="number" id="eqGorHR" value="72" step="1" oninput="calcGorlin()">
+          </div>
+          <div class="mc-row">
+            <label>SEP (sec)</label><input type="number" id="eqGorSEP" value="0.32" step="0.01" oninput="calcGorlin()">
+            <label>Mean ΔP</label><input type="number" id="eqGorGrad" value="45" step="1" oninput="calcGorlin()">
+          </div>
+          <div class="mc-result" id="eqGorlinResult">AVA = —</div>
+        </div>
+        <div class="eq-interp">
+          <strong>Severe AS:</strong> <span class="eq-alert">AVA &lt;1.0 cm²</span> &nbsp;|&nbsp; <strong>Severe MS:</strong> <span class="eq-alert">MVA &lt;1.5 cm²</span><br>
+          Gorlin underestimates area in low-flow states. Use dobutamine stress echo to confirm.
+        </div>
+      </div>
+
+      <!-- SVR / PVR -->
+      <div class="eq-card">
+        <h3>Vascular Resistance</h3>
+        <div class="eq-formula">
+          SVR <span class="eq-sym">=</span>
+          <span class="frac">
+            <span class="frac-num">(<span class="eq-var">MAP</span> <span class="eq-sym">−</span> <span class="eq-var">RAP</span>) <span class="eq-sym">×</span> <span class="eq-const">80</span></span>
+            <span class="frac-den"><span class="eq-var">CO</span></span>
+          </span>
+        </div>
+        <div class="eq-formula" style="margin-top:6px">
+          PVR <span class="eq-sym">=</span>
+          <span class="frac">
+            <span class="frac-num">(<span class="eq-var">mPAP</span> <span class="eq-sym">−</span> <span class="eq-var">PCWP</span>) <span class="eq-sym">×</span> <span class="eq-const">80</span></span>
+            <span class="frac-den"><span class="eq-var">CO</span></span>
+          </span>
+        </div>
+        <div class="eq-explain">
+          <strong>"Pressure drop across the bed ÷ flow."</strong> Ohm's law for blood.<br>
+          <strong>SVR</strong> = systemic afterload (LV pushes against). <strong>PVR</strong> = pulmonary afterload (RV pushes against).<br>
+          ×80 converts Wood units → dynes·s·cm⁻⁵. <strong>Omit ×80 for Wood units.</strong><br>
+          <span class="eq-tip">TPG = mPAP − PCWP (>12 = pre-cap component). DPG = PADP − PCWP (≥7 = pre-cap).</span>
+        </div>
+        <div class="eq-mini-calc">
+          <div class="mc-title">Quick Calculator</div>
+          <div class="mc-row">
+            <label>MAP</label><input type="number" id="eqResMAP" value="90" step="1" oninput="calcResistance()">
+            <label>RAP</label><input type="number" id="eqResRAP" value="5" step="1" oninput="calcResistance()">
+            <label>CO</label><input type="number" id="eqResCO" value="5.0" step="0.1" oninput="calcResistance()">
+          </div>
+          <div class="mc-row">
+            <label>mPAP</label><input type="number" id="eqResPAP" value="15" step="1" oninput="calcResistance()">
+            <label>PCWP</label><input type="number" id="eqResPCWP" value="10" step="1" oninput="calcResistance()">
+          </div>
+          <div class="mc-result" id="eqResResult">SVR = — &nbsp; PVR = —</div>
+        </div>
+        <div class="eq-interp">
+          <strong>SVR normal:</strong> <span class="eq-norm">800–1200 dynes</span> (10–15 WU) &nbsp;|&nbsp; <strong>PVR normal:</strong> <span class="eq-norm">&lt;240 dynes</span> (&lt;3 WU)<br>
+          PVR >2 WU with mPAP >20 = pre-capillary PH (2022 ESC/ERS).
+        </div>
+      </div>
+
+      <!-- AR INDEX -->
+      <div class="eq-card">
+        <h3>Aortic Regurgitation Index</h3>
+        <div class="eq-formula">
+          ARI <span class="eq-sym">=</span>
+          <span class="frac">
+            <span class="frac-num"><span class="eq-var">AoDBP</span> <span class="eq-sym">−</span> <span class="eq-var">LVEDP</span></span>
+            <span class="frac-den"><span class="eq-var">AoSBP</span></span>
+          </span>
+        </div>
+        <div class="eq-explain">
+          <strong>"How much diastolic driving gradient remains."</strong><br>
+          In severe AR, LVEDP rises toward AoDBP, shrinking the gradient that drives coronary perfusion.<br>
+          The index normalizes this to systolic pressure.<br>
+          <span class="eq-tip">Measured at end-diastole. A low ARI predicts need for surgery.</span>
+        </div>
+        <div class="eq-mini-calc">
+          <div class="mc-title">Quick Calculator</div>
+          <div class="mc-row">
+            <label>AoDBP</label><input type="number" id="eqARIdbp" value="60" step="1" oninput="calcARI()">
+            <label>LVEDP</label><input type="number" id="eqARIlvedp" value="15" step="1" oninput="calcARI()">
+            <label>AoSBP</label><input type="number" id="eqARIsbp" value="140" step="1" oninput="calcARI()">
+          </div>
+          <div class="mc-result" id="eqARIResult">ARI = —</div>
+        </div>
+        <div class="eq-interp">
+          ARI <strong class="eq-norm">>0.25</strong> = mild–moderate &nbsp;|&nbsp; <strong class="eq-alert">≤0.25</strong> = severe AR (surgery indicated)<br>
+          Correlates with angiographic grade. Low ARI = equalization → impaired coronary flow.
+        </div>
+      </div>
+
+      <!-- OTHER HIGH-YIELD -->
+      <div class="eq-card">
+        <h3>Other High-Yield Formulas</h3>
+        <div class="eq-formula" style="font-size:13px; text-align:left; line-height: 2.2;">
+          <strong>SAI</strong> <span class="eq-sym">=</span>
+          <span class="frac">
+            <span class="frac-num">RV<sub>insp</sub> / LV<sub>insp</sub></span>
+            <span class="frac-den">RV<sub>exp</sub> / LV<sub>exp</sub></span>
+          </span>
+          <span style="color:var(--text-dim); margin-left:8px; font-size:11px">(>1.1 = CP, sens 97%)</span><br>
+          <strong>PAPi</strong> <span class="eq-sym">=</span>
+          <span class="frac">
+            <span class="frac-num">PASP <span class="eq-sym">−</span> PADP</span>
+            <span class="frac-den">RAP</span>
+          </span>
+          <span style="color:var(--text-dim); margin-left:8px; font-size:11px">(&lt;0.9 predicts RV failure)</span><br>
+          <strong>DPG</strong> <span class="eq-sym">=</span> PADP − PCWP
+          <span style="color:var(--text-dim); margin-left:8px; font-size:11px">(≥7 = pre-cap PH component)</span><br>
+          <strong>MAP</strong> <span class="eq-sym">=</span> DBP + ⅓(SBP − DBP)<br>
+          <strong>QTc</strong> <span class="eq-sym">=</span>
+          <span class="frac">
+            <span class="frac-num">QT</span>
+            <span class="frac-den">√RR</span>
+          </span>
+          <span style="color:var(--text-dim); margin-left:8px; font-size:11px">(Bazett correction)</span>
+        </div>
+        <div class="eq-explain">
+          <strong>LVEDP grading:</strong> normal &lt;12, borderline 12–16, elevated 16–20, severely elevated >20 mmHg.<br>
+          <strong>Damping coefficient:</strong> overshoot / (SBP − DBP). Optimal 0.6–0.7 → adequate frequency response.<br>
+          <strong>PA compliance:</strong> SV / (PASP − PADP). Low compliance = poor RV-PA coupling, worse prognosis in PH.
+        </div>
+      </div>
+
+    </div>`;
+}
+
+// ── Equation mini-calculators ────────────────────────────────────
+
+function calcFick() {
+  const hb = parseFloat(document.getElementById('eqFickHb').value) || 0;
+  const bsa = parseFloat(document.getElementById('eqFickBSA').value) || 0;
+  const saO2 = parseFloat(document.getElementById('eqFickSaO2').value) || 0;
+  const svO2 = parseFloat(document.getElementById('eqFickSvO2').value) || 0;
+  const vo2 = 125 * bsa;
+  const caO2 = 1.36 * hb * saO2 / 100;
+  const cvO2 = 1.36 * hb * svO2 / 100;
+  const avDiff = caO2 - cvO2;
+  if (avDiff <= 0 || bsa <= 0) { document.getElementById('eqFickResult').innerHTML = 'CO = — &nbsp; CI = —'; return; }
+  const co = vo2 / (avDiff * 10);
+  const ci = co / bsa;
+  let cls = ci >= 2.5 ? 'eq-norm' : ci >= 2.2 ? 'eq-warn' : 'eq-alert';
+  document.getElementById('eqFickResult').innerHTML =
+    `CO = <strong>${co.toFixed(1)}</strong> L/min &nbsp;|&nbsp; CI = <strong class="${cls}">${ci.toFixed(1)}</strong> L/min/m² &nbsp;<span style="font-size:10px;color:var(--text-dim)">(VO₂ assumed ${Math.round(vo2)})</span>`;
+}
+
+function calcQpQs() {
+  const saO2 = parseFloat(document.getElementById('eqQpSaO2').value) || 0;
+  const svO2 = parseFloat(document.getElementById('eqQpSvO2').value) || 0;
+  const spvO2 = parseFloat(document.getElementById('eqQpSpvO2').value) || 0;
+  const spaO2 = parseFloat(document.getElementById('eqQpSpaO2').value) || 0;
+  const den = spvO2 - spaO2;
+  if (den <= 0) { document.getElementById('eqQpQsResult').innerHTML = 'Qp/Qs = —'; return; }
+  const ratio = (saO2 - svO2) / den;
+  let interp, cls;
+  if (ratio > 1.5) { interp = 'Significant L→R shunt'; cls = 'eq-alert'; }
+  else if (ratio > 1.1) { interp = 'Small L→R shunt'; cls = 'eq-warn'; }
+  else if (ratio >= 0.9) { interp = 'No significant shunt'; cls = 'eq-norm'; }
+  else { interp = 'R→L shunt'; cls = 'eq-alert'; }
+  document.getElementById('eqQpQsResult').innerHTML =
+    `Qp/Qs = <strong>${ratio.toFixed(2)}</strong> &nbsp;<span class="${cls}" style="font-size:11px">${interp}</span>`;
+}
+
+function calcGorlin() {
+  const co = (parseFloat(document.getElementById('eqGorCO').value) || 0) * 1000; // mL/min
+  const hr = parseFloat(document.getElementById('eqGorHR').value) || 0;
+  const sep = parseFloat(document.getElementById('eqGorSEP').value) || 0;
+  const grad = parseFloat(document.getElementById('eqGorGrad').value) || 0;
+  if (hr <= 0 || sep <= 0 || grad <= 0) { document.getElementById('eqGorlinResult').innerHTML = 'AVA = —'; return; }
+  const ava = co / (44.3 * hr * sep * Math.sqrt(grad));
+  const hakki = (co / 1000) / Math.sqrt(grad);
+  let cls = ava < 1.0 ? 'eq-alert' : ava < 1.5 ? 'eq-warn' : 'eq-norm';
+  document.getElementById('eqGorlinResult').innerHTML =
+    `AVA = <strong class="${cls}">${ava.toFixed(2)}</strong> cm² &nbsp;|&nbsp; Hakki = <strong>${hakki.toFixed(2)}</strong> cm²`;
+}
+
+function calcResistance() {
+  const map = parseFloat(document.getElementById('eqResMAP').value) || 0;
+  const rap = parseFloat(document.getElementById('eqResRAP').value) || 0;
+  const co = parseFloat(document.getElementById('eqResCO').value) || 0;
+  const mpap = parseFloat(document.getElementById('eqResPAP').value) || 0;
+  const pcwp = parseFloat(document.getElementById('eqResPCWP').value) || 0;
+  if (co <= 0) { document.getElementById('eqResResult').innerHTML = 'SVR = — &nbsp; PVR = —'; return; }
+  const svr = ((map - rap) / co) * 80;
+  const pvr = ((mpap - pcwp) / co) * 80;
+  const svrWU = (map - rap) / co;
+  const pvrWU = (mpap - pcwp) / co;
+  let svrCls = svr >= 800 && svr <= 1200 ? 'eq-norm' : svr > 1200 ? 'eq-warn' : 'eq-alert';
+  let pvrCls = pvr < 240 ? 'eq-norm' : 'eq-alert';
+  document.getElementById('eqResResult').innerHTML =
+    `SVR = <strong class="${svrCls}">${Math.round(svr)}</strong> dynes (${svrWU.toFixed(1)} WU) &nbsp;|&nbsp; PVR = <strong class="${pvrCls}">${Math.round(pvr)}</strong> dynes (${pvrWU.toFixed(1)} WU)`;
+}
+
+function calcARI() {
+  const dbp = parseFloat(document.getElementById('eqARIdbp').value) || 0;
+  const lvedp = parseFloat(document.getElementById('eqARIlvedp').value) || 0;
+  const sbp = parseFloat(document.getElementById('eqARIsbp').value) || 0;
+  if (sbp <= 0) { document.getElementById('eqARIResult').innerHTML = 'ARI = —'; return; }
+  const ari = (dbp - lvedp) / sbp;
+  let cls = ari > 0.25 ? 'eq-norm' : 'eq-alert';
+  let interp = ari > 0.25 ? 'Mild–moderate AR' : 'Severe AR — surgery indicated';
+  document.getElementById('eqARIResult').innerHTML =
+    `ARI = <strong class="${cls}">${ari.toFixed(2)}</strong> &nbsp;<span class="${cls}" style="font-size:11px">${interp}</span>`;
+}
+
+// ════════════════════════════════════════════════════════════════════
+// CALCULATOR HTML
+// ════════════════════════════════════════════════════════════════════
+
+function getGorlinCalcHTML() {
+  return `
+    <div class="calc-panel">
+      <h4>Gorlin & Hakki AVA Calculator</h4>
+      <div class="calc-row"><label>CO (L/min)</label><input type="number" id="calcCO" value="5.0" step="0.1" oninput="calcGorlinAVA()"></div>
+      <div class="calc-row"><label>HR (bpm)</label><input type="number" id="calcHR" value="72" oninput="calcGorlinAVA()"></div>
+      <div class="calc-row"><label>SEP (sec)</label><input type="number" id="calcSEP" value="0.32" step="0.01" oninput="calcGorlinAVA()"></div>
+      <div class="calc-row"><label>Mean Grad</label><input type="number" id="calcGrad" value="45" step="1" oninput="calcGorlinAVA()"></div>
+      <div class="calc-row"><label>Peak Grad</label><input type="number" id="calcPeak" value="70" step="1" oninput="calcGorlinAVA()"></div>
+      <div class="calc-result" id="gorlinResult">AVA = —</div>
+    </div>`;
+}
+
+function calcGorlinAVA() {
+  const co = parseFloat(document.getElementById('calcCO')?.value) || 5;
+  const hr = parseFloat(document.getElementById('calcHR')?.value) || 72;
+  const sep = parseFloat(document.getElementById('calcSEP')?.value) || 0.32;
+  const grad = parseFloat(document.getElementById('calcGrad')?.value) || 40;
+  const peak = parseFloat(document.getElementById('calcPeak')?.value) || 70;
+
+  const coMl = co * 1000;
+  const gorlin = coMl / (44.3 * hr * sep * Math.sqrt(grad));
+  const hakki = co / Math.sqrt(peak);
+
+  let sev = '', cls = '';
+  if (gorlin < 0.6) { sev = 'Critical'; cls = 'sev-crit'; }
+  else if (gorlin < 1.0) { sev = 'Severe'; cls = 'sev-sev'; }
+  else if (gorlin < 1.5) { sev = 'Moderate'; cls = 'sev-mod'; }
+  else { sev = 'Mild'; cls = 'sev-mild'; }
+
+  const el = document.getElementById('gorlinResult');
+  if (el) el.innerHTML = `Gorlin AVA = <span class="val">${gorlin.toFixed(2)} cm²</span> <span class="sev ${cls}">${sev}</span> &nbsp;|&nbsp; Hakki AVA = <span class="val">${hakki.toFixed(2)} cm²</span>`;
+}
+
+function getGorlinMVACalcHTML() {
+  return `
+    <div class="calc-panel">
+      <h4>Gorlin MVA Calculator</h4>
+      <div class="calc-row"><label>CO (L/min)</label><input type="number" id="calcMCO" value="5.0" step="0.1" oninput="calcGorlinMVA()"></div>
+      <div class="calc-row"><label>HR (bpm)</label><input type="number" id="calcMHR" value="72" oninput="calcGorlinMVA()"></div>
+      <div class="calc-row"><label>DFP (sec)</label><input type="number" id="calcDFP" value="0.42" step="0.01" oninput="calcGorlinMVA()"></div>
+      <div class="calc-row"><label>Mean Grad</label><input type="number" id="calcMGrad" value="12" step="1" oninput="calcGorlinMVA()"></div>
+      <div class="calc-result" id="gorlinMVAResult">MVA = —</div>
+    </div>`;
+}
+
+function calcGorlinMVA() {
+  const co = parseFloat(document.getElementById('calcMCO')?.value) || 5;
+  const hr = parseFloat(document.getElementById('calcMHR')?.value) || 72;
+  const dfp = parseFloat(document.getElementById('calcDFP')?.value) || 0.42;
+  const grad = parseFloat(document.getElementById('calcMGrad')?.value) || 12;
+
+  const coMl = co * 1000;
+  const mva = coMl / (37.7 * hr * dfp * Math.sqrt(grad));
+
+  let sev = '', cls = '';
+  if (mva < 1.0) { sev = 'Severe'; cls = 'sev-sev'; }
+  else if (mva < 1.5) { sev = 'Moderate'; cls = 'sev-mod'; }
+  else { sev = 'Mild'; cls = 'sev-mild'; }
+
+  const el = document.getElementById('gorlinMVAResult');
+  if (el) el.innerHTML = `Gorlin MVA = <span class="val">${mva.toFixed(2)} cm²</span> <span class="sev ${cls}">${sev}</span>`;
+}
+
+// ════════════════════════════════════════════════════════════════════
+// LESSON SWITCHING
+// ════════════════════════════════════════════════════════════════════
+
+function switchLesson(id) {
+  if (!LESSONS[id]) return;
+  currentLesson = id;
+  const lesson = LESSONS[id];
+
+  // Update sidebar
+  document.querySelectorAll('.lesson-btn').forEach(b => b.classList.remove('active'));
+  const btn = document.querySelector(`.lesson-btn[data-lesson="${id}"]`);
+  if (btn) btn.classList.add('active');
+
+  // Controls
+  document.getElementById('severityGroup').style.display = lesson.hasSeverity ? '' : 'none';
+  document.getElementById('compareGroup').style.display = lesson.hasCompare ? '' : 'none';
+  document.getElementById('acuteGroup').style.display = lesson.hasAcuteToggle ? '' : 'none';
+  document.getElementById('pvcGroup').style.display = lesson.hasProvocation ? '' : 'none';
+  document.getElementById('provocationGroup').style.display = lesson.hasProvocation ? '' : 'none';
+  document.getElementById('phTypeGroup').style.display = lesson.hasPHType ? '' : 'none';
+  document.getElementById('respGroup').style.display = lesson.hasResp ? '' : 'none';
+  // Reset PH type on lesson switch
+  phType = 'pre';
+  document.getElementById('phPreBtn').classList.add('on');
+  document.getElementById('phPostBtn').classList.remove('on');
+  document.getElementById('phCombBtn').classList.remove('on');
+  // Reset respiratory state on lesson switch
+  respEnabled = false;
+  respPhase = 0;
+  clearWaveBuffer();
+  const respBtn = document.getElementById('respBtn');
+  if (respBtn) { respBtn.textContent = 'Respiration'; respBtn.classList.remove('on'); }
+  // Reset PVC state on lesson switch
+  pvcState = 'none';
+  pvcBeatCountdown = 0;
+  hocmProvocation = 0;
+  const provSlider = document.getElementById('provSlider');
+  if (provSlider) provSlider.value = 0;
+  const provVal = document.getElementById('provVal');
+  if (provVal) provVal.textContent = 'Baseline';
+  const pvcBtn = document.getElementById('pvcBtn');
+  if (pvcBtn) { pvcBtn.textContent = 'Trigger PVC'; pvcBtn.disabled = false; }
+
+  // Equations panel: show/hide canvas vs formula grid
+  const eqPanel = document.getElementById('equationsPanel');
+  const controlsRow = document.querySelector('.controls-row');
+  const teachingPanel = document.getElementById('teachingPanel');
+  const resizeHandle = document.getElementById('resizeHandle');
+  if (lesson.isEquations) {
+    eqPanel.innerHTML = buildEquationsPanel();
+    eqPanel.classList.add('active');
+    document.getElementById('ecgCanvas').style.display = 'none';
+    document.getElementById('waveCanvas').style.display = 'none';
+    controlsRow.style.display = 'none';
+    teachingPanel.style.display = 'none';
+    resizeHandle.style.display = 'none';
+    // Run initial calculations
+    calcFick(); calcQpQs(); calcGorlin(); calcResistance(); calcARI();
+  } else {
+    eqPanel.classList.remove('active');
+    eqPanel.innerHTML = '';
+    document.getElementById('ecgCanvas').style.display = '';
+    document.getElementById('waveCanvas').style.display = '';
+    controlsRow.style.display = '';
+    teachingPanel.style.display = '';
+    resizeHandle.style.display = '';
+  }
+
+  // Build trace toggles
+  rebuildTraceToggles();
+
+  // Update teaching panel
+  updateTeaching();
+
+  // Reset scroll for clean look
+  scrollX = 0;
+  redrawNeeded = true;
+}
+
+function rebuildTraceToggles() {
+  const lesson = LESSONS[currentLesson];
+  const traces = typeof lesson.traces === 'function' ? lesson.traces() : lesson.traces;
+  const container = document.getElementById('traceToggles');
+  container.innerHTML = '';
+  traceVis = {};
+
+  traces.forEach(tr => {
+    traceVis[tr.id] = (lesson.defaultOn || []).includes(tr.id);
+    const btn = document.createElement('button');
+    btn.className = 'trace-tog' + (traceVis[tr.id] ? ' on' : '');
+    btn.textContent = tr.label;
+    btn.style.color = getComputedColor(tr.color);
+    btn.onclick = () => {
+      traceVis[tr.id] = !traceVis[tr.id];
+      btn.classList.toggle('on');
+      redrawNeeded = true;
+    };
+    container.appendChild(btn);
+  });
+}
+
+function getComputedColor(c) {
+  if (!c.startsWith('var(')) return c;
+  const prop = c.replace('var(','').replace(')','');
+  return getComputedStyle(document.documentElement).getPropertyValue(prop).trim() || c;
+}
+
+function updateTeaching() {
+  const lesson = LESSONS[currentLesson];
+  teachingPanel.innerHTML = lesson.teaching();
+  // Trigger calc if present
+  if (currentLesson === 'as') setTimeout(calcGorlinAVA, 50);
+  if (currentLesson === 'ms') setTimeout(calcGorlinMVA, 50);
+}
+
+// ════════════════════════════════════════════════════════════════════
+// CONTROLS
+// ════════════════════════════════════════════════════════════════════
+
+function updateHR(val) {
+  HR = parseInt(val);
+  document.getElementById('hrVal').textContent = val;
+  if (bufferActive) clearWaveBuffer(); // HR changes beatFrac mapping
+  redrawNeeded = true;
+}
+
+function updateSeverity(val) {
+  severity = parseInt(val);
+  let label = 'Mild';
+  if (severity > 66) label = 'Severe';
+  else if (severity > 33) label = 'Moderate';
+  document.getElementById('sevVal').textContent = label;
+  updateTeaching();
+  redrawNeeded = true;
+}
+
+function setSpeed(s) {
+  speed = s;
+  document.getElementById('speed25').classList.toggle('on', s === 25);
+  document.getElementById('speed50').classList.toggle('on', s === 50);
+  if (bufferActive) clearWaveBuffer(); // speed changes px/beat mapping
+  redrawNeeded = true;
+}
+
+function toggleCompare() {
+  compareNormal = document.getElementById('compareNormal').checked;
+  redrawNeeded = true;
+}
+
+function triggerPVC() {
+  if (currentLesson !== 'hocm' || pvcState !== 'none') return;
+  // Freeze current canvas into buffer BEFORE pvcState changes
+  // This ensures past beats stay normal — only new leading-edge pixels show PVC/post-PVC
+  prefillWaveBuffer();
+  pvcState = 'pvc';
+  pvcBeatCountdown = 1;
+  pvcScrollStart = scrollX;
+  document.getElementById('pvcBtn').textContent = 'PVC active...';
+  document.getElementById('pvcBtn').disabled = true;
+}
+
+function updateProvocation(val) {
+  hocmProvocation = parseInt(val) / 100;
+  let label = 'Baseline';
+  if (hocmProvocation > 0.3) label = 'Valsalva / Amyl';
+  else if (hocmProvocation > 0) label = '↓ Preload';
+  else if (hocmProvocation < -0.3) label = 'Squat / Phenyl';
+  else if (hocmProvocation < 0) label = '↑ Afterload';
+  document.getElementById('provVal').textContent = label;
+  updateTeaching();
+  redrawNeeded = true;
+}
+
+function setAcute(isAcute) {
+  mrAcute = isAcute;
+  document.getElementById('acuteBtn').classList.toggle('on', isAcute);
+  document.getElementById('chronicBtn').classList.toggle('on', !isAcute);
+  updateTeaching();
+  redrawNeeded = true;
+}
+
+function togglePause() {
+  paused = !paused;
+  document.getElementById('pauseBtn').textContent = paused ? '▶' : '⏸';
+  document.getElementById('pauseBtn').classList.toggle('on', !paused);
+}
+
+function toggleResp() {
+  respEnabled = !respEnabled;
+  const btn = document.getElementById('respBtn');
+  btn.classList.toggle('on', respEnabled);
+  btn.textContent = respEnabled ? 'Respiration ON' : 'Respiration';
+  if (respEnabled) {
+    respPhase = 0;
+    // Freeze current canvas into buffer BEFORE respPhase starts changing.
+    // This ensures all existing (past) pixels stay flat — only new pixels
+    // at the leading edge will show respiratory modulation.
+    prefillWaveBuffer();
+  } else {
+    respPhase = 0;
+    clearWaveBuffer(); // stateless rendering fine without resp
+  }
+  updateTeaching();
+  redrawNeeded = true;
+}
+
+function toggleMode() {
+  isDark = !isDark;
+  document.body.classList.toggle('light', !isDark);
+  document.getElementById('modeToggle').textContent = isDark ? 'Light Mode' : 'Dark Mode';
+  rebuildTraceToggles();
+  redrawNeeded = true;
+}
+
+// ════════════════════════════════════════════════════════════════════
+// CANVAS SIZING
+// ════════════════════════════════════════════════════════════════════
+
+const ECG_HEIGHT = 50;
+
+function sizeCanvases() {
+  const area = canvasArea;
+  const w = area.clientWidth;
+  const h = area.clientHeight - ECG_HEIGHT;
+
+  ecgCanvas.width = w * DPR;
+  ecgCanvas.height = ECG_HEIGHT * DPR;
+  ecgCanvas.style.width = w + 'px';
+  ecgCanvas.style.height = ECG_HEIGHT + 'px';
+
+  waveCanvas.width = w * DPR;
+  waveCanvas.height = Math.max(200, h) * DPR;
+  waveCanvas.style.width = w + 'px';
+  waveCanvas.style.height = Math.max(200, h) + 'px';
+
+  redrawNeeded = true;
+}
+
+// ════════════════════════════════════════════════════════════════════
+// RENDERING
+// ════════════════════════════════════════════════════════════════════
+
+function mmHgToY(mmHg, scale, canvasH) {
+  const range = scale.max - scale.min;
+  const frac = (mmHg - scale.min) / range;
+  const margin = 20 * DPR;
+  return canvasH - margin - frac * (canvasH - 2 * margin);
+}
+
+function drawGrid(ctx, w, h, scale) {
+  ctx.save();
+  // Minor gridlines
+  ctx.strokeStyle = getComputedColor('var(--grid-minor)');
+  ctx.lineWidth = 1;
+  for (let mmHg = scale.min; mmHg <= scale.max; mmHg += (scale.step / 5) || 1) {
+    const y = mmHgToY(mmHg, scale, h);
+    ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(w, y); ctx.stroke();
+  }
+  // Major gridlines + labels
+  ctx.strokeStyle = getComputedColor('var(--grid-major)');
+  ctx.lineWidth = 1;
+  ctx.fillStyle = getComputedColor('var(--text-dim)');
+  ctx.font = `${10 * DPR}px -apple-system, Helvetica Neue, sans-serif`;
+  ctx.textAlign = 'right';
+  ctx.textBaseline = 'middle';
+  for (let mmHg = scale.min; mmHg <= scale.max; mmHg += scale.step) {
+    const y = mmHgToY(mmHg, scale, h);
+    ctx.beginPath(); ctx.moveTo(40 * DPR, y); ctx.lineTo(w, y); ctx.stroke();
+    ctx.fillText(mmHg.toString(), 36 * DPR, y);
+  }
+  ctx.restore();
+}
+
+function getScrollDPR() {
+  // Snap scroll to integer device pixels to prevent sub-pixel aliasing (vibrating traces)
+  return Math.round(scrollX * DPR);
+}
+
+function drawECG(ctx, w, h) {
+  ctx.save();
+  ctx.clearRect(0, 0, w, h);
+  ctx.fillStyle = getComputedColor('var(--bg)');
+  ctx.fillRect(0, 0, w, h);
+
+  const beatDuration = 60 / HR;
+  const pxPerSec = speed * 3.78 * DPR;
+  const pxPerBeat = beatDuration * pxPerSec;
+  const sX = getScrollDPR();
+
+  ctx.strokeStyle = getComputedColor('var(--ecg-green)');
+  ctx.lineWidth = 1.5 * DPR;
+  ctx.lineJoin = 'round';
+  ctx.lineCap = 'round';
+  ctx.shadowColor = getComputedColor('var(--ecg-green)');
+  ctx.shadowBlur = 4 * DPR;
+
+  const midY = h / 2;
+  const amp = h * 0.35;
+
+  ctx.beginPath();
+  for (let px = 0; px < w; px++) {
+    const worldX = px + sX;
+    const worldXInt = Math.round(worldX);
+    const beatFrac = ((worldX / pxPerBeat) % 1 + 1) % 1;
+    let val;
+    if (bufferActive) {
+      const bufEntry = waveBuffer.get(worldXInt);
+      if (bufEntry && bufEntry._ecg != null) {
+        val = bufEntry._ecg;
+      } else {
+        const alt = waveBuffer.get(worldXInt - 1) || waveBuffer.get(worldXInt + 1);
+        val = (alt && alt._ecg != null) ? alt._ecg : generateECG(beatFrac, { HR });
+      }
+    } else {
+      val = generateECG(beatFrac, { HR });
+    }
+    const y = midY - val * amp;
+    if (px === 0) ctx.moveTo(px, y); else ctx.lineTo(px, y);
+  }
+  ctx.stroke();
+  ctx.restore();
+
+  // Label
+  ctx.save();
+  ctx.font = `${9 * DPR}px -apple-system, Helvetica Neue, sans-serif`;
+  ctx.fillStyle = getComputedColor('var(--ecg-green)');
+  ctx.globalAlpha = 0.6;
+  ctx.fillText('ECG Lead II', 8 * DPR, 12 * DPR);
+  ctx.restore();
+}
+
+// Auto-compute scale from visible traces
+function computeAutoScale(traces, lessonScale) {
+  let maxP = 0;
+  const lesson = LESSONS[currentLesson];
+  const needsExtra = (lesson && (lesson.hasResp || lesson.hasProvocation));
+
+  if (needsExtra) {
+    // For resp/PVC lessons: ALWAYS compute from baseline gen() with state neutralized.
+    // Temporarily disable resp and reset pvcState, then re-evaluate lesson.traces()
+    // to get baseline generators (not post-PVC augmented or resp-modified).
+    // This prevents: (1) scale oscillation from changing respPhase each frame,
+    // (2) scale jump at toggle time (buffer vs gen() sampling find different maxP),
+    // (3) pvcState causing scale to expand then contract during PVC cycle.
+    // The 25% headroom below accommodates respiratory/PVC peaks above baseline.
+    const savedResp = respEnabled;
+    const savedPvc = pvcState;
+    respEnabled = false;
+    pvcState = 'none';
+    const baseTraces = typeof lesson.traces === 'function' ? lesson.traces() : lesson.traces;
+    baseTraces.forEach(tr => {
+      if (!traceVis[tr.id]) return;
+      for (let b = 0; b <= 1; b += 0.005) {
+        const v = tr.gen(b);
+        if (v > maxP) maxP = v;
+      }
+    });
+    respEnabled = savedResp;
+    pvcState = savedPvc;
+  } else {
+    // Normal stateless rendering — sample gen() across a full beat
+    traces.forEach(tr => {
+      if (!traceVis[tr.id]) return;
+      for (let b = 0; b <= 1; b += 0.01) {
+        const v = tr.gen(b);
+        if (v > maxP) maxP = v;
+      }
+    });
+  }
+
+  if (maxP <= 0) return lessonScale;
+  // Consistent headroom: resp/PVC lessons always get 25% to accommodate modulation peaks
+  const headroom = maxP * (needsExtra ? 0.25 : 0.12);
+  const raw = maxP + headroom;
+  // Pick nice step sizes
+  let step, maxVal;
+  if (raw <= 15)       { step = 2;  maxVal = Math.ceil(raw / 2) * 2; }
+  else if (raw <= 50)  { step = 5;  maxVal = Math.ceil(raw / 5) * 5; }
+  else if (raw <= 100) { step = 10; maxVal = Math.ceil(raw / 10) * 10; }
+  else if (raw <= 250) { step = 20; maxVal = Math.ceil(raw / 20) * 20; }
+  else                 { step = 50; maxVal = Math.ceil(raw / 50) * 50; }
+  return { min: 0, max: maxVal, step };
+}
+
+function drawWaveforms(ctx, w, h) {
+  ctx.save();
+  ctx.clearRect(0, 0, w, h);
+  ctx.fillStyle = getComputedColor('var(--bg)');
+  ctx.fillRect(0, 0, w, h);
+
+  const lesson = LESSONS[currentLesson];
+  const traces = typeof lesson.traces === 'function' ? lesson.traces() : lesson.traces;
+
+  // Auto-scale based on visible traces
+  const scale = computeAutoScale(traces, lesson.scale);
+
+  drawGrid(ctx, w, h, scale);
+
+  const beatDuration = 60 / HR;
+  const pxPerSec = speed * 3.78 * DPR;
+  const pxPerBeat = beatDuration * pxPerSec;
+
+  // Draw gradient shading first
+  if (lesson.gradient) {
+    ctx.save();
+    ctx.fillStyle = getComputedColor('var(--gradient-fill)');
+    ctx.beginPath();
+    let inGrad = false;
+    let topPts = [], botPts = [];
+    for (let px = 0; px < w; px++) {
+      const worldX = px + getScrollDPR();
+      const worldXInt = Math.round(worldX);
+      const beatFrac = ((worldX / pxPerBeat) % 1 + 1) % 1;
+      // When buffer active, compute gradient from frozen buffer values (not gen())
+      let g;
+      if (bufferActive) {
+        const bufEntry = waveBuffer.get(worldXInt) || waveBuffer.get(worldXInt - 1) || waveBuffer.get(worldXInt + 1);
+        if (bufEntry && bufEntry.lv != null && bufEntry.ao != null) {
+          const lvP = bufEntry.lv, aoP = bufEntry.ao;
+          if (beatFrac > 0.05 && beatFrac < 0.32 && lvP > aoP) {
+            g = { top: aoP, bottom: lvP };
+          } else { g = null; }
+        } else { g = lesson.gradient(beatFrac); }
+      } else {
+        g = lesson.gradient(beatFrac);
+      }
+      if (g) {
+        topPts.push({ x: px, y: mmHgToY(g.bottom, scale, h) });
+        botPts.push({ x: px, y: mmHgToY(g.top, scale, h) });
+        inGrad = true;
+      } else if (inGrad) {
+        // Draw accumulated gradient region
+        if (topPts.length > 2) {
+          ctx.beginPath();
+          ctx.moveTo(topPts[0].x, topPts[0].y);
+          for (let i = 1; i < topPts.length; i++) ctx.lineTo(topPts[i].x, topPts[i].y);
+          for (let i = botPts.length - 1; i >= 0; i--) ctx.lineTo(botPts[i].x, botPts[i].y);
+          ctx.closePath();
+          ctx.fill();
+        }
+        topPts = []; botPts = [];
+        inGrad = false;
+      }
+    }
+    // Flush remaining
+    if (topPts.length > 2) {
+      ctx.beginPath();
+      ctx.moveTo(topPts[0].x, topPts[0].y);
+      for (let i = 1; i < topPts.length; i++) ctx.lineTo(topPts[i].x, topPts[i].y);
+      for (let i = botPts.length - 1; i >= 0; i--) ctx.lineTo(botPts[i].x, botPts[i].y);
+      ctx.closePath();
+      ctx.fill();
+    }
+    ctx.restore();
+  }
+
+  // Draw compare normal traces (dashed, behind)
+  if (compareNormal && lesson.normalTraces) {
+    lesson.normalTraces.forEach(tr => {
+      ctx.save();
+      ctx.strokeStyle = getComputedColor(tr.color);
+      ctx.lineWidth = 1.5 * DPR;
+      ctx.setLineDash([6 * DPR, 4 * DPR]);
+      ctx.globalAlpha = 0.7;
+      ctx.beginPath();
+      for (let px = 0; px < w; px++) {
+        const worldX = px + getScrollDPR();
+        const beatFrac = ((worldX / pxPerBeat) % 1 + 1) % 1;
+        const mmHg = tr.gen(beatFrac);
+        const y = mmHgToY(mmHg, scale, h);
+        if (px === 0) ctx.moveTo(px, y); else ctx.lineTo(px, y);
+      }
+      ctx.stroke();
+      ctx.restore();
+    });
+  }
+
+  // Draw main traces — collect label positions for collision avoidance
+  const labelQueue = [];
+  traces.forEach(tr => {
+    if (!traceVis[tr.id]) return;
+    ctx.save();
+    const color = getComputedColor(tr.color);
+    ctx.strokeStyle = color;
+    ctx.lineWidth = 2 * DPR;
+    ctx.lineJoin = 'round';
+    ctx.lineCap = 'round';
+    ctx.shadowColor = color;
+    ctx.shadowBlur = 3 * DPR;
+
+    ctx.beginPath();
+    let labelX = 0, labelY = 0, maxVal = -Infinity;
+    for (let px = 0; px < w; px++) {
+      const worldX = px + getScrollDPR();
+      const worldXInt = Math.round(worldX);
+      const beatFrac = ((worldX / pxPerBeat) % 1 + 1) % 1;
+      let mmHg;
+      if (bufferActive) {
+        const bufEntry = waveBuffer.get(worldXInt);
+        if (bufEntry && tr.id in bufEntry) {
+          mmHg = bufEntry[tr.id];
+        } else {
+          const alt = waveBuffer.get(worldXInt - 1) || waveBuffer.get(worldXInt + 1);
+          mmHg = (alt && tr.id in alt) ? alt[tr.id] : tr.gen(beatFrac);
+        }
+      } else {
+        mmHg = tr.gen(beatFrac);
+      }
+      const y = mmHgToY(mmHg, scale, h);
+      if (px === 0) ctx.moveTo(px, y); else ctx.lineTo(px, y);
+      if (mmHg > maxVal && px < pxPerBeat) {
+        maxVal = mmHg;
+        labelX = px;
+        labelY = y;
+      }
+    }
+    ctx.stroke();
+    ctx.restore();
+    labelQueue.push({ label: tr.label, color, x: labelX + 6 * DPR, y: labelY - 6 * DPR, mmHg: maxVal });
+  });
+
+  // Draw labels with collision avoidance
+  if (document.getElementById('showLabels')?.checked && labelQueue.length) {
+    // Sort by Y position (top to bottom) so we nudge lower labels down
+    labelQueue.sort((a, b) => a.y - b.y);
+    const minGap = 13 * DPR;
+    for (let i = 1; i < labelQueue.length; i++) {
+      const prev = labelQueue[i - 1];
+      const curr = labelQueue[i];
+      if (Math.abs(curr.x - prev.x) < 60 * DPR && curr.y - prev.y < minGap) {
+        curr.y = prev.y + minGap;
+      }
+    }
+    ctx.save();
+    ctx.shadowBlur = 0;
+    ctx.font = `bold ${10 * DPR}px -apple-system, Helvetica Neue, sans-serif`;
+    ctx.textAlign = 'left';
+    labelQueue.forEach(lbl => {
+      ctx.fillStyle = lbl.color;
+      ctx.fillText(lbl.label, lbl.x, lbl.y);
+    });
+    ctx.restore();
+  }
+
+  // ── a-c-v-x-y annotations ──────────────────────────────────────
+  if (document.getElementById('showAnnotations')?.checked) {
+    // Find actual local extremum near expected beat position
+    // dir=1 → find local max (peak), dir=-1 → find local min (trough)
+    function findExtremum(gen, center, dir, range) {
+      const r = range || 0.04;
+      let bestB = center, bestV = gen(center);
+      for (let b = center - r; b <= center + r; b += 0.002) {
+        const bf = ((b % 1) + 1) % 1;
+        const v = gen(bf);
+        if ((dir === 1 && v > bestV) || (dir === -1 && v < bestV)) {
+          bestV = v; bestB = bf;
+        }
+      }
+      return { beat: bestB, mmHg: bestV };
+    }
+
+    // Annotation defs: ch=label, hint=approximate beat, dir=1 peak/-1 trough
+    function getRAAnnotations() {
+      const p = getAnnotationParams('ra');
+      if (!p) return [];
+      const annots = [
+        { ch: 'a', hint: p.aCenter || 0.08, dir: 1 },
+        { ch: 'x', hint: p.xCenter || 0.22, dir: -1 },
+        { ch: 'v', hint: p.vCenter || 0.44, dir: 1 },
+        { ch: 'y', hint: p.yCenter || 0.60, dir: -1 },
+      ];
+      // c wave: only include if it creates a visible local bump (cAmp > 1)
+      if (p.cAmp && p.cAmp >= 1) {
+        annots.splice(1, 0, { ch: 'c', hint: p.cCenter || 0.14, dir: 1 });
+      }
+      return annots;
+    }
+
+    function getPCWPAnnotations() {
+      const p = getAnnotationParams('pcwp');
+      if (!p) return [];
+      const delay = p.timeDelay || 0.06;
+      return [
+        { ch: 'a', hint: (p.aCenter || 0.08) + delay, dir: 1 },
+        { ch: 'x', hint: (p.xCenter || 0.20) + delay, dir: -1 },
+        { ch: 'v', hint: (p.vCenter || 0.42) + delay, dir: 1 },
+        { ch: 'y', hint: (p.yCenter || 0.58) + delay, dir: -1 },
+      ];
+    }
+
+    traces.forEach(tr => {
+      if (!traceVis[tr.id]) return;
+      let annots;
+      if (tr.id === 'ra') annots = getRAAnnotations();
+      else if (tr.id === 'pcwp') annots = getPCWPAnnotations();
+      else return;
+      if (!annots.length) return;
+
+      // Pre-compute actual extremum positions (once per frame, not per beat)
+      // Skip labels where the feature is obliterated (e.g. x descent lost in severe TR)
+      const resolved = [];
+      annots.forEach(an => {
+        const ext = findExtremum(tr.gen, an.hint, an.dir);
+        // Verify it's a genuine local extremum, not just a slope
+        const before = tr.gen(((ext.beat - 0.01) % 1 + 1) % 1);
+        const after = tr.gen(((ext.beat + 0.01) % 1 + 1) % 1);
+        const genuine = an.dir === 1
+          ? (ext.mmHg >= before && ext.mmHg >= after)
+          : (ext.mmHg <= before && ext.mmHg <= after);
+        if (genuine) resolved.push({ ch: an.ch, beat: ext.beat, mmHg: ext.mmHg, dir: an.dir });
+      });
+
+      const color = getComputedColor(tr.color);
+      ctx.save();
+      ctx.font = `bold ${9 * DPR}px -apple-system, Helvetica Neue, sans-serif`;
+      ctx.fillStyle = color;
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+
+      const scrollDPR = getScrollDPR();
+      const firstBeatIdx = Math.floor(scrollDPR / pxPerBeat);
+      const lastBeatIdx = Math.ceil((scrollDPR + w) / pxPerBeat);
+
+      for (let bi = firstBeatIdx; bi <= lastBeatIdx; bi++) {
+        resolved.forEach(r => {
+          const worldPx = bi * pxPerBeat + r.beat * pxPerBeat;
+          const screenPx = worldPx - scrollDPR;
+          if (screenPx < -20 || screenPx > w + 20) return;
+
+          const traceY = mmHgToY(r.mmHg, scale, h);
+          const offset = r.dir * (-14 * DPR);
+          const labelY = traceY + offset;
+
+          ctx.globalAlpha = 0.85;
+          ctx.fillText(r.ch, screenPx, labelY);
+        });
+      }
+      ctx.restore();
+    });
+  }
+
+  // ── HOCM post-PVC red arrow annotation ──────────────────────────
+  if (currentLesson === 'hocm' && pvcState === 'post' && bufferActive) {
+    // Find the Ao peak in the post-PVC beat region from the buffer
+    const scrollDPR = getScrollDPR();
+    let aoPeakPx = -1, aoPeakMmHg = -Infinity;
+    let lvPeakPx = -1, lvPeakMmHg = -Infinity;
+    // Scan visible buffer for the post-PVC beat (right-most ~1.5 beats)
+    const scanStart = Math.max(0, w - pxPerBeat * 1.5);
+    for (let px = Math.floor(scanStart); px < w; px++) {
+      const wx = Math.round(px + scrollDPR);
+      const entry = waveBuffer.get(wx);
+      if (!entry) continue;
+      if (entry.ao != null && entry.ao > aoPeakMmHg) {
+        aoPeakMmHg = entry.ao; aoPeakPx = px;
+      }
+      if (entry.lv != null && entry.lv > lvPeakMmHg) {
+        lvPeakMmHg = entry.lv; lvPeakPx = px;
+      }
+    }
+    if (aoPeakPx > 0 && lvPeakPx > 0) {
+      const { ao: baseAo } = getHOCMParams();
+      const normalAoPeak = baseAo.SBP;
+      ctx.save();
+      // Red arrow at Ao peak pointing down — "↓ PP"
+      const aoY = mmHgToY(aoPeakMmHg, scale, h);
+      const arrowX = aoPeakPx;
+      ctx.globalAlpha = 0.9;
+      ctx.fillStyle = '#ff1744';
+      ctx.strokeStyle = '#ff1744';
+      ctx.lineWidth = 2 * DPR;
+      // Arrow shaft pointing down
+      const arrowTop = aoY + 6 * DPR;
+      const arrowBot = aoY + 28 * DPR;
+      ctx.beginPath();
+      ctx.moveTo(arrowX, arrowTop);
+      ctx.lineTo(arrowX, arrowBot);
+      ctx.stroke();
+      // Arrowhead
+      ctx.beginPath();
+      ctx.moveTo(arrowX, arrowBot + 2 * DPR);
+      ctx.lineTo(arrowX - 4 * DPR, arrowBot - 4 * DPR);
+      ctx.lineTo(arrowX + 4 * DPR, arrowBot - 4 * DPR);
+      ctx.closePath();
+      ctx.fill();
+      // Label
+      ctx.font = `bold ${9 * DPR}px -apple-system, Helvetica Neue, sans-serif`;
+      ctx.textAlign = 'left';
+      ctx.fillText('↓ PP', arrowX + 6 * DPR, arrowBot);
+
+      // Red arrow at LV peak pointing up — "↑ LVSP"
+      const lvY = mmHgToY(lvPeakMmHg, scale, h);
+      const lvArrowBot = lvY - 6 * DPR;
+      const lvArrowTop = lvY - 28 * DPR;
+      ctx.beginPath();
+      ctx.moveTo(lvPeakPx, lvArrowBot);
+      ctx.lineTo(lvPeakPx, lvArrowTop);
+      ctx.stroke();
+      // Arrowhead pointing up
+      ctx.beginPath();
+      ctx.moveTo(lvPeakPx, lvArrowTop - 2 * DPR);
+      ctx.lineTo(lvPeakPx - 4 * DPR, lvArrowTop + 4 * DPR);
+      ctx.lineTo(lvPeakPx + 4 * DPR, lvArrowTop + 4 * DPR);
+      ctx.closePath();
+      ctx.fill();
+      // Label
+      ctx.textAlign = 'right';
+      ctx.fillText('↑ LVSP', lvPeakPx - 6 * DPR, lvArrowTop);
+      ctx.restore();
+    }
+  }
+
+  // Y-axis label
+  ctx.save();
+  ctx.font = `${9 * DPR}px -apple-system, Helvetica Neue, sans-serif`;
+  ctx.fillStyle = getComputedColor('var(--text-dim)');
+  ctx.translate(10 * DPR, h / 2);
+  ctx.rotate(-Math.PI / 2);
+  ctx.textAlign = 'center';
+  ctx.fillText('mmHg', 0, 0);
+  ctx.restore();
+
+  // Respiratory phase indicator (top-right corner)
+  if (respEnabled) {
+    const mod = getRespMod(); // -1 insp, +1 exp
+    const barW = 80 * DPR, barH = 14 * DPR;
+    const bx = w - barW - 12 * DPR, by = 10 * DPR;
+    ctx.save();
+    ctx.fillStyle = 'rgba(0,0,0,0.5)';
+    ctx.fillRect(bx - 4 * DPR, by - 2 * DPR, barW + 8 * DPR, barH + 12 * DPR);
+    // Bar background
+    ctx.fillStyle = 'rgba(255,255,255,0.1)';
+    ctx.fillRect(bx, by, barW, barH);
+    // Fill: green for inspiration, amber for expiration
+    const fillW = Math.abs(mod) * barW / 2;
+    if (mod < 0) {
+      ctx.fillStyle = 'rgba(102,187,106,0.6)';
+      ctx.fillRect(bx + barW / 2 - fillW, by, fillW, barH);
+    } else {
+      ctx.fillStyle = 'rgba(255,183,77,0.6)';
+      ctx.fillRect(bx + barW / 2, by, fillW, barH);
+    }
+    // Center tick
+    ctx.strokeStyle = 'rgba(255,255,255,0.3)';
+    ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.moveTo(bx + barW / 2, by); ctx.lineTo(bx + barW / 2, by + barH); ctx.stroke();
+    // Labels
+    ctx.font = `${7 * DPR}px -apple-system, Helvetica Neue, sans-serif`;
+    ctx.fillStyle = 'rgba(255,255,255,0.6)';
+    ctx.textAlign = 'left';
+    ctx.fillText('INSP', bx, by + barH + 9 * DPR);
+    ctx.textAlign = 'right';
+    ctx.fillText('EXP', bx + barW, by + barH + 9 * DPR);
+    ctx.restore();
+  }
+}
+
+// ════════════════════════════════════════════════════════════════════
+// ANIMATION LOOP
+// ════════════════════════════════════════════════════════════════════
+
+let lastTime = 0;
+
+function animate(timestamp) {
+  animId = requestAnimationFrame(animate);
+
+  const dt = lastTime ? (timestamp - lastTime) / 1000 : 0.016;
+  lastTime = timestamp;
+
+  if (!paused) {
+    // Advance respiratory cycle
+    if (respEnabled) {
+      respPhase += (2 * Math.PI * RESP_RATE / 60) * dt;
+      if (respPhase > 2 * Math.PI) respPhase -= 2 * Math.PI;
+    }
+
+    // Scroll FIRST, then advance buffer — so buffer covers the new scroll position
+    const pxPerSec = speed * 3.78;
+    scrollX += pxPerSec * dt;
+
+    // Advance buffer AFTER scroll so leading-edge pixels match what drawWaveforms will need
+    if (bufferActive) advanceWaveBuffer();
+
+    // PVC state machine (beat-based timing)
+    if (pvcState !== 'none' && currentLesson === 'hocm') {
+      const beatDuration = 60 / HR;
+      const pxPerBeat = beatDuration * pxPerSec;
+      const beatsSincePVC = (scrollX - pvcScrollStart) / pxPerBeat;
+
+      if (pvcState === 'pvc' && beatsSincePVC >= 0.6) {
+        pvcState = 'pause';
+        pvcScrollStart = scrollX;
+      } else if (pvcState === 'pause' && beatsSincePVC >= 0.8) {
+        pvcState = 'post';
+        pvcScrollStart = scrollX;
+        updateTeaching();
+      } else if (pvcState === 'post' && beatsSincePVC >= 2.0) {
+        pvcState = 'none';
+        clearWaveBuffer(); // PVC sequence done — return to stateless rendering
+        const btn = document.getElementById('pvcBtn');
+        if (btn) { btn.textContent = 'Trigger PVC'; btn.disabled = false; }
+        updateTeaching();
+      }
+    }
+  }
+
+  // Always draw (needed after resize, lesson switch, etc.)
+  drawECG(ecgCtx, ecgCanvas.width, ecgCanvas.height);
+  drawWaveforms(waveCtx, waveCanvas.width, waveCanvas.height);
+}
+
+// ════════════════════════════════════════════════════════════════════
+// RESIZE HANDLE (teaching panel)
+// ════════════════════════════════════════════════════════════════════
+
+(function() {
+  const handle = document.getElementById('resizeHandle');
+  let dragging = false, startY = 0, startH = 0;
+  handle.addEventListener('mousedown', e => {
+    dragging = true; startY = e.clientY; startH = teachingPanel.offsetHeight;
+    document.body.style.cursor = 'ns-resize';
+    e.preventDefault();
+  });
+  document.addEventListener('mousemove', e => {
+    if (!dragging) return;
+    const diff = startY - e.clientY;
+    teachingPanel.style.height = Math.max(80, startH + diff) + 'px';
+    sizeCanvases();
+  });
+  document.addEventListener('mouseup', () => {
+    if (dragging) { dragging = false; document.body.style.cursor = ''; }
+  });
+})();
+
+// ════════════════════════════════════════════════════════════════════
+// INIT
+// ════════════════════════════════════════════════════════════════════
+
+window.addEventListener('resize', sizeCanvases);
+// Keyboard: Space=pause, Left/Right=scrub
+window.addEventListener('keydown', e => {
+  // Don't capture when typing in inputs
+  if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
+  if (e.code === 'Space') {
+    e.preventDefault();
+    togglePause();
+  } else if (e.code === 'ArrowLeft') {
+    e.preventDefault();
+    scrollX -= (speed * 3.78) * 0.15;
+    if (scrollX < 0) scrollX = 0;
+    if (bufferActive) advanceWaveBuffer();
+    redrawNeeded = true;
+  } else if (e.code === 'ArrowRight') {
+    e.preventDefault();
+    scrollX += (speed * 3.78) * 0.15;
+    if (bufferActive) advanceWaveBuffer();
+    redrawNeeded = true;
+  }
+});
+
+// Mouse drag on canvas to scrub
+(function() {
+  let dragging = false, dragStartX = 0, scrollStart = 0;
+  const area = document.getElementById('canvasArea');
+  area.style.cursor = 'grab';
+  area.addEventListener('mousedown', e => {
+    if (e.target.closest('.resize-handle')) return;
+    dragging = true;
+    dragStartX = e.clientX;
+    scrollStart = scrollX;
+    area.style.cursor = 'grabbing';
+    e.preventDefault();
+  });
+  window.addEventListener('mousemove', e => {
+    if (!dragging) return;
+    const dx = dragStartX - e.clientX;
+    scrollX = Math.max(0, scrollStart + dx * (DPR));
+    if (bufferActive) advanceWaveBuffer();
+    redrawNeeded = true;
+  });
+  window.addEventListener('mouseup', () => {
+    if (dragging) { dragging = false; area.style.cursor = 'grab'; }
+  });
+})();
+
+sizeCanvases();
+switchLesson('normal');
+animate(0);
+
+// Brief pulse on resize handle to hint it's draggable
+setTimeout(() => document.getElementById('resizeHandle').classList.add('pulse'), 2000);
+setTimeout(() => document.getElementById('resizeHandle').classList.remove('pulse'), 4000);
+
+</script>
+</body>
+</html>

@@ -467,6 +467,23 @@ body {
   <div class="section-label" id="sectionLabel">Interactive Hemodynamic Tools</div>
 
   <div class="cards">
+    <!-- Hemodynamic Waveforms -->
+    <a class="tool-card" id="cardHemo" href="/hemodynamics/">
+      <div class="card-canvas-wrap">
+        <canvas id="canvasHemo"></canvas>
+      </div>
+      <div class="card-info">
+        <div class="card-title">Hemodynamic Waveforms <span class="card-arrow">&rarr;</span></div>
+        <div class="card-desc">Interactive hemodynamic waveform simulator with 12 lessons covering valvular disease, HOCM, constrictive vs restrictive, tamponade, and pulmonary hypertension.</div>
+        <div class="card-tags">
+          <span class="card-tag">12 Lessons</span>
+          <span class="card-tag">HOCM / PVC</span>
+          <span class="card-tag">Resp Variation</span>
+          <span class="card-tag">Gorlin / Hakki</span>
+        </div>
+      </div>
+    </a>
+
     <!-- RHC Calculator -->
     <a class="tool-card" id="cardRhc" href="/rhc/">
       <div class="card-canvas-wrap">
@@ -779,6 +796,7 @@ body {
     // Start card animations after cards are visible (2 loops on initial play, 1 on skip)
     var loops = instant ? 1 : 2;
     setTimeout(function() {
+      startHemoAnimation(loops);
       startRhcAnimation(loops);
       startPvAnimation(loops);
       startEkgAnimation(loops);
@@ -895,11 +913,13 @@ body {
     clearTimeout(resizeTimer);
     resizeTimer = setTimeout(function() {
       // Re-setup canvases on resize
+      hemoSetup = setupCanvas('canvasHemo');
       rhcSetup = setupCanvas('canvasRhc');
       pvSetup = setupCanvas('canvasPv');
       ekgSetup = setupCanvas('canvasEkg');
       embryoSetup = setupCanvas('canvasEmbryo');
       // Redraw final frames if animations completed
+      if (hemoDone) drawHemoFrame(hemoSetup, 1);
       if (rhcDone) drawRhcFrame(rhcSetup, 1);
       if (pvDone) drawPvFrame(pvSetup, 1);
       if (ekgDone) drawEkgFrame(ekgSetup, 1);
@@ -908,15 +928,134 @@ body {
   });
 
   // Lazy init — canvases may not have dimensions yet
-  var rhcSetup, pvSetup, ekgSetup, embryoSetup;
-  var rhcDone = false, pvDone = false, ekgDone = false, embryoDone = false;
-  var rhcRunning = false, pvRunning = false, ekgRunning = false, embryoRunning = false;
+  var hemoSetup, rhcSetup, pvSetup, ekgSetup, embryoSetup;
+  var hemoDone = false, rhcDone = false, pvDone = false, ekgDone = false, embryoDone = false;
+  var hemoRunning = false, rhcRunning = false, pvRunning = false, ekgRunning = false, embryoRunning = false;
 
   function ensureSetup() {
+    if (!hemoSetup) hemoSetup = setupCanvas('canvasHemo');
     if (!rhcSetup) rhcSetup = setupCanvas('canvasRhc');
     if (!pvSetup) pvSetup = setupCanvas('canvasPv');
     if (!ekgSetup) ekgSetup = setupCanvas('canvasEkg');
     if (!embryoSetup) embryoSetup = setupCanvas('canvasEmbryo');
+  }
+
+
+  /* ══════════════════════════════════════
+     HEMODYNAMIC WAVEFORMS CARD — RA + LV overlay
+     ══════════════════════════════════════ */
+  function hemoRA(beat) {
+    var v = 4;
+    v += 3.5 * Math.exp(-0.5 * Math.pow((beat - 0.06) / 0.032, 2)); // a wave
+    v -= 2.0 * Math.exp(-0.5 * Math.pow((beat - 0.18) / 0.038, 2)); // x descent
+    v += 2.5 * Math.exp(-0.5 * Math.pow((beat - 0.40) / 0.048, 2)); // v wave
+    v -= 2.0 * Math.exp(-0.5 * Math.pow((beat - 0.55) / 0.038, 2)); // y descent
+    return Math.max(0, v);
+  }
+
+  function hemoLV(beat) {
+    if (beat < 0.04) return 10 + (beat / 0.04) * 110;
+    if (beat < 0.25) return 120;
+    if (beat < 0.35) return 120 - ((beat - 0.25) / 0.10) * 110;
+    // Diastole
+    var diaT = (beat - 0.35) / 0.65;
+    return 10 + 4 * Math.exp(-0.5 * Math.pow((diaT - 0.85) / 0.12, 2)); // a-wave bump at end-diastole
+  }
+
+  function drawHemoFrame(s, progress) {
+    var ctx = s.ctx, W = s.w, H = s.h;
+    ctx.clearRect(0, 0, W, H);
+
+    // Grid
+    ctx.strokeStyle = 'rgba(255,255,255,0.04)';
+    ctx.lineWidth = 0.5;
+    for (var mmhg = 0; mmhg <= 120; mmhg += 20) {
+      var gy = H * 0.92 - (mmhg / 140) * H * 0.82;
+      ctx.beginPath(); ctx.moveTo(W * 0.05, gy); ctx.lineTo(W * 0.95, gy); ctx.stroke();
+    }
+
+    // Wipe reveal
+    var reveal = Math.min(progress * 1.3, 1);
+    var maxX = W * 0.06 + reveal * W * 0.88;
+
+    // RA trace (blue, low amplitude)
+    ctx.save();
+    ctx.beginPath();
+    ctx.rect(0, 0, maxX, H);
+    ctx.clip();
+    ctx.shadowColor = 'rgba(74,144,217,0.4)';
+    ctx.shadowBlur = 6;
+    ctx.strokeStyle = '#4a90d9';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    for (var px = 0; px < W; px++) {
+      var b = ((px / W) * 2.2) % 1;
+      var ra = hemoRA(b);
+      var y = H * 0.92 - (ra / 140) * H * 0.82;
+      if (px === 0) ctx.moveTo(px, y); else ctx.lineTo(px, y);
+    }
+    ctx.stroke();
+    ctx.restore();
+
+    // LV trace (red, full amplitude)
+    ctx.save();
+    ctx.beginPath();
+    ctx.rect(0, 0, maxX, H);
+    ctx.clip();
+    ctx.shadowColor = 'rgba(255,82,82,0.4)';
+    ctx.shadowBlur = 6;
+    ctx.strokeStyle = '#ff5252';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    for (var px2 = 0; px2 < W; px2++) {
+      var b2 = ((px2 / W) * 2.2) % 1;
+      var lv = hemoLV(b2);
+      var y2 = H * 0.92 - (lv / 140) * H * 0.82;
+      if (px2 === 0) ctx.moveTo(px2, y2); else ctx.lineTo(px2, y2);
+    }
+    ctx.stroke();
+    ctx.restore();
+
+    // Labels
+    if (progress > 0.3) {
+      ctx.font = '600 10px DM Sans, sans-serif';
+      ctx.textAlign = 'left';
+      ctx.globalAlpha = Math.min((progress - 0.3) * 3, 0.6);
+      ctx.fillStyle = '#4a90d9';
+      ctx.fillText('RA', W * 0.06, H * 0.78);
+      ctx.fillStyle = '#ff5252';
+      ctx.fillText('LV', W * 0.06, H * 0.22);
+      ctx.globalAlpha = 1;
+    }
+    if (progress > 0.6) {
+      ctx.font = '500 9px DM Sans, sans-serif';
+      ctx.fillStyle = 'rgba(124,77,255,0.4)';
+      ctx.textAlign = 'right';
+      ctx.fillText('12 lessons', W * 0.94, H * 0.14);
+    }
+  }
+
+  function startHemoAnimation(loops) {
+    if (hemoRunning) return;
+    loops = loops || 1;
+    ensureSetup();
+    hemoDone = false; hemoRunning = true;
+    var dur = 2800, loopIdx = 0;
+    function runLoop() {
+      var t0 = performance.now();
+      function frame() {
+        var p = Math.min((performance.now() - t0) / dur, 1);
+        drawHemoFrame(hemoSetup, p);
+        if (p < 1) requestAnimationFrame(frame);
+        else {
+          loopIdx++;
+          if (loopIdx < loops) { setTimeout(runLoop, 200); }
+          else { hemoDone = true; hemoRunning = false; }
+        }
+      }
+      requestAnimationFrame(frame);
+    }
+    runLoop();
   }
 
 
@@ -1511,6 +1650,7 @@ body {
 
   // Wait for images to load before setting up hover
   window.addEventListener('load', function() {
+    addHoverReplay('cardHemo', startHemoAnimation);
     addHoverReplay('cardRhc', startRhcAnimation);
     addHoverReplay('cardPv', startPvAnimation);
     addHoverReplay('cardEkg', startEkgAnimation);
