@@ -3,39 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Hemodynamic Waveforms Simulator — Aortic Stenosis, HOCM, Constrictive Pericarditis | CathMath</title>
-<meta name="description" content="Interactive hemodynamic waveform simulator with 12 lessons: normal waveforms, aortic stenosis, mitral stenosis, MR, AR, TR, HOCM, constrictive pericarditis, restrictive cardiomyopathy, cardiac tamponade, pulmonary hypertension. Free cath lab teaching tool.">
-<meta name="keywords" content="hemodynamic waveforms, aortic stenosis waveform, mitral stenosis gradient, HOCM Brockenbrough, constrictive pericarditis, restrictive cardiomyopathy, cardiac tamponade, pulmonary hypertension, right heart catheterization waveforms, RA tracing, RV tracing, PA tracing, PCWP, V waves, dip and plateau, square root sign, pulsus paradoxus, Gorlin equation">
-<meta name="author" content="Dr. Saro Avedikian, MD, MPH">
-<meta name="robots" content="index, follow">
-<link rel="canonical" href="https://cathmath.org/hemodynamics/">
-<link rel="icon" type="image/x-icon" href="/favicon.ico">
-<link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
-<link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
-<meta property="og:type" content="website">
-<meta property="og:url" content="https://cathmath.org/hemodynamics/">
-<meta property="og:title" content="Hemodynamic Waveforms Simulator | CathMath">
-<meta property="og:description" content="Interactive simulator for 12 hemodynamic waveform patterns: AS, MS, MR, AR, TR, HOCM, constrictive pericarditis, tamponade, pulmonary hypertension, and more.">
-<meta property="og:image" content="https://cathmath.org/og-image.png">
-<meta property="og:site_name" content="CathMath">
-<meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:title" content="Hemodynamic Waveforms Simulator | CathMath">
-<meta name="twitter:description" content="12 interactive hemodynamic waveform lessons for the cath lab. Free teaching tool.">
-<meta name="twitter:image" content="https://cathmath.org/og-image.png">
-<script type="application/ld+json">
-{
-  "@context": "https://schema.org",
-  "@type": "WebApplication",
-  "name": "Hemodynamic Waveforms Simulator",
-  "url": "https://cathmath.org/hemodynamics/",
-  "description": "Interactive hemodynamic waveform simulator with 12 lessons covering valvular disease, HOCM, constrictive pericarditis, cardiac tamponade, and pulmonary hypertension.",
-  "applicationCategory": "HealthApplication",
-  "operatingSystem": "Any",
-  "offers": {"@type": "Offer", "price": "0", "priceCurrency": "USD"},
-  "author": {"@type": "Person", "name": "Dr. Saro Avedikian", "honorificSuffix": "MD, MPH"},
-  "isPartOf": {"@type": "WebSite", "name": "CathMath", "url": "https://cathmath.org"}
-}
-</script>
+<title>CathMath — Hemodynamic Waveforms</title>
 <style>
 /* ===== RESET & BASE ===== */
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -536,8 +504,8 @@ let scrollX = 0;
 
 // HOCM post-PVC state
 let pvcState = 'none'; // 'none' | 'pvc' | 'pause' | 'post'
-let pvcBeatCountdown = 0; // beats remaining in current PVC state
-let pvcScrollStart = 0;
+let pvcBeatCount = 0;   // beat boundaries crossed since PVC trigger
+let pvcLastBeatFrac = 0; // previous frame's beatFrac for boundary detection
 let hocmProvocation = 0; // -1 to +1: negative=squat/phenylephrine, positive=valsalva/amyl
 
 // Respiratory cycle state (Phase 4: CP/RCM/Tamponade)
@@ -1211,8 +1179,8 @@ function advanceWaveBuffer() {
   }
   bufferHead = newHead;
 
-  // Prune: keep 2x canvas width behind
-  const minKeep = Math.round(scrollDPR) - w;
+  // Prune: keep 5x canvas width behind (allows scroll-back to review PVCs)
+  const minKeep = Math.round(scrollDPR) - w * 5;
   for (const k of waveBuffer.keys()) {
     if (k < minKeep) waveBuffer.delete(k);
   }
@@ -2242,7 +2210,7 @@ function switchLesson(id) {
   if (respBtn) { respBtn.textContent = 'Respiration'; respBtn.classList.remove('on'); }
   // Reset PVC state on lesson switch
   pvcState = 'none';
-  pvcBeatCountdown = 0;
+  pvcBeatCount = 0;
   hocmProvocation = 0;
   const provSlider = document.getElementById('provSlider');
   if (provSlider) provSlider.value = 0;
@@ -2363,8 +2331,11 @@ function triggerPVC() {
   // This ensures past beats stay normal — only new leading-edge pixels show PVC/post-PVC
   prefillWaveBuffer();
   pvcState = 'pvc';
-  pvcBeatCountdown = 1;
-  pvcScrollStart = scrollX;
+  pvcBeatCount = 0;
+  // Initialize beat boundary detection with current beatFrac
+  const beatDuration = 60 / HR;
+  const pxPerBeatDPR = beatDuration * speed * 3.78 * DPR;
+  pvcLastBeatFrac = ((scrollX * DPR / pxPerBeatDPR) % 1 + 1) % 1;
   document.getElementById('pvcBtn').textContent = 'PVC active...';
   document.getElementById('pvcBtn').disabled = true;
 }
@@ -2849,76 +2820,9 @@ function drawWaveforms(ctx, w, h) {
     });
   }
 
-  // ── HOCM post-PVC red arrow annotation ──────────────────────────
-  if (currentLesson === 'hocm' && pvcState === 'post' && bufferActive) {
-    // Find the Ao peak in the post-PVC beat region from the buffer
-    const scrollDPR = getScrollDPR();
-    let aoPeakPx = -1, aoPeakMmHg = -Infinity;
-    let lvPeakPx = -1, lvPeakMmHg = -Infinity;
-    // Scan visible buffer for the post-PVC beat (right-most ~1.5 beats)
-    const scanStart = Math.max(0, w - pxPerBeat * 1.5);
-    for (let px = Math.floor(scanStart); px < w; px++) {
-      const wx = Math.round(px + scrollDPR);
-      const entry = waveBuffer.get(wx);
-      if (!entry) continue;
-      if (entry.ao != null && entry.ao > aoPeakMmHg) {
-        aoPeakMmHg = entry.ao; aoPeakPx = px;
-      }
-      if (entry.lv != null && entry.lv > lvPeakMmHg) {
-        lvPeakMmHg = entry.lv; lvPeakPx = px;
-      }
-    }
-    if (aoPeakPx > 0 && lvPeakPx > 0) {
-      const { ao: baseAo } = getHOCMParams();
-      const normalAoPeak = baseAo.SBP;
-      ctx.save();
-      // Red arrow at Ao peak pointing down — "↓ PP"
-      const aoY = mmHgToY(aoPeakMmHg, scale, h);
-      const arrowX = aoPeakPx;
-      ctx.globalAlpha = 0.9;
-      ctx.fillStyle = '#ff1744';
-      ctx.strokeStyle = '#ff1744';
-      ctx.lineWidth = 2 * DPR;
-      // Arrow shaft pointing down
-      const arrowTop = aoY + 6 * DPR;
-      const arrowBot = aoY + 28 * DPR;
-      ctx.beginPath();
-      ctx.moveTo(arrowX, arrowTop);
-      ctx.lineTo(arrowX, arrowBot);
-      ctx.stroke();
-      // Arrowhead
-      ctx.beginPath();
-      ctx.moveTo(arrowX, arrowBot + 2 * DPR);
-      ctx.lineTo(arrowX - 4 * DPR, arrowBot - 4 * DPR);
-      ctx.lineTo(arrowX + 4 * DPR, arrowBot - 4 * DPR);
-      ctx.closePath();
-      ctx.fill();
-      // Label
-      ctx.font = `bold ${9 * DPR}px -apple-system, Helvetica Neue, sans-serif`;
-      ctx.textAlign = 'left';
-      ctx.fillText('↓ PP', arrowX + 6 * DPR, arrowBot);
-
-      // Red arrow at LV peak pointing up — "↑ LVSP"
-      const lvY = mmHgToY(lvPeakMmHg, scale, h);
-      const lvArrowBot = lvY - 6 * DPR;
-      const lvArrowTop = lvY - 28 * DPR;
-      ctx.beginPath();
-      ctx.moveTo(lvPeakPx, lvArrowBot);
-      ctx.lineTo(lvPeakPx, lvArrowTop);
-      ctx.stroke();
-      // Arrowhead pointing up
-      ctx.beginPath();
-      ctx.moveTo(lvPeakPx, lvArrowTop - 2 * DPR);
-      ctx.lineTo(lvPeakPx - 4 * DPR, lvArrowTop + 4 * DPR);
-      ctx.lineTo(lvPeakPx + 4 * DPR, lvArrowTop + 4 * DPR);
-      ctx.closePath();
-      ctx.fill();
-      // Label
-      ctx.textAlign = 'right';
-      ctx.fillText('↑ LVSP', lvPeakPx - 6 * DPR, lvArrowTop);
-      ctx.restore();
-    }
-  }
+  // Post-PVC annotations removed — the waveform changes themselves
+  // (↓ Ao pulse pressure, ↑ LV systolic) are visible in the traces
+  // and explained in the teaching panel.
 
   // Y-axis label
   ctx.save();
@@ -2991,26 +2895,35 @@ function animate(timestamp) {
     // Advance buffer AFTER scroll so leading-edge pixels match what drawWaveforms will need
     if (bufferActive) advanceWaveBuffer();
 
-    // PVC state machine (beat-based timing)
+    // PVC state machine — transitions snap to beat boundaries
+    // so each beat uses consistent parameters (no hybrid morphologies)
     if (pvcState !== 'none' && currentLesson === 'hocm') {
       const beatDuration = 60 / HR;
-      const pxPerBeat = beatDuration * pxPerSec;
-      const beatsSincePVC = (scrollX - pvcScrollStart) / pxPerBeat;
+      const pxPerBeatDPR = beatDuration * pxPerSec * DPR;
+      const scrollDPR = scrollX * DPR;
+      const currentBeatFrac = ((scrollDPR / pxPerBeatDPR) % 1 + 1) % 1;
 
-      if (pvcState === 'pvc' && beatsSincePVC >= 0.6) {
-        pvcState = 'pause';
-        pvcScrollStart = scrollX;
-      } else if (pvcState === 'pause' && beatsSincePVC >= 0.8) {
-        pvcState = 'post';
-        pvcScrollStart = scrollX;
-        updateTeaching();
-      } else if (pvcState === 'post' && beatsSincePVC >= 2.0) {
-        pvcState = 'none';
-        clearWaveBuffer(); // PVC sequence done — return to stateless rendering
-        const btn = document.getElementById('pvcBtn');
-        if (btn) { btn.textContent = 'Trigger PVC'; btn.disabled = false; }
-        updateTeaching();
+      // Detect beat boundary (beatFrac wraps from ~1 back to ~0)
+      if (currentBeatFrac < pvcLastBeatFrac - 0.5) {
+        pvcBeatCount++;
+        // State advances at each beat boundary:
+        // Beat 1: PVC beat ends → compensatory pause
+        // Beat 2: pause ends → post-PVC potentiated beat (Brockenbrough)
+        // Beat 3: post-PVC ends → return to normal
+        if (pvcState === 'pvc' && pvcBeatCount >= 1) {
+          pvcState = 'pause';
+        } else if (pvcState === 'pause' && pvcBeatCount >= 2) {
+          pvcState = 'post';
+          updateTeaching();
+        } else if (pvcState === 'post' && pvcBeatCount >= 3) {
+          pvcState = 'none';
+          // Buffer stays active — PVC data persists for scroll-back review
+          const btn = document.getElementById('pvcBtn');
+          if (btn) { btn.textContent = 'Trigger PVC'; btn.disabled = false; }
+          updateTeaching();
+        }
       }
+      pvcLastBeatFrac = currentBeatFrac;
     }
   }
 
