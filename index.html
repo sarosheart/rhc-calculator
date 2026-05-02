@@ -411,6 +411,155 @@ body {
   color: var(--text-dim);
 }
 
+/* ══════ COMPANION APP ══════ */
+.companion-section {
+  padding: 0 32px 80px;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.companion-card {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: 24px;
+  background: var(--navy-deep);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 22px 26px;
+  text-decoration: none;
+  color: inherit;
+  transition: border-color 0.3s ease, box-shadow 0.3s ease, transform 0.3s ease;
+}
+
+.companion-card:hover {
+  border-color: var(--border-hover);
+  box-shadow:
+    0 8px 40px rgba(0,0,0,0.35),
+    0 0 30px rgba(0,230,118,0.04);
+  transform: translateY(-3px);
+}
+
+.companion-icon {
+  width: 72px;
+  height: 72px;
+  border-radius: 16px;
+  overflow: hidden;
+  flex-shrink: 0;
+  box-shadow: 0 6px 20px rgba(0,0,0,0.4);
+}
+
+.companion-icon img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.companion-info {
+  min-width: 0;
+}
+
+.companion-eyebrow {
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  margin-bottom: 5px;
+}
+
+.companion-title {
+  font-size: 19px;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+  margin-bottom: 5px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.companion-title .card-arrow {
+  display: inline-block;
+  font-size: 13px;
+  color: var(--accent);
+  opacity: 0;
+  transform: translateX(-4px);
+  transition: opacity 0.2s ease, transform 0.2s ease;
+}
+
+.companion-card:hover .card-arrow { opacity: 1; transform: translateX(0); }
+
+.companion-desc {
+  font-size: 12.5px;
+  color: var(--text-dim);
+  line-height: 1.55;
+  margin-bottom: 10px;
+}
+
+.companion-cta {
+  flex-shrink: 0;
+}
+
+.appstore-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 9px 16px;
+  background: #000;
+  border: 1px solid rgba(255,255,255,0.18);
+  border-radius: 8px;
+  color: #fff;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  white-space: nowrap;
+  transition: border-color 0.3s ease, background 0.3s ease;
+}
+
+.companion-card:hover .appstore-badge {
+  border-color: rgba(0,230,118,0.4);
+  background: #0a0a0a;
+}
+
+.appstore-badge svg {
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+}
+
+.appstore-badge .badge-eyebrow {
+  font-size: 8.5px;
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  color: rgba(255,255,255,0.65);
+  display: block;
+  line-height: 1.1;
+  margin-bottom: 1px;
+}
+
+.appstore-badge .badge-main {
+  display: block;
+  line-height: 1.1;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+@media (max-width: 720px) {
+  .companion-card {
+    grid-template-columns: auto 1fr;
+    grid-template-rows: auto auto;
+    row-gap: 16px;
+  }
+  .companion-cta {
+    grid-column: 1 / -1;
+  }
+  .appstore-badge {
+    width: 100%;
+    justify-content: center;
+  }
+}
+
 /* ══════ FOOTER ══════ */
 .footer {
   text-align: center;
@@ -562,6 +711,40 @@ body {
       </div>
     </a>
   </div>
+</section>
+
+<!-- ══════ COMPANION APP ══════ -->
+<section class="companion-section">
+  <div class="section-divider"></div>
+  <div class="section-label">In Your Pocket</div>
+
+  <a class="companion-card" href="https://apps.apple.com/app/id6761793182" target="_blank" rel="noopener">
+    <div class="companion-icon">
+      <img src="/cathpal-app-icon.png" alt="CathPal app icon" loading="lazy">
+    </div>
+    <div class="companion-info">
+      <div class="companion-eyebrow">iOS · iPhone &amp; iPad</div>
+      <div class="companion-title">CathPal <span class="card-arrow">&rarr;</span></div>
+      <div class="companion-desc">Native hemodynamic calculator built for the cath lab — Fick &amp; thermodilution CO, PVR/SVR, Gorlin, complete shunt oximetry, PH classification. Fully offline, no login.</div>
+      <div class="card-tags">
+        <span class="card-tag">$4.99 one-time</span>
+        <span class="card-tag">Offline</span>
+        <span class="card-tag">No account</span>
+        <span class="card-tag">EMR copy-paste</span>
+      </div>
+    </div>
+    <div class="companion-cta">
+      <span class="appstore-badge">
+        <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+          <path d="M17.05 20.28c-.98.95-2.05.8-3.08.35-1.09-.46-2.09-.48-3.24 0-1.44.62-2.2.44-3.06-.35C2.79 15.25 3.51 7.59 9.05 7.31c1.35.07 2.29.74 3.08.8 1.18-.24 2.31-.93 3.57-.84 1.51.12 2.65.72 3.4 1.8-3.12 1.87-2.38 5.98.48 7.13-.57 1.5-1.31 2.99-2.54 4.09zM12 7.25c-.15-2.23 1.66-4.07 3.74-4.25.29 2.58-2.34 4.5-3.74 4.25z"/>
+        </svg>
+        <span>
+          <span class="badge-eyebrow">Download on the</span>
+          <span class="badge-main">App Store</span>
+        </span>
+      </span>
+    </div>
+  </a>
 </section>
 
 <footer class="footer">
