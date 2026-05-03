@@ -50,7 +50,7 @@
 body {
   font-family: -apple-system, "Helvetica Neue", Helvetica, Arial, sans-serif;
   font-size: 14px; background: var(--navy-deep); color: var(--text);
-  overflow: hidden; height: 100vh; display: flex; flex-direction: column;
+  min-height: 100vh; overflow-y: auto; display: flex; flex-direction: column;
 }
 .site-nav {
   background: var(--navy); color: #fff; display: flex; align-items: center;
@@ -369,7 +369,7 @@ body {
 <div class="main-container">
   <div class="left-panel">
     <div class="panel-header">
-      <h2>Cardiac Embryology</h2>
+      <h1 style="font-size:18px;font-weight:700;color:var(--text);margin:0;letter-spacing:-0.01em;">Cardiac Embryology</h1>
       <div class="subtitle">Interactive Development — Days 15 to Birth</div>
     </div>
     <div class="stage-list" id="stageList"></div>
@@ -431,6 +431,98 @@ body {
     <div class="substep-bar" id="substepBar"></div>
   </div>
 </div>
+
+<!-- ══════ SEO / EDUCATIONAL CONTENT ══════ -->
+<style>
+.seo-section {
+  background: var(--panel-bg);
+  color: var(--text);
+  padding: 48px 32px 64px;
+  border-top: 1px solid var(--border);
+  flex-shrink: 0;
+}
+.seo-section .seo-inner {
+  max-width: 980px;
+  margin: 0 auto;
+  font-size: 14.5px;
+  line-height: 1.7;
+}
+.seo-section h2 {
+  font-size: 22px;
+  font-weight: 700;
+  color: rgba(255,255,255,0.95);
+  margin: 0 0 8px;
+}
+.seo-section .seo-lead {
+  color: var(--text-dim);
+  margin-bottom: 28px;
+  font-size: 15px;
+}
+.seo-section h3 {
+  font-size: 16px;
+  font-weight: 700;
+  color: rgba(255,255,255,0.92);
+  margin: 28px 0 8px;
+}
+.seo-section p { margin: 0 0 12px; color: var(--text); }
+.seo-section ul { margin: 0 0 12px 20px; padding: 0; color: var(--text); }
+.seo-section li { margin-bottom: 4px; }
+.seo-section .seo-related {
+  margin-top: 32px;
+  padding-top: 24px;
+  border-top: 1px solid var(--border);
+  font-size: 13px;
+  color: var(--text-dim);
+}
+.seo-section .seo-related a {
+  color: var(--accent);
+  text-decoration: none;
+  border-bottom: 1px solid rgba(74,144,217,0.3);
+  margin-right: 14px;
+  white-space: nowrap;
+}
+.seo-section .seo-related a:hover { border-bottom-color: var(--accent); }
+</style>
+
+<section class="seo-section" aria-label="About this cardiac embryology simulator">
+  <div class="seo-inner">
+    <h2>About the Cardiac Embryology Simulator</h2>
+    <p class="seo-lead">An interactive 3D visualization of how a flat plate of mesoderm becomes a four-chambered heart. The simulator walks through ten developmental stages from the cardiogenic crescent at days 15–18 to the fetal–to–neonatal circulatory transition at birth, with cross-sections and a "what goes wrong" mode that maps each step to its associated congenital heart defect.</p>
+
+    <h3>The 10 stages of cardiac development</h3>
+    <p>The heart is the first functional organ in the embryo. The stages covered:</p>
+    <ul>
+      <li><strong>1. Cardiogenic crescent</strong> — first heart field (FHF) and second heart field (SHF) progenitors form a horseshoe of mesoderm rostral to the neural plate.</li>
+      <li><strong>2. Linear heart tube</strong> — fusion of bilateral endocardial tubes; first contractions begin around day 22.</li>
+      <li><strong>3. Cardiac looping</strong> — D-loop (rightward, normal) bends the tube into its definitive orientation. L-looping causes situs inversus or dextrocardia.</li>
+      <li><strong>4. Atrial septation</strong> — septum primum, ostium primum, ostium secundum, septum secundum, and the foramen ovale flap valve.</li>
+      <li><strong>5. Ventricular septation</strong> — muscular and membranous interventricular septum closure; failure produces VSDs (perimembranous most common).</li>
+      <li><strong>6. Outflow tract septation</strong> — neural crest cells drive aorticopulmonary septum spiraling. Failure produces tetralogy of Fallot, transposition of the great arteries (TGA), persistent truncus arteriosus, and DORV.</li>
+      <li><strong>7. Endocardial cushion fusion</strong> — atrioventricular septation. Failure produces the AVSD spectrum (associated with trisomy 21).</li>
+      <li><strong>8. Aortic arch remodeling</strong> — six pairs of pharyngeal arch arteries are sculpted into the adult aortic arch; persistent or interrupted arches give vascular rings, coarctation, and IAA.</li>
+      <li><strong>9. AV valve delamination</strong> — failure produces Ebstein anomaly with apically displaced tricuspid leaflets and atrialized RV.</li>
+      <li><strong>10. Fetal circulation and birth transition</strong> — three shunts (ductus venosus, foramen ovale, ductus arteriosus) close in sequence; failure to close the DA gives PDA.</li>
+    </ul>
+
+    <h3>First and second heart fields</h3>
+    <p>The FHF gives rise primarily to the left ventricle and parts of the atria. The SHF contributes to the right ventricle, outflow tract, and venous pole. Cardiac neural crest cells migrate into the outflow tract and are essential for aorticopulmonary septation — disruption (as in DiGeorge / 22q11 deletion) causes conotruncal anomalies including tetralogy of Fallot, truncus arteriosus, and interrupted aortic arch.</p>
+
+    <h3>Common congenital heart defects</h3>
+    <p>The simulator's defect mode pairs each developmental misstep with its clinical phenotype: ASD (ostium secundum, primum, sinus venosus, coronary sinus types), VSD, AVSD, tetralogy of Fallot, TGA, truncus arteriosus, DORV, hypoplastic left heart syndrome, coarctation of the aorta, Ebstein anomaly, and persistent ductus arteriosus. Ductal-dependent lesions are emphasized — left-sided (HLHS, critical AS, critical coarctation, IAA) and right-sided (critical PS, pulmonary atresia with intact ventricular septum) — because keeping the ductus open with prostaglandin E1 is often life-saving in the first hours of life.</p>
+
+    <h3>Who this tool is for</h3>
+    <p>Built for cardiology fellows preparing for boards, pediatric cardiology trainees, medical students taking embryology and pediatrics courses, and any clinician who wants to refresh the link between developmental anatomy and the lesions seen in adult congenital cardiology clinic. Educational visualization only — not for clinical decision-making.</p>
+
+    <div class="seo-related">
+      <strong style="color: rgba(255,255,255,0.85); margin-right: 14px;">Related tools:</strong>
+      <a href="/rhc/">RHC Calculator</a>
+      <a href="/hemodynamics/">Hemodynamic Waveforms</a>
+      <a href="/pvloop/">PV Loop Simulator</a>
+      <a href="/ekg/">EKG Simulator</a>
+      <a href="/">All CathMath tools</a>
+    </div>
+  </div>
+</section>
 
 <script type="importmap">
 { "imports": {
