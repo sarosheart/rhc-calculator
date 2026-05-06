@@ -328,8 +328,7 @@ body.dark .slider-val { color: #6eb0f7; }
   gap: 5px;
 }
 .drug-btn {
-  flex: 1 1 auto;
-  min-width: 0;
+  flex: 0 1 auto;
   padding: 6px 10px;
   background: var(--panel-bg);
   color: var(--text);
@@ -338,7 +337,7 @@ body.dark .slider-val { color: #6eb0f7; }
   font-size: 11.5px;
   font-weight: 600;
   cursor: pointer;
-  transition: all 0.15s;
+  transition: border-color 0.15s, color 0.15s, background 0.15s;
   white-space: nowrap;
 }
 .drug-btn:hover {
@@ -553,30 +552,31 @@ body.dark .measure-value { color: #6eb0f7; }
 }
 .active-pill .x:hover { opacity: 1; }
 
-/* ═══ DRUG TIP (hover detail) ═══ */
-.drug-btn { position: relative; }
-.tip {
-  position: absolute;
-  bottom: calc(100% + 6px);
-  left: 50%;
-  transform: translateX(-50%);
+/* ═══ GLOBAL FIXED TOOLTIP (drug hover) ═══
+   Rendered at body level with position:fixed so it's never clipped by
+   the .left sidebar's overflow:auto. JS positions it on hover. */
+.global-tip {
+  position: fixed;
+  z-index: 9999;
   background: var(--navy);
   color: #fff;
   font-size: 11px;
   font-weight: 500;
   padding: 7px 10px;
   border-radius: 6px;
-  white-space: normal;
   width: 220px;
   text-align: left;
   pointer-events: none;
   opacity: 0;
-  transition: opacity 0.15s;
-  box-shadow: 0 4px 14px rgba(0,0,0,0.2);
-  z-index: 100;
+  transition: opacity 0.12s;
+  box-shadow: 0 4px 14px rgba(0,0,0,0.3);
   line-height: 1.4;
+  left: 0;
+  top: 0;
+  transform: translate(-9999px, -9999px);
 }
-.drug-btn:hover .tip { opacity: 1; }
+.global-tip.visible { opacity: 1; }
+body.dark .global-tip { background: #2a3548; }
 
 /* ═══ MOBILE ═══ */
 @media (max-width: 800px) {
@@ -691,64 +691,64 @@ body.dark .measure-value { color: #6eb0f7; }
       <div class="drug-group" style="--class-color: var(--c-IA);">
         <div class="drug-group-label">Class IA · Na block + K block</div>
         <div class="drug-row">
-          <button class="drug-btn" data-drug="quinidine">Quinidine<span class="tip"></span></button>
-          <button class="drug-btn" data-drug="procainamide">Procainamide<span class="tip"></span></button>
-          <button class="drug-btn" data-drug="disopyramide">Disopyramide<span class="tip"></span></button>
+          <button class="drug-btn" data-drug="quinidine">Quinidine</button>
+          <button class="drug-btn" data-drug="procainamide">Procainamide</button>
+          <button class="drug-btn" data-drug="disopyramide">Disopyramide</button>
         </div>
       </div>
 
       <div class="drug-group" style="--class-color: var(--c-IB);">
         <div class="drug-group-label">Class IB · Na block (weak, ischemia-selective)</div>
         <div class="drug-row">
-          <button class="drug-btn" data-drug="lidocaine">Lidocaine<span class="tip"></span></button>
-          <button class="drug-btn" data-drug="mexiletine">Mexiletine<span class="tip"></span></button>
-          <button class="drug-btn" data-drug="phenytoin">Phenytoin<span class="tip"></span></button>
+          <button class="drug-btn" data-drug="lidocaine">Lidocaine</button>
+          <button class="drug-btn" data-drug="mexiletine">Mexiletine</button>
+          <button class="drug-btn" data-drug="phenytoin">Phenytoin</button>
         </div>
       </div>
 
       <div class="drug-group" style="--class-color: var(--c-IC);">
         <div class="drug-group-label">Class IC · Na block (strong)</div>
         <div class="drug-row">
-          <button class="drug-btn" data-drug="flecainide">Flecainide<span class="tip"></span></button>
-          <button class="drug-btn" data-drug="propafenone">Propafenone<span class="tip"></span></button>
+          <button class="drug-btn" data-drug="flecainide">Flecainide</button>
+          <button class="drug-btn" data-drug="propafenone">Propafenone</button>
         </div>
       </div>
 
       <div class="drug-group" style="--class-color: var(--c-II);">
         <div class="drug-group-label">Class II · β-blockers</div>
         <div class="drug-row">
-          <button class="drug-btn" data-drug="metoprolol">Metoprolol<span class="tip"></span></button>
-          <button class="drug-btn" data-drug="atenolol">Atenolol<span class="tip"></span></button>
-          <button class="drug-btn" data-drug="esmolol">Esmolol<span class="tip"></span></button>
-          <button class="drug-btn" data-drug="propranolol">Propranolol<span class="tip"></span></button>
+          <button class="drug-btn" data-drug="metoprolol">Metoprolol</button>
+          <button class="drug-btn" data-drug="atenolol">Atenolol</button>
+          <button class="drug-btn" data-drug="esmolol">Esmolol</button>
+          <button class="drug-btn" data-drug="propranolol">Propranolol</button>
         </div>
       </div>
 
       <div class="drug-group" style="--class-color: var(--c-III);">
         <div class="drug-group-label">Class III · K block</div>
         <div class="drug-row">
-          <button class="drug-btn" data-drug="amiodarone">Amiodarone<span class="tip"></span></button>
-          <button class="drug-btn" data-drug="sotalol">Sotalol<span class="tip"></span></button>
-          <button class="drug-btn" data-drug="dofetilide">Dofetilide<span class="tip"></span></button>
-          <button class="drug-btn" data-drug="ibutilide">Ibutilide<span class="tip"></span></button>
-          <button class="drug-btn" data-drug="dronedarone">Dronedarone<span class="tip"></span></button>
+          <button class="drug-btn" data-drug="amiodarone">Amiodarone</button>
+          <button class="drug-btn" data-drug="sotalol">Sotalol</button>
+          <button class="drug-btn" data-drug="dofetilide">Dofetilide</button>
+          <button class="drug-btn" data-drug="ibutilide">Ibutilide</button>
+          <button class="drug-btn" data-drug="dronedarone">Dronedarone</button>
         </div>
       </div>
 
       <div class="drug-group" style="--class-color: var(--c-IV);">
         <div class="drug-group-label">Class IV · non-DHP CCB</div>
         <div class="drug-row">
-          <button class="drug-btn" data-drug="verapamil">Verapamil<span class="tip"></span></button>
-          <button class="drug-btn" data-drug="diltiazem">Diltiazem<span class="tip"></span></button>
+          <button class="drug-btn" data-drug="verapamil">Verapamil</button>
+          <button class="drug-btn" data-drug="diltiazem">Diltiazem</button>
         </div>
       </div>
 
       <div class="drug-group" style="--class-color: var(--c-V);">
         <div class="drug-group-label">Other · AV nodal / membrane</div>
         <div class="drug-row">
-          <button class="drug-btn" data-drug="adenosine">Adenosine<span class="tip"></span></button>
-          <button class="drug-btn" data-drug="digoxin">Digoxin<span class="tip"></span></button>
-          <button class="drug-btn" data-drug="magnesium">Magnesium<span class="tip"></span></button>
+          <button class="drug-btn" data-drug="adenosine">Adenosine</button>
+          <button class="drug-btn" data-drug="digoxin">Digoxin</button>
+          <button class="drug-btn" data-drug="magnesium">Magnesium</button>
         </div>
       </div>
 
@@ -785,6 +785,9 @@ body.dark .measure-value { color: #6eb0f7; }
     <div class="measurements" id="measurements"></div>
   </main>
 </div>
+
+<!-- Global tooltip — rendered at body level so it escapes the .left sidebar's overflow clip. -->
+<div id="globalTip" class="global-tip" role="tooltip" aria-hidden="true"></div>
 
 <script>
 'use strict';
@@ -1414,11 +1417,53 @@ function updateDrugBtns() {
     // Dim drugs without pacemaker effect when in pacemaker mode
     const dimmed = cellType === 'pace' && !drug.paceMajor;
     btn.classList.toggle('dimmed', dimmed);
-    btn.querySelector('.tip').textContent = dimmed
+    // Tooltip text lives in a data attr; the global tip element reads it on hover.
+    btn.dataset.tip = dimmed
       ? 'Minimal effect on pacemaker AP — see Ventricular tab'
       : drug.mech;
   });
 }
+
+// ═══════════════════════════════════════════════════════════
+// GLOBAL TOOLTIP (drug hover) — escapes the .left overflow clip
+// ═══════════════════════════════════════════════════════════
+(function setupGlobalTip() {
+  const tip = document.getElementById('globalTip');
+  if (!tip) return;
+  function position(btn) {
+    const r = btn.getBoundingClientRect();
+    // Measure tip after content is set
+    tip.style.transform = 'translate(0, 0)';
+    const tw = tip.offsetWidth;
+    const th = tip.offsetHeight;
+    let x = r.left + (r.width - tw) / 2;
+    // Clamp horizontally to viewport with 8px gutter
+    x = Math.max(8, Math.min(window.innerWidth - tw - 8, x));
+    let y = r.top - th - 8; // above the button
+    if (y < 8) y = r.bottom + 8; // fall back below if near top
+    tip.style.left = x + 'px';
+    tip.style.top = y + 'px';
+  }
+  function show(e) {
+    const btn = e.currentTarget;
+    const text = btn.dataset.tip;
+    if (!text) return;
+    tip.textContent = text;
+    tip.classList.add('visible');
+    position(btn);
+  }
+  function hide() {
+    tip.classList.remove('visible');
+    // Park off-screen so it can't intercept anything
+    tip.style.transform = 'translate(-9999px, -9999px)';
+  }
+  document.querySelectorAll('.drug-btn').forEach(btn => {
+    btn.addEventListener('mouseenter', show);
+    btn.addEventListener('mouseleave', hide);
+    btn.addEventListener('focus', show);
+    btn.addEventListener('blur', hide);
+  });
+})();
 
 const CLASS_COLOR_VAR = { IA:'--c-IA', IB:'--c-IB', IC:'--c-IC', II:'--c-II', III:'--c-III', IV:'--c-IV', V:'--c-V' };
 
