@@ -54,7 +54,8 @@
     {"@type": "ListItem", "position": 2, "url": "https://cathmath.org/hemodynamics/", "name": "Hemodynamic Waveforms Simulator"},
     {"@type": "ListItem", "position": 3, "url": "https://cathmath.org/pvloop/", "name": "PV Loop Simulator"},
     {"@type": "ListItem", "position": 4, "url": "https://cathmath.org/ekg/", "name": "12-Lead EKG Simulator"},
-    {"@type": "ListItem", "position": 5, "url": "https://cathmath.org/embryology/", "name": "Cardiac Embryology Simulator"}
+    {"@type": "ListItem", "position": 5, "url": "https://cathmath.org/embryology/", "name": "Cardiac Embryology Simulator"},
+    {"@type": "ListItem", "position": 6, "url": "https://cathmath.org/ap/", "name": "Cardiac Action Potential Simulator"}
   ]
 }
 </script>
@@ -723,6 +724,23 @@ body {
         </div>
       </div>
     </a>
+
+    <!-- Action Potential Simulator -->
+    <a class="tool-card" id="cardAp" href="/ap/">
+      <div class="card-canvas-wrap">
+        <canvas id="canvasAp"></canvas>
+      </div>
+      <div class="card-info">
+        <div class="card-title">Action Potential <span class="card-arrow">&rarr;</span></div>
+        <div class="card-desc">Cardiac action potential simulator showing how each Vaughan Williams class of antiarrhythmic reshapes the ventricular and pacemaker AP.</div>
+        <div class="card-tags">
+          <span class="card-tag">Vaughan Williams</span>
+          <span class="card-tag">22 Drugs</span>
+          <span class="card-tag">Vent + Pace</span>
+          <span class="card-tag">Ion Currents</span>
+        </div>
+      </div>
+    </a>
   </div>
 </section>
 
@@ -951,6 +969,7 @@ body {
       startPvAnimation(loops);
       startEkgAnimation(loops);
       startEmbryoAnimation(loops);
+      startApAnimation(loops);
     }, instant ? 100 : 600);
   }
 
@@ -1045,19 +1064,21 @@ body {
       pvSetup = setupCanvas('canvasPv');
       ekgSetup = setupCanvas('canvasEkg');
       embryoSetup = setupCanvas('canvasEmbryo');
+      apSetup = setupCanvas('canvasAp');
       // Redraw final frames if animations completed
       if (hemoDone) drawHemoFrame(hemoSetup, 1);
       if (rhcDone) drawRhcFrame(rhcSetup, 1);
       if (pvDone) drawPvFrame(pvSetup, 1);
       if (ekgDone) drawEkgFrame(ekgSetup, 1);
       if (embryoDone) drawEmbryoFrame(embryoSetup, 1);
+      if (apDone) drawApFrame(apSetup, 1);
     }, 200);
   });
 
   // Lazy init — canvases may not have dimensions yet
-  var hemoSetup, rhcSetup, pvSetup, ekgSetup, embryoSetup;
-  var hemoDone = false, rhcDone = false, pvDone = false, ekgDone = false, embryoDone = false;
-  var hemoRunning = false, rhcRunning = false, pvRunning = false, ekgRunning = false, embryoRunning = false;
+  var hemoSetup, rhcSetup, pvSetup, ekgSetup, embryoSetup, apSetup;
+  var hemoDone = false, rhcDone = false, pvDone = false, ekgDone = false, embryoDone = false, apDone = false;
+  var hemoRunning = false, rhcRunning = false, pvRunning = false, ekgRunning = false, embryoRunning = false, apRunning = false;
 
   function ensureSetup() {
     if (!hemoSetup) hemoSetup = setupCanvas('canvasHemo');
@@ -1065,6 +1086,7 @@ body {
     if (!pvSetup) pvSetup = setupCanvas('canvasPv');
     if (!ekgSetup) ekgSetup = setupCanvas('canvasEkg');
     if (!embryoSetup) embryoSetup = setupCanvas('canvasEmbryo');
+    if (!apSetup) apSetup = setupCanvas('canvasAp');
   }
 
 
@@ -1714,6 +1736,140 @@ body {
 
 
   /* ══════════════════════════════════════
+     AP CARD — VENTRICULAR ACTION POTENTIAL TRACE
+     ══════════════════════════════════════ */
+  function ventricularAP(t) {
+    // t in ms (0-400). Returns mV.
+    var vRest = -85, vPeak = 30, vNotch = -2, vPlateau = 12;
+    var d0 = 2, d1 = 7, d2a = 22, d2b = 158, d3 = 100;
+    var t1 = d0;
+    var t2 = t1 + d1;
+    var t2m = t2 + d2a;
+    var t3 = t2m + d2b;
+    var t4 = t3 + d3;
+    if (t < 0) return vRest;
+    if (t < t1) {
+      var u = t / t1;
+      return vRest + (vPeak - vRest) * (u < 0.5 ? 4*u*u*u : 1 - Math.pow(-2*u + 2, 3) / 2);
+    }
+    if (t < t2) return vNotch + (vPeak - vNotch) * Math.exp(-3.2 * (t - t1) / d1);
+    if (t < t2m) {
+      var u = (t - t2) / d2a;
+      var s = u < 0.5 ? 4*u*u*u : 1 - Math.pow(-2*u + 2, 3) / 2;
+      return vNotch + (vPlateau - vNotch) * s;
+    }
+    if (t < t3) {
+      var u = (t - t2m) / d2b;
+      return vPlateau + (vPlateau * 0.6 - vPlateau) * u;
+    }
+    if (t < t4) {
+      var u = (t - t3) / d3;
+      var s = u < 0.5 ? 4*u*u*u : 1 - Math.pow(-2*u + 2, 3) / 2;
+      var startV = vPlateau * 0.6;
+      return startV + (vRest - startV) * s;
+    }
+    return vRest;
+  }
+
+  function drawApFrame(s, progress) {
+    var ctx = s.ctx, W = s.w, H = s.h;
+    ctx.clearRect(0, 0, W, H);
+    var vMin = -100, vMax = 40, tMax = 420;
+    var margin = { l: 8, r: 8, t: 14, b: 14 };
+    var plotW = W - margin.l - margin.r;
+    var plotH = H - margin.t - margin.b;
+    var py = function (v) { return margin.t + plotH * (1 - (v - vMin) / (vMax - vMin)); };
+    var px = function (t) { return margin.l + plotW * (t / tMax); };
+
+    // 0 mV reference (faint)
+    ctx.strokeStyle = 'rgba(255,255,255,0.06)';
+    ctx.lineWidth = 0.5;
+    ctx.setLineDash([2, 4]);
+    ctx.beginPath();
+    ctx.moveTo(margin.l, py(0));
+    ctx.lineTo(margin.l + plotW, py(0));
+    ctx.stroke();
+    ctx.setLineDash([]);
+
+    var totalPts = Math.floor(plotW);
+    var end = Math.floor(progress * totalPts);
+    if (end < 2) return;
+
+    // Glow stroke
+    ctx.save();
+    ctx.shadowColor = 'rgba(74,144,217,0.4)';
+    ctx.shadowBlur = 6;
+    ctx.strokeStyle = '#4a90d9';
+    ctx.lineWidth = 2;
+    ctx.lineJoin = 'round';
+    ctx.lineCap = 'round';
+    ctx.beginPath();
+    for (var i = 0; i <= end; i++) {
+      var t = (i / totalPts) * tMax;
+      var v = ventricularAP(t);
+      var x = px(t);
+      var y = py(v);
+      if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+    }
+    ctx.stroke();
+    ctx.restore();
+
+    // Leading dot
+    if (progress < 1 && end > 0) {
+      var t = (end / totalPts) * tMax;
+      var v = ventricularAP(t);
+      ctx.save();
+      ctx.shadowColor = '#4a90d9';
+      ctx.shadowBlur = 10;
+      ctx.fillStyle = '#4a90d9';
+      ctx.beginPath();
+      ctx.arc(px(t), py(v), 2.5, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.restore();
+    }
+
+    // Phase numbers
+    if (progress > 0.5) {
+      ctx.font = '600 8px DM Sans, sans-serif';
+      ctx.fillStyle = 'rgba(74,144,217,0.4)';
+      ctx.textAlign = 'center';
+      ctx.fillText('0', px(2), H - 4);
+      ctx.fillText('2', px(120), H - 4);
+      ctx.fillText('3', px(220), H - 4);
+    }
+    if (progress > 0.7) {
+      ctx.font = '500 9px DM Sans, sans-serif';
+      ctx.fillStyle = 'rgba(74,144,217,0.3)';
+      ctx.textAlign = 'right';
+      ctx.fillText('Lead AP', W - 6, margin.t + 8);
+    }
+  }
+
+  function startApAnimation(loops) {
+    if (apRunning) return;
+    loops = loops || 1;
+    ensureSetup();
+    apDone = false; apRunning = true;
+    var dur = 2800, loopIdx = 0;
+    function runLoop() {
+      var t0 = performance.now();
+      function frame() {
+        var p = Math.min((performance.now() - t0) / dur, 1);
+        drawApFrame(apSetup, p);
+        if (p < 1) requestAnimationFrame(frame);
+        else {
+          loopIdx++;
+          if (loopIdx < loops) { setTimeout(runLoop, 200); }
+          else { apDone = true; apRunning = false; }
+        }
+      }
+      requestAnimationFrame(frame);
+    }
+    runLoop();
+  }
+
+
+  /* ══════════════════════════════════════
      HOVER REPLAY
      ══════════════════════════════════════ */
   function addHoverReplay(cardId, startFn) {
@@ -1740,6 +1896,7 @@ body {
     addHoverReplay('cardPv', startPvAnimation);
     addHoverReplay('cardEkg', startEkgAnimation);
     addHoverReplay('cardEmbryo', startEmbryoAnimation);
+    addHoverReplay('cardAp', startApAnimation);
   });
 
   // Auto-skip animation if already seen on this device within 48 hours

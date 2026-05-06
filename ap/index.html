@@ -1,0 +1,1578 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Cardiac Action Potential Simulator — Antiarrhythmics & Vaughan Williams Classes | CathMath</title>
+<meta name="description" content="Interactive cardiac action potential simulator. Visualize how Class I, II, III, IV antiarrhythmics reshape the ventricular and pacemaker action potential. Free cardiology teaching tool.">
+<meta name="keywords" content="action potential, cardiac action potential, Vaughan Williams, antiarrhythmic, Class IA, Class IB, Class IC, Class III, amiodarone, lidocaine, flecainide, sotalol, verapamil, adenosine, sodium channel blocker, potassium channel blocker, pacemaker, SA node, AV node, refractory period">
+<meta name="author" content="Dr. Saro Avedikian, MD, MPH">
+<meta name="robots" content="index, follow">
+<link rel="canonical" href="https://cathmath.org/ap/">
+<link rel="icon" type="image/x-icon" href="/favicon.ico">
+<link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://cathmath.org/ap/">
+<meta property="og:title" content="Cardiac Action Potential Simulator | CathMath">
+<meta property="og:description" content="Interactive simulator of antiarrhythmic effects on cardiac action potential. Vaughan Williams Class I-IV.">
+<meta property="og:image" content="https://cathmath.org/og-image.png">
+<meta property="og:site_name" content="CathMath">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Cardiac Action Potential Simulator | CathMath">
+<meta name="twitter:description" content="See how each antiarrhythmic class reshapes the cardiac action potential.">
+<meta name="twitter:image" content="https://cathmath.org/og-image.png">
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "WebApplication",
+  "name": "Cardiac Action Potential Simulator",
+  "url": "https://cathmath.org/ap/",
+  "description": "Interactive simulator showing how Vaughan-Williams antiarrhythmic classes reshape the cardiac action potential in ventricular myocytes and pacemaker cells.",
+  "applicationCategory": "EducationalApplication",
+  "operatingSystem": "Web",
+  "offers": {"@type": "Offer", "price": "0"},
+  "author": {"@type": "Person", "name": "Dr. Saro Avedikian", "jobTitle": "Cardiology Fellow"}
+}
+</script>
+<style>
+:root {
+  --navy: #0d2240;
+  --navy-deep: #091a33;
+  --navy-card: #0c1f3a;
+  --bg: #f4f6f9;
+  --panel-bg: #ffffff;
+  --panel-bg-2: #f9fafc;
+  --border: #d8dfe8;
+  --text: #1a1a2e;
+  --text-dim: #5a6478;
+  --text-muted: #8892a4;
+  --accent: #3b82f6;
+  --threshold: #ef4444;
+  --rest: #6b7280;
+
+  /* Drug class colors */
+  --c-IA: #6366f1;
+  --c-IB: #14b8a6;
+  --c-IC: #f59e0b;
+  --c-II: #ef4444;
+  --c-III: #a855f7;
+  --c-IV: #10b981;
+  --c-V:  #64748b;
+
+  --slider-track: #e3e7ee;
+  --slider-thumb: var(--navy);
+}
+body.dark {
+  --bg: #0a1220;
+  --panel-bg: #131a26;
+  --panel-bg-2: #0f1722;
+  --border: #2a3340;
+  --text: #d8dce4;
+  --text-dim: #9aa3b3;
+  --text-muted: #6b7587;
+  --slider-track: #2a3340;
+  --slider-thumb: #4a90d9;
+  --navy: #4a90d9;
+  --navy-deep: #1e2740;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { height: 100%; }
+body {
+  font-family: -apple-system, "Helvetica Neue", Helvetica, Arial, sans-serif;
+  font-size: 14px;
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ═══ SITE NAV ═══ */
+.site-nav {
+  background: #0a1628;
+  color: #fff;
+  display: flex;
+  align-items: center;
+  padding: 0 24px;
+  height: 42px;
+  position: sticky;
+  top: 0;
+  z-index: 200;
+  border-bottom: 1px solid rgba(255,255,255,0.06);
+  flex-shrink: 0;
+}
+.nav-brand { font-size: 16px; font-weight: 800; margin-right: 32px; color: #fff; text-decoration: none; letter-spacing: 0.3px; }
+.nav-tabs { display: flex; height: 100%; }
+.nav-tab {
+  display: flex; align-items: center;
+  padding: 0 18px; height: 42px;
+  font-size: 13px; font-weight: 600;
+  color: rgba(255,255,255,0.5);
+  text-decoration: none;
+  border-bottom: 2px solid transparent;
+  transition: color 0.2s, border-color 0.2s;
+}
+.nav-tab:hover { color: rgba(255,255,255,0.85); }
+.nav-tab.active { color: #fff; border-bottom-color: #4a90d9; }
+.nav-right { margin-left: auto; display: flex; align-items: center; gap: 16px; }
+.nav-credit { font-size: 11px; opacity: 0.5; font-weight: 400; }
+.nav-right button {
+  background: rgba(255,255,255,0.1);
+  color: #fff;
+  border: 1px solid rgba(255,255,255,0.2);
+  padding: 4px 12px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 11px;
+  font-weight: 600;
+  transition: background 0.2s;
+}
+.nav-right button:hover { background: rgba(255,255,255,0.2); }
+
+/* ═══ PAGE CONTROLS ═══ */
+.page-controls {
+  background: var(--navy);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 24px;
+  flex-shrink: 0;
+}
+.page-title { display: flex; align-items: baseline; gap: 12px; }
+.page-title h1 {
+  font-size: 17px;
+  font-weight: 700;
+  margin: 0;
+  letter-spacing: -0.01em;
+}
+.page-sub { font-size: 12px; opacity: 0.65; }
+.page-controls .header-btns { display: flex; gap: 8px; }
+.page-controls button {
+  background: rgba(255,255,255,0.08);
+  color: #fff;
+  border: 1px solid rgba(255,255,255,0.18);
+  padding: 5px 14px;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 600;
+  transition: all 0.2s;
+}
+.page-controls button:hover { background: rgba(255,255,255,0.18); }
+
+/* ═══ MAIN LAYOUT ═══ */
+.main {
+  display: flex;
+  flex: 1;
+  min-height: 0;
+}
+
+/* ═══ LEFT PANEL ═══ */
+.left {
+  width: 340px;
+  flex-shrink: 0;
+  background: var(--panel-bg);
+  border-right: 1px solid var(--border);
+  overflow-y: auto;
+  padding: 16px;
+}
+.card {
+  background: var(--panel-bg-2);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 12px 14px;
+  margin-bottom: 12px;
+}
+.card-title {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--navy);
+  margin-bottom: 10px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+body.dark .card-title { color: var(--text); }
+
+/* ═══ SEGMENT TOGGLE (cell type) ═══ */
+.seg-toggle {
+  display: flex;
+  background: var(--slider-track);
+  border-radius: 6px;
+  padding: 3px;
+  gap: 2px;
+}
+.seg-btn {
+  flex: 1;
+  padding: 6px 8px;
+  background: transparent;
+  border: none;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-dim);
+  cursor: pointer;
+  transition: all 0.18s;
+}
+.seg-btn.active {
+  background: var(--panel-bg);
+  color: var(--navy);
+  box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+}
+body.dark .seg-btn.active { color: #6eb0f7; }
+
+/* ═══ SLIDERS ═══ */
+.slider-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+  font-size: 12px;
+}
+.slider-row:last-child { margin-bottom: 0; }
+.slider-label {
+  flex: 0 0 100px;
+  font-weight: 600;
+  color: var(--text);
+  font-size: 11.5px;
+  position: relative;
+  cursor: help;
+  border-bottom: 1px dotted transparent;
+  transition: border-color 0.15s, color 0.15s;
+}
+.slider-label[data-tip]:hover {
+  color: var(--accent);
+  border-bottom-color: var(--accent);
+}
+.slider-label[data-tip]::after {
+  content: attr(data-tip);
+  position: absolute;
+  bottom: calc(100% + 6px);
+  left: 0;
+  background: var(--navy);
+  color: #fff;
+  font-size: 11px;
+  font-weight: 500;
+  padding: 7px 10px;
+  border-radius: 5px;
+  white-space: normal;
+  width: 220px;
+  text-align: left;
+  line-height: 1.4;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.15s;
+  box-shadow: 0 4px 14px rgba(0,0,0,0.2);
+  z-index: 200;
+}
+.slider-label[data-tip]:hover::after { opacity: 1; }
+body.dark .slider-label[data-tip]::after { background: #2a3548; }
+.slider-row input[type=range] {
+  -webkit-appearance: none;
+  appearance: none;
+  flex: 1;
+  height: 4px;
+  background: var(--slider-track);
+  border-radius: 2px;
+  outline: none;
+  cursor: pointer;
+}
+.slider-row input[type=range]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: var(--slider-thumb);
+  cursor: pointer;
+  border: 2px solid var(--panel-bg);
+  box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+}
+.slider-val {
+  font-family: "SF Mono", Menlo, Consolas, monospace;
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--navy);
+  min-width: 46px;
+  text-align: right;
+}
+body.dark .slider-val { color: #6eb0f7; }
+
+/* ═══ DRUG GROUPS ═══ */
+.drug-group { margin-bottom: 12px; }
+.drug-group:last-child { margin-bottom: 0; }
+.drug-group-label {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+  margin-bottom: 6px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.drug-group-label::before {
+  content: '';
+  display: inline-block;
+  width: 8px; height: 8px;
+  border-radius: 50%;
+  background: var(--class-color);
+}
+.drug-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+}
+.drug-btn {
+  flex: 1 1 auto;
+  min-width: 0;
+  padding: 6px 10px;
+  background: var(--panel-bg);
+  color: var(--text);
+  border: 1px solid var(--border);
+  border-radius: 5px;
+  font-size: 11.5px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s;
+  white-space: nowrap;
+}
+.drug-btn:hover {
+  border-color: var(--class-color);
+  color: var(--class-color);
+}
+.drug-btn.active {
+  background: var(--class-color);
+  color: #fff;
+  border-color: var(--class-color);
+  box-shadow: 0 1px 4px rgba(0,0,0,0.12);
+}
+body.dark .drug-btn { background: var(--panel-bg-2); }
+
+.btn-clear {
+  width: 100%;
+  margin-top: 8px;
+  padding: 6px 10px;
+  background: transparent;
+  border: 1px solid var(--border);
+  border-radius: 5px;
+  color: var(--text-dim);
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.btn-clear:hover { border-color: var(--threshold); color: var(--threshold); }
+
+/* ═══ RIGHT PANEL ═══ */
+.right {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  background: var(--bg);
+  min-width: 0;
+}
+.canvas-wrap {
+  flex: 1;
+  position: relative;
+  background: var(--panel-bg);
+  margin: 12px 12px 0;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  /* visible so ion-current tooltips are not clipped at the top edge */
+  overflow: visible;
+  min-height: 300px;
+}
+canvas { display: block; width: 100%; height: 100%; border-radius: 8px; }
+
+/* Combined draggable display panel (overlays + legend) */
+.float-panel {
+  position: absolute;
+  top: 12px;
+  right: 14px;
+  background: rgba(255,255,255,0.92);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  z-index: 10;
+  backdrop-filter: blur(6px);
+  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+  user-select: none;
+  font-size: 11px;
+  min-width: 156px;
+}
+body.dark .float-panel { background: rgba(19,26,38,0.92); box-shadow: 0 2px 8px rgba(0,0,0,0.3); }
+.float-handle {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 6px 10px;
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+  cursor: move;
+  border-bottom: 1px solid var(--border);
+  border-radius: 6px 6px 0 0;
+}
+.float-handle:hover { background: rgba(0,0,0,0.03); }
+body.dark .float-handle:hover { background: rgba(255,255,255,0.04); }
+.float-handle .drag-grip { color: var(--text-muted); font-size: 10px; letter-spacing: -2px; }
+.float-body {
+  padding: 8px 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+.float-divider {
+  height: 1px;
+  background: var(--border);
+  margin: 4px -10px;
+}
+
+.overlay-row { display: flex; align-items: center; gap: 6px; cursor: pointer; color: var(--text-dim); }
+.overlay-row input { cursor: pointer; }
+.legend-row { display: flex; align-items: center; gap: 7px; color: var(--text-dim); }
+.legend-line { width: 18px; height: 2px; background: var(--navy); }
+.legend-line.ghost { background: #94a3b8; }
+
+/* Ion current labels — DOM, with hover tooltips */
+.ion-labels { position: absolute; inset: 0; pointer-events: none; }
+.ion-label {
+  position: absolute;
+  font-style: italic;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-dim);
+  background: rgba(255,255,255,0.7);
+  padding: 1px 6px;
+  border-radius: 3px;
+  pointer-events: auto;
+  cursor: help;
+  white-space: nowrap;
+  transform: translate(-50%, -50%);
+  transition: color 0.15s, background 0.15s;
+}
+body.dark .ion-label { background: rgba(11,17,28,0.55); color: var(--text); }
+.ion-label:hover { color: var(--accent); }
+.ion-label .ion-tip {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--navy);
+  color: #fff;
+  font-style: normal;
+  font-weight: 500;
+  font-size: 11px;
+  padding: 7px 10px;
+  border-radius: 5px;
+  white-space: normal;
+  width: 220px;
+  text-align: left;
+  line-height: 1.4;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.15s;
+  box-shadow: 0 4px 14px rgba(0,0,0,0.2);
+  z-index: 50;
+}
+.ion-label:hover .ion-tip { opacity: 1; }
+body.dark .ion-label .ion-tip { background: #2a3548; }
+
+/* Disabled drug button (no pacemaker effect) */
+.drug-btn.dimmed {
+  opacity: 0.35;
+  cursor: not-allowed;
+  pointer-events: auto; /* keep tooltip */
+}
+.drug-btn.dimmed:hover { border-color: var(--border); color: var(--text); }
+
+.measurements {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(110px, 1fr));
+  gap: 8px;
+  padding: 12px;
+}
+.measure {
+  background: var(--panel-bg);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 8px 12px;
+}
+.measure-label {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+  margin-bottom: 2px;
+}
+.measure-value {
+  font-family: "SF Mono", Menlo, Consolas, monospace;
+  font-size: 17px;
+  font-weight: 700;
+  color: var(--navy);
+}
+body.dark .measure-value { color: #6eb0f7; }
+.measure-delta {
+  font-size: 10px;
+  font-weight: 600;
+  margin-left: 4px;
+}
+.measure-delta.up { color: var(--threshold); }
+.measure-delta.down { color: var(--c-IV); }
+
+/* ═══ ACTIVE DRUG STRIP ═══ */
+.active-strip {
+  padding: 8px 12px 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  min-height: 24px;
+}
+.active-pill {
+  font-size: 11px;
+  font-weight: 600;
+  padding: 3px 10px;
+  border-radius: 12px;
+  color: #fff;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.active-pill .x {
+  cursor: pointer;
+  opacity: 0.7;
+  font-size: 14px;
+  line-height: 1;
+}
+.active-pill .x:hover { opacity: 1; }
+
+/* ═══ DRUG TIP (hover detail) ═══ */
+.drug-btn { position: relative; }
+.tip {
+  position: absolute;
+  bottom: calc(100% + 6px);
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--navy);
+  color: #fff;
+  font-size: 11px;
+  font-weight: 500;
+  padding: 7px 10px;
+  border-radius: 6px;
+  white-space: normal;
+  width: 220px;
+  text-align: left;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.15s;
+  box-shadow: 0 4px 14px rgba(0,0,0,0.2);
+  z-index: 100;
+  line-height: 1.4;
+}
+.drug-btn:hover .tip { opacity: 1; }
+
+/* ═══ MOBILE ═══ */
+@media (max-width: 800px) {
+  .main { flex-direction: column; }
+  .left { width: 100%; max-height: 50vh; border-right: none; border-bottom: 1px solid var(--border); }
+  .canvas-wrap { min-height: 240px; }
+}
+</style>
+</head>
+<body class="dark">
+
+<!-- ═══ SITE NAV ═══ -->
+<nav class="site-nav">
+  <a href="/" class="nav-brand">CathMath</a>
+  <div class="nav-tabs">
+    <a href="/rhc/" class="nav-tab">RHC Calculator</a>
+    <a href="/pvloop/" class="nav-tab">PV Loops</a>
+    <a href="/ekg/" class="nav-tab">EKG Simulator</a>
+    <a href="/embryology/" class="nav-tab">Embryology</a>
+    <a href="/hemodynamics/" class="nav-tab">Hemodynamics</a>
+    <a href="/ap/" class="nav-tab active">Action Potential</a>
+  </div>
+  <div class="nav-right">
+    <span class="nav-credit">Dr. Saro Avedikian, MD, MPH</span>
+    <button id="darkToggle" onclick="toggleDark()">Light Mode</button>
+  </div>
+</nav>
+
+<!-- ═══ PAGE CONTROLS ═══ -->
+<div class="page-controls">
+  <div class="page-title">
+    <h1>Cardiac Action Potential Simulator</h1>
+    <span class="page-sub">Vaughan Williams Class I–IV Antiarrhythmics</span>
+  </div>
+  <div class="header-btns">
+    <button onclick="resetAll()">Reset</button>
+  </div>
+</div>
+
+<!-- ═══ MAIN ═══ -->
+<div class="main">
+  <!-- LEFT PANEL -->
+  <aside class="left">
+
+    <!-- CELL TYPE -->
+    <div class="card">
+      <div class="card-title">Cell Type</div>
+      <div class="seg-toggle" id="cellToggle">
+        <button class="seg-btn active" data-cell="vent">Ventricular</button>
+        <button class="seg-btn" data-cell="pace">Pacemaker</button>
+      </div>
+    </div>
+
+    <!-- DIRECT PARAMETERS -->
+    <div class="card" id="ventSliders">
+      <div class="card-title">Parameters</div>
+      <div class="slider-row">
+        <span class="slider-label" data-tip="Slope of phase 0 upstroke. Reflects fast Na⁺ influx. Class I drugs reduce this — Class IC most strongly.">Phase 0 (I_Na)</span>
+        <input type="range" id="slPhase0" min="0.1" max="1.5" step="0.05" value="1.0">
+        <span class="slider-val" id="slPhase0Val">1.00×</span>
+      </div>
+      <div class="slider-row">
+        <span class="slider-label" data-tip="Action potential duration multiplier. Reflects K⁺ efflux timing. Class III drugs (amiodarone, sotalol, dofetilide) prolong this; Class IB shortens it.">APD (I_K)</span>
+        <input type="range" id="slApd" min="0.5" max="2.0" step="0.05" value="1.0">
+        <span class="slider-val" id="slApdVal">1.00×</span>
+      </div>
+      <div class="slider-row">
+        <span class="slider-label" data-tip="Effective refractory period as a fraction of APD. The portion during which another stimulus cannot trigger a new AP.">ERP fraction</span>
+        <input type="range" id="slErp" min="0.6" max="1.0" step="0.01" value="0.85">
+        <span class="slider-val" id="slErpVal">0.85</span>
+      </div>
+      <div class="slider-row">
+        <span class="slider-label" data-tip="Resting membrane potential. Less negative values mimic ischemia — fewer Na channels available, slower phase 0. Why Class IB drugs are ischemia-selective.">Resting</span>
+        <input type="range" id="slRest" min="-95" max="-65" step="1" value="-85">
+        <span class="slider-val" id="slRestVal">-85 mV</span>
+      </div>
+    </div>
+
+    <div class="card" id="paceSliders" style="display:none;">
+      <div class="card-title">Parameters</div>
+      <div class="slider-row">
+        <span class="slider-label" data-tip="Rate of spontaneous diastolic depolarization. Sets pacemaker firing rate. Slowed by β-blockers, CCBs, adenosine, digoxin.">Phase 4 slope</span>
+        <input type="range" id="slP4" min="0.005" max="0.15" step="0.005" value="0.05">
+        <span class="slider-val" id="slP4Val">0.050</span>
+      </div>
+      <div class="slider-row">
+        <span class="slider-label" data-tip="Slope of phase 0 in pacemaker cells. Calcium-dependent (not Na). Verapamil and diltiazem slow this — that's why they slow AV nodal conduction.">Phase 0 (I_Ca)</span>
+        <input type="range" id="slP0p" min="0.2" max="1.5" step="0.05" value="1.0">
+        <span class="slider-val" id="slP0pVal">1.00×</span>
+      </div>
+      <div class="slider-row">
+        <span class="slider-label" data-tip="Action potential duration of the firing pacemaker cell. Prolonged AV nodal AP slows conduction.">APD</span>
+        <input type="range" id="slApdp" min="0.5" max="1.8" step="0.05" value="1.0">
+        <span class="slider-val" id="slApdpVal">1.00×</span>
+      </div>
+      <div class="slider-row">
+        <span class="slider-label" data-tip="Maximum diastolic potential — the most negative voltage reached after repolarization, before phase 4 begins. Adenosine hyperpolarizes via I_KAch.">MDP</span>
+        <input type="range" id="slMdp" min="-80" max="-50" step="1" value="-65">
+        <span class="slider-val" id="slMdpVal">-65 mV</span>
+      </div>
+      <div class="slider-row">
+        <span class="slider-label" data-tip="Voltage at which the cell fires phase 0. Reaching it from MDP triggers the upstroke. Longer time to threshold = slower heart rate.">Threshold</span>
+        <input type="range" id="slThr" min="-55" max="-30" step="1" value="-40">
+        <span class="slider-val" id="slThrVal">-40 mV</span>
+      </div>
+    </div>
+
+    <!-- DRUGS -->
+    <div class="card">
+      <div class="card-title">Antiarrhythmics</div>
+
+      <div class="drug-group" style="--class-color: var(--c-IA);">
+        <div class="drug-group-label">Class IA · Na block + K block</div>
+        <div class="drug-row">
+          <button class="drug-btn" data-drug="quinidine">Quinidine<span class="tip"></span></button>
+          <button class="drug-btn" data-drug="procainamide">Procainamide<span class="tip"></span></button>
+          <button class="drug-btn" data-drug="disopyramide">Disopyramide<span class="tip"></span></button>
+        </div>
+      </div>
+
+      <div class="drug-group" style="--class-color: var(--c-IB);">
+        <div class="drug-group-label">Class IB · Na block (weak, ischemia-selective)</div>
+        <div class="drug-row">
+          <button class="drug-btn" data-drug="lidocaine">Lidocaine<span class="tip"></span></button>
+          <button class="drug-btn" data-drug="mexiletine">Mexiletine<span class="tip"></span></button>
+          <button class="drug-btn" data-drug="phenytoin">Phenytoin<span class="tip"></span></button>
+        </div>
+      </div>
+
+      <div class="drug-group" style="--class-color: var(--c-IC);">
+        <div class="drug-group-label">Class IC · Na block (strong)</div>
+        <div class="drug-row">
+          <button class="drug-btn" data-drug="flecainide">Flecainide<span class="tip"></span></button>
+          <button class="drug-btn" data-drug="propafenone">Propafenone<span class="tip"></span></button>
+        </div>
+      </div>
+
+      <div class="drug-group" style="--class-color: var(--c-II);">
+        <div class="drug-group-label">Class II · β-blockers</div>
+        <div class="drug-row">
+          <button class="drug-btn" data-drug="metoprolol">Metoprolol<span class="tip"></span></button>
+          <button class="drug-btn" data-drug="atenolol">Atenolol<span class="tip"></span></button>
+          <button class="drug-btn" data-drug="esmolol">Esmolol<span class="tip"></span></button>
+          <button class="drug-btn" data-drug="propranolol">Propranolol<span class="tip"></span></button>
+        </div>
+      </div>
+
+      <div class="drug-group" style="--class-color: var(--c-III);">
+        <div class="drug-group-label">Class III · K block</div>
+        <div class="drug-row">
+          <button class="drug-btn" data-drug="amiodarone">Amiodarone<span class="tip"></span></button>
+          <button class="drug-btn" data-drug="sotalol">Sotalol<span class="tip"></span></button>
+          <button class="drug-btn" data-drug="dofetilide">Dofetilide<span class="tip"></span></button>
+          <button class="drug-btn" data-drug="ibutilide">Ibutilide<span class="tip"></span></button>
+          <button class="drug-btn" data-drug="dronedarone">Dronedarone<span class="tip"></span></button>
+        </div>
+      </div>
+
+      <div class="drug-group" style="--class-color: var(--c-IV);">
+        <div class="drug-group-label">Class IV · non-DHP CCB</div>
+        <div class="drug-row">
+          <button class="drug-btn" data-drug="verapamil">Verapamil<span class="tip"></span></button>
+          <button class="drug-btn" data-drug="diltiazem">Diltiazem<span class="tip"></span></button>
+        </div>
+      </div>
+
+      <div class="drug-group" style="--class-color: var(--c-V);">
+        <div class="drug-group-label">Other · AV nodal / membrane</div>
+        <div class="drug-row">
+          <button class="drug-btn" data-drug="adenosine">Adenosine<span class="tip"></span></button>
+          <button class="drug-btn" data-drug="digoxin">Digoxin<span class="tip"></span></button>
+          <button class="drug-btn" data-drug="magnesium">Magnesium<span class="tip"></span></button>
+        </div>
+      </div>
+
+      <button class="btn-clear" onclick="clearDrugs()">Clear all drugs</button>
+    </div>
+
+  </aside>
+
+  <!-- RIGHT PANEL -->
+  <main class="right">
+    <div class="canvas-wrap">
+      <canvas id="canvas"></canvas>
+      <div class="ion-labels" id="ionLabels"></div>
+      <div class="float-panel" id="floatPanel">
+        <div class="float-handle" id="floatHandle">
+          <span>Display</span>
+          <span class="drag-grip" title="Drag to move">⋮⋮</span>
+        </div>
+        <div class="float-body">
+          <label class="overlay-row"><input type="checkbox" id="ovGhost" checked> Ghost (baseline)</label>
+          <label class="overlay-row"><input type="checkbox" id="ovPhases" checked> Phase labels</label>
+          <label class="overlay-row"><input type="checkbox" id="ovIons" checked> Ion currents</label>
+          <label class="overlay-row"><input type="checkbox" id="ovErp" checked> ERP shading</label>
+          <label class="overlay-row"><input type="checkbox" id="ovThreshold"> Threshold line</label>
+          <div class="float-divider"></div>
+          <div class="legend-row"><span class="legend-line"></span> Current</div>
+          <div class="legend-row"><span class="legend-line ghost"></span> Baseline</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="active-strip" id="activeStrip"></div>
+
+    <div class="measurements" id="measurements"></div>
+  </main>
+</div>
+
+<script>
+'use strict';
+
+// ═══════════════════════════════════════════════════════════
+// DRUG CATALOG — params are ADDITIVE deltas to baseline
+// ═══════════════════════════════════════════════════════════
+// `paceMajor` flags drugs with clinically meaningful pacemaker AP effect.
+// Drugs marked `false` are disabled in pacemaker mode (Na/K blockers act on
+// fast-response cells; SA/AV nodal cells use Ca-dependent phase 0).
+const DRUGS = {
+  // CLASS IA — moderate Na block + K block (ventricular only — no pace effect)
+  quinidine:    { name:'Quinidine', cls:'IA', paceMajor:false, vent:{phase0Mult:-0.40, apdMult:+0.25, erpFraction:+0.05}, pace:{}, mech:'Moderate Na block (↓ phase 0) + K block (↑ APD/ERP). Watch QT — torsades risk. Paradoxically can ↑ HR via vagolytic effect.' },
+  procainamide: { name:'Procainamide', cls:'IA', paceMajor:false, vent:{phase0Mult:-0.30, apdMult:+0.20, erpFraction:+0.05}, pace:{}, mech:'Active metabolite NAPA has Class III activity. Lupus-like syndrome with chronic use.' },
+  disopyramide: { name:'Disopyramide', cls:'IA', paceMajor:false, vent:{phase0Mult:-0.35, apdMult:+0.20, erpFraction:+0.05}, pace:{}, mech:'Strong anticholinergic + negative inotrope. Used in vagally-mediated AF and HOCM.' },
+
+  // CLASS IB — weak Na, fast off, ischemia-selective (ventricular only)
+  lidocaine:    { name:'Lidocaine', cls:'IB', paceMajor:false, vent:{phase0Mult:-0.10, apdMult:-0.10, erpFraction:0}, pace:{}, mech:'Use-dependent — preferentially blocks ischemic/depolarized tissue. Minimal change at normal HR.' },
+  mexiletine:   { name:'Mexiletine', cls:'IB', paceMajor:false, vent:{phase0Mult:-0.10, apdMult:-0.10, erpFraction:0}, pace:{}, mech:'Oral lidocaine analog. Used for VT, especially in long QT3 and post-MI.' },
+  phenytoin:    { name:'Phenytoin', cls:'IB', paceMajor:false, vent:{phase0Mult:-0.08, apdMult:-0.10, erpFraction:0}, pace:{}, mech:'Classically used for digoxin-toxic arrhythmias. Largely historical role.' },
+
+  // CLASS IC — strong Na, slow off (ventricular only at therapeutic doses)
+  flecainide:   { name:'Flecainide', cls:'IC', paceMajor:false, vent:{phase0Mult:-0.65, apdMult:+0.05, erpFraction:0}, pace:{}, mech:'Strong Na block, slow off-kinetics → ↑↑ QRS. Avoid in structural heart disease (CAST trial).' },
+  propafenone:  { name:'Propafenone', cls:'IC', paceMajor:false, vent:{phase0Mult:-0.55, apdMult:+0.05, erpFraction:0}, pace:{}, mech:'Mild β-blocking activity. Pill-in-pocket cardioversion of paroxysmal AF.' },
+
+  // CLASS II — β-blockers (major pacemaker effect)
+  metoprolol:   { name:'Metoprolol', cls:'II', paceMajor:true, vent:{}, pace:{phase4Slope:-0.030, apdMult:+0.10}, mech:'β1-selective. Rate control in AF, post-MI, HFrEF.' },
+  atenolol:     { name:'Atenolol', cls:'II', paceMajor:true, vent:{}, pace:{phase4Slope:-0.025, apdMult:+0.10}, mech:'β1-selective, renally cleared. Less crosses BBB.' },
+  esmolol:      { name:'Esmolol', cls:'II', paceMajor:true, vent:{}, pace:{phase4Slope:-0.035, apdMult:+0.10}, mech:'Ultra-short half-life (9 min). IV infusion for acute rate control.' },
+  propranolol:  { name:'Propranolol', cls:'II', paceMajor:true, vent:{phase0Mult:-0.05}, pace:{phase4Slope:-0.030, apdMult:+0.10}, mech:'Non-selective β-blocker with mild membrane-stabilizing (Na block) activity.' },
+
+  // CLASS III — K block (amiodarone, sotalol, dronedarone slow SA via β/Ca block too)
+  amiodarone:   { name:'Amiodarone', cls:'III', paceMajor:true, vent:{phase0Mult:-0.10, apdMult:+0.35, erpFraction:+0.05}, pace:{phase4Slope:-0.020, apdMult:+0.15}, mech:'Multi-channel: K, Na, Ca, β-block. Most effective for AF/VT. Pulm/thyroid/hepatic toxicity.' },
+  sotalol:      { name:'Sotalol', cls:'III', paceMajor:true, vent:{apdMult:+0.30, erpFraction:+0.05}, pace:{phase4Slope:-0.025, apdMult:+0.10}, mech:'K block + non-selective β block. Strong torsades risk — admit for initiation.' },
+  dofetilide:   { name:'Dofetilide', cls:'III', paceMajor:false, vent:{apdMult:+0.30, erpFraction:+0.05}, pace:{}, mech:'Pure I_Kr blocker — ventricular myocyte only. Renally dosed. Inpatient initiation required (TIKOSYN REMS).' },
+  ibutilide:    { name:'Ibutilide', cls:'III', paceMajor:false, vent:{apdMult:+0.25, erpFraction:+0.05}, pace:{}, mech:'IV only — pharmacologic cardioversion of recent-onset AF/AFL.' },
+  dronedarone:  { name:'Dronedarone', cls:'III', paceMajor:true, vent:{phase0Mult:-0.05, apdMult:+0.20, erpFraction:+0.03}, pace:{phase4Slope:-0.015, apdMult:+0.10}, mech:'Amiodarone analog without iodine. Avoid in permanent AF, HF, severe LV dysfunction.' },
+
+  // CLASS IV — non-DHP CCBs (major SA/AV nodal effect)
+  verapamil:    { name:'Verapamil', cls:'IV', paceMajor:true, vent:{}, pace:{phase0Mult:-0.45, apdMult:+0.20}, mech:'Slows phase 0 in Ca-dependent SA/AV nodal cells. Avoid in HFrEF and WPW with AF.' },
+  diltiazem:    { name:'Diltiazem', cls:'IV', paceMajor:true, vent:{}, pace:{phase0Mult:-0.40, apdMult:+0.20}, mech:'Less negative inotropy than verapamil. First-line rate control in AF.' },
+
+  // OTHER
+  adenosine:    { name:'Adenosine', cls:'V', paceMajor:true, vent:{}, pace:{phase4Slope:-0.045, MDP:-10}, mech:'A1 receptor → I_KAch → AV nodal block. 6 mg → 12 mg IV push. Half-life ~10 sec.' },
+  digoxin:      { name:'Digoxin', cls:'V', paceMajor:true, vent:{}, pace:{phase4Slope:-0.020, apdMult:+0.10}, mech:'↑ vagal tone slows AV node. Narrow therapeutic index. Inotrope via Na/K-ATPase block.' },
+  magnesium:    { name:'Magnesium', cls:'V', paceMajor:false, vent:{apdMult:-0.03}, pace:{}, mech:'First-line for torsades. Membrane stabilizer — acts on ventricular EADs, not pacemaker.' },
+};
+
+// ═══════════════════════════════════════════════════════════
+// STATE
+// ═══════════════════════════════════════════════════════════
+const BASELINE_VENT = {
+  vRest: -85, vPeak: 30, vNotch: -2, vPlateau: 12,
+  phase0Dur: 2, phase1Dur: 7, phase2Dur: 180, phase3Dur: 100,
+  phase0Mult: 1.0, apdMult: 1.0, erpFraction: 0.85,
+};
+const BASELINE_PACE = {
+  MDP: -65, threshold: -40, peak: 10,
+  phase0Dur: 30, apDuration: 200,
+  phase4Slope: 0.05,
+  phase0Mult: 1.0, apdMult: 1.0,
+};
+
+let cellType = 'vent';
+let activeDrugs = new Set();
+let params = { ...BASELINE_VENT };
+let paceParams = { ...BASELINE_PACE };
+let userOverrides = {}; // sliders manually moved
+let userOverridesPace = {};
+
+// Animation
+let animFrom = null, animTo = null, animStart = 0, animating = false;
+const ANIM_MS = 400;
+
+// ═══════════════════════════════════════════════════════════
+// AP MODELS
+// ═══════════════════════════════════════════════════════════
+function easeInOutCubic(t) { return t < 0.5 ? 4*t*t*t : 1 - Math.pow(-2*t + 2, 3) / 2; }
+function easeOutQuad(t) { return 1 - (1-t)*(1-t); }
+function easeInQuad(t) { return t*t; }
+
+// Ventricular AP value at time t (ms) from upstroke.
+// Biomimetic 5-phase shape:
+//  • Phase 0  cubic-ease upstroke from vRest to vPeak
+//  • Phase 1  exponential I_to-style decay from vPeak to vNotch
+//             (vNotch sits BELOW vPlateau → produces the spike-and-notch shape)
+//  • Phase 2a smooth cubic recovery from vNotch up to vPlateau (the "scoop")
+//  • Phase 2b slow drift downward through the plateau
+//  • Phase 3  S-curve (cubic ease) repolarization back to vRest
+function ventAP(t, p) {
+  if (t < 0) return p.vRest;
+  const d0 = p.phase0Dur / Math.max(0.05, p.phase0Mult);
+  const d1 = p.phase1Dur * p.apdMult;
+  const d2 = p.phase2Dur * p.apdMult;
+  const d3 = p.phase3Dur * p.apdMult;
+
+  // Phase 2 split: ~12% recovers from notch up to plateau, ~88% slow plateau drift
+  const d2a = d2 * 0.12;
+  const d2b = d2 - d2a;
+
+  const t1 = d0;
+  const t2 = t1 + d1;
+  const t2m = t2 + d2a;       // end of notch-to-plateau scoop
+  const t3 = t2 + d2;         // end of plateau
+  const t4 = t3 + d3;         // end of phase 3
+
+  if (t < t1) return p.vRest + (p.vPeak - p.vRest) * easeInOutCubic(t / t1);
+
+  if (t < t2) {
+    // Phase 1: exponential decay from vPeak toward vNotch (I_to kinetics)
+    const u = (t - t1) / d1;
+    return p.vNotch + (p.vPeak - p.vNotch) * Math.exp(-3.2 * u);
+  }
+
+  if (t < t2m) {
+    // Phase 2a: cubic-ease recovery from notch up to plateau (the rebound)
+    const u = (t - t2) / d2a;
+    return p.vNotch + (p.vPlateau - p.vNotch) * easeInOutCubic(u);
+  }
+
+  if (t < t3) {
+    // Phase 2b: gentle linear drift downward across the plateau, ending ~40% closer to 0
+    const u = (t - t2m) / d2b;
+    const plateauEnd = p.vPlateau * 0.6;
+    return p.vPlateau + (plateauEnd - p.vPlateau) * u;
+  }
+
+  if (t < t4) {
+    // Phase 3: smooth S-curve descent
+    const u = (t - t3) / d3;
+    const startV = p.vPlateau * 0.6;
+    return startV + (p.vRest - startV) * easeInOutCubic(u);
+  }
+  return p.vRest;
+}
+
+function ventAPDuration(p) {
+  return p.phase0Dur / Math.max(0.05, p.phase0Mult)
+    + (p.phase1Dur + p.phase2Dur + p.phase3Dur) * p.apdMult;
+}
+
+// Pacemaker AP — auto-firing loop
+// Returns the cycle length in ms
+function pacemakerCycleLen(p) {
+  const phase4Time = (p.threshold - p.MDP) / p.phase4Slope; // ms to reach threshold
+  const apdTime = p.apDuration * p.apdMult;
+  return phase4Time + apdTime;
+}
+
+function pacemakerAP(t, p) {
+  // t in ms within one cycle
+  const phase4Time = (p.threshold - p.MDP) / p.phase4Slope;
+  const apdTime = p.apDuration * p.apdMult;
+  const cycle = phase4Time + apdTime;
+  let tMod = t % cycle;
+  if (tMod < phase4Time) {
+    // Phase 4: linear depolarization from MDP toward threshold
+    return p.MDP + p.phase4Slope * tMod;
+  }
+  // AP fires
+  const tAp = tMod - phase4Time;
+  const d0 = p.phase0Dur / Math.max(0.05, p.phase0Mult); // slow with Ca block
+  const d3 = apdTime - d0;
+  if (tAp < d0) {
+    // Phase 0: rise from threshold to peak
+    const u = tAp / d0;
+    return p.threshold + (p.peak - p.threshold) * easeInOutCubic(u);
+  }
+  // Phase 3 repol back to MDP
+  const u = (tAp - d0) / d3;
+  return p.peak + (p.MDP - p.peak) * easeInOutCubic(u);
+}
+
+// ═══════════════════════════════════════════════════════════
+// DRUG APPLICATION
+// ═══════════════════════════════════════════════════════════
+function applyDrugDeltas(baseline, key) {
+  const out = { ...baseline };
+  for (const id of activeDrugs) {
+    const drug = DRUGS[id];
+    const deltas = drug[key] || {};
+    for (const [k, v] of Object.entries(deltas)) {
+      if (out[k] !== undefined) out[k] += v;
+    }
+  }
+  return out;
+}
+
+function calcParams(forCellType) {
+  const baseline = forCellType === 'vent' ? BASELINE_VENT : BASELINE_PACE;
+  const key = forCellType === 'vent' ? 'vent' : 'pace';
+  const out = applyDrugDeltas(baseline, key);
+  // Apply user overrides AFTER drugs (overrides win)
+  const overrides = forCellType === 'vent' ? userOverrides : userOverridesPace;
+  for (const [k, v] of Object.entries(overrides)) {
+    if (v !== undefined) out[k] = v;
+  }
+  // Clamp safety
+  if (out.phase0Mult !== undefined) out.phase0Mult = Math.max(0.05, out.phase0Mult);
+  if (out.apdMult !== undefined) out.apdMult = Math.max(0.3, out.apdMult);
+  if (out.phase4Slope !== undefined) out.phase4Slope = Math.max(0.001, out.phase4Slope);
+  return out;
+}
+
+// ═══════════════════════════════════════════════════════════
+// CANVAS RENDER
+// ═══════════════════════════════════════════════════════════
+const canvas = document.getElementById('canvas');
+const ctx = canvas.getContext('2d');
+let DPR = window.devicePixelRatio || 1;
+let W = 0, H = 0;
+
+function resizeCanvas() {
+  const rect = canvas.parentElement.getBoundingClientRect();
+  W = rect.width;
+  H = rect.height;
+  canvas.width = W * DPR;
+  canvas.height = H * DPR;
+  ctx.setTransform(1, 0, 0, 1, 0, 0);
+  ctx.scale(DPR, DPR);
+}
+
+function getStyles() {
+  const s = getComputedStyle(document.body);
+  return {
+    text: s.getPropertyValue('--text').trim() || '#1a1a2e',
+    textDim: s.getPropertyValue('--text-dim').trim(),
+    border: s.getPropertyValue('--border').trim(),
+    panelBg: s.getPropertyValue('--panel-bg').trim(),
+    threshold: s.getPropertyValue('--threshold').trim(),
+    rest: s.getPropertyValue('--rest').trim(),
+    navy: s.getPropertyValue('--navy').trim() || '#0d2240',
+  };
+}
+
+function drawAxes(margin, vMin, vMax, tMax, isPace) {
+  const styles = getStyles();
+  const plotW = W - margin.l - margin.r;
+  const plotH = H - margin.t - margin.b;
+
+  // Grid lines
+  ctx.strokeStyle = styles.border;
+  ctx.lineWidth = 0.5;
+  ctx.font = '10px -apple-system, sans-serif';
+  ctx.fillStyle = styles.textDim;
+
+  // Y-axis (mV)
+  for (let v = Math.ceil(vMin/30)*30; v <= vMax; v += 30) {
+    const y = margin.t + plotH * (1 - (v - vMin) / (vMax - vMin));
+    ctx.beginPath();
+    ctx.moveTo(margin.l, y); ctx.lineTo(margin.l + plotW, y);
+    ctx.stroke();
+    ctx.textAlign = 'right';
+    ctx.fillText(v + ' mV', margin.l - 6, y + 3);
+  }
+  // X-axis (time)
+  const tStep = isPace ? 200 : 100;
+  for (let t = 0; t <= tMax; t += tStep) {
+    const x = margin.l + plotW * (t / tMax);
+    ctx.strokeStyle = t === 0 ? styles.border : styles.border;
+    ctx.beginPath();
+    ctx.moveTo(x, margin.t); ctx.lineTo(x, margin.t + plotH);
+    ctx.stroke();
+    ctx.textAlign = 'center';
+    ctx.fillText(t + ' ms', x, margin.t + plotH + 14);
+  }
+
+  // 0 mV reference
+  if (vMin <= 0 && vMax >= 0) {
+    const y0 = margin.t + plotH * (1 - (0 - vMin) / (vMax - vMin));
+    ctx.strokeStyle = styles.textDim;
+    ctx.setLineDash([2, 4]);
+    ctx.lineWidth = 0.8;
+    ctx.beginPath();
+    ctx.moveTo(margin.l, y0); ctx.lineTo(margin.l + plotW, y0);
+    ctx.stroke();
+    ctx.setLineDash([]);
+  }
+}
+
+function drawTrace(p, isPace, color, width, t0, sweepMs) {
+  const styles = getStyles();
+  const margin = { l: 56, r: 18, t: 24, b: 28 };
+  const plotW = W - margin.l - margin.r;
+  const plotH = H - margin.t - margin.b;
+  const vMin = -100, vMax = 40;
+  const tMax = isPace ? Math.max(800, pacemakerCycleLen(p) + 100) : 600;
+
+  ctx.strokeStyle = color;
+  ctx.lineWidth = width;
+  ctx.lineJoin = 'round';
+  ctx.lineCap = 'round';
+  ctx.beginPath();
+
+  const STEP = 1; // ms
+  // Cap drawing at tMax so we don't stack points at the right edge
+  // (which created a vertical artifact when sweep wrapped past tMax).
+  const drawUntil = Math.min(sweepMs, tMax);
+  let started = false;
+  for (let t = 0; t <= drawUntil; t += STEP) {
+    let v;
+    if (isPace) {
+      v = pacemakerAP(t, p);
+    } else {
+      // Single AP starting at t=20 (small phase 4 baseline before)
+      v = t < 20 ? p.vRest : ventAP(t - 20, p);
+    }
+    const x = margin.l + plotW * (t / tMax);
+    const y = margin.t + plotH * (1 - (v - vMin) / (vMax - vMin));
+    if (!started) { ctx.moveTo(x, y); started = true; }
+    else ctx.lineTo(x, y);
+  }
+  ctx.stroke();
+
+  // Leading dot — only when actively sweeping inside plot range
+  if (drawUntil > 0 && drawUntil < tMax) {
+    const t = drawUntil;
+    let v;
+    if (isPace) v = pacemakerAP(t, p);
+    else v = t < 20 ? p.vRest : ventAP(t - 20, p);
+    const x = margin.l + plotW * (t / tMax);
+    const y = margin.t + plotH * (1 - (v - vMin) / (vMax - vMin));
+    ctx.fillStyle = color;
+    ctx.shadowColor = color;
+    ctx.shadowBlur = 8;
+    ctx.beginPath();
+    ctx.arc(x, y, 3, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.shadowBlur = 0;
+  }
+}
+
+function drawErpShading(p, isPace) {
+  if (!document.getElementById('ovErp').checked) return;
+  if (isPace) return; // ERP for ventricular only here
+  const styles = getStyles();
+  const margin = { l: 56, r: 18, t: 24, b: 28 };
+  const plotW = W - margin.l - margin.r;
+  const plotH = H - margin.t - margin.b;
+  const tMax = 600;
+  const apd = ventAPDuration(p);
+  const erp = apd * p.erpFraction;
+  const x1 = margin.l + plotW * Math.min(20 / tMax, 1);
+  const x2 = margin.l + plotW * Math.min((20 + erp) / tMax, 1);
+  ctx.fillStyle = 'rgba(239, 68, 68, 0.07)';
+  ctx.fillRect(x1, margin.t, x2 - x1, plotH);
+  // Label
+  ctx.fillStyle = 'rgba(239, 68, 68, 0.6)';
+  ctx.font = '10px -apple-system, sans-serif';
+  ctx.textAlign = 'center';
+  ctx.fillText('ERP', (x1 + x2) / 2, margin.t + 12);
+}
+
+function drawPhaseLabels(p, isPace) {
+  if (!document.getElementById('ovPhases').checked) return;
+  const styles = getStyles();
+  const margin = { l: 56, r: 18, t: 24, b: 28 };
+  const plotW = W - margin.l - margin.r;
+  const plotH = H - margin.t - margin.b;
+  const tMax = isPace ? Math.max(800, pacemakerCycleLen(p) + 100) : 600;
+
+  ctx.fillStyle = styles.text;
+  ctx.font = '600 11px -apple-system, sans-serif';
+  ctx.textAlign = 'center';
+  const labelY = margin.t + plotH - 8;
+
+  if (isPace) {
+    const phase4 = (p.threshold - p.MDP) / p.phase4Slope;
+    const apd = p.apDuration * p.apdMult;
+    const cycle = phase4 + apd;
+    // Phase 4 labels for the first cycle visible
+    ctx.fillText('Phase 4', margin.l + plotW * (phase4 * 0.5 / tMax), labelY);
+    ctx.fillText('0', margin.l + plotW * ((phase4 + p.phase0Dur / Math.max(0.05, p.phase0Mult) * 0.5) / tMax), labelY);
+    ctx.fillText('3', margin.l + plotW * ((phase4 + apd * 0.7) / tMax), labelY);
+  } else {
+    const d0 = p.phase0Dur / Math.max(0.05, p.phase0Mult);
+    const d1 = p.phase1Dur * p.apdMult;
+    const d2 = p.phase2Dur * p.apdMult;
+    const d3 = p.phase3Dur * p.apdMult;
+    const off = 20;
+    const xMid = (a, b) => margin.l + plotW * Math.min((off + (a + b) / 2) / tMax, 1);
+    ctx.fillText('0', xMid(0, d0), labelY);
+    ctx.fillText('1', xMid(d0, d0 + d1), labelY);
+    ctx.fillText('2', xMid(d0 + d1, d0 + d1 + d2), labelY);
+    ctx.fillText('3', xMid(d0 + d1 + d2, d0 + d1 + d2 + d3), labelY);
+    if (d0 + d1 + d2 + d3 + 60 < tMax - 20) {
+      ctx.fillText('4', xMid(d0 + d1 + d2 + d3, d0 + d1 + d2 + d3 + 50), labelY);
+    }
+  }
+}
+
+// Ion-current annotations are DOM elements (positioned in updateIonLabels)
+// so they support hover tooltips and crisper text than canvas fillText.
+function drawIonCurrents() { /* moved to DOM — see updateIonLabels() */ }
+
+function drawThreshold(p, isPace) {
+  if (!document.getElementById('ovThreshold').checked) return;
+  const styles = getStyles();
+  const margin = { l: 56, r: 18, t: 24, b: 28 };
+  const plotW = W - margin.l - margin.r;
+  const plotH = H - margin.t - margin.b;
+  const vMin = -100, vMax = 40;
+  const thr = isPace ? p.threshold : -50;
+  const y = margin.t + plotH * (1 - (thr - vMin) / (vMax - vMin));
+  ctx.strokeStyle = styles.threshold;
+  ctx.setLineDash([4, 4]);
+  ctx.lineWidth = 1;
+  ctx.beginPath();
+  ctx.moveTo(margin.l, y); ctx.lineTo(margin.l + plotW, y);
+  ctx.stroke();
+  ctx.setLineDash([]);
+  ctx.fillStyle = styles.threshold;
+  ctx.font = '10px -apple-system, sans-serif';
+  ctx.textAlign = 'left';
+  ctx.fillText('Threshold ' + thr + ' mV', margin.l + 4, y - 3);
+}
+
+let sweepMs = 0;
+const SWEEP_SPEED = 220; // ms of AP-time per render second (slow enough to see)
+let lastFrameTime = 0;
+
+function render(now) {
+  if (!lastFrameTime) lastFrameTime = now;
+  const dt = now - lastFrameTime;
+  lastFrameTime = now;
+
+  // Sweep advance
+  const isPace = cellType === 'pace';
+  const tMax = isPace ? Math.max(800, pacemakerCycleLen(params) + 100) : 600;
+  sweepMs += dt * 0.6; // 0.6 ms AP-time per ms wall (~1.7s sweep)
+  if (sweepMs > tMax + 60) sweepMs = 0;
+
+  // Animate param transition
+  if (animating) {
+    const u = Math.min(1, (now - animStart) / ANIM_MS);
+    const interp = {};
+    for (const k of Object.keys(animTo)) {
+      const a = animFrom[k] ?? 0;
+      const b = animTo[k];
+      interp[k] = typeof b === 'number' ? a + (b - a) * easeInOutCubic(u) : b;
+    }
+    if (isPace) paceParams = interp; else params = interp;
+    if (u >= 1) animating = false;
+  }
+
+  ctx.clearRect(0, 0, W, H);
+  const styles = getStyles();
+  const margin = { l: 56, r: 18, t: 24, b: 28 };
+  drawAxes(margin, -100, 40, tMax, isPace);
+
+  const live = isPace ? paceParams : params;
+  const baselineParams = isPace ? BASELINE_PACE : BASELINE_VENT;
+
+  drawErpShading(live, isPace);
+  drawThreshold(live, isPace);
+
+  // Ghost (baseline) — drawn first so live trace overlays
+  if (document.getElementById('ovGhost').checked) {
+    drawTrace(baselineParams, isPace, 'rgba(148, 163, 184, 0.55)', 1.6, 0, isPace ? Math.max(800, pacemakerCycleLen(baselineParams) + 100) : 600);
+  }
+
+  // Live
+  drawTrace(live, isPace, styles.navy, 2.6, 0, sweepMs);
+
+  drawPhaseLabels(live, isPace);
+  updateIonLabels(live, isPace);
+  updateMeasurements(live, baselineParams, isPace);
+
+  requestAnimationFrame(render);
+}
+
+// ═══════════════════════════════════════════════════════════
+// ION CURRENT DOM LABELS — positioned over canvas, with hover tooltips
+// ═══════════════════════════════════════════════════════════
+const ION_TIPS = {
+  'I_Na':   'Fast Na⁺ inward current — drives the rapid phase 0 upstroke in atrial, ventricular, and Purkinje cells. Target of all Class I antiarrhythmics.',
+  'I_to':   'Transient outward K⁺ current — produces the early phase 1 notch.',
+  'I_Ca-L': 'L-type Ca²⁺ current ("L" = Long-lasting). Sustains the phase 2 plateau in working myocytes; provides the slow phase 0 in SA/AV nodal cells. Target of Class IV (verapamil, diltiazem).',
+  'I_Ca-T': 'T-type Ca²⁺ current ("T" = Transient). Contributes to late phase 4 depolarization in pacemaker cells.',
+  'I_Kr':   'Rapid component of the delayed rectifier K⁺ current. Phase 3 repolarization. Primary target of Class III drugs (sotalol, dofetilide, ibutilide). hERG channel — drug-induced QT prolongation.',
+  'I_Ks':   'Slow component of the delayed rectifier K⁺ current. Background phase 3 repolarization.',
+  'I_K':    'Delayed rectifier K⁺ current — phase 3 repolarization in pacemaker cells.',
+  'I_K1':   'Inward rectifier K⁺ — maintains the resting membrane potential in working myocytes.',
+  'I_f':    '"Funny" current (HCN channel) — mixed Na⁺/K⁺ inward current activated by hyperpolarization. Drives phase 4 spontaneous depolarization in SA node. Target of ivabradine.',
+  'I_KAch': 'Acetylcholine-activated K⁺ current — opened by vagal stimulation and adenosine A1 receptors. Hyperpolarizes pacemaker cells (slows or blocks AV node).',
+};
+
+function makeIonLabel(name, x, y) {
+  const el = document.createElement('span');
+  el.className = 'ion-label';
+  el.style.left = x + 'px';
+  el.style.top = y + 'px';
+  // Build label + tip
+  const tip = ION_TIPS[name] || name;
+  el.innerHTML = name + '<span class="ion-tip">' + tip + '</span>';
+  return el;
+}
+
+// Ion labels live in the TOP MARGIN strip — strictly above any point on the
+// trace (vent peak +30 mV maps below row B; pace peak +10 mV maps even lower).
+// Two staggered rows (rowA, rowB) absorb horizontal collisions between
+// labels of adjacent narrow phases (e.g., phase 0 + phase 1 in vent).
+function updateIonLabels(p, isPace) {
+  const wrap = document.getElementById('ionLabels');
+  const showIons = document.getElementById('ovIons').checked;
+  wrap.innerHTML = '';
+  if (!showIons) return;
+
+  const margin = { l: 56, r: 18, t: 24, b: 28 };
+  const plotW = W - margin.l - margin.r;
+  const tMax = isPace ? Math.max(800, pacemakerCycleLen(p) + 100) : 600;
+  const px = t => margin.l + plotW * (t / tMax);
+
+  // Both rows sit BELOW canvas top (8/30) but well ABOVE plot top (24).
+  // Plot top corresponds to +40 mV — higher than any voltage on either trace
+  // (vent peak +30, pace peak +10) — so neither row can intersect the trace.
+  const rowA = 10;
+  const rowB = 32;
+
+  const labels = [];
+  if (isPace) {
+    const phase4 = (p.threshold - p.MDP) / Math.max(0.001, p.phase4Slope);
+    const apdTime = p.apDuration * p.apdMult;
+    const d0 = p.phase0Dur / Math.max(0.05, p.phase0Mult);
+    labels.push({ name: 'I_f',    x: px(phase4 * 0.30) });
+    labels.push({ name: 'I_Ca-T', x: px(phase4 * 0.85) });
+    labels.push({ name: 'I_Ca-L', x: px(phase4 + d0 * 0.5) });
+    labels.push({ name: 'I_K',    x: px(phase4 + apdTime * 0.7) });
+  } else {
+    const off = 20;
+    const d0 = p.phase0Dur / Math.max(0.05, p.phase0Mult);
+    const d1 = p.phase1Dur * p.apdMult;
+    const d2 = p.phase2Dur * p.apdMult;
+    const d3 = p.phase3Dur * p.apdMult;
+    labels.push({ name: 'I_Na',   x: px(off + d0 * 0.5) });
+    labels.push({ name: 'I_to',   x: px(off + d0 + d1 * 0.5) });
+    labels.push({ name: 'I_Ca-L', x: px(off + d0 + d1 + d2 * 0.4) });
+    labels.push({ name: 'I_Kr',   x: px(off + d0 + d1 + d2 + d3 * 0.55) });
+  }
+
+  // Stagger between rowA / rowB based on horizontal proximity of the
+  // most recent label placed in each row. ~60 px is the typical label width.
+  labels.sort((a, b) => a.x - b.x);
+  const MIN_DIST = 64;
+  let lastA = -Infinity, lastB = -Infinity;
+  for (const lbl of labels) {
+    const okA = (lbl.x - lastA) >= MIN_DIST;
+    const okB = (lbl.x - lastB) >= MIN_DIST;
+    let y;
+    if (okA) { y = rowA; lastA = lbl.x; }
+    else if (okB) { y = rowB; lastB = lbl.x; }
+    else {
+      // Both crowded — pick the row with more clearance
+      y = (lbl.x - lastA) >= (lbl.x - lastB) ? rowA : rowB;
+      if (y === rowA) lastA = lbl.x; else lastB = lbl.x;
+    }
+    wrap.appendChild(makeIonLabel(lbl.name, lbl.x, y));
+  }
+}
+
+// ═══════════════════════════════════════════════════════════
+// MEASUREMENTS
+// ═══════════════════════════════════════════════════════════
+function updateMeasurements(live, baseline, isPace) {
+  const wrap = document.getElementById('measurements');
+  let m = [];
+  if (isPace) {
+    const cl = pacemakerCycleLen(live);
+    const clBase = pacemakerCycleLen(baseline);
+    const hr = 60000 / cl;
+    const hrBase = 60000 / clBase;
+    m = [
+      { label: 'Heart Rate', value: Math.round(hr) + ' bpm', delta: hr - hrBase, unit: 'bpm' },
+      { label: 'Cycle length', value: Math.round(cl) + ' ms', delta: cl - clBase, unit: 'ms' },
+      { label: 'APD', value: Math.round(live.apDuration * live.apdMult) + ' ms', delta: (live.apDuration*live.apdMult) - (baseline.apDuration*baseline.apdMult), unit: 'ms' },
+      { label: 'Phase 4 slope', value: live.phase4Slope.toFixed(3), delta: live.phase4Slope - baseline.phase4Slope, unit: '' },
+      { label: 'MDP', value: Math.round(live.MDP) + ' mV', delta: live.MDP - baseline.MDP, unit: 'mV' },
+    ];
+  } else {
+    const apd = ventAPDuration(live);
+    const apdBase = ventAPDuration(baseline);
+    const erp = apd * live.erpFraction;
+    const erpBase = apdBase * baseline.erpFraction;
+    const dvdt = (live.vPeak - live.vRest) / (live.phase0Dur / Math.max(0.05, live.phase0Mult));
+    const dvdtBase = (baseline.vPeak - baseline.vRest) / baseline.phase0Dur;
+    m = [
+      { label: 'APD', value: Math.round(apd) + ' ms', delta: apd - apdBase, unit: 'ms' },
+      { label: 'ERP', value: Math.round(erp) + ' ms', delta: erp - erpBase, unit: 'ms' },
+      { label: 'Phase 0 dV/dt', value: Math.round(dvdt) + ' mV/ms', delta: dvdt - dvdtBase, unit: 'mV/ms' },
+      { label: 'QRS estimate', value: Math.round(80 / live.phase0Mult) + ' ms', delta: 80/live.phase0Mult - 80, unit: 'ms' },
+      { label: 'QT estimate', value: Math.round(380 * live.apdMult) + ' ms', delta: 380*live.apdMult - 380, unit: 'ms' },
+    ];
+  }
+  wrap.innerHTML = m.map(x => {
+    const dStr = Math.abs(x.delta) < 0.5 ? '' :
+      `<span class="measure-delta ${x.delta > 0 ? 'up' : 'down'}">${x.delta > 0 ? '↑' : '↓'} ${Math.abs(x.delta).toFixed(x.unit==='' ? 3 : 0)}</span>`;
+    return `<div class="measure"><div class="measure-label">${x.label}</div><div class="measure-value">${x.value}${dStr}</div></div>`;
+  }).join('');
+}
+
+// ═══════════════════════════════════════════════════════════
+// INTERACTION
+// ═══════════════════════════════════════════════════════════
+function startTransition() {
+  const target = calcParams(cellType);
+  animFrom = { ...(cellType === 'vent' ? params : paceParams) };
+  animTo = target;
+  animStart = performance.now();
+  animating = true;
+}
+
+function toggleDrug(id) {
+  // Block toggling drugs that have no pacemaker effect when in pacemaker mode
+  if (cellType === 'pace' && DRUGS[id] && !DRUGS[id].paceMajor) return;
+  if (activeDrugs.has(id)) activeDrugs.delete(id); else activeDrugs.add(id);
+  updateDrugBtns();
+  updateActiveStrip();
+  startTransition();
+}
+
+function updateDrugBtns() {
+  document.querySelectorAll('.drug-btn').forEach(btn => {
+    const id = btn.dataset.drug;
+    const drug = DRUGS[id];
+    if (!drug) return;
+    btn.classList.toggle('active', activeDrugs.has(id));
+    // Dim drugs without pacemaker effect when in pacemaker mode
+    const dimmed = cellType === 'pace' && !drug.paceMajor;
+    btn.classList.toggle('dimmed', dimmed);
+    btn.querySelector('.tip').textContent = dimmed
+      ? 'Minimal effect on pacemaker AP — see Ventricular tab'
+      : drug.mech;
+  });
+}
+
+const CLASS_COLOR_VAR = { IA:'--c-IA', IB:'--c-IB', IC:'--c-IC', II:'--c-II', III:'--c-III', IV:'--c-IV', V:'--c-V' };
+
+function updateActiveStrip() {
+  const strip = document.getElementById('activeStrip');
+  if (activeDrugs.size === 0) {
+    strip.innerHTML = '<span style="font-size:11px; color: var(--text-muted);">No drugs active — start at baseline</span>';
+    return;
+  }
+  strip.innerHTML = [...activeDrugs].map(id => {
+    const d = DRUGS[id];
+    const color = `var(${CLASS_COLOR_VAR[d.cls]})`;
+    return `<span class="active-pill" style="background:${color}">${d.name} <span class="x" data-drop="${id}">×</span></span>`;
+  }).join('');
+  strip.querySelectorAll('.x').forEach(el => {
+    el.onclick = () => toggleDrug(el.dataset.drop);
+  });
+}
+
+function clearDrugs() {
+  activeDrugs.clear();
+  updateDrugBtns();
+  updateActiveStrip();
+  startTransition();
+}
+
+function resetAll() {
+  activeDrugs.clear();
+  userOverrides = {};
+  userOverridesPace = {};
+  // Reset sliders to baseline
+  document.getElementById('slPhase0').value = 1.0; document.getElementById('slPhase0Val').textContent = '1.00×';
+  document.getElementById('slApd').value = 1.0; document.getElementById('slApdVal').textContent = '1.00×';
+  document.getElementById('slErp').value = 0.85; document.getElementById('slErpVal').textContent = '0.85';
+  document.getElementById('slRest').value = -85; document.getElementById('slRestVal').textContent = '-85 mV';
+  document.getElementById('slP4').value = 0.05; document.getElementById('slP4Val').textContent = '0.050';
+  document.getElementById('slP0p').value = 1.0; document.getElementById('slP0pVal').textContent = '1.00×';
+  document.getElementById('slApdp').value = 1.0; document.getElementById('slApdpVal').textContent = '1.00×';
+  document.getElementById('slMdp').value = -65; document.getElementById('slMdpVal').textContent = '-65 mV';
+  document.getElementById('slThr').value = -40; document.getElementById('slThrVal').textContent = '-40 mV';
+  updateDrugBtns();
+  updateActiveStrip();
+  startTransition();
+}
+
+// Cell type toggle
+document.querySelectorAll('#cellToggle .seg-btn').forEach(btn => {
+  btn.onclick = () => {
+    cellType = btn.dataset.cell;
+    document.querySelectorAll('#cellToggle .seg-btn').forEach(b => b.classList.toggle('active', b === btn));
+    document.getElementById('ventSliders').style.display = cellType === 'vent' ? '' : 'none';
+    document.getElementById('paceSliders').style.display = cellType === 'pace' ? '' : 'none';
+    // When switching to pacemaker, drop any active drugs that have no pace effect
+    if (cellType === 'pace') {
+      for (const id of [...activeDrugs]) {
+        if (DRUGS[id] && !DRUGS[id].paceMajor) activeDrugs.delete(id);
+      }
+    }
+    updateDrugBtns();
+    updateActiveStrip();
+    sweepMs = 0;
+    startTransition();
+  };
+});
+
+// ═══════════════════════════════════════════════════════════
+// DRAG: float-panel (Display)
+// ═══════════════════════════════════════════════════════════
+(function setupDrag() {
+  const panel = document.getElementById('floatPanel');
+  const handle = document.getElementById('floatHandle');
+  let dragging = false, dx = 0, dy = 0;
+  handle.addEventListener('mousedown', e => {
+    dragging = true;
+    const rect = panel.getBoundingClientRect();
+    dx = e.clientX - rect.left;
+    dy = e.clientY - rect.top;
+    e.preventDefault();
+  });
+  document.addEventListener('mousemove', e => {
+    if (!dragging) return;
+    const wrap = panel.parentElement.getBoundingClientRect();
+    const px = e.clientX - wrap.left - dx;
+    const py = e.clientY - wrap.top - dy;
+    const maxX = wrap.width - panel.offsetWidth - 4;
+    const maxY = wrap.height - panel.offsetHeight - 4;
+    panel.style.left = Math.max(4, Math.min(maxX, px)) + 'px';
+    panel.style.top = Math.max(4, Math.min(maxY, py)) + 'px';
+    panel.style.right = 'auto';
+  });
+  document.addEventListener('mouseup', () => { dragging = false; });
+})();
+
+// Drug buttons
+document.querySelectorAll('.drug-btn').forEach(btn => {
+  btn.onclick = () => toggleDrug(btn.dataset.drug);
+});
+
+// Sliders — ventricular
+function bindSlider(id, valId, key, fmt, isPace) {
+  const el = document.getElementById(id);
+  const valEl = document.getElementById(valId);
+  el.addEventListener('input', () => {
+    const v = parseFloat(el.value);
+    valEl.textContent = fmt(v);
+    if (isPace) userOverridesPace[key] = v;
+    else userOverrides[key] = v;
+    startTransition();
+  });
+}
+bindSlider('slPhase0', 'slPhase0Val', 'phase0Mult', v => v.toFixed(2) + '×', false);
+bindSlider('slApd', 'slApdVal', 'apdMult', v => v.toFixed(2) + '×', false);
+bindSlider('slErp', 'slErpVal', 'erpFraction', v => v.toFixed(2), false);
+bindSlider('slRest', 'slRestVal', 'vRest', v => v + ' mV', false);
+bindSlider('slP4', 'slP4Val', 'phase4Slope', v => v.toFixed(3), true);
+bindSlider('slP0p', 'slP0pVal', 'phase0Mult', v => v.toFixed(2) + '×', true);
+bindSlider('slApdp', 'slApdpVal', 'apdMult', v => v.toFixed(2) + '×', true);
+bindSlider('slMdp', 'slMdpVal', 'MDP', v => v + ' mV', true);
+bindSlider('slThr', 'slThrVal', 'threshold', v => v + ' mV', true);
+
+// Overlay checkboxes — no rebind needed, render reads them
+['ovGhost','ovPhases','ovIons','ovErp','ovThreshold'].forEach(id => {
+  document.getElementById(id).addEventListener('change', () => {});
+});
+
+// Dark mode
+function toggleDark() {
+  document.body.classList.toggle('dark');
+  const isDark = document.body.classList.contains('dark');
+  document.getElementById('darkToggle').textContent = isDark ? 'Light Mode' : 'Dark Mode';
+  try { localStorage.setItem('cathmath_dark', isDark ? '1' : '0'); } catch(e) {}
+}
+try {
+  const pref = localStorage.getItem('cathmath_dark');
+  if (pref === '0') {
+    document.body.classList.remove('dark');
+    document.getElementById('darkToggle').textContent = 'Dark Mode';
+  }
+} catch(e) {}
+
+// Resize
+window.addEventListener('resize', () => {
+  resizeCanvas();
+});
+
+// INIT
+resizeCanvas();
+updateDrugBtns();
+updateActiveStrip();
+params = calcParams('vent');
+paceParams = calcParams('pace');
+requestAnimationFrame(render);
+
+</script>
+
+</body>
+</html>
