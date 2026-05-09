@@ -4066,50 +4066,51 @@ function drawDB_PWvsCW() {
 }
 
 // Schematic apical 4-chamber view showing LV / LA / MV with optional PW sample volume or CW beam.
+// LAYOUT RULE: anatomy region is left of `LABEL_X` only. ALL text labels live in the right
+// label strip (after LABEL_X). Marker shapes (sample volume box, beam line) stay in anatomy
+// region but never carry inline text — text lives on the right strip with a leader line.
 function drawDB_FlowSchematic(x, y, w, h, opts) {
-  // Apex at top, MV in middle, LA at bottom
-  // LV chamber (top half)
-  const padX = 14;
-  const cx = x + w / 2;
-  const lvTop = y + 6;
+  // Layout zones (named constants, never magic numbers).
+  const LABEL_STRIP_W = 80;                // reserved zone for text labels
+  const padX = 6;
+  const anatomyLeft = x + padX;
+  const anatomyRight = x + w - LABEL_STRIP_W - padX;
+  const cx = (anatomyLeft + anatomyRight) / 2;
+  const half = (anatomyRight - anatomyLeft) / 2;
+  const lvTop = y + 8;
   const mvY = y + h * 0.55;
   const laBot = y + h - 6;
-  // LV outline
+  const labelX = anatomyRight + 8;          // start of label text
+
+  // ── LV chamber outline ──
   ctx.strokeStyle = '#5b6677';
   ctx.lineWidth = 1.2;
   ctx.fillStyle = 'rgba(220, 60, 50, 0.06)';
   ctx.beginPath();
-  ctx.moveTo(cx - 30, lvTop + 6);
-  ctx.quadraticCurveTo(cx, lvTop, cx + 30, lvTop + 6);
-  ctx.lineTo(cx + 38, mvY - 2);
-  ctx.lineTo(cx - 38, mvY - 2);
+  ctx.moveTo(cx - half * 0.85, lvTop + 6);
+  ctx.quadraticCurveTo(cx, lvTop, cx + half * 0.85, lvTop + 6);
+  ctx.lineTo(cx + half, mvY - 2);
+  ctx.lineTo(cx - half, mvY - 2);
   ctx.closePath();
   ctx.fill();
   ctx.stroke();
-  // LA outline
+  // ── LA outline ──
   ctx.beginPath();
-  ctx.moveTo(cx - 38, mvY + 2);
-  ctx.lineTo(cx + 38, mvY + 2);
-  ctx.quadraticCurveTo(cx + 30, laBot, cx, laBot);
-  ctx.quadraticCurveTo(cx - 30, laBot, cx - 38, mvY + 2);
+  ctx.moveTo(cx - half, mvY + 2);
+  ctx.lineTo(cx + half, mvY + 2);
+  ctx.quadraticCurveTo(cx + half * 0.85, laBot, cx, laBot);
+  ctx.quadraticCurveTo(cx - half * 0.85, laBot, cx - half, mvY + 2);
   ctx.closePath();
   ctx.fill();
   ctx.stroke();
-  // MV line with gap (orifice)
+  // ── MV line with orifice gap ──
   ctx.strokeStyle = '#fdcc4d';
   ctx.lineWidth = 1.6;
   ctx.beginPath();
-  ctx.moveTo(cx - 38, mvY); ctx.lineTo(cx - 6, mvY);
-  ctx.moveTo(cx + 6, mvY); ctx.lineTo(cx + 38, mvY);
+  ctx.moveTo(cx - half, mvY); ctx.lineTo(cx - 6, mvY);
+  ctx.moveTo(cx + 6, mvY); ctx.lineTo(cx + half, mvY);
   ctx.stroke();
-  // Chamber labels
-  ctx.fillStyle = '#a8b1c0';
-  ctx.font = '600 10px DM Sans, system-ui, sans-serif';
-  ctx.textAlign = 'left';
-  ctx.fillText('LV', cx - 36, lvTop + 18);
-  ctx.fillText('LA', cx - 36, laBot - 4);
-
-  // Probe (top, since apex is at top)
+  // ── Probe at top ──
   ctx.fillStyle = '#7a8499';
   ctx.beginPath();
   ctx.moveTo(cx - 10, y);
@@ -4119,27 +4120,50 @@ function drawDB_FlowSchematic(x, y, w, h, opts) {
   ctx.closePath();
   ctx.fill();
 
-  // PW sample volume marker — small square just above MV
+  // ── Chamber labels — in label strip, with leader line ──
+  ctx.fillStyle = '#a8b1c0';
+  ctx.font = '700 11px DM Sans, system-ui, sans-serif';
+  ctx.textAlign = 'left';
+  ctx.fillText('LV', labelX, lvTop + 22);
+  ctx.fillText('LA', labelX, laBot - 8);
+  // Leader lines from labels to chamber centers (subtle)
+  ctx.strokeStyle = 'rgba(168, 177, 192, 0.30)';
+  ctx.lineWidth = 0.8;
+  ctx.beginPath();
+  ctx.moveTo(labelX - 4, lvTop + 18); ctx.lineTo(cx, (lvTop + mvY) / 2);
+  ctx.moveTo(labelX - 4, laBot - 12); ctx.lineTo(cx, (mvY + laBot) / 2);
+  ctx.stroke();
+
+  // ── PW sample volume marker (anatomy region) + label (label strip) ──
   if (opts.highlightSampleVolume) {
+    const svY = mvY - 14;
     ctx.strokeStyle = '#3b82f6';
     ctx.lineWidth = 2;
-    ctx.strokeRect(cx - 5, mvY - 14, 10, 8);
-    // Beam line dashed (faint)
+    ctx.strokeRect(cx - 5, svY, 10, 8);
+    // Faint beam line from probe to sample volume
     ctx.strokeStyle = 'rgba(59,130,246,0.45)';
     ctx.lineWidth = 1.2;
     ctx.setLineDash([3, 3]);
     ctx.beginPath();
     ctx.moveTo(cx, lvTop);
-    ctx.lineTo(cx, mvY - 14);
+    ctx.lineTo(cx, svY);
     ctx.stroke();
     ctx.setLineDash([]);
-    // Label
-    ctx.fillStyle = '#3b82f6';
+    // Leader from sample volume to label strip
+    ctx.strokeStyle = 'rgba(59,130,246,0.55)';
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(cx + 6, svY + 4); ctx.lineTo(labelX - 4, svY + 4);
+    ctx.stroke();
+    // Label in label strip
+    ctx.fillStyle = '#5fa5f0';
     ctx.font = '700 11px DM Sans, system-ui, sans-serif';
     ctx.textAlign = 'left';
-    ctx.fillText('sample volume', cx + 12, mvY - 10);
+    ctx.fillText('sample', labelX, svY + 2);
+    ctx.fillText('volume', labelX, svY + 14);
   }
-  // CW beam line — full beam highlighted
+
+  // ── CW beam line (anatomy region) + label (label strip) ──
   if (opts.highlightBeam) {
     ctx.strokeStyle = '#ef4444';
     ctx.lineWidth = 2;
@@ -4147,10 +4171,18 @@ function drawDB_FlowSchematic(x, y, w, h, opts) {
     ctx.moveTo(cx, lvTop);
     ctx.lineTo(cx, laBot);
     ctx.stroke();
-    ctx.fillStyle = '#ef4444';
+    // Leader from beam mid-point to label strip
+    ctx.strokeStyle = 'rgba(239, 68, 68, 0.55)';
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(cx, mvY - 18); ctx.lineTo(labelX - 4, mvY - 18);
+    ctx.stroke();
+    // Label in label strip — placed ABOVE the MV-Y to avoid the MV line and any leaders below
+    ctx.fillStyle = '#f57878';
     ctx.font = '700 11px DM Sans, system-ui, sans-serif';
     ctx.textAlign = 'left';
-    ctx.fillText('CW beam', cx + 12, mvY);
+    ctx.fillText('CW', labelX, mvY - 22);
+    ctx.fillText('beam', labelX, mvY - 10);
   }
 }
 
@@ -4647,7 +4679,7 @@ function recompute() {
     const sev = o.severity ? `<div class="severity-pill ${o.severity.klass}">${o.severity.label}</div>` : '';
     return `<div class="${classes.join(' ')}">
       <div class="output-label">${o.label}</div>
-      <div class="output-value">${o.value}<span class="output-unit">${o.unit}</span></div>
+      <div class="output-value">${o.value}${o.unit ? `<span class="output-unit">${o.unit}</span>` : ''}</div>
       ${sev}
     </div>`;
   }).join('');
