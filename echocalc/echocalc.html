@@ -3693,105 +3693,157 @@ function drawPRAtlas(p, t) {
 // Each panel shows a stylized PLAX LV schematic (top half) + LVOT CW envelope (bottom half).
 // ═══════════════════════════════════════════════════════════
 
-// Draws a stylized PLAX-style LV schematic with septum + posterior wall.
-// opts: { septumMm, postMm, samPresent, label, lvotColor }
-function drawHCMSchematic(area, opts) {
+// Draws a recognisable parasternal long-axis (PLAX) LV schematic with septum, posterior
+// wall, LVOT, MV leaflets, and LA. Used for HCM (asymmetric septal hypertrophy + SAM)
+// and amyloid (concentric thick walls + sparkling + biatrial enlargement).
+//
+// opts: { septumMm, postMm, samPresent, sparkle, laEnlarged, raEnlarged }
+function drawPlaxSchematic(area, opts) {
   const { x, y, w, h } = area;
-  // Pixel scale: 1 mm ≈ pxPerMm
-  const pxPerMm = h * 0.025;       // tunable; 1 mm = ~h/40
-  const cavityX = x + 16;
-  const cavityW = w - 32;
-  const cavityY = y + 8;
-  const cavityH = h - 16;
-  const septumPx = Math.max(4, opts.septumMm * pxPerMm);
-  const postPx   = Math.max(4, opts.postMm   * pxPerMm);
+  // Layout zones
+  const padX = 6;
+  const padY = 6;
+  const labelStripH = 14;        // bottom label strip
+  const lvLeft = x + padX;
+  const lvRight = x + w - padX - 36;  // leave 36px for LA + AV
+  const lvW = lvRight - lvLeft;
+  const lvTop = y + padY;
+  const lvBot = y + h - padY - labelStripH;
+  const lvH = lvBot - lvTop;
 
-  // LV cavity (red tint)
-  ctx.fillStyle = 'rgba(220, 60, 50, 0.10)';
-  ctx.fillRect(cavityX, cavityY + septumPx, cavityW, cavityH - septumPx - postPx);
+  // 1 mm of wall thickness ≈ pxPerMm — calibrate so 50 mm of vertical cardiac
+  // dimension fits in the available height. Cavity stays visible even with thick walls.
+  const pxPerMm = lvH / 50;
+  const septumPx = Math.max(3, opts.septumMm * pxPerMm);
+  const postPx   = Math.max(3, opts.postMm   * pxPerMm);
 
-  // Septum (top wall)
-  ctx.fillStyle = opts.septumColor || '#586478';
-  ctx.fillRect(cavityX, cavityY, cavityW, septumPx);
+  // Cavity (red tint) — IMPORTANT: kept visible even when walls are thick
+  ctx.fillStyle = 'rgba(220, 60, 50, 0.18)';
+  ctx.fillRect(lvLeft, lvTop + septumPx, lvW, Math.max(8, lvH - septumPx - postPx));
 
-  // Posterior wall (bottom)
-  ctx.fillStyle = '#586478';
-  ctx.fillRect(cavityX, cavityY + cavityH - postPx, cavityW, postPx);
+  // Septum (top wall, IVS)
+  ctx.fillStyle = '#5b6677';
+  ctx.fillRect(lvLeft, lvTop, lvW, septumPx);
+  // Posterior wall
+  ctx.fillRect(lvLeft, lvTop + lvH - postPx, lvW, postPx);
 
-  // Outer outline
+  // Granular sparkling pattern in walls (amyloid)
+  if (opts.sparkle) {
+    ctx.fillStyle = 'rgba(255, 240, 180, 0.55)';
+    const seed = (a, b) => Math.abs(Math.sin(a * 9.7 + b * 4.3) * 1000) % 1;
+    const dotsPerWall = 30;
+    for (let i = 0; i < dotsPerWall; i++) {
+      // Septum dots
+      const sx = lvLeft + seed(i, 1) * lvW;
+      const sy = lvTop + seed(i, 2) * septumPx;
+      ctx.beginPath(); ctx.arc(sx, sy, 1.1, 0, Math.PI * 2); ctx.fill();
+      // Posterior wall dots
+      const px = lvLeft + seed(i, 3) * lvW;
+      const py = lvTop + lvH - postPx + seed(i, 4) * postPx;
+      ctx.beginPath(); ctx.arc(px, py, 1.1, 0, Math.PI * 2); ctx.fill();
+    }
+  }
+
+  // LV cavity outline
   ctx.strokeStyle = '#7a8499';
   ctx.lineWidth = 1;
-  ctx.strokeRect(cavityX, cavityY, cavityW, cavityH);
+  ctx.strokeRect(lvLeft, lvTop, lvW, lvH);
 
-  // Septum thickness caliper (left side, inside septum)
-  ctx.strokeStyle = '#fdcc4d';
-  ctx.lineWidth = 1.4;
-  ctx.beginPath();
-  ctx.moveTo(cavityX + 8, cavityY + 4);
-  ctx.lineTo(cavityX + 8, cavityY + septumPx - 2);
-  ctx.stroke();
-  // Serif marks
-  ctx.beginPath();
-  ctx.moveTo(cavityX + 4, cavityY + 4);   ctx.lineTo(cavityX + 12, cavityY + 4);
-  ctx.moveTo(cavityX + 4, cavityY + septumPx - 2); ctx.lineTo(cavityX + 12, cavityY + septumPx - 2);
-  ctx.stroke();
-  // Label
-  ctx.fillStyle = '#fdcc4d';
-  ctx.font = '700 11px DM Sans, system-ui, sans-serif';
-  ctx.textAlign = 'left';
-  ctx.fillText(opts.septumMm + ' mm', cavityX + 16, cavityY + Math.max(septumPx / 2 + 4, 14));
+  // ──────── LA on right side ────────
+  const laLeft = lvRight + 4;
+  const laW = 30;
+  const laHeight = opts.laEnlarged ? lvH * 0.85 : lvH * 0.45;
+  const laTop = lvTop + (lvH - laHeight) / 2;
+  ctx.fillStyle = 'rgba(80, 130, 200, 0.18)';
+  ctx.strokeStyle = '#7a8499';
+  ctx.lineWidth = 1;
+  ctx.fillRect(laLeft, laTop, laW, laHeight);
+  ctx.strokeRect(laLeft, laTop, laW, laHeight);
+  ctx.fillStyle = '#a8b1c0';
+  ctx.font = '700 10px DM Sans, system-ui, sans-serif';
+  ctx.textAlign = 'center';
+  ctx.fillText('LA', laLeft + laW / 2, laTop + laHeight / 2 + 4);
+  if (opts.laEnlarged) {
+    ctx.fillStyle = '#ef9b9b';
+    ctx.font = '700 9px DM Sans, system-ui, sans-serif';
+    ctx.fillText('↑ enlarged', laLeft + laW / 2, laTop - 4);
+  }
 
-  // MV leaflets — anterior (top) and posterior (bottom), meeting in mid-cavity left
-  const mvBaseY = cavityY + cavityH / 2;
-  const mvTipX = cavityX + cavityW * 0.55;
+  // ──────── MV leaflets between LV and LA ────────
+  const mvBaseX = lvRight;
+  const mvAntY = lvTop + septumPx;          // anterior attachment (just below septum)
+  const mvPostY = lvTop + lvH - postPx;     // posterior attachment (just above PW)
+  const mvTipX = mvBaseX - 22;
+  const mvTipY = (mvAntY + mvPostY) / 2;
   ctx.strokeStyle = '#fdcc4d';
-  ctx.lineWidth = 2.2;
-  // Anterior leaflet — straight if no SAM, bulged toward septum if SAM
+  ctx.lineWidth = 2;
+  // Anterior leaflet — bulges UP toward septum if SAM present
   ctx.beginPath();
-  ctx.moveTo(cavityX + 4, cavityY + septumPx + 2);  // attaches at septum-cavity junction near left wall
+  ctx.moveTo(mvBaseX, mvAntY);
   if (opts.samPresent) {
-    // Bezier: curve UP toward septum mid-systole
     ctx.bezierCurveTo(
-      cavityX + cavityW * 0.18, cavityY + septumPx + 4,
-      cavityX + cavityW * 0.30, cavityY + septumPx + 2,  // bulge near septum
-      mvTipX, mvBaseY
+      mvBaseX - 6, mvAntY - 4,
+      mvBaseX - 14, mvAntY - 10,   // peak of SAM bulge near septum
+      mvTipX, mvTipY
     );
   } else {
-    ctx.lineTo(mvTipX, mvBaseY);
+    ctx.lineTo(mvTipX, mvTipY);
   }
   ctx.stroke();
-  // Posterior leaflet — straight
+  // Posterior leaflet
   ctx.beginPath();
-  ctx.moveTo(cavityX + 4, cavityY + cavityH - postPx - 2);
-  ctx.lineTo(mvTipX, mvBaseY);
+  ctx.moveTo(mvBaseX, mvPostY);
+  ctx.lineTo(mvTipX, mvTipY);
   ctx.stroke();
 
-  // SAM annotation arrow (curved) if present
+  // ──────── Septum thickness caliper (inside septum, left side) ────────
+  ctx.strokeStyle = '#fdcc4d';
+  ctx.lineWidth = 1.4;
+  // Vertical caliper line
+  ctx.beginPath();
+  ctx.moveTo(lvLeft + 6, lvTop + 2);
+  ctx.lineTo(lvLeft + 6, lvTop + septumPx - 2);
+  ctx.stroke();
+  // Top + bottom serifs
+  ctx.beginPath();
+  ctx.moveTo(lvLeft + 2, lvTop + 2);
+  ctx.lineTo(lvLeft + 10, lvTop + 2);
+  ctx.moveTo(lvLeft + 2, lvTop + septumPx - 2);
+  ctx.lineTo(lvLeft + 10, lvTop + septumPx - 2);
+  ctx.stroke();
+  // Septum mm label — placed in cavity (just below septum)
+  ctx.fillStyle = '#fdcc4d';
+  ctx.font = '700 12px DM Sans, system-ui, sans-serif';
+  ctx.textAlign = 'left';
+  ctx.fillText(opts.septumMm + ' mm', lvLeft + 14, lvTop + septumPx + 14);
+
+  // SAM red annotation
   if (opts.samPresent) {
-    ctx.strokeStyle = '#ef4444';
-    ctx.lineWidth = 1.6;
-    const arrX = cavityX + cavityW * 0.30;
-    const arrY = cavityY + septumPx + 6;
-    ctx.beginPath();
-    ctx.moveTo(arrX - 6, arrY + 8);
-    ctx.lineTo(arrX, arrY + 2);
-    ctx.lineTo(arrX + 6, arrY + 8);
-    ctx.stroke();
-    // "SAM" label
     ctx.fillStyle = '#ef4444';
-    ctx.font = '700 11px DM Sans, system-ui, sans-serif';
+    ctx.font = '700 12px DM Sans, system-ui, sans-serif';
     ctx.textAlign = 'left';
-    ctx.fillText('SAM →', arrX + 8, arrY + 4);
+    ctx.fillText('SAM', mvTipX - 36, mvAntY - 12);
+    // Arrowhead from "SAM" toward the leaflet bulge
+    ctx.strokeStyle = '#ef4444';
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    ctx.moveTo(mvTipX - 18, mvAntY - 8);
+    ctx.lineTo(mvTipX - 12, mvAntY - 4);
+    ctx.stroke();
   }
 
-  // Direction labels
+  // ──────── Tissue labels (bottom strip — guaranteed below all anatomy) ────────
   ctx.fillStyle = '#9aa3b3';
-  ctx.font = '600 9px DM Sans, system-ui, sans-serif';
+  ctx.font = '600 9.5px DM Sans, system-ui, sans-serif';
   ctx.textAlign = 'left';
-  ctx.fillText('septum', cavityX + 4, cavityY + septumPx + 12);
-  ctx.fillText('post wall', cavityX + 4, cavityY + cavityH - postPx - 4);
+  ctx.fillText('PLAX view', lvLeft, lvBot + 10);
   ctx.textAlign = 'right';
-  ctx.fillText('LVOT →', cavityX + cavityW - 4, cavityY + septumPx + 12);
+  ctx.fillText('LVOT', mvBaseX, lvBot + 10);
+}
+
+// Backwards-compat shim — older callers used drawHCMSchematic
+function drawHCMSchematic(area, opts) {
+  drawPlaxSchematic(area, opts);
 }
 
 function drawHCMAtlas(p, t) {
@@ -3873,72 +3925,16 @@ function drawStrainBullsEye(cx, cy, r, pattern) {
   ctx.stroke();
 }
 
-// Renders a wall+chambers schematic for amyloid 2D view comparison
+// Amyloid 2D walls — reuses the recognisable PLAX schematic with options for
+// wall thickness, biatrial enlargement, and granular sparkling pattern.
 function drawAmyloidWallView(area, opts) {
-  // opts: { wallMm, atriaSize ('small'/'large'), sparkle (true/false), label }
-  const { x, y, w, h } = area;
-  const lvX = x + 18;
-  const lvW = w - 36;
-  const lvY = y + 36;
-  const lvH = h - 72;
-  const wallPx = Math.min(20, opts.wallMm * 1.0);
-  // LV cavity
-  ctx.fillStyle = 'rgba(220, 60, 50, 0.10)';
-  ctx.fillRect(lvX, lvY + wallPx, lvW, lvH - wallPx * 2);
-  // Walls (top + bottom)
-  ctx.fillStyle = '#586478';
-  ctx.fillRect(lvX, lvY, lvW, wallPx);
-  ctx.fillRect(lvX, lvY + lvH - wallPx, lvW, wallPx);
-  // Sparkle (granular pattern) — small dots scattered in walls
-  if (opts.sparkle) {
-    ctx.fillStyle = 'rgba(255, 255, 200, 0.55)';
-    const seed = (a, b) => Math.abs(Math.sin(a * 9.7 + b * 4.3)) * 1000 % 1;
-    for (let i = 0; i < 60; i++) {
-      const px = lvX + seed(i, 1) * lvW;
-      const useTop = seed(i, 2) < 0.5;
-      const py = useTop ? (lvY + seed(i, 3) * wallPx) : (lvY + lvH - wallPx + seed(i, 3) * wallPx);
-      ctx.beginPath();
-      ctx.arc(px, py, 1.2, 0, Math.PI * 2);
-      ctx.fill();
-    }
-  }
-  // LV outline
-  ctx.strokeStyle = '#7a8499';
-  ctx.lineWidth = 1;
-  ctx.strokeRect(lvX, lvY, lvW, lvH);
-
-  // LA above LV
-  const laH = opts.atriaSize === 'large' ? 22 : 12;
-  ctx.fillStyle = 'rgba(80, 130, 200, 0.18)';
-  ctx.fillRect(lvX + lvW * 0.10, y + 8, lvW * 0.80, laH);
-  ctx.strokeStyle = '#7a8499';
-  ctx.strokeRect(lvX + lvW * 0.10, y + 8, lvW * 0.80, laH);
-  ctx.fillStyle = '#9aa3b3';
-  ctx.font = '700 10px DM Sans, system-ui, sans-serif';
-  ctx.textAlign = 'center';
-  ctx.fillText('LA' + (opts.atriaSize === 'large' ? ' (enlarged)' : ''), lvX + lvW / 2, y + 8 + laH / 2 + 4);
-
-  // RA — small box on right
-  const raH = opts.atriaSize === 'large' ? 22 : 12;
-  ctx.fillStyle = 'rgba(80, 130, 200, 0.18)';
-  ctx.fillRect(lvX + lvW * 0.10, y + h - laH - 8, lvW * 0.80, raH);
-  ctx.strokeRect(lvX + lvW * 0.10, y + h - laH - 8, lvW * 0.80, raH);
-  ctx.fillStyle = '#9aa3b3';
-  ctx.fillText('RA' + (opts.atriaSize === 'large' ? ' (enlarged)' : ''), lvX + lvW / 2, y + h - laH - 8 + raH / 2 + 4);
-
-  // Wall thickness caliper
-  ctx.strokeStyle = '#fdcc4d';
-  ctx.lineWidth = 1.4;
-  ctx.beginPath();
-  ctx.moveTo(lvX + 8, lvY + 4);
-  ctx.lineTo(lvX + 8, lvY + wallPx - 2);
-  ctx.moveTo(lvX + 4, lvY + 4);   ctx.lineTo(lvX + 12, lvY + 4);
-  ctx.moveTo(lvX + 4, lvY + wallPx - 2); ctx.lineTo(lvX + 12, lvY + wallPx - 2);
-  ctx.stroke();
-  ctx.fillStyle = '#fdcc4d';
-  ctx.font = '700 11px DM Sans, system-ui, sans-serif';
-  ctx.textAlign = 'left';
-  ctx.fillText(opts.wallMm + ' mm', lvX + 14, lvY + Math.max(wallPx / 2 + 4, 14));
+  drawPlaxSchematic(area, {
+    septumMm: opts.wallMm,
+    postMm:   opts.wallMm,             // concentric — both walls thickened equally
+    samPresent: false,
+    sparkle: !!opts.sparkle,
+    laEnlarged: opts.atriaSize === 'large',
+  });
 }
 
 function drawAmyloidAtlas(p, t) {

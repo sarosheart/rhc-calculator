@@ -565,7 +565,6 @@ body.dark .global-tip { background: #2a3548; }
     <a href="/embryology/" class="nav-tab">Embryology</a>
     <a href="/hemodynamics/" class="nav-tab">Hemodynamics</a>
     <a href="/ap/" class="nav-tab active">Action Potential</a>
-    <a href="/echocalc/" class="nav-tab">Echo Calc</a>
   </div>
   <div class="nav-right">
     <span class="nav-credit">Dr. Saro Avedikian, MD, MPH</span>
@@ -778,25 +777,25 @@ const DRUGS = {
   propafenone:  { name:'Propafenone', cls:'IC', paceMajor:false, vent:{phase0Mult:-0.55, apdMult:+0.05, erpFraction:0}, pace:{}, mech:'Mild β-blocking activity. Pill-in-pocket cardioversion of paroxysmal AF.' },
 
   // CLASS II — β-blockers (major pacemaker effect)
-  metoprolol:   { name:'Metoprolol', cls:'II', paceMajor:true, vent:{}, pace:{phase4Slope:-0.030, apdMult:+0.10}, mech:'β1-selective. Rate control in AF, post-MI, HFrEF.' },
-  atenolol:     { name:'Atenolol', cls:'II', paceMajor:true, vent:{}, pace:{phase4Slope:-0.025, apdMult:+0.10}, mech:'β1-selective, renally cleared. Less crosses BBB.' },
-  esmolol:      { name:'Esmolol', cls:'II', paceMajor:true, vent:{}, pace:{phase4Slope:-0.035, apdMult:+0.10}, mech:'Ultra-short half-life (9 min). IV infusion for acute rate control.' },
-  propranolol:  { name:'Propranolol', cls:'II', paceMajor:true, vent:{phase0Mult:-0.05}, pace:{phase4Slope:-0.030, apdMult:+0.10}, mech:'Non-selective β-blocker with mild membrane-stabilizing (Na block) activity.' },
+  metoprolol:   { name:'Metoprolol', cls:'II', paceMajor:true, vent:{}, pace:{phase4SlopeFactor:0.78, apdMult:+0.10}, mech:'β1-selective. Rate control in AF, post-MI, HFrEF.' },
+  atenolol:     { name:'Atenolol', cls:'II', paceMajor:true, vent:{}, pace:{phase4SlopeFactor:0.82, apdMult:+0.10}, mech:'β1-selective, renally cleared. Less crosses BBB.' },
+  esmolol:      { name:'Esmolol', cls:'II', paceMajor:true, vent:{}, pace:{phase4SlopeFactor:0.72, apdMult:+0.10}, mech:'Ultra-short half-life (9 min). IV infusion for acute rate control.' },
+  propranolol:  { name:'Propranolol', cls:'II', paceMajor:true, vent:{phase0Mult:-0.05}, pace:{phase4SlopeFactor:0.78, apdMult:+0.10}, mech:'Non-selective β-blocker with mild membrane-stabilizing (Na block) activity.' },
 
   // CLASS III — K block (amiodarone, sotalol, dronedarone slow SA via β/Ca block too)
-  amiodarone:   { name:'Amiodarone', cls:'III', paceMajor:true, vent:{phase0Mult:-0.10, apdMult:+0.35, erpFraction:+0.05}, pace:{phase4Slope:-0.020, apdMult:+0.15}, mech:'Multi-channel: K, Na, Ca, β-block. Most effective for AF/VT. Pulm/thyroid/hepatic toxicity.' },
-  sotalol:      { name:'Sotalol', cls:'III', paceMajor:true, vent:{apdMult:+0.30, erpFraction:+0.05}, pace:{phase4Slope:-0.025, apdMult:+0.10}, mech:'K block + non-selective β block. Strong torsades risk — admit for initiation.' },
+  amiodarone:   { name:'Amiodarone', cls:'III', paceMajor:true, vent:{phase0Mult:-0.10, apdMult:+0.35, erpFraction:+0.05}, pace:{phase4SlopeFactor:0.85, apdMult:+0.15}, mech:'Multi-channel: K, Na, Ca, β-block. Most effective for AF/VT. Pulm/thyroid/hepatic toxicity.' },
+  sotalol:      { name:'Sotalol', cls:'III', paceMajor:true, vent:{apdMult:+0.30, erpFraction:+0.05}, pace:{phase4SlopeFactor:0.80, apdMult:+0.10}, mech:'K block + non-selective β block. Strong torsades risk — admit for initiation.' },
   dofetilide:   { name:'Dofetilide', cls:'III', paceMajor:false, vent:{apdMult:+0.30, erpFraction:+0.05}, pace:{}, mech:'Pure I_Kr blocker — ventricular myocyte only. Renally dosed. Inpatient initiation required (TIKOSYN REMS).' },
   ibutilide:    { name:'Ibutilide', cls:'III', paceMajor:false, vent:{apdMult:+0.25, erpFraction:+0.05}, pace:{}, mech:'IV only — pharmacologic cardioversion of recent-onset AF/AFL.' },
-  dronedarone:  { name:'Dronedarone', cls:'III', paceMajor:true, vent:{phase0Mult:-0.05, apdMult:+0.20, erpFraction:+0.03}, pace:{phase4Slope:-0.015, apdMult:+0.10}, mech:'Amiodarone analog without iodine. Avoid in permanent AF, HF, severe LV dysfunction.' },
+  dronedarone:  { name:'Dronedarone', cls:'III', paceMajor:true, vent:{phase0Mult:-0.05, apdMult:+0.20, erpFraction:+0.03}, pace:{phase4SlopeFactor:0.88, apdMult:+0.10}, mech:'Amiodarone analog without iodine. Avoid in permanent AF, HF, severe LV dysfunction.' },
 
   // CLASS IV — non-DHP CCBs (major SA/AV nodal effect)
   verapamil:    { name:'Verapamil', cls:'IV', paceMajor:true, vent:{}, pace:{phase0Mult:-0.45, apdMult:+0.20}, mech:'Slows phase 0 in Ca-dependent SA/AV nodal cells. Avoid in HFrEF and WPW with AF.' },
   diltiazem:    { name:'Diltiazem', cls:'IV', paceMajor:true, vent:{}, pace:{phase0Mult:-0.40, apdMult:+0.20}, mech:'Less negative inotropy than verapamil. First-line rate control in AF.' },
 
   // OTHER
-  adenosine:    { name:'Adenosine', cls:'V', paceMajor:true, vent:{}, pace:{phase4Slope:-0.045, MDP:-10}, mech:'A1 receptor → I_KAch → AV nodal block. 6 mg → 12 mg IV push. Half-life ~10 sec.' },
-  digoxin:      { name:'Digoxin', cls:'V', paceMajor:true, vent:{}, pace:{phase4Slope:-0.020, apdMult:+0.10}, mech:'↑ vagal tone slows AV node. Narrow therapeutic index. Inotrope via Na/K-ATPase block.' },
+  adenosine:    { name:'Adenosine', cls:'V', paceMajor:true, vent:{}, pace:{phase4SlopeFactor:0.20, MDP:-10}, mech:'A1 receptor → I_KAch → AV nodal block. 6 mg → 12 mg IV push. Half-life ~10 sec.' },
+  digoxin:      { name:'Digoxin', cls:'V', paceMajor:true, vent:{}, pace:{phase4SlopeFactor:0.92, apdMult:+0.10}, mech:'↑ vagal tone slows AV node. Narrow therapeutic index. Inotrope via Na/K-ATPase block.' },
   magnesium:    { name:'Magnesium', cls:'V', paceMajor:false, vent:{apdMult:-0.03}, pace:{}, mech:'First-line for torsades. Membrane stabilizer — acts on ventricular EADs, not pacemaker.' },
 };
 
@@ -934,7 +933,15 @@ function applyDrugDeltas(baseline, key) {
     const drug = DRUGS[id];
     const deltas = drug[key] || {};
     for (const [k, v] of Object.entries(deltas)) {
-      if (out[k] !== undefined) out[k] += v;
+      // Keys ending in 'Factor' multiply the corresponding base key (receptor-saturation
+      // model — stacking 2 drugs gives diminishing returns, not additive subtraction).
+      // E.g. drug.phase4SlopeFactor = 0.78 multiplies out.phase4Slope by 0.78.
+      if (k.endsWith('Factor')) {
+        const baseKey = k.slice(0, -6);
+        if (out[baseKey] !== undefined) out[baseKey] *= v;
+      } else if (out[k] !== undefined) {
+        out[k] += v;
+      }
     }
   }
   return out;
@@ -1169,6 +1176,8 @@ function drawPhaseRegions(p, isPace) {
 
   // Labels in top margin (y above the plot top edge — trace can never reach here)
   ctx.textAlign = 'center';
+  const isLight = !document.body.classList.contains('dark');
+  const labelTextColor = isLight ? '#1a1a2e' : '#e8ecf2';
   for (const r of regions) {
     if (!r.label) continue;
     const xLeft = px(r.x1);
@@ -1176,14 +1185,14 @@ function drawPhaseRegions(p, isPace) {
     const w = xRight - xLeft;
     if (w < 24) continue; // not enough room
     const cx = (xLeft + xRight) / 2;
-    // Phase number — bold, in phase color
+    // Phase number — bold, in phase color (high contrast against background)
     ctx.fillStyle = r.color;
-    ctx.font = '700 12px DM Sans, -apple-system, sans-serif';
+    ctx.font = '700 13px DM Sans, -apple-system, sans-serif';
     ctx.fillText(r.label, cx, margin.t - 12);
-    // Ion current — italic, lighter
+    // Ion current — bright neutral (NOT phase color, which fades into the tinted background)
     if (r.ion && w >= 50) {
-      ctx.font = 'italic 600 10px DM Sans, -apple-system, sans-serif';
-      ctx.fillStyle = r.color + 'cc'; // ~80% alpha
+      ctx.font = '600 11px DM Sans, -apple-system, sans-serif';
+      ctx.fillStyle = labelTextColor;
       ctx.fillText(r.ion, cx, margin.t - 1);
     }
   }
