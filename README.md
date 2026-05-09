@@ -15,6 +15,7 @@ Built and maintained by [Dr. Saro Avedikian, MD, MPH](https://x.com/Sarotonin_) 
 | EKG Simulator | [/ekg/](https://cathmath.org/ekg/) | 12-lead ECG simulator with coronary occlusion mapping, MI evolution, Wellens, De Winter |
 | Cardiac Embryology | [/embryology/](https://cathmath.org/embryology/) | 3D cardiac development — 10 stages, animated cross-sections, congenital defects, board pearls |
 | Action Potential | [/ap/](https://cathmath.org/ap/) | Cardiac action potential simulator — Vaughan-Williams Class I–IV antiarrhythmics, ventricular + pacemaker modes, 22 drugs |
+| Echo Hemodynamics Calculator | [/echocalc/](https://cathmath.org/echocalc/) | 21-module Doppler reference — 2025 ASE diastolic algorithms (sinus + AF), valvular calculators (PISA, continuity, PHT) and Normal·Mod·Severe pattern atlases for AS/AR/MS/MR/TR/PS/PR, HCM + amyloid (apical-sparing strain), constrictive vs restrictive, PASP, Doppler CO, dP/dt, PVR, Qp/Qs |
 
 ## Companion iOS app
 
