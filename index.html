@@ -741,6 +741,22 @@ body {
         </div>
       </div>
     </a>
+
+    <a class="tool-card" id="cardEcho" href="/echocalc/">
+      <div class="card-canvas-wrap">
+        <canvas id="canvasEcho"></canvas>
+      </div>
+      <div class="card-info">
+        <div class="card-title">Echo Hemodynamics Calculator <span class="card-arrow">&rarr;</span></div>
+        <div class="card-desc">Doppler-derived hemodynamics, valvular pattern atlases, and the 2025 ASE diastolic algorithm — with animated spectral envelopes and clinical pitfalls.</div>
+        <div class="card-tags">
+          <span class="card-tag">PISA / Continuity</span>
+          <span class="card-tag">2025 Diastolic</span>
+          <span class="card-tag">CP vs RCM</span>
+          <span class="card-tag">Amyloid Strain</span>
+        </div>
+      </div>
+    </a>
   </div>
 </section>
 
@@ -970,6 +986,7 @@ body {
       startEkgAnimation(loops);
       startEmbryoAnimation(loops);
       startApAnimation(loops);
+      startEchoAnimation(loops);
     }, instant ? 100 : 600);
   }
 
@@ -1065,6 +1082,7 @@ body {
       ekgSetup = setupCanvas('canvasEkg');
       embryoSetup = setupCanvas('canvasEmbryo');
       apSetup = setupCanvas('canvasAp');
+      echoSetup = setupCanvas('canvasEcho');
       // Redraw final frames if animations completed
       if (hemoDone) drawHemoFrame(hemoSetup, 1);
       if (rhcDone) drawRhcFrame(rhcSetup, 1);
@@ -1072,13 +1090,14 @@ body {
       if (ekgDone) drawEkgFrame(ekgSetup, 1);
       if (embryoDone) drawEmbryoFrame(embryoSetup, 1);
       if (apDone) drawApFrame(apSetup, 1);
+      if (echoDone) drawEchoFrame(echoSetup, 1);
     }, 200);
   });
 
   // Lazy init — canvases may not have dimensions yet
-  var hemoSetup, rhcSetup, pvSetup, ekgSetup, embryoSetup, apSetup;
-  var hemoDone = false, rhcDone = false, pvDone = false, ekgDone = false, embryoDone = false, apDone = false;
-  var hemoRunning = false, rhcRunning = false, pvRunning = false, ekgRunning = false, embryoRunning = false, apRunning = false;
+  var hemoSetup, rhcSetup, pvSetup, ekgSetup, embryoSetup, apSetup, echoSetup;
+  var hemoDone = false, rhcDone = false, pvDone = false, ekgDone = false, embryoDone = false, apDone = false, echoDone = false;
+  var hemoRunning = false, rhcRunning = false, pvRunning = false, ekgRunning = false, embryoRunning = false, apRunning = false, echoRunning = false;
 
   function ensureSetup() {
     if (!hemoSetup) hemoSetup = setupCanvas('canvasHemo');
@@ -1087,6 +1106,7 @@ body {
     if (!ekgSetup) ekgSetup = setupCanvas('canvasEkg');
     if (!embryoSetup) embryoSetup = setupCanvas('canvasEmbryo');
     if (!apSetup) apSetup = setupCanvas('canvasAp');
+    if (!echoSetup) echoSetup = setupCanvas('canvasEcho');
   }
 
 
@@ -1870,6 +1890,91 @@ body {
 
 
   /* ══════════════════════════════════════
+     ECHO CALC card animation — sweep across 3 dagger CW envelopes (severe AS)
+     ══════════════════════════════════════ */
+  function drawEchoFrame(s, progress) {
+    var ctx = s.ctx, W = s.w, H = s.h;
+    ctx.clearRect(0, 0, W, H);
+    // Baseline near top — CW envelope below baseline (jet away from probe)
+    var baseline = H * 0.12;
+    ctx.strokeStyle = 'rgba(255,255,255,0.18)';
+    ctx.lineWidth = 0.6;
+    ctx.beginPath(); ctx.moveTo(0, baseline); ctx.lineTo(W, baseline); ctx.stroke();
+    // Faint reference line at mid-velocity
+    ctx.strokeStyle = 'rgba(255,255,255,0.05)';
+    ctx.beginPath(); ctx.moveTo(0, baseline + (H - baseline) * 0.5); ctx.lineTo(W, baseline + (H - baseline) * 0.5); ctx.stroke();
+
+    // 3 dagger envelopes (severe AS pattern), revealed left-to-right via clip
+    var beats = 3;
+    var beatW = W / beats;
+    var peakY = (H - baseline) * 0.78;  // peak depth from baseline
+    var sweepX = progress * W;
+
+    ctx.save();
+    ctx.beginPath();
+    ctx.rect(0, 0, sweepX, H);
+    ctx.clip();
+    ctx.shadowColor = 'rgba(74,144,217,0.45)';
+    ctx.shadowBlur = 6;
+    ctx.fillStyle = 'rgba(74, 144, 217, 0.65)';
+    for (var b = 0; b < beats; b++) {
+      var bx = b * beatW;
+      ctx.beginPath();
+      ctx.moveTo(bx + beatW * 0.10, baseline);
+      // Slow rise
+      for (var i = 0; i <= 16; i++) {
+        var u = i / 16;
+        var pv = peakY * (1 - Math.pow(1 - u, 2.2));
+        ctx.lineTo(bx + beatW * (0.10 + u * 0.42), baseline + pv);
+      }
+      // Plateau
+      ctx.lineTo(bx + beatW * 0.56, baseline + peakY);
+      // Fast fall
+      for (var j = 0; j <= 10; j++) {
+        var u2 = j / 10;
+        var pv2 = peakY * Math.pow(1 - u2, 2);
+        ctx.lineTo(bx + beatW * (0.56 + u2 * 0.20), baseline + pv2);
+      }
+      ctx.lineTo(bx + beatW * 0.76, baseline);
+      ctx.closePath();
+      ctx.fill();
+    }
+    ctx.restore();
+
+    // Sweep cursor line
+    if (progress < 1) {
+      ctx.strokeStyle = 'rgba(74,144,217,0.6)';
+      ctx.lineWidth = 1.5;
+      ctx.beginPath(); ctx.moveTo(sweepX, 0); ctx.lineTo(sweepX, H); ctx.stroke();
+    }
+  }
+
+  function startEchoAnimation(loops) {
+    if (echoRunning) return;
+    loops = loops || 1;
+    ensureSetup();
+    if (!echoSetup) return;
+    echoDone = false; echoRunning = true;
+    var dur = 2400, loopIdx = 0;
+    function runLoop() {
+      var t0 = performance.now();
+      function frame() {
+        var p = Math.min((performance.now() - t0) / dur, 1);
+        drawEchoFrame(echoSetup, p);
+        if (p < 1) requestAnimationFrame(frame);
+        else {
+          loopIdx++;
+          if (loopIdx < loops) { setTimeout(runLoop, 200); }
+          else { echoDone = true; echoRunning = false; }
+        }
+      }
+      requestAnimationFrame(frame);
+    }
+    runLoop();
+  }
+
+
+  /* ══════════════════════════════════════
      HOVER REPLAY
      ══════════════════════════════════════ */
   function addHoverReplay(cardId, startFn) {
@@ -1897,6 +2002,7 @@ body {
     addHoverReplay('cardEkg', startEkgAnimation);
     addHoverReplay('cardEmbryo', startEmbryoAnimation);
     addHoverReplay('cardAp', startApAnimation);
+    addHoverReplay('cardEcho', startEchoAnimation);
   });
 
   // Auto-skip animation if already seen on this device within 48 hours
