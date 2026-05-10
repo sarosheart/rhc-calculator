@@ -785,6 +785,65 @@ const MODULES = {
   },
 
   // ─────────────────────────────────────────────────────────
+  bernoulli_vti: {
+    id: 'bernoulli_vti',
+    title: 'Bernoulli & VTI',
+    purpose: 'Two foundational Doppler tools. The simplified Bernoulli equation (ΔP = 4·V²) converts any peak velocity into a pressure gradient — the basis of valvular gradients, PASP from a TR jet, dP/dt, and shunt assessment. The Velocity-Time Integral (VTI) is the area under the spectral envelope — the "stroke distance" the column of blood travels per beat — and underlies stroke volume and continuity-equation calculations.',
+    formula: '<strong>Modified Bernoulli:</strong> ΔP = 4·V<sup>2</sup>&nbsp; (assumes V<sub>1</sub> ≪ V<sub>2</sub>; viscous + acceleration terms negligible) &nbsp;·&nbsp; <strong>VTI:</strong> ∫ v(t) dt = stroke distance &nbsp;·&nbsp; <strong>SV</strong> = VTI · CSA',
+    inputs: [
+      { type: 'picker', key: 'view', label: 'View', default: 'bernoulli',
+        options: [
+          { v: 'bernoulli', text: 'Bernoulli ΔP = 4V²',  help: 'Quadratic — small velocity changes give large gradient changes' },
+          { v: 'vti',       text: 'VTI (stroke distance)', help: 'Area under the velocity-time spectral envelope' },
+        ],
+      },
+      { type: 'slider', key: 'vmax',     label: 'V<sub>max</sub>',     unit: 'm/s', min: 0.5, max: 6.0, step: 0.05, default: 2.5, decimals: 2 },
+      { type: 'slider', key: 'duration', label: 'Ejection time',       unit: 'ms',  min: 150, max: 400, step: 5,    default: 280, decimals: 0 },
+      { type: 'slider', key: 'csa',      label: 'LVOT CSA (for SV)',   unit: 'cm²', min: 1.5, max: 6.0, step: 0.05, default: 3.5, decimals: 2 },
+    ],
+    compute: (p) => {
+      if (p.view === 'bernoulli') {
+        const grad = 4 * p.vmax * p.vmax;
+        let clinical;
+        if (p.vmax < 2)      clinical = 'Sub-stenotic flow or very mild AS V<sub>max</sub>.';
+        else if (p.vmax < 3) clinical = 'Mild gradient — TR jet in this range estimates PASP ≈ 30–45 mmHg (add RAP).';
+        else if (p.vmax < 4) clinical = 'Moderate gradient — moderate AS, moderate TR jet.';
+        else if (p.vmax < 5) clinical = 'Severe range — peak gradient ≥ 64 mmHg meets one severe-AS criterion (V<sub>max</sub> ≥ 4 m/s).';
+        else                 clinical = 'Critical — severe AS, severe MR, restrictive VSD jet, or near-systemic PA pressure.';
+        return [
+          { key: 'g',    label: 'Peak gradient (ΔP)', value: grad.toFixed(0), unit: 'mmHg' },
+          { key: 'sq',   label: 'V<sup>2</sup>',      value: (p.vmax * p.vmax).toFixed(2), unit: 'm²/s²' },
+          { key: 'note', label: 'Clinical context',   value: clinical, unit: '', text: true, wide: true },
+        ];
+      } else {
+        // Triangular VTI ≈ ½ · V_max · duration. Match clinical "stroke distance" units (cm).
+        const durSec = p.duration / 1000;
+        const vtiCm  = 0.5 * p.vmax * durSec * 100; // m·s × 100 → cm
+        const sv     = vtiCm * p.csa;
+        const meanV  = (p.vmax / 2) * 100;
+        let svBand;
+        if (sv < 35)        svBand = 'Low SV — concerning for low-flow state, low-flow / low-gradient AS.';
+        else if (sv < 50)   svBand = 'Below normal — reduced contractility or reduced preload.';
+        else if (sv < 100)  svBand = 'Normal stroke volume.';
+        else                svBand = 'High — hyperdynamic, regurgitant LV (AR / MR), or high-output state.';
+        return [
+          { key: 'vti',  label: 'LVOT VTI',     value: vtiCm.toFixed(1), unit: 'cm' },
+          { key: 'sv',   label: 'Stroke volume', value: sv.toFixed(0),    unit: 'mL' },
+          { key: 'mean', label: 'Mean velocity', value: meanV.toFixed(0), unit: 'cm/s' },
+          { key: 'note', label: 'SV assessment', value: svBand, unit: '', text: true, wide: true },
+        ];
+      }
+    },
+    draw: drawBernoulliVTI,
+    pitfalls: [
+      'The simplified Bernoulli omits the viscous-friction term and assumes V<sub>1</sub> ≪ V<sub>2</sub>. When V<sub>1</sub> is appreciable (e.g., AS with high LVOT velocity, or coarctation distal to a pre-narrowing acceleration), use the EXPANDED form: ΔP = 4·(V<sub>2</sub>² − V<sub>1</sub>²).',
+      'The triangular VTI approximation works well for AS / PS / TR CW envelopes but underestimates VTI for round / parabolic envelopes (typical of LVOT-PW). In real practice, the sonographer digitises the envelope.',
+      'Stroke volume calculations are squared-error sensitive: SV = VTI × π·(D/2)². A 1 mm error in LVOT diameter translates to ~10% error in SV.',
+      'Doppler measurements are angle-dependent. The beam must be parallel (≤ 20°) to flow. Underestimating velocity directly underestimates ΔP via the squared term.',
+    ],
+  },
+
+  // ─────────────────────────────────────────────────────────
   pasp: {
     id: 'pasp',
     title: 'PASP from TR V<sub>max</sub>',
@@ -4067,6 +4126,276 @@ function drawDopplerBasics(p, t) {
   else if (p.view === 'tdi')             drawDB_TDI();
 }
 
+// ═══════════════════════════════════════════════════════════
+// BERNOULLI & VTI PRIMER
+// ═══════════════════════════════════════════════════════════
+function drawBernoulliVTI(p, t) {
+  ctx.clearRect(0, 0, W, H);
+  const titleStr = p.view === 'vti'
+    ? 'Velocity-Time Integral (VTI) — area under the spectral envelope'
+    : 'Modified Bernoulli — pressure gradient from peak velocity';
+  lblTitle(titleStr, W / 2, 16);
+
+  if (p.view === 'vti') drawBV_VTI(p);
+  else                  drawBV_Bernoulli(p);
+}
+
+function drawBV_Bernoulli(p) {
+  // Two-panel layout: left = stylised flow constriction, right = ΔP = 4V² visual.
+  const padX = 12;
+  const gap = 14;
+  const panelW = (W - padX * 2 - gap) / 2;
+  const panelY = 30;
+  const panelH = H - panelY - 12;
+  const vmax = p.vmax;
+  const grad = 4 * vmax * vmax;
+
+  // ── LEFT: flow schematic ──
+  const lx = padX, ly = panelY, lw = panelW, lh = panelH;
+  ctx.fillStyle = '#0d1019';
+  ctx.fillRect(lx, ly, lw, lh);
+  ctx.strokeStyle = 'rgba(255,255,255,0.06)';
+  ctx.lineWidth = 1;
+  ctx.strokeRect(lx + 0.5, ly + 0.5, lw - 1, lh - 1);
+  lblTick('Flow constriction', lx + 8, ly + 16);
+
+  // Pipe outline: wide → narrow → wide
+  const pipeY = ly + lh / 2;
+  const pipeWide = lh * 0.50;
+  const pipeNarrow = Math.max(8, pipeWide * (1 - Math.min(0.85, vmax / 6.5)));
+  const proxX = lx + 14, orifX1 = lx + lw * 0.42, orifX2 = lx + lw * 0.58, distX = lx + lw - 14;
+
+  ctx.strokeStyle = '#7a8499';
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.moveTo(proxX, pipeY - pipeWide / 2);
+  ctx.lineTo(orifX1, pipeY - pipeWide / 2);
+  ctx.lineTo(orifX1 + 14, pipeY - pipeNarrow / 2);
+  ctx.lineTo(orifX2 - 14, pipeY - pipeNarrow / 2);
+  ctx.lineTo(orifX2, pipeY - pipeWide / 2);
+  ctx.lineTo(distX, pipeY - pipeWide / 2);
+  ctx.moveTo(proxX, pipeY + pipeWide / 2);
+  ctx.lineTo(orifX1, pipeY + pipeWide / 2);
+  ctx.lineTo(orifX1 + 14, pipeY + pipeNarrow / 2);
+  ctx.lineTo(orifX2 - 14, pipeY + pipeNarrow / 2);
+  ctx.lineTo(orifX2, pipeY + pipeWide / 2);
+  ctx.lineTo(distX, pipeY + pipeWide / 2);
+  ctx.stroke();
+
+  // Flow arrows (proximal slow, distal fast)
+  const arrow = (x, y, len, color, label) => {
+    ctx.strokeStyle = color;
+    ctx.fillStyle = color;
+    ctx.lineWidth = 2.4;
+    ctx.beginPath();
+    ctx.moveTo(x, y);
+    ctx.lineTo(x + len, y);
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(x + len, y);
+    ctx.lineTo(x + len - 6, y - 4);
+    ctx.lineTo(x + len - 6, y + 4);
+    ctx.closePath();
+    ctx.fill();
+    if (label) lblTick(label, x + len + 6, y + 4);
+  };
+  arrow(lx + 22, pipeY, 36, 'rgba(120, 200, 130, 0.85)', 'V₁ ≈ 1 m/s');
+  // Distal arrow scales with vmax
+  const distArrowLen = Math.min(80, 30 + vmax * 9);
+  arrow(orifX2 + 4, pipeY, distArrowLen, 'rgba(239, 100, 100, 0.9)', `V₂ = ${vmax.toFixed(2)} m/s`);
+
+  lblTick('Proximal', proxX, pipeY + pipeWide / 2 + 18);
+  lblTick('Orifice', orifX1 + 14, pipeY - pipeNarrow / 2 - 8);
+  lblTick('Distal jet', distX - 36, pipeY + pipeWide / 2 + 18);
+
+  // ── RIGHT: ΔP vs V curve with pointer ──
+  const rx = lx + lw + gap, ry = ly, rw = lw, rh = lh;
+  ctx.fillStyle = '#0d1019';
+  ctx.fillRect(rx, ry, rw, rh);
+  ctx.strokeStyle = 'rgba(255,255,255,0.06)';
+  ctx.lineWidth = 1;
+  ctx.strokeRect(rx + 0.5, ry + 0.5, rw - 1, rh - 1);
+  lblTick('ΔP = 4·V² (quadratic)', rx + 8, ry + 16);
+
+  // Plot region
+  const plX = rx + 38, plY = ry + 28, plW = rw - 50, plH = rh - 50;
+  const vRange = 6.0;        // 0..6 m/s
+  const gradRange = 144;     // 4·6² = 144 mmHg full scale
+  const mvX = v => plX + (v / vRange) * plW;
+  const mgY = g => plY + plH - (g / gradRange) * plH;
+
+  // Axes
+  ctx.strokeStyle = '#5b6677';
+  ctx.lineWidth = 1;
+  ctx.beginPath();
+  ctx.moveTo(plX, plY); ctx.lineTo(plX, plY + plH); ctx.lineTo(plX + plW, plY + plH);
+  ctx.stroke();
+  // V ticks
+  for (let v = 0; v <= 6; v++) {
+    const x = mvX(v);
+    ctx.strokeStyle = 'rgba(255,255,255,0.06)';
+    ctx.beginPath(); ctx.moveTo(x, plY); ctx.lineTo(x, plY + plH); ctx.stroke();
+    lblTick(v + '', x - 4, plY + plH + 14);
+  }
+  lblTick('V (m/s)', plX + plW / 2 - 18, plY + plH + 28);
+  // Gradient ticks (every 36 mmHg)
+  for (let g = 0; g <= 144; g += 36) {
+    const y = mgY(g);
+    ctx.strokeStyle = 'rgba(255,255,255,0.06)';
+    ctx.beginPath(); ctx.moveTo(plX, y); ctx.lineTo(plX + plW, y); ctx.stroke();
+    lblTick(g + '', plX - 28, y + 4);
+  }
+  lblTick('ΔP (mmHg)', plX - 32, plY - 4);
+
+  // Curve
+  ctx.strokeStyle = '#ef6464';
+  ctx.lineWidth = 2.2;
+  ctx.beginPath();
+  for (let i = 0; i <= 60; i++) {
+    const v = (i / 60) * vRange;
+    const g = 4 * v * v;
+    const x = mvX(v), y = mgY(g);
+    if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+  }
+  ctx.stroke();
+
+  // Marker at current vmax
+  const mx = mvX(vmax), my = mgY(grad);
+  // Drop lines
+  ctx.setLineDash([4, 4]);
+  ctx.strokeStyle = 'rgba(253, 204, 77, 0.55)';
+  ctx.lineWidth = 1;
+  ctx.beginPath();
+  ctx.moveTo(mx, plY + plH); ctx.lineTo(mx, my); ctx.lineTo(plX, my);
+  ctx.stroke();
+  ctx.setLineDash([]);
+  // Marker dot
+  ctx.fillStyle = '#fdcc4d';
+  ctx.beginPath(); ctx.arc(mx, my, 5, 0, Math.PI * 2); ctx.fill();
+  // Caliper labels
+  lblCaliper(`V = ${vmax.toFixed(2)} m/s`, mx, plY + plH + 14, 'center');
+  lblCaliper(`ΔP = ${grad.toFixed(0)} mmHg`, plX + plW / 2, my - 8, 'center');
+}
+
+function drawBV_VTI(p) {
+  // Spectral envelope, area under curve = VTI. Triangular shape (CW).
+  const sx = 14, sy = 30, sw = W - 28, sh = H - 50;
+  ctx.fillStyle = '#0d1019';
+  ctx.fillRect(sx, sy, sw, sh);
+  ctx.strokeStyle = 'rgba(255,255,255,0.06)';
+  ctx.lineWidth = 1;
+  ctx.strokeRect(sx + 0.5, sy + 0.5, sw - 1, sh - 1);
+  lblTick('CW spectral envelope (down = away from probe)', sx + 8, sy + 16);
+
+  // 0 baseline near top
+  const baseline = sy + 28;
+  ctx.strokeStyle = '#7a8499';
+  ctx.lineWidth = 0.8;
+  ctx.beginPath(); ctx.moveTo(sx, baseline); ctx.lineTo(sx + sw, baseline); ctx.stroke();
+  lblTick('0', sx + 4, baseline - 3);
+
+  // Velocity ticks downward
+  const maxV = 6.0;
+  const usableH = sh - 40;
+  const vToY = v => baseline + (usableH * (v / maxV));
+  for (let v = 1; v <= 6; v++) {
+    const y = vToY(v);
+    ctx.strokeStyle = 'rgba(255,255,255,0.05)';
+    ctx.beginPath(); ctx.moveTo(sx, y); ctx.lineTo(sx + sw, y); ctx.stroke();
+    lblTick(v + ' m/s', sx + 4, y - 3);
+  }
+
+  // Two beats — show the area = VTI for the first one.
+  const cycleMs = 1000;                    // single beat span on the time axis
+  const totalMs = cycleMs * 2;             // show 2 beats
+  const tToX = ms => sx + 8 + (ms / totalMs) * (sw - 16);
+  const ejectStart = 80;                   // ms after R wave
+  const ejectEnd = ejectStart + p.duration;
+
+  // Triangular envelope shape generator (apex at midpoint of ejection)
+  const env = (msInBeat) => {
+    if (msInBeat < ejectStart || msInBeat > ejectEnd) return 0;
+    const u = (msInBeat - ejectStart) / (ejectEnd - ejectStart); // 0..1
+    return p.vmax * (u < 0.5 ? (u * 2) : (1 - (u - 0.5) * 2));
+  };
+
+  // Beat 1 — filled (highlighted as VTI area)
+  ctx.fillStyle = 'rgba(120, 200, 130, 0.42)';
+  ctx.shadowColor = 'rgba(120, 200, 130, 0.25)';
+  ctx.shadowBlur = 6;
+  ctx.beginPath();
+  ctx.moveTo(tToX(ejectStart), baseline);
+  for (let ms = ejectStart; ms <= ejectEnd; ms += 6) {
+    ctx.lineTo(tToX(ms), vToY(env(ms)));
+  }
+  ctx.lineTo(tToX(ejectEnd), baseline);
+  ctx.closePath();
+  ctx.fill();
+  ctx.shadowBlur = 0;
+
+  // Beat 1 outline
+  ctx.strokeStyle = '#5fc97a';
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.moveTo(tToX(ejectStart), baseline);
+  for (let ms = ejectStart; ms <= ejectEnd; ms += 4) {
+    ctx.lineTo(tToX(ms), vToY(env(ms)));
+  }
+  ctx.lineTo(tToX(ejectEnd), baseline);
+  ctx.stroke();
+
+  // Beat 2 — outline only (for context)
+  ctx.strokeStyle = 'rgba(120, 200, 130, 0.45)';
+  ctx.lineWidth = 1.2;
+  ctx.beginPath();
+  ctx.moveTo(tToX(cycleMs + ejectStart), baseline);
+  for (let ms = ejectStart; ms <= ejectEnd; ms += 4) {
+    ctx.lineTo(tToX(cycleMs + ms), vToY(env(ms)));
+  }
+  ctx.lineTo(tToX(cycleMs + ejectEnd), baseline);
+  ctx.stroke();
+
+  // Annotations on beat 1
+  const apexT = ejectStart + (ejectEnd - ejectStart) / 2;
+  const apexX = tToX(apexT), apexY = vToY(p.vmax);
+  // V_max caliper
+  ctx.strokeStyle = '#fdcc4d';
+  ctx.lineWidth = 1;
+  ctx.setLineDash([4, 4]);
+  ctx.beginPath(); ctx.moveTo(sx + 4, apexY); ctx.lineTo(apexX, apexY); ctx.stroke();
+  ctx.setLineDash([]);
+  lblCaliper(`V_max = ${p.vmax.toFixed(2)} m/s`, apexX + 6, apexY + 4, 'left');
+
+  // Ejection time bracket
+  const bracketY = baseline - 6;
+  ctx.strokeStyle = '#fdcc4d';
+  ctx.lineWidth = 1.4;
+  ctx.beginPath();
+  ctx.moveTo(tToX(ejectStart), bracketY);
+  ctx.lineTo(tToX(ejectStart), bracketY - 4);
+  ctx.lineTo(tToX(ejectEnd), bracketY - 4);
+  ctx.lineTo(tToX(ejectEnd), bracketY);
+  ctx.stroke();
+  lblCaliper(`ejection time = ${p.duration} ms`, (tToX(ejectStart) + tToX(ejectEnd)) / 2, bracketY - 8, 'center');
+
+  // Area annotation
+  const vtiCm = 0.5 * p.vmax * (p.duration / 1000) * 100;
+  ctx.fillStyle = 'rgba(0,0,0,0.55)';
+  const tagW = 130, tagH = 30;
+  const tagX = apexX - tagW / 2, tagY = vToY(p.vmax * 0.5) - tagH / 2;
+  ctx.fillRect(tagX, tagY, tagW, tagH);
+  ctx.strokeStyle = 'rgba(120, 200, 130, 0.6)';
+  ctx.lineWidth = 1;
+  ctx.strokeRect(tagX + 0.5, tagY + 0.5, tagW - 1, tagH - 1);
+  ctx.fillStyle = '#dde2ec';
+  ctx.font = '700 12px DM Sans, system-ui, sans-serif';
+  ctx.textAlign = 'center';
+  ctx.fillText(`VTI ≈ ${vtiCm.toFixed(1)} cm`, apexX, tagY + 13);
+  ctx.font = '600 10px DM Sans, system-ui, sans-serif';
+  ctx.fillStyle = '#a8b1c0';
+  ctx.fillText('= ½ · V_max · t (triangular)', apexX, tagY + 25);
+}
+
 function drawDB_PWvsCW() {
   const padX = 12;
   const gap = 14;
@@ -4606,7 +4935,7 @@ let inputState = {}; // current parameter values for active module
 
 // Sidebar grouping. Order modules into clinical categories.
 const MODULE_GROUPS = [
-  { name: 'Fundamentals',       modules: ['doppler_basics'] },
+  { name: 'Fundamentals',       modules: ['doppler_basics', 'bernoulli_vti'] },
   { name: 'Diastolic Function', modules: ['diastolic', 'diastolic_af', 'constrictive_vs_restrictive'] },
   { name: 'Valvular Calculators', modules: ['pisa', 'continuity', 'pht'] },
   { name: 'Valvular Patterns',  modules: ['as_atlas', 'ar_atlas', 'ms_atlas', 'mr_atlas', 'tr_atlas', 'ps_atlas', 'pr_atlas'] },
