@@ -175,7 +175,7 @@ body {
 .main {
   display: flex;
   flex: 1;
-  min-height: 0;
+  min-height: calc(100vh - 42px); /* nav height — keeps simulator above the fold; SEO below */
 }
 
 /* ═══ LEFT PANEL ═══ */
@@ -377,6 +377,67 @@ body.dark .drug-btn { background: var(--panel-bg-2); }
 }
 .btn-clear:hover { border-color: var(--threshold); color: var(--threshold); }
 
+/* ═══ CLINICAL PRESETS (Scenarios + Disease States) ═══ */
+.preset-tabs {
+  display: flex;
+  background: var(--slider-track);
+  border-radius: 6px;
+  padding: 3px;
+  gap: 2px;
+  margin-bottom: 10px;
+}
+.preset-tab {
+  flex: 1;
+  padding: 6px 8px;
+  background: transparent;
+  border: none;
+  border-radius: 4px;
+  font-size: 11.5px;
+  font-weight: 600;
+  color: var(--text-dim);
+  cursor: pointer;
+  transition: all 0.18s;
+}
+.preset-tab.active {
+  background: var(--panel-bg);
+  color: var(--navy);
+  box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+}
+body.dark .preset-tab.active { color: #6eb0f7; }
+.preset-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+}
+.preset-btn {
+  flex: 0 1 auto;
+  padding: 6px 10px;
+  background: var(--panel-bg);
+  color: var(--text);
+  border: 1px solid var(--border);
+  border-radius: 5px;
+  font-size: 11.5px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: border-color 0.15s, color 0.15s, background 0.15s;
+  white-space: nowrap;
+}
+body.dark .preset-btn { background: var(--panel-bg-2); }
+.preset-btn:hover { border-color: var(--accent); color: var(--accent); }
+.preset-btn.active { background: var(--accent); color: #fff; border-color: var(--accent); }
+.preset-btn.warn:hover { border-color: var(--threshold); color: var(--threshold); }
+.preset-btn.warn.active { background: var(--threshold); border-color: var(--threshold); }
+.preset-note {
+  font-size: 11.5px;
+  color: var(--text-dim);
+  font-style: italic;
+  line-height: 1.45;
+  margin-top: 10px;
+  min-height: 16px;
+  padding: 0 2px;
+}
+.preset-note.warn { color: var(--threshold); font-style: normal; font-weight: 600; }
+
 /* ═══ RIGHT PANEL ═══ */
 .right {
   flex: 1;
@@ -545,11 +606,65 @@ body.dark .measure-value { color: #6eb0f7; }
 .global-tip.visible { opacity: 1; }
 body.dark .global-tip { background: #2a3548; }
 
+/* ═══ SEO CONTENT (below the simulator) ═══ */
+.seo-content {
+  padding: 36px 24px 56px;
+  background: var(--panel-bg);
+  border-top: 1px solid var(--border);
+  font-size: 14.5px;
+  line-height: 1.65;
+  color: var(--text);
+}
+.seo-content .seo-inner { max-width: 920px; margin: 0 auto; }
+.seo-content h2 {
+  font-size: 22px;
+  font-weight: 700;
+  margin-bottom: 16px;
+  color: var(--navy);
+  letter-spacing: -0.01em;
+}
+body.dark .seo-content h2 { color: #6eb0f7; }
+.seo-content h3 {
+  font-size: 16px;
+  font-weight: 700;
+  margin: 22px 0 8px;
+  color: var(--text);
+  letter-spacing: -0.005em;
+}
+.seo-content p { margin-bottom: 12px; }
+.seo-content ul { padding-left: 22px; margin-bottom: 12px; }
+.seo-content ul li { margin-bottom: 6px; }
+.seo-content strong { color: var(--text); font-weight: 700; }
+.seo-content .related-tools {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 12px;
+  font-size: 13px;
+}
+.seo-content .related-tools a {
+  display: inline-block;
+  padding: 6px 14px;
+  background: var(--panel-bg-2);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  color: var(--text);
+  text-decoration: none;
+  font-weight: 600;
+  transition: all 0.15s;
+}
+.seo-content .related-tools a:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
 /* ═══ MOBILE ═══ */
 @media (max-width: 800px) {
   .main { flex-direction: column; }
   .left { width: 100%; max-height: 50vh; border-right: none; border-bottom: 1px solid var(--border); }
   .canvas-wrap { min-height: 240px; }
+  .seo-content { padding: 24px 16px 40px; font-size: 14px; }
+  .seo-content h2 { font-size: 19px; }
 }
 </style>
 </head>
@@ -564,6 +679,7 @@ body.dark .global-tip { background: #2a3548; }
     <a href="/ekg/" class="nav-tab">EKG Simulator</a>
     <a href="/embryology/" class="nav-tab">Embryology</a>
     <a href="/hemodynamics/" class="nav-tab">Hemodynamics</a>
+    <a href="/echocalc/" class="nav-tab">Echo Calc</a>
     <a href="/ap/" class="nav-tab active">Action Potential</a>
   </div>
   <div class="nav-right">
@@ -593,6 +709,32 @@ body.dark .global-tip { background: #2a3548; }
         <button class="seg-btn active" data-cell="vent">Ventricular</button>
         <button class="seg-btn" data-cell="pace">Pacemaker</button>
       </div>
+    </div>
+
+    <!-- CLINICAL PRESETS -->
+    <div class="card">
+      <div class="card-title">Clinical Presets</div>
+      <div class="preset-tabs" id="presetTabs">
+        <button class="preset-tab active" data-preset-tab="scenario">Scenarios</button>
+        <button class="preset-tab" data-preset-tab="disease">Disease states</button>
+      </div>
+      <div class="preset-list" id="scenarioList">
+        <button class="preset-btn" data-scenario="lidocaine_vt">Lidocaine for VT</button>
+        <button class="preset-btn" data-scenario="amiodarone_af">Amiodarone for AF</button>
+        <button class="preset-btn" data-scenario="flecainide_pip">Flecainide pill-in-pocket</button>
+        <button class="preset-btn" data-scenario="metoprolol_st">Metoprolol for sinus tach</button>
+        <button class="preset-btn" data-scenario="adenosine_svt">Adenosine for SVT</button>
+        <button class="preset-btn" data-scenario="verapamil_avnrt">Verapamil for AVNRT</button>
+        <button class="preset-btn warn" data-scenario="sotalol_torsades">Sotalol → torsades</button>
+        <button class="preset-btn warn" data-scenario="quinidine_syncope">Quinidine syncope</button>
+      </div>
+      <div class="preset-list" id="diseaseList" style="display:none;">
+        <button class="preset-btn" data-disease="longqt">Long QT</button>
+        <button class="preset-btn" data-disease="shortqt">Short QT</button>
+        <button class="preset-btn" data-disease="brugada">Brugada</button>
+        <button class="preset-btn" data-disease="ischemia">Ischemia</button>
+      </div>
+      <div class="preset-note" id="presetNote"></div>
     </div>
 
     <!-- DIRECT PARAMETERS -->
@@ -749,6 +891,58 @@ body.dark .global-tip { background: #2a3548; }
   </main>
 </div>
 
+<!-- ═══ SEO / EDUCATIONAL CONTENT ═══ -->
+<section class="seo-content">
+  <div class="seo-inner">
+    <h2>About the Cardiac Action Potential Simulator</h2>
+    <p>The cardiac action potential is the voltage waveform that drives every heartbeat. Its shape — and how that shape is reshaped by drugs and disease — is one of the most testable concepts in clinical cardiology. This free interactive simulator visualizes the five phases of the ventricular myocyte action potential and the spontaneous-firing waveform of the SA/AV nodal pacemaker, then lets you stack any combination of <strong>antiarrhythmic drugs</strong> in real time to see how each class reshapes the trace.</p>
+
+    <h3>The Vaughan-Williams classification</h3>
+    <p>Ernst Vaughan-Williams' 1970 classification organizes antiarrhythmics by their primary ion-channel target:</p>
+    <ul>
+      <li><strong>Class I — Sodium channel blockers.</strong> Slow the upstroke (phase 0) of the ventricular action potential. Subdivided by binding kinetics:
+        <ul>
+          <li><strong>Class IA</strong> (quinidine, procainamide, disopyramide) — moderate Na block plus K block, prolonging both QRS and QT.</li>
+          <li><strong>Class IB</strong> (lidocaine, mexiletine, phenytoin) — weak Na block with fast off-kinetics. Use-dependent: preferentially blocks depolarized or rapidly firing tissue, making it ischemia-selective.</li>
+          <li><strong>Class IC</strong> (flecainide, propafenone) — strong Na block with slow off-kinetics. Markedly widens QRS. Avoided in structural heart disease (CAST trial).</li>
+        </ul>
+      </li>
+      <li><strong>Class II — β-adrenergic blockers</strong> (metoprolol, atenolol, esmolol, propranolol). Reduce sympathetic drive on the SA node, flattening the phase 4 slope of the pacemaker action potential and slowing AV nodal conduction.</li>
+      <li><strong>Class III — Potassium channel blockers</strong> (amiodarone, sotalol, dofetilide, ibutilide, dronedarone). Block the delayed-rectifier I<sub>Kr</sub> current, prolonging phase 3 repolarization, lengthening APD and ERP. Excessive QT prolongation drives torsades-de-pointes.</li>
+      <li><strong>Class IV — Non-dihydropyridine calcium channel blockers</strong> (verapamil, diltiazem). Block L-type Ca²⁺ current — the dominant phase 0 carrier in SA and AV nodal cells. They have minimal effect on ventricular phase 0 (which is Na-dependent).</li>
+      <li><strong>Other</strong> — adenosine, digoxin, magnesium. Adenosine opens I<sub>KAch</sub> via the A1 receptor, hyperpolarizing the AV node and producing transient block. Digoxin slows the AV node via vagal tone. Magnesium is first-line for torsades-de-pointes.</li>
+    </ul>
+
+    <h3>Ventricular vs pacemaker action potentials</h3>
+    <p><strong>Ventricular myocytes</strong> have a stable, polarized resting potential of about −85 mV maintained by inward-rectifier I<sub>K1</sub>. They depolarize abruptly when stimulated, with a fast Na-driven phase 0, an early I<sub>to</sub>-mediated notch (phase 1), a long Ca²⁺-driven plateau (phase 2), and a K-driven repolarization (phase 3).</p>
+    <p><strong>Pacemaker cells</strong> (SA and AV nodes) have no stable resting potential. After repolarization to a maximum diastolic potential of about −60 to −65 mV, the cell spontaneously depolarizes through phase 4 — driven by the funny current I<sub>f</sub>, T-type Ca²⁺ current, and decaying I<sub>K</sub>. When this drift reaches threshold, an L-type Ca²⁺ current opens and triggers the upstroke. This is why β-blockers and CCBs slow heart rate, why adenosine produces transient AV block, and why pure Class I and III drugs have minimal effect on nodal cells.</p>
+
+    <h3>Disease states and clinical scenarios</h3>
+    <p>Built-in disease presets let you visualize the substrate before adding drugs:</p>
+    <ul>
+      <li><strong>Long QT syndrome</strong> — inherited K-channel loss-of-function prolongs APD. Stacking a Class III drug on this substrate is dangerous.</li>
+      <li><strong>Short QT syndrome</strong> — K-channel gain-of-function shortens APD. Substrate for atrial fibrillation and idiopathic ventricular fibrillation.</li>
+      <li><strong>Brugada syndrome</strong> — SCN5A loss-of-function reduces phase 0 in epicardium. Class IC drugs (flecainide) are diagnostic but proarrhythmic.</li>
+      <li><strong>Ischemia</strong> — depolarized resting potential (−65 mV) inactivates Na channels. Class IB drugs preferentially bind these inactivated channels — the structural basis of "use-dependence".</li>
+    </ul>
+    <p>Clinical scenarios apply ready-made drug-and-substrate combinations: lidocaine for VT in ischemia, amiodarone for atrial fibrillation, flecainide pill-in-pocket cardioversion, metoprolol for sinus tachycardia, adenosine for SVT, verapamil for AVNRT, and the proarrhythmic stories of sotalol-induced torsades and the historic "quinidine syncope".</p>
+
+    <h3>How to use this simulator</h3>
+    <p>Choose <strong>Ventricular</strong> or <strong>Pacemaker</strong> mode, then either click a <strong>Clinical Scenario</strong> (a preconfigured drug + substrate combination) or apply a <strong>Disease State</strong> and stack drugs on top. Adjust individual parameters with the sliders. The dashed grey ghost trace shows your baseline so you can see exactly what each intervention changes. Live measurements (APD, ERP, dV/dt, estimated QRS, QT, heart rate, cycle length) update with every change.</p>
+    <p>This tool is built for cardiology fellows preparing for board exams, residents studying for in-service exams, and medical students who want to see Vaughan-Williams classes come alive on a real action potential trace. It is for educational use only and is not a substitute for clinical judgment.</p>
+
+    <h3>Related tools</h3>
+    <div class="related-tools">
+      <a href="/rhc/">RHC Calculator</a>
+      <a href="/pvloop/">PV Loop Simulator</a>
+      <a href="/ekg/">EKG Simulator</a>
+      <a href="/embryology/">Cardiac Embryology</a>
+      <a href="/hemodynamics/">Hemodynamic Waveforms</a>
+      <a href="/echocalc/">Echo Hemodynamics Calculator</a>
+    </div>
+  </div>
+</section>
+
 <!-- Global tooltip — rendered at body level so it escapes the .left sidebar's overflow clip. -->
 <div id="globalTip" class="global-tip" role="tooltip" aria-hidden="true"></div>
 
@@ -800,6 +994,99 @@ const DRUGS = {
 };
 
 // ═══════════════════════════════════════════════════════════
+// CLINICAL PRESETS — scenarios (drugs + cell + overrides) and disease states (overrides only)
+// ═══════════════════════════════════════════════════════════
+const SCENARIOS = {
+  lidocaine_vt: {
+    name: 'Lidocaine for VT',
+    cell: 'vent',
+    drugs: ['lidocaine'],
+    overrides: { vRest: -65 },
+    note: 'Class IB on ischemic substrate (Vrest set to −65 mV) — fast off-kinetics give use-dependent Na block.',
+  },
+  amiodarone_af: {
+    name: 'Amiodarone for AF',
+    cell: 'vent',
+    drugs: ['amiodarone'],
+    overrides: {},
+    note: 'Class III on ventricle — APD prolonged, ERP up. Toggle Pacemaker to see SA-node slowing too.',
+  },
+  flecainide_pip: {
+    name: 'Flecainide pill-in-pocket',
+    cell: 'vent',
+    drugs: ['flecainide'],
+    overrides: {},
+    note: 'Class IC: marked phase 0 slowing → wider QRS. Avoid in structural heart disease (CAST trial).',
+  },
+  metoprolol_st: {
+    name: 'Metoprolol for sinus tach',
+    cell: 'pace',
+    drugs: ['metoprolol'],
+    overrides: {},
+    note: 'Class II on SA pacemaker: phase 4 slope flattens → slower spontaneous firing.',
+  },
+  adenosine_svt: {
+    name: 'Adenosine for SVT',
+    cell: 'pace',
+    drugs: ['adenosine'],
+    overrides: {},
+    note: 'A1 → I_KAch → MDP hyperpolarized, phase 4 nearly flat → transient AV nodal block.',
+  },
+  verapamil_avnrt: {
+    name: 'Verapamil for AVNRT',
+    cell: 'pace',
+    drugs: ['verapamil'],
+    overrides: {},
+    note: 'Class IV: slows Ca-dependent phase 0 in AV node → breaks reentry.',
+  },
+  sotalol_torsades: {
+    name: 'Sotalol → torsades',
+    cell: 'vent',
+    drugs: ['sotalol'],
+    overrides: { apdMult: 1.5 },
+    note: '⚠ Excessive K block → APD overshoot → EAD substrate. Inpatient initiation required.',
+    warn: true,
+  },
+  quinidine_syncope: {
+    name: 'Quinidine syncope',
+    cell: 'vent',
+    drugs: ['quinidine'],
+    overrides: { apdMult: 1.45 },
+    note: '⚠ Class IA: Na block + K block → marked QT prolongation → torsades-de-pointes ("quinidine syncope").',
+    warn: true,
+  },
+};
+
+const DISEASES = {
+  longqt: {
+    name: 'Long QT',
+    cell: 'vent',
+    overrides: { apdMult: 1.6 },
+    note: 'Inherited K-channel loss-of-function → APD↑↑, QT↑. Stacking Class III drugs is dangerous.',
+  },
+  shortqt: {
+    name: 'Short QT',
+    cell: 'vent',
+    overrides: { apdMult: 0.55 },
+    note: 'Inherited K-channel gain-of-function → APD↓, QT↓. Substrate for AF and idiopathic VF.',
+  },
+  brugada: {
+    name: 'Brugada',
+    cell: 'vent',
+    overrides: { phase0Mult: 0.55 },
+    note: 'SCN5A loss-of-function → reduced phase 0 in epicardium. Avoid Class IC (flecainide unmasks).',
+  },
+  ischemia: {
+    name: 'Ischemia',
+    cell: 'vent',
+    overrides: { vRest: -65 },
+    note: 'Depolarized Vrest (−65 mV): partial Na inactivation → Class IB selectively binds depolarized channels.',
+  },
+};
+
+let activePreset = null; // {kind:'scenario'|'disease', id:string} | null
+
+// ═══════════════════════════════════════════════════════════
 // STATE
 // ═══════════════════════════════════════════════════════════
 const BASELINE_VENT = {
@@ -818,8 +1105,10 @@ let cellType = 'vent';
 let activeDrugs = new Set();
 let params = { ...BASELINE_VENT };
 let paceParams = { ...BASELINE_PACE };
-let userOverrides = {}; // sliders manually moved
+let userOverrides = {}; // sliders manually moved (final say — replaces)
 let userOverridesPace = {};
+let diseaseOverrides = {}; // disease substrate for vent (sits below drug deltas)
+let diseaseOverridesPace = {};
 
 // Animation
 let animFrom = null, animTo = null, animStart = 0, animating = false;
@@ -948,12 +1237,16 @@ function applyDrugDeltas(baseline, key) {
 }
 
 function calcParams(forCellType) {
-  const baseline = forCellType === 'vent' ? BASELINE_VENT : BASELINE_PACE;
+  // 3-layer model: baseline → disease (substrate) → drug deltas → user overrides.
+  // Disease writes establish a NEW baseline so drugs stack on the diseased substrate.
+  const rawBaseline = forCellType === 'vent' ? BASELINE_VENT : BASELINE_PACE;
+  const dovr = forCellType === 'vent' ? diseaseOverrides : diseaseOverridesPace;
+  const baseline = { ...rawBaseline, ...dovr };
   const key = forCellType === 'vent' ? 'vent' : 'pace';
   const out = applyDrugDeltas(baseline, key);
-  // Apply user overrides AFTER drugs (overrides win)
-  const overrides = forCellType === 'vent' ? userOverrides : userOverridesPace;
-  for (const [k, v] of Object.entries(overrides)) {
+  // User slider overrides win over everything — final say.
+  const uovr = forCellType === 'vent' ? userOverrides : userOverridesPace;
+  for (const [k, v] of Object.entries(uovr)) {
     if (v !== undefined) out[k] = v;
   }
   // Clamp safety
@@ -1332,9 +1625,141 @@ function toggleDrug(id) {
   // Block toggling drugs that have no pacemaker effect when in pacemaker mode
   if (cellType === 'pace' && DRUGS[id] && !DRUGS[id].paceMajor) return;
   if (activeDrugs.has(id)) activeDrugs.delete(id); else activeDrugs.add(id);
+  clearPreset();
   updateDrugBtns();
   updateActiveStrip();
   startTransition();
+}
+
+// ═══════════════════════════════════════════════════════════
+// SLIDER ↔ STATE SYNC
+// ═══════════════════════════════════════════════════════════
+const SLIDER_MAP_VENT = {
+  phase0Mult:  { id:'slPhase0', valId:'slPhase0Val', def:1.0,  fmt:v => (+v).toFixed(2) + '×' },
+  apdMult:     { id:'slApd',    valId:'slApdVal',    def:1.0,  fmt:v => (+v).toFixed(2) + '×' },
+  erpFraction: { id:'slErp',    valId:'slErpVal',    def:0.85, fmt:v => (+v).toFixed(2) },
+  vRest:       { id:'slRest',   valId:'slRestVal',   def:-85,  fmt:v => v + ' mV' },
+};
+const SLIDER_MAP_PACE = {
+  phase4Slope: { id:'slP4',     valId:'slP4Val',     def:0.05, fmt:v => (+v).toFixed(3) },
+  phase0Mult:  { id:'slP0p',    valId:'slP0pVal',    def:1.0,  fmt:v => (+v).toFixed(2) + '×' },
+  apdMult:     { id:'slApdp',   valId:'slApdpVal',   def:1.0,  fmt:v => (+v).toFixed(2) + '×' },
+  MDP:         { id:'slMdp',    valId:'slMdpVal',    def:-65,  fmt:v => v + ' mV' },
+  threshold:   { id:'slThr',    valId:'slThrVal',    def:-40,  fmt:v => v + ' mV' },
+};
+
+function syncSlidersFromState() {
+  // Slider shows: user override > disease substrate > default. Drug deltas are NOT
+  // reflected on sliders so the user can see the diseased baseline they're stacking on.
+  for (const [key, m] of Object.entries(SLIDER_MAP_VENT)) {
+    let v = m.def;
+    if (diseaseOverrides[key] !== undefined) v = diseaseOverrides[key];
+    if (userOverrides[key] !== undefined) v = userOverrides[key];
+    document.getElementById(m.id).value = v;
+    document.getElementById(m.valId).textContent = m.fmt(v);
+  }
+  for (const [key, m] of Object.entries(SLIDER_MAP_PACE)) {
+    let v = m.def;
+    if (diseaseOverridesPace[key] !== undefined) v = diseaseOverridesPace[key];
+    if (userOverridesPace[key] !== undefined) v = userOverridesPace[key];
+    document.getElementById(m.id).value = v;
+    document.getElementById(m.valId).textContent = m.fmt(v);
+  }
+}
+
+function setCellTypeUI(c) {
+  cellType = c;
+  document.querySelectorAll('#cellToggle .seg-btn').forEach(b => {
+    b.classList.toggle('active', b.dataset.cell === c);
+  });
+  document.getElementById('ventSliders').style.display = c === 'vent' ? '' : 'none';
+  document.getElementById('paceSliders').style.display = c === 'pace' ? '' : 'none';
+  // Drop any drug whose deltas for the target cell type are empty — keeps the
+  // active strip honest (no "phantom" inert drugs after a cell switch).
+  for (const id of [...activeDrugs]) {
+    const drug = DRUGS[id];
+    if (!drug) continue;
+    const deltas = drug[c] || {};
+    if (Object.keys(deltas).length === 0) activeDrugs.delete(id);
+  }
+  sweepMs = 0;
+}
+
+// ═══════════════════════════════════════════════════════════
+// PRESET APPLIERS
+// ═══════════════════════════════════════════════════════════
+function applyScenario(id) {
+  const s = SCENARIOS[id];
+  if (!s) return;
+  // Scenario = full clean preset. Wipe everything, then load fresh.
+  activeDrugs.clear();
+  userOverrides = {};
+  userOverridesPace = {};
+  diseaseOverrides = {};
+  diseaseOverridesPace = {};
+  setCellTypeUI(s.cell);
+  for (const d of s.drugs) {
+    if (s.cell === 'pace' && DRUGS[d] && !DRUGS[d].paceMajor) continue;
+    activeDrugs.add(d);
+  }
+  // Scenario overrides go in userOverrides — they're forced parameter values
+  // (e.g. ischemic vRest=-65 for "Lidocaine for VT", or apdMult=1.5 for "Sotalol→torsades").
+  for (const [k, v] of Object.entries(s.overrides || {})) {
+    if (s.cell === 'vent') userOverrides[k] = v; else userOverridesPace[k] = v;
+  }
+  syncSlidersFromState();
+  activePreset = { kind: 'scenario', id };
+  updatePresetButtons();
+  updatePresetNote(s);
+  updateDrugBtns();
+  updateActiveStrip();
+  startTransition();
+}
+
+function applyDisease(id) {
+  const d = DISEASES[id];
+  if (!d) return;
+  // Disease = substrate layer. Reset disease + user overrides for the relevant cell,
+  // but KEEP active drugs so they stack on the diseased baseline.
+  if (d.cell === 'vent') { diseaseOverrides = {}; userOverrides = {}; }
+  else { diseaseOverridesPace = {}; userOverridesPace = {}; }
+  setCellTypeUI(d.cell);
+  // Disease writes to diseaseOverrides — drug deltas apply on top so e.g.
+  // Long QT (apdMult=1.6) + Sotalol (+0.30) → 1.90, showing the dangerous combo.
+  for (const [k, v] of Object.entries(d.overrides || {})) {
+    if (d.cell === 'vent') diseaseOverrides[k] = v; else diseaseOverridesPace[k] = v;
+  }
+  syncSlidersFromState();
+  activePreset = { kind: 'disease', id };
+  updatePresetButtons();
+  updatePresetNote(d);
+  updateDrugBtns();
+  updateActiveStrip();
+  startTransition();
+}
+
+function clearPreset() {
+  if (!activePreset) return;
+  activePreset = null;
+  updatePresetButtons();
+  updatePresetNote(null);
+}
+
+function updatePresetButtons() {
+  document.querySelectorAll('[data-scenario]').forEach(b => {
+    b.classList.toggle('active', !!activePreset && activePreset.kind === 'scenario' && activePreset.id === b.dataset.scenario);
+  });
+  document.querySelectorAll('[data-disease]').forEach(b => {
+    b.classList.toggle('active', !!activePreset && activePreset.kind === 'disease' && activePreset.id === b.dataset.disease);
+  });
+}
+
+function updatePresetNote(p) {
+  const note = document.getElementById('presetNote');
+  if (!note) return;
+  if (!p) { note.textContent = ''; note.classList.remove('warn'); return; }
+  note.textContent = p.note || '';
+  note.classList.toggle('warn', !!p.warn);
 }
 
 function updateDrugBtns() {
@@ -1423,16 +1848,10 @@ function resetAll() {
   activeDrugs.clear();
   userOverrides = {};
   userOverridesPace = {};
-  // Reset sliders to baseline
-  document.getElementById('slPhase0').value = 1.0; document.getElementById('slPhase0Val').textContent = '1.00×';
-  document.getElementById('slApd').value = 1.0; document.getElementById('slApdVal').textContent = '1.00×';
-  document.getElementById('slErp').value = 0.85; document.getElementById('slErpVal').textContent = '0.85';
-  document.getElementById('slRest').value = -85; document.getElementById('slRestVal').textContent = '-85 mV';
-  document.getElementById('slP4').value = 0.05; document.getElementById('slP4Val').textContent = '0.050';
-  document.getElementById('slP0p').value = 1.0; document.getElementById('slP0pVal').textContent = '1.00×';
-  document.getElementById('slApdp').value = 1.0; document.getElementById('slApdpVal').textContent = '1.00×';
-  document.getElementById('slMdp').value = -65; document.getElementById('slMdpVal').textContent = '-65 mV';
-  document.getElementById('slThr').value = -40; document.getElementById('slThrVal').textContent = '-40 mV';
+  diseaseOverrides = {};
+  diseaseOverridesPace = {};
+  syncSlidersFromState();
+  clearPreset();
   updateDrugBtns();
   updateActiveStrip();
   startTransition();
@@ -1441,21 +1860,30 @@ function resetAll() {
 // Cell type toggle
 document.querySelectorAll('#cellToggle .seg-btn').forEach(btn => {
   btn.onclick = () => {
-    cellType = btn.dataset.cell;
-    document.querySelectorAll('#cellToggle .seg-btn').forEach(b => b.classList.toggle('active', b === btn));
-    document.getElementById('ventSliders').style.display = cellType === 'vent' ? '' : 'none';
-    document.getElementById('paceSliders').style.display = cellType === 'pace' ? '' : 'none';
-    // When switching to pacemaker, drop any active drugs that have no pace effect
-    if (cellType === 'pace') {
-      for (const id of [...activeDrugs]) {
-        if (DRUGS[id] && !DRUGS[id].paceMajor) activeDrugs.delete(id);
-      }
-    }
+    setCellTypeUI(btn.dataset.cell);
+    clearPreset();
     updateDrugBtns();
     updateActiveStrip();
-    sweepMs = 0;
     startTransition();
   };
+});
+
+// Preset tabs
+document.querySelectorAll('#presetTabs .preset-tab').forEach(btn => {
+  btn.onclick = () => {
+    const which = btn.dataset.presetTab;
+    document.querySelectorAll('#presetTabs .preset-tab').forEach(b => b.classList.toggle('active', b === btn));
+    document.getElementById('scenarioList').style.display = which === 'scenario' ? '' : 'none';
+    document.getElementById('diseaseList').style.display = which === 'disease' ? '' : 'none';
+  };
+});
+
+// Preset buttons
+document.querySelectorAll('[data-scenario]').forEach(btn => {
+  btn.onclick = () => applyScenario(btn.dataset.scenario);
+});
+document.querySelectorAll('[data-disease]').forEach(btn => {
+  btn.onclick = () => applyDisease(btn.dataset.disease);
 });
 
 // ═══════════════════════════════════════════════════════════
@@ -1500,6 +1928,7 @@ function bindSlider(id, valId, key, fmt, isPace) {
     valEl.textContent = fmt(v);
     if (isPace) userOverridesPace[key] = v;
     else userOverrides[key] = v;
+    clearPreset();
     startTransition();
   });
 }
