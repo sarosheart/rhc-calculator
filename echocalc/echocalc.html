@@ -844,6 +844,97 @@ const MODULES = {
   },
 
   // ─────────────────────────────────────────────────────────
+  strain_primer: {
+    id: 'strain_primer',
+    title: 'Strain Echocardiography',
+    purpose: 'Speckle-tracking strain quantifies myocardial deformation as a percentage change in length. Global Longitudinal Strain (GLS) is the most widely used metric — more sensitive than EF for early systolic dysfunction. Three views: the underlying concept, the AHA 17-segment bull\'s-eye plot, and the classic regional patterns (apical sparing, basal HCM, post-MI territories).',
+    formula: '<strong>Strain (Lagrangian)</strong> = ΔL / L₀ × 100%&nbsp; (negative = shortening) &nbsp;·&nbsp; <strong>Strain rate</strong> = dStrain / dt (s⁻¹) &nbsp;·&nbsp; <strong>GLS</strong> = average of 17 segmental peak systolic longitudinal strains. Normal GLS ≤ −18% (more negative).',
+    inputs: [
+      { type: 'picker', key: 'view', label: 'View', default: 'concept',
+        options: [
+          { v: 'concept',  text: 'Strain concept',     help: 'What strain measures and how speckle tracking works' },
+          { v: 'patterns', text: 'Bull\'s-eye patterns', help: 'Classic regional patterns: amyloid, HCM, DCM, post-MI' },
+          { v: 'gls',      text: 'GLS calculator',     help: 'Enter a global GLS value, see severity grading and interpretation' },
+        ],
+      },
+      { type: 'picker', key: 'pattern', label: 'Pattern', default: 'normal',
+        options: [
+          { v: 'normal',         text: 'Normal',                 help: 'All 17 segments ≈ −20%' },
+          { v: 'amyloid',        text: 'Amyloid (apical-spar)',  help: 'Apical preserved, basal severely reduced — "cherry on top"' },
+          { v: 'hcm',            text: 'HCM (basal septal)',     help: 'Reduced strain in hypertrophied basal septum' },
+          { v: 'dcm',            text: 'DCM (global)',           help: 'Globally reduced ~−10%' },
+          { v: 'mi_lad',         text: 'Post-MI: LAD',           help: 'Apical anterior + apical septal infarct' },
+          { v: 'mi_rca',         text: 'Post-MI: RCA',           help: 'Inferior wall infarct' },
+          { v: 'mi_lcx',         text: 'Post-MI: LCx',           help: 'Lateral wall infarct' },
+        ],
+      },
+      { type: 'slider', key: 'gls', label: 'GLS', unit: '%', min: -25, max: -4, step: 0.5, default: -19, decimals: 1 },
+    ],
+    compute: (p) => {
+      if (p.view === 'concept') {
+        return [
+          { key: 'def',    label: 'Strain (definition)', value: 'Fractional change in segment length: (L_systole − L_diastole) / L_diastole × 100%', text: true, wide: true },
+          { key: 'sign',   label: 'Sign convention',     value: 'NEGATIVE for systolic shortening (longitudinal, circumferential). Radial strain is positive (thickening).', text: true, wide: true },
+          { key: 'method', label: 'Speckle tracking',    value: 'Tracks acoustic speckle patterns frame-by-frame in greyscale 2D images. Angle-independent (vs tissue Doppler strain, which requires beam-parallel motion).', text: true, wide: true },
+          { key: 'gls',    label: 'Normal GLS',          value: '≤ −18% (some labs use −16% as the lower bound; vendor-specific normals exist)', text: true, wide: true },
+        ];
+      }
+      if (p.view === 'gls') {
+        const gls = p.gls;
+        let band, severity, color;
+        if (gls <= -18)      { band = 'Normal';                      severity = 'Normal contractility'; color = 'normal'; }
+        else if (gls <= -16) { band = 'Borderline / mild reduction'; severity = 'Subtle subclinical dysfunction. Trend over time. Cardiotoxicity surveillance threshold: ≥15% relative drop from baseline GLS.'; color = 'borderline'; }
+        else if (gls <= -12) { band = 'Mildly reduced';              severity = 'Likely systolic dysfunction even if EF preserved. Common in HFpEF with myocardial disease.'; color = 'mild'; }
+        else if (gls <= -8)  { band = 'Moderately reduced';          severity = 'Significant systolic dysfunction. Almost always with reduced EF.'; color = 'moderate'; }
+        else                 { band = 'Severely reduced';            severity = 'Advanced systolic dysfunction. Poor prognostic marker.'; color = 'severe'; }
+        return [
+          { key: 'gls',  label: 'GLS',         value: gls.toFixed(1) + '%',         unit: '' },
+          { key: 'band', label: 'Severity',    value: band,                          unit: '' },
+          { key: 'pct',  label: '% of normal', value: (gls / -20 * 100).toFixed(0) + '%', unit: '' },
+          { key: 'note', label: 'Interpretation', value: severity,                   text: true, wide: true },
+          { key: 'cv',   label: 'Cardiotoxicity surveillance', value: 'A relative drop ≥ 15% from a patient\'s own baseline GLS predicts cancer-therapeutics-related cardiac dysfunction (CTRCD) before EF drops. Use vendor-consistent measurements over time.', text: true, wide: true },
+        ];
+      }
+      // patterns view
+      const patternCells = {
+        normal:   [{ key: 'feat', label: 'Pattern feature', value: 'All 17 segments ≈ −20% (homogeneous deep-red bull\'s-eye)', text: true, wide: true },
+                   { key: 'gls',  label: 'GLS',             value: '≈ −20%' },
+                   { key: 'dx',   label: 'Common in',       value: 'Healthy heart, athlete\'s heart (preserved despite hypertrophy)', text: true, wide: true }],
+        amyloid:  [{ key: 'feat', label: 'Pattern feature', value: 'APICAL SPARING — apex deep-red (preserved), basal pale (severely reduced). The "cherry-on-top" or "bullseye" sign.', text: true, wide: true },
+                   { key: 'rs',   label: 'Relative apical strain', value: 'avg apical / (avg basal + mid) > 1.0 — highly specific for amyloid' },
+                   { key: 'dx',   label: 'Diagnosis',       value: 'Cardiac amyloid (ATTR or AL). Confirm with PYP scintigraphy + light-chain studies.', text: true, wide: true }],
+        hcm:      [{ key: 'feat', label: 'Pattern feature', value: 'Reduced strain confined to the HYPERTROPHIED basal anteroseptal / inferoseptal segments. Spared lateral wall.', text: true, wide: true },
+                   { key: 'rs',   label: 'Differentiator',  value: 'Unlike amyloid, lateral wall is preserved. Apical-to-basal ratio is NOT inverted.' },
+                   { key: 'dx',   label: 'Diagnosis',       value: 'Hypertrophic cardiomyopathy. Pair with PLAX wall thickness and SAM assessment.', text: true, wide: true }],
+        dcm:      [{ key: 'feat', label: 'Pattern feature', value: 'Globally reduced strain (~−10% across all segments). Pale, washed-out bull\'s-eye.', text: true, wide: true },
+                   { key: 'gls',  label: 'GLS',             value: '−8 to −12% typically' },
+                   { key: 'dx',   label: 'Diagnosis',       value: 'Dilated cardiomyopathy (ischemic, idiopathic, peripartum, tachycardia-mediated, etc.).', text: true, wide: true }],
+        mi_lad:   [{ key: 'feat', label: 'Pattern feature', value: 'Akinetic apex + apical septal segments. Sparing of inferior, lateral, basal segments.', text: true, wide: true },
+                   { key: 'terr', label: 'Coronary territory', value: 'LAD: apical, anterior, anteroseptal' },
+                   { key: 'dx',   label: 'Pearl',           value: 'Strain detects regional dysfunction earlier than wall-motion scoring, especially in subendocardial MI.', text: true, wide: true }],
+        mi_rca:   [{ key: 'feat', label: 'Pattern feature', value: 'Reduced strain in basal/mid INFERIOR and inferoseptal segments. Anterior, lateral spared.', text: true, wide: true },
+                   { key: 'terr', label: 'Coronary territory', value: 'RCA (right-dominant): inferior, inferoseptal, posterior basal' },
+                   { key: 'dx',   label: 'Watch',           value: 'Concomitant RV dysfunction is common — assess RV strain and TAPSE in inferior MI.', text: true, wide: true }],
+        mi_lcx:   [{ key: 'feat', label: 'Pattern feature', value: 'Reduced strain in basal/mid INFEROLATERAL and ANTEROLATERAL segments.', text: true, wide: true },
+                   { key: 'terr', label: 'Coronary territory', value: 'LCx: lateral wall ± posterior segments' },
+                   { key: 'dx',   label: 'Pearl',           value: 'LCx territory is a common site of "silent" MI (electrocardiographically silent) — strain unmasks it.', text: true, wide: true }],
+      };
+      return patternCells[p.pattern] || patternCells.normal;
+    },
+    draw: drawStrainPrimer,
+    pitfalls: [
+      '<strong>Vendor variability.</strong> GE, Philips, Siemens, and Canon report different absolute strain values. Use vendor-specific normal ranges (or the EACVI/ASE consensus ~−18% as a rough cutoff). For serial follow-up, measure on the same machine each time.',
+      '<strong>Apical foreshortening</strong> makes the apex look pseudo-reduced. Always optimise the apical view to capture the true LV length before strain analysis. Pseudo-reduction at the apex can be confused with apical-sparing if not appreciated.',
+      '<strong>Atrial fibrillation</strong> requires averaging ≥ 5 beats because of beat-to-beat variability. Single-beat strain in AF is unreliable.',
+      '<strong>Sign convention.</strong> Negative is good. GLS = −10% is WORSE than GLS = −18%. The literature sometimes drops the minus sign; always confirm.',
+      '<strong>Apical sparing is a RATIO, not an absolute.</strong> Calculate (avg apical strain) / (avg basal + mid strain). A ratio > 1.0 has ~93% specificity for amyloid in the right clinical context.',
+      '<strong>Strain rate ≠ strain.</strong> Strain rate (s⁻¹) is the time derivative; it tracks fast deformation events and is used for diastolic function (e\'-equivalent) and dyssynchrony. Strain (%) is the cumulative deformation.',
+      '<strong>Tissue-Doppler strain is angle-dependent</strong> and largely obsolete for clinical work — speckle tracking is the modern standard. If a report says "strain" without specifying, it almost always means speckle-tracking 2D strain.',
+      '<strong>EF can be preserved with abnormal GLS</strong> — this is the early signal in chemotherapy cardiotoxicity (anthracyclines, trastuzumab), HFpEF, and infiltrative cardiomyopathies. A relative drop ≥ 15% from baseline GLS triggers the cardiotoxicity work-up.',
+    ],
+  },
+
+  // ─────────────────────────────────────────────────────────
   pasp: {
     id: 'pasp',
     title: 'PASP from TR V<sub>max</sub>',
@@ -4028,6 +4119,620 @@ function drawStrainBullsEye(cx, cy, r, pattern) {
   ctx.stroke();
 }
 
+// ═══════════════════════════════════════════════════════════
+// STRAIN PRIMER — three views with rigorous layout discipline
+// ═══════════════════════════════════════════════════════════
+// Layout rule (per feedback_canvas_layout_rules.md):
+//   - Anatomy / visualization lives in the LEFT zone only.
+//   - All text labels live in the RIGHT label strip, never overlapping figures.
+//   - Named zone constants, ascent-aware text positioning, no magic numbers.
+
+// Heatmap: strain value → CSS color. Echo convention: more-negative = better = red.
+// Range −25% (very preserved) → 0% (severely reduced).
+function strainColor(strain) {
+  // Clamp to display range
+  const s = Math.max(-25, Math.min(0, strain));
+  // Map −25 → 0 onto a 5-stop ramp (red → orange → yellow → green → blue)
+  const t = (-s) / 25;   // 0..1, 1 = most preserved (most negative)
+  // Stops (rgb):
+  //   t=1.0   deep red    (200, 30, 30)
+  //   t=0.75  orange/red  (235, 100, 50)
+  //   t=0.50  yellow/orange (240, 200, 70)
+  //   t=0.25  green       (110, 200, 110)
+  //   t=0.0   blue (worst) (70, 130, 220)
+  const stops = [
+    { t: 0.00, r:  70, g: 130, b: 220 },
+    { t: 0.25, r: 110, g: 200, b: 110 },
+    { t: 0.50, r: 240, g: 200, b:  70 },
+    { t: 0.75, r: 235, g: 100, b:  50 },
+    { t: 1.00, r: 200, g:  30, b:  30 },
+  ];
+  let lo = stops[0], hi = stops[stops.length - 1];
+  for (let i = 0; i < stops.length - 1; i++) {
+    if (t >= stops[i].t && t <= stops[i + 1].t) { lo = stops[i]; hi = stops[i + 1]; break; }
+  }
+  const u = (t - lo.t) / Math.max(0.0001, (hi.t - lo.t));
+  const rr = Math.round(lo.r + (hi.r - lo.r) * u);
+  const gg = Math.round(lo.g + (hi.g - lo.g) * u);
+  const bb = Math.round(lo.b + (hi.b - lo.b) * u);
+  return `rgb(${rr}, ${gg}, ${bb})`;
+}
+
+// AHA 17-segment strain values per pattern. Index 0..16 maps to AHA segments 1..17.
+// Order: 1–6 basal (anterior, anteroseptal, inferoseptal, inferior, inferolateral, anterolateral),
+//        7–12 mid (same order), 13–16 apical (anterior, septal, inferior, lateral), 17 apex.
+function strainPatternValues(pattern) {
+  const set = (a) => a.slice();
+  const patterns = {
+    normal:        set([-20,-20,-20,-20,-20,-20,  -20,-20,-20,-20,-20,-20,  -20,-20,-20,-20,  -20]),
+    amyloid:       set([ -6, -6, -6, -6, -6, -6,  -10,-10,-10,-10,-10,-10,  -18,-18,-18,-18,  -20]),
+    hcm:           set([-12, -7, -7,-14,-18,-18,  -14,-10,-10,-16,-18,-18,  -20,-18,-20,-20,  -22]),
+    dcm:           set([-10,-10,-10,-10,-10,-10,  -10,-10,-10,-10,-10,-10,  -10,-10,-10,-10,  -10]),
+    // Apical anterior + apical septal infarct (segments 13, 14) + LAD-territory mid-anterior
+    mi_lad:        set([-14,-14,-18,-18,-18,-18,  -10,-10,-18,-18,-18,-18,   -4, -4,-18,-18,   -8]),
+    // RCA territory: basal/mid inferior + inferoseptal (segments 3, 4, 9, 10, 15)
+    mi_rca:        set([-18,-18, -8, -5, -8,-18,  -18,-18, -8, -5, -8,-18,  -18,-18, -6,-18,  -18]),
+    // LCx territory: basal/mid lateral + apical lateral (5, 6, 11, 12, 16)
+    mi_lcx:        set([-18,-18,-18,-18, -8, -8,  -18,-18,-18,-18, -8, -8,  -18,-18,-18, -8,  -18]),
+  };
+  return patterns[pattern] || patterns.normal;
+}
+
+// 17-segment bull's-eye renderer. Segments laid out per AHA convention:
+//   - Anterior at 12 o'clock, Septal at 9 o'clock, Inferior at 6, Lateral at 3.
+//   - 6 basal segments (outermost ring), 6 mid, 4 apical, 1 apex tip.
+//   - Each segment ring starts at 12 o'clock and goes CLOCKWISE.
+//   - Segment 1 (basal anterior) spans 11–1 o'clock (centered at 12 o'clock).
+// NO TEXT inside segments — labels live in the right legend strip.
+function drawBullsEye17(cx, cy, r, segValues) {
+  const rings = [
+    { rOuter: r,        rInner: r * 0.66, segs: 6, startIdx: 0,  rotateDeg: -30 },  // basal 1..6
+    { rOuter: r * 0.66, rInner: r * 0.36, segs: 6, startIdx: 6,  rotateDeg: -30 },  // mid 7..12
+    { rOuter: r * 0.36, rInner: r * 0.12, segs: 4, startIdx: 12, rotateDeg: -45 },  // apical 13..16
+  ];
+  // Outermost halo
+  ctx.fillStyle = 'rgba(255,255,255,0.05)';
+  ctx.beginPath();
+  ctx.arc(cx, cy, r + 4, 0, Math.PI * 2);
+  ctx.fill();
+
+  for (const ring of rings) {
+    for (let s = 0; s < ring.segs; s++) {
+      // Standard: start at 12 o'clock (which is −90° in canvas coords), sweep CW.
+      // rotateDeg shifts the starting boundary so segment 1's center lands AT 12 o'clock.
+      const span = (Math.PI * 2) / ring.segs;
+      const a0 = -Math.PI / 2 + (ring.rotateDeg * Math.PI / 180) + s * span;
+      const a1 = a0 + span;
+      const strain = segValues[ring.startIdx + s];
+      ctx.fillStyle = strainColor(strain);
+      ctx.beginPath();
+      ctx.arc(cx, cy, ring.rOuter, a0, a1);
+      ctx.arc(cx, cy, ring.rInner, a1, a0, true);
+      ctx.closePath();
+      ctx.fill();
+      // Segment outline
+      ctx.strokeStyle = 'rgba(0,0,0,0.35)';
+      ctx.lineWidth = 0.8;
+      ctx.stroke();
+    }
+  }
+  // Apex tip (segment 17) — solid central disk
+  ctx.fillStyle = strainColor(segValues[16]);
+  ctx.beginPath();
+  ctx.arc(cx, cy, r * 0.12, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.strokeStyle = 'rgba(0,0,0,0.35)';
+  ctx.lineWidth = 0.8;
+  ctx.stroke();
+  // Outer rim
+  ctx.strokeStyle = 'rgba(255,255,255,0.55)';
+  ctx.lineWidth = 1.4;
+  ctx.beginPath();
+  ctx.arc(cx, cy, r, 0, Math.PI * 2);
+  ctx.stroke();
+}
+
+// Orientation tick marks AROUND the bull's-eye (outside the figure region).
+// Anterior / Septal / Inferior / Lateral compass labels. Pure margin labels —
+// no overlap with the bull's-eye disc itself.
+function drawBullsEyeCompass(cx, cy, r) {
+  const labels = [
+    { txt: 'ANTERIOR',  dx:  0, dy: -r - 14, align: 'center' },
+    { txt: 'LATERAL',   dx:  r + 14, dy: 4, align: 'left' },
+    { txt: 'INFERIOR',  dx:  0, dy:  r + 18, align: 'center' },
+    { txt: 'SEPTAL',    dx: -r - 14, dy: 4, align: 'right' },
+  ];
+  ctx.fillStyle = '#a8b1c0';
+  ctx.font = '600 10.5px DM Sans, system-ui, sans-serif';
+  for (const L of labels) {
+    ctx.textAlign = L.align;
+    ctx.fillText(L.txt, cx + L.dx, cy + L.dy);
+  }
+}
+
+// Right-strip color-scale legend. Vertical bar with strain-value labels.
+function drawStrainColorScale(x, y, w, h) {
+  const barX = x + 14;
+  const barW = 14;
+  const barTop = y + 18;
+  const barBot = y + h - 28;
+  const barH = barBot - barTop;
+  // Gradient via incremental fill (256 steps)
+  for (let i = 0; i < 64; i++) {
+    const t = i / 63;
+    const strain = -25 + (25 * t); // -25 (top, best) → 0 (bottom, worst)
+    ctx.fillStyle = strainColor(strain);
+    ctx.fillRect(barX, barTop + t * barH, barW, barH / 64 + 1);
+  }
+  // Frame
+  ctx.strokeStyle = 'rgba(255,255,255,0.15)';
+  ctx.lineWidth = 1;
+  ctx.strokeRect(barX + 0.5, barTop + 0.5, barW, barH);
+  // Header
+  ctx.fillStyle = '#dde2ec';
+  ctx.font = '700 10.5px DM Sans, system-ui, sans-serif';
+  ctx.textAlign = 'left';
+  ctx.fillText('STRAIN', x + 14, y + 12);
+  // Tick labels — five values
+  ctx.fillStyle = '#a8b1c0';
+  ctx.font = '600 10.5px DM Sans, system-ui, sans-serif';
+  ctx.textAlign = 'left';
+  const ticks = [-25, -20, -15, -10, -5, 0];
+  for (const v of ticks) {
+    const t = (-v) / 25;            // 1 = top, 0 = bottom
+    const ty = barBot - t * barH;
+    ctx.beginPath();
+    ctx.moveTo(barX + barW, ty);
+    ctx.lineTo(barX + barW + 4, ty);
+    ctx.strokeStyle = 'rgba(255,255,255,0.35)';
+    ctx.stroke();
+    ctx.fillStyle = '#a8b1c0';
+    // Ascent-aware vertical centering (12px font ≈ +3.5 baseline offset)
+    ctx.fillText(v + '%', barX + barW + 7, ty + 3.5);
+  }
+  // Footer caption
+  ctx.fillStyle = '#7a8499';
+  ctx.font = '500 9.5px DM Sans, system-ui, sans-serif';
+  ctx.textAlign = 'left';
+  ctx.fillText('preserved → reduced', barX, barBot + 14);
+}
+
+// ═══════════════════════════════════════════════════════════
+// View 1: CONCEPT — LV outline deformation + strain curve over one beat
+// ═══════════════════════════════════════════════════════════
+function drawStrainConcept(t) {
+  // Layout zones (named — no magic numbers)
+  const padX = 14, padY = 30;
+  const labelStripW = 240;
+  const anatomyX = padX;
+  const anatomyRight = W - labelStripW - padX;
+  const anatomyTop = padY;
+  const anatomyBot = H - 8;
+  const labelStripX = anatomyRight + 12;
+
+  // Split anatomy zone in half: left = LV outline, right = strain curve
+  const halfW = (anatomyRight - anatomyX) / 2;
+  const lvBoxX = anatomyX, lvBoxY = anatomyTop, lvBoxW = halfW - 6, lvBoxH = anatomyBot - anatomyTop;
+  const crvBoxX = anatomyX + halfW + 6, crvBoxY = anatomyTop, crvBoxW = halfW - 6, crvBoxH = anatomyBot - anatomyTop;
+
+  // Background panels
+  ctx.fillStyle = '#0d1019';
+  ctx.fillRect(lvBoxX, lvBoxY, lvBoxW, lvBoxH);
+  ctx.fillRect(crvBoxX, crvBoxY, crvBoxW, crvBoxH);
+  ctx.strokeStyle = 'rgba(255,255,255,0.06)';
+  ctx.strokeRect(lvBoxX + 0.5, lvBoxY + 0.5, lvBoxW - 1, lvBoxH - 1);
+  ctx.strokeRect(crvBoxX + 0.5, crvBoxY + 0.5, crvBoxW - 1, crvBoxH - 1);
+
+  // ── LV outline (apical 4-chamber view, stylised) ──
+  lblTick('LV deformation', lvBoxX + 8, lvBoxY + 16);
+  const cx = lvBoxX + lvBoxW / 2;
+  const cy = lvBoxY + lvBoxH / 2 + 8;
+  const lvW_ed = Math.min(lvBoxW * 0.42, 140);   // end-diastolic width
+  const lvH_ed = Math.min(lvBoxH * 0.62, 200);   // end-diastolic height
+  const lvW_es = lvW_ed * 0.84;                   // end-systolic — narrower
+  const lvH_es = lvH_ed * 0.82;                   // and shorter (longitudinal shortening)
+
+  function drawLVShape(cw, ch, color, lineWidth, dash) {
+    ctx.strokeStyle = color;
+    ctx.lineWidth = lineWidth;
+    if (dash) ctx.setLineDash(dash);
+    // Stylised LV: dome at top (base), apex at bottom — flipped on canvas y-axis
+    // We draw the LV with apex DOWN, base UP — standard apical 4-chamber orientation.
+    ctx.beginPath();
+    const topY = cy - ch / 2;
+    const botY = cy + ch / 2;
+    const leftX = cx - cw / 2;
+    const rightX = cx + cw / 2;
+    // Left wall (curved)
+    ctx.moveTo(leftX + cw * 0.04, topY);
+    ctx.bezierCurveTo(leftX - cw * 0.06, cy - ch * 0.1, leftX - cw * 0.02, cy + ch * 0.15, cx - cw * 0.06, botY);
+    // Apex (rounded)
+    ctx.bezierCurveTo(cx, botY + ch * 0.04, cx, botY + ch * 0.04, cx + cw * 0.06, botY);
+    // Right wall
+    ctx.bezierCurveTo(rightX + cw * 0.02, cy + ch * 0.15, rightX + cw * 0.06, cy - ch * 0.1, rightX - cw * 0.04, topY);
+    // Annulus (top closure)
+    ctx.lineTo(leftX + cw * 0.04, topY);
+    ctx.stroke();
+    ctx.setLineDash([]);
+  }
+  // End-diastolic outline (dashed gray)
+  drawLVShape(lvW_ed, lvH_ed, 'rgba(180,200,220,0.55)', 1.8, [5, 4]);
+  // End-systolic outline (solid red — shortened)
+  drawLVShape(lvW_es, lvH_es, 'rgba(220, 60, 50, 0.95)', 2.4, null);
+
+  // Shortening arrows along the long axis (inward radial)
+  const tAnim = ((Date.now() / 1800) % 1.0); // 0..1, ~1.8 second cycle
+  // Pulse the arrows in sync with the systolic contraction.
+  const pulse = 0.5 + 0.5 * Math.sin(tAnim * Math.PI * 2 - Math.PI / 2);
+  const arrowFade = Math.max(0.25, pulse);
+  const drawArrow = (x1, y1, x2, y2) => {
+    ctx.strokeStyle = `rgba(253, 204, 77, ${arrowFade})`;
+    ctx.fillStyle = `rgba(253, 204, 77, ${arrowFade})`;
+    ctx.lineWidth = 1.6;
+    ctx.beginPath();
+    ctx.moveTo(x1, y1);
+    ctx.lineTo(x2, y2);
+    ctx.stroke();
+    // Arrowhead
+    const ang = Math.atan2(y2 - y1, x2 - x1);
+    ctx.beginPath();
+    ctx.moveTo(x2, y2);
+    ctx.lineTo(x2 - 5 * Math.cos(ang - Math.PI / 7), y2 - 5 * Math.sin(ang - Math.PI / 7));
+    ctx.lineTo(x2 - 5 * Math.cos(ang + Math.PI / 7), y2 - 5 * Math.sin(ang + Math.PI / 7));
+    ctx.closePath();
+    ctx.fill();
+  };
+  // Longitudinal shortening: arrows from the base and apex toward the centre.
+  const baseY = cy - lvH_ed / 2;
+  const apexY = cy + lvH_ed / 2;
+  drawArrow(cx, baseY + 6, cx, baseY + 22);    // base → down
+  drawArrow(cx, apexY - 6, cx, apexY - 22);    // apex → up
+
+  // ── Strain curve panel ──
+  lblTick('Longitudinal strain over one beat', crvBoxX + 8, crvBoxY + 16);
+  const cPadL = 36, cPadR = 14, cPadT = 28, cPadB = 28;
+  const plX = crvBoxX + cPadL;
+  const plY = crvBoxY + cPadT;
+  const plW = crvBoxW - cPadL - cPadR;
+  const plH = crvBoxH - cPadT - cPadB;
+
+  // Axes
+  // 0 line at top of plot, -25% at bottom
+  const yToCanvas = strain => plY + (-strain / 25) * plH; // strain in [-25, 0]
+  // Frame
+  ctx.strokeStyle = '#5b6677';
+  ctx.lineWidth = 1;
+  ctx.beginPath();
+  ctx.moveTo(plX, plY);
+  ctx.lineTo(plX, plY + plH);
+  ctx.lineTo(plX + plW, plY + plH);
+  ctx.stroke();
+  // Y ticks
+  ctx.fillStyle = '#a8b1c0';
+  ctx.font = '600 10px DM Sans, system-ui, sans-serif';
+  ctx.textAlign = 'right';
+  for (const v of [0, -5, -10, -15, -20]) {
+    const y = yToCanvas(v);
+    ctx.beginPath();
+    ctx.moveTo(plX - 3, y);
+    ctx.lineTo(plX, y);
+    ctx.strokeStyle = '#5b6677';
+    ctx.stroke();
+    ctx.strokeStyle = 'rgba(255,255,255,0.04)';
+    ctx.beginPath();
+    ctx.moveTo(plX, y); ctx.lineTo(plX + plW, y);
+    ctx.stroke();
+    ctx.fillStyle = '#a8b1c0';
+    ctx.fillText(v + '%', plX - 5, y + 3.5);
+  }
+  // X axis label
+  ctx.fillStyle = '#7a8499';
+  ctx.font = '500 9.5px DM Sans, system-ui, sans-serif';
+  ctx.textAlign = 'center';
+  ctx.fillText('one cardiac cycle (≈ 1 sec)', plX + plW / 2, plY + plH + 18);
+
+  // Strain curve: 0 → −20 peak → 0 (asymmetric U-shape)
+  // Phase: 0 at t=0 (end-diastole), peak at ~35% (end-systole), return to 0 by t=1
+  const peakStrain = -20;
+  ctx.strokeStyle = '#5fc97a';
+  ctx.lineWidth = 2.2;
+  ctx.lineJoin = 'round';
+  ctx.beginPath();
+  const N = 80;
+  for (let i = 0; i <= N; i++) {
+    const u = i / N;
+    // Asymmetric U-shape: steep down to peak, gentler return
+    let s;
+    if (u < 0.35) {
+      // Cubic ease-in to peak
+      const k = u / 0.35;
+      s = peakStrain * easeInOutCubicE(k);
+    } else {
+      // Cubic ease-out return
+      const k = (u - 0.35) / 0.65;
+      s = peakStrain * (1 - easeInOutCubicE(k));
+    }
+    const x = plX + u * plW;
+    const y = yToCanvas(s);
+    if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+  }
+  ctx.stroke();
+  // Peak strain caliper
+  const peakX = plX + 0.35 * plW;
+  const peakY = yToCanvas(peakStrain);
+  ctx.fillStyle = '#fdcc4d';
+  ctx.beginPath();
+  ctx.arc(peakX, peakY, 4, 0, Math.PI * 2);
+  ctx.fill();
+  lblCaliper(`peak ${peakStrain}%`, peakX, peakY - 8, 'center');
+
+  // ── Right label strip (no anatomy overlap) ──
+  drawConceptLabelStrip(labelStripX, padY, labelStripW - padX, anatomyBot - padY);
+}
+
+// Cubic ease helper for the strain curve (local; doesn't shadow ventAP's)
+function easeInOutCubicE(t) {
+  return t < 0.5 ? 4*t*t*t : 1 - Math.pow(-2*t + 2, 3) / 2;
+}
+
+function drawConceptLabelStrip(x, y, w, h) {
+  ctx.fillStyle = '#dde2ec';
+  ctx.font = '700 11px DM Sans, system-ui, sans-serif';
+  ctx.textAlign = 'left';
+  ctx.fillText('KEY CONCEPTS', x, y + 14);
+
+  const items = [
+    { tag: 'Strain', body: 'ΔL/L₀ × 100% — fractional change in segment length from end-diastole to peak systole.' },
+    { tag: 'Sign',   body: 'Longitudinal & circumferential strain are NEGATIVE during systole (shortening). Radial strain is positive (thickening).' },
+    { tag: 'Tracking', body: 'Speckle tracking follows the natural acoustic pattern frame-by-frame — angle-independent, vendor-specific.' },
+    { tag: 'GLS', body: 'Global Longitudinal Strain = average of 17 segmental peaks. Normal ≤ −18%.' },
+  ];
+  let cy = y + 34;
+  for (const it of items) {
+    ctx.fillStyle = '#fdcc4d';
+    ctx.font = '700 10.5px DM Sans, system-ui, sans-serif';
+    ctx.fillText(it.tag, x, cy);
+    cy += 13;
+    ctx.fillStyle = '#a8b1c0';
+    ctx.font = '500 11px DM Sans, system-ui, sans-serif';
+    cy = wrapText(it.body, x, cy, w - 6, 14) + 8;
+  }
+}
+
+// Word-wrap helper. Returns the y-coordinate of the line BELOW the last drawn line.
+function wrapText(text, x, y, maxW, lineH) {
+  const words = text.split(/\s+/);
+  let line = '';
+  let cy = y;
+  for (const w of words) {
+    const test = line ? line + ' ' + w : w;
+    if (ctx.measureText(test).width > maxW && line) {
+      ctx.fillText(line, x, cy);
+      cy += lineH;
+      line = w;
+    } else {
+      line = test;
+    }
+  }
+  if (line) { ctx.fillText(line, x, cy); cy += lineH; }
+  return cy;
+}
+
+// ═══════════════════════════════════════════════════════════
+// View 2: PATTERNS — Bull's-eye with pattern picker
+// ═══════════════════════════════════════════════════════════
+function drawStrainPatterns(p) {
+  const padX = 14, padY = 30;
+  const labelStripW = 230;
+  const anatomyX = padX;
+  const anatomyRight = W - labelStripW - padX;
+  const anatomyTop = padY + 6;
+  const anatomyBot = H - 8;
+  const labelStripX = anatomyRight + 14;
+
+  // Anatomy panel background
+  ctx.fillStyle = '#0d1019';
+  ctx.fillRect(anatomyX, anatomyTop, anatomyRight - anatomyX, anatomyBot - anatomyTop);
+  ctx.strokeStyle = 'rgba(255,255,255,0.06)';
+  ctx.strokeRect(anatomyX + 0.5, anatomyTop + 0.5, anatomyRight - anatomyX - 1, anatomyBot - anatomyTop - 1);
+
+  // Bull's-eye centre + radius — ample margin for compass labels
+  const cx = (anatomyX + anatomyRight) / 2;
+  const cy = (anatomyTop + anatomyBot) / 2;
+  const r = Math.min((anatomyRight - anatomyX) / 2 - 70, (anatomyBot - anatomyTop) / 2 - 50);
+
+  // Render the bull's-eye with deterministic values for the selected pattern
+  const values = strainPatternValues(p.pattern || 'normal');
+  drawBullsEye17(cx, cy, r, values);
+  drawBullsEyeCompass(cx, cy, r);
+
+  // Average GLS for the active pattern
+  const avgGls = values.reduce((a, b) => a + b, 0) / values.length;
+
+  // ── Right strip: color scale + GLS readout + pattern caption ──
+  drawStrainColorScale(labelStripX, anatomyTop + 4, labelStripW - 28, (anatomyBot - anatomyTop) * 0.45);
+
+  // GLS readout pill below the color scale
+  const pillY = anatomyTop + 6 + (anatomyBot - anatomyTop) * 0.45 + 12;
+  ctx.fillStyle = '#11161f';
+  ctx.strokeStyle = 'rgba(255,255,255,0.12)';
+  ctx.lineWidth = 1;
+  ctx.fillRect(labelStripX, pillY, labelStripW - 28, 56);
+  ctx.strokeRect(labelStripX + 0.5, pillY + 0.5, labelStripW - 29, 55);
+  ctx.fillStyle = '#a8b1c0';
+  ctx.font = '700 10px DM Sans, system-ui, sans-serif';
+  ctx.textAlign = 'left';
+  ctx.fillText('AVERAGE GLS', labelStripX + 12, pillY + 16);
+  ctx.fillStyle = strainColor(avgGls);
+  ctx.font = '700 22px DM Sans, system-ui, sans-serif';
+  ctx.fillText(avgGls.toFixed(1) + '%', labelStripX + 12, pillY + 42);
+
+  // Pattern name caption (below the pill, with wrap)
+  const patternNames = {
+    normal: 'Normal — homogeneous',
+    amyloid: 'Amyloid — apical sparing',
+    hcm: 'HCM — basal septal',
+    dcm: 'DCM — globally reduced',
+    mi_lad: 'LAD infarct — apical',
+    mi_rca: 'RCA infarct — inferior',
+    mi_lcx: 'LCx infarct — lateral',
+  };
+  ctx.fillStyle = '#fdcc4d';
+  ctx.font = '700 11px DM Sans, system-ui, sans-serif';
+  ctx.fillText('PATTERN', labelStripX, pillY + 78);
+  ctx.fillStyle = '#dde2ec';
+  ctx.font = '600 12px DM Sans, system-ui, sans-serif';
+  wrapText(patternNames[p.pattern] || patternNames.normal, labelStripX, pillY + 96, labelStripW - 36, 14);
+}
+
+// ═══════════════════════════════════════════════════════════
+// View 3: GLS calculator — Bull's-eye colored uniformly + strain curve
+// ═══════════════════════════════════════════════════════════
+function drawStrainGLS(p) {
+  const padX = 14, padY = 30;
+  const labelStripW = 220;
+  const anatomyX = padX;
+  const anatomyRight = W - labelStripW - padX;
+  const anatomyTop = padY + 6;
+  const anatomyBot = H - 8;
+  const labelStripX = anatomyRight + 14;
+
+  // Split anatomy zone: top half = bull's-eye, bottom half = strain curve
+  const splitY = anatomyTop + (anatomyBot - anatomyTop) * 0.62;
+
+  // Bull's-eye panel (top)
+  ctx.fillStyle = '#0d1019';
+  ctx.fillRect(anatomyX, anatomyTop, anatomyRight - anatomyX, splitY - anatomyTop - 4);
+  ctx.strokeStyle = 'rgba(255,255,255,0.06)';
+  ctx.strokeRect(anatomyX + 0.5, anatomyTop + 0.5, anatomyRight - anatomyX - 1, splitY - anatomyTop - 5);
+
+  const cx = (anatomyX + anatomyRight) / 2;
+  const cy = anatomyTop + (splitY - anatomyTop) / 2;
+  const r = Math.min((anatomyRight - anatomyX) / 2 - 60, (splitY - anatomyTop) / 2 - 30);
+  const uniform = Array.from({ length: 17 }, () => p.gls);
+  drawBullsEye17(cx, cy, r, uniform);
+  drawBullsEyeCompass(cx, cy, r);
+
+  // Strain curve panel (bottom)
+  const crvX = anatomyX;
+  const crvY = splitY + 4;
+  const crvW = anatomyRight - anatomyX;
+  const crvH = anatomyBot - crvY;
+  ctx.fillStyle = '#0d1019';
+  ctx.fillRect(crvX, crvY, crvW, crvH);
+  ctx.strokeStyle = 'rgba(255,255,255,0.06)';
+  ctx.strokeRect(crvX + 0.5, crvY + 0.5, crvW - 1, crvH - 1);
+  lblTick('Strain curve at GLS = ' + p.gls.toFixed(1) + '%', crvX + 8, crvY + 14);
+
+  const cPadL = 36, cPadR = 14, cPadT = 22, cPadB = 18;
+  const plX = crvX + cPadL;
+  const plY = crvY + cPadT;
+  const plW = crvW - cPadL - cPadR;
+  const plH = crvH - cPadT - cPadB;
+  const yToCanvas = strain => plY + (-strain / 25) * plH;
+
+  // Frame
+  ctx.strokeStyle = '#5b6677';
+  ctx.lineWidth = 1;
+  ctx.beginPath();
+  ctx.moveTo(plX, plY); ctx.lineTo(plX, plY + plH); ctx.lineTo(plX + plW, plY + plH);
+  ctx.stroke();
+  // Y ticks
+  ctx.fillStyle = '#a8b1c0';
+  ctx.font = '600 10px DM Sans, system-ui, sans-serif';
+  ctx.textAlign = 'right';
+  for (const v of [0, -5, -10, -15, -20, -25]) {
+    const y = yToCanvas(v);
+    if (y < plY - 1 || y > plY + plH + 1) continue;
+    ctx.strokeStyle = 'rgba(255,255,255,0.05)';
+    ctx.beginPath();
+    ctx.moveTo(plX, y); ctx.lineTo(plX + plW, y);
+    ctx.stroke();
+    ctx.fillStyle = '#a8b1c0';
+    ctx.fillText(v + '%', plX - 5, y + 3.5);
+  }
+  // Normal reference band (-18 to -22)
+  const yNormalTop = yToCanvas(-22);
+  const yNormalBot = yToCanvas(-18);
+  ctx.fillStyle = 'rgba(95, 201, 122, 0.10)';
+  ctx.fillRect(plX, yNormalTop, plW, yNormalBot - yNormalTop);
+  ctx.fillStyle = 'rgba(95, 201, 122, 0.55)';
+  ctx.font = '500 9.5px DM Sans, system-ui, sans-serif';
+  ctx.textAlign = 'left';
+  ctx.fillText('normal range', plX + 4, yNormalTop - 2);
+
+  // Strain curve at the user's GLS value
+  ctx.strokeStyle = strainColor(p.gls);
+  ctx.lineWidth = 2.4;
+  ctx.lineJoin = 'round';
+  ctx.beginPath();
+  const N = 80;
+  for (let i = 0; i <= N; i++) {
+    const u = i / N;
+    let s;
+    if (u < 0.35) {
+      const k = u / 0.35;
+      s = p.gls * easeInOutCubicE(k);
+    } else {
+      const k = (u - 0.35) / 0.65;
+      s = p.gls * (1 - easeInOutCubicE(k));
+    }
+    const x = plX + u * plW;
+    const y = yToCanvas(s);
+    if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+  }
+  ctx.stroke();
+  // Peak caliper
+  const peakX = plX + 0.35 * plW;
+  const peakY = yToCanvas(p.gls);
+  ctx.fillStyle = strainColor(p.gls);
+  ctx.beginPath();
+  ctx.arc(peakX, peakY, 4, 0, Math.PI * 2);
+  ctx.fill();
+  lblCaliper('peak ' + p.gls.toFixed(1) + '%', peakX, peakY - 8, 'center');
+
+  // ── Right strip: severity badge + color scale ──
+  // Severity badge
+  let band, badgeColor;
+  if (p.gls <= -18)      { band = 'NORMAL';      badgeColor = '#5fc97a'; }
+  else if (p.gls <= -16) { band = 'BORDERLINE';  badgeColor = '#fdcc4d'; }
+  else if (p.gls <= -12) { band = 'MILD ↓';      badgeColor = '#f59e0b'; }
+  else if (p.gls <= -8)  { band = 'MODERATE ↓';  badgeColor = '#ef6464'; }
+  else                   { band = 'SEVERE ↓';    badgeColor = '#c43838'; }
+  const badgeH = 70;
+  ctx.fillStyle = '#11161f';
+  ctx.fillRect(labelStripX, anatomyTop + 4, labelStripW - 28, badgeH);
+  ctx.strokeStyle = badgeColor;
+  ctx.lineWidth = 2;
+  ctx.strokeRect(labelStripX + 0.5, anatomyTop + 4.5, labelStripW - 29, badgeH - 1);
+  ctx.fillStyle = '#a8b1c0';
+  ctx.font = '700 10px DM Sans, system-ui, sans-serif';
+  ctx.textAlign = 'left';
+  ctx.fillText('SEVERITY', labelStripX + 10, anatomyTop + 22);
+  ctx.fillStyle = badgeColor;
+  ctx.font = '700 17px DM Sans, system-ui, sans-serif';
+  ctx.fillText(band, labelStripX + 10, anatomyTop + 50);
+
+  // Color scale below the badge
+  drawStrainColorScale(labelStripX, anatomyTop + 4 + badgeH + 10, labelStripW - 28, anatomyBot - (anatomyTop + 4 + badgeH + 10) - 6);
+}
+
+// ═══════════════════════════════════════════════════════════
+// drawStrainPrimer — dispatcher
+// ═══════════════════════════════════════════════════════════
+function drawStrainPrimer(p, t) {
+  ctx.clearRect(0, 0, W, H);
+  const titles = {
+    concept:  'Strain — Lagrangian deformation of the myocardium',
+    patterns: 'Strain Bull\'s-eye — classic regional patterns',
+    gls:      'Global Longitudinal Strain (GLS) — calculator',
+  };
+  lblTitle(titles[p.view] || titles.concept, W / 2, 16);
+  if (p.view === 'patterns')      drawStrainPatterns(p);
+  else if (p.view === 'gls')      drawStrainGLS(p);
+  else                            drawStrainConcept(t);
+}
+
 // Amyloid 2D walls — reuses the recognisable PLAX schematic with options for
 // wall thickness, biatrial enlargement, and granular sparkling pattern.
 function drawAmyloidWallView(area, opts) {
@@ -4935,7 +5640,7 @@ let inputState = {}; // current parameter values for active module
 
 // Sidebar grouping. Order modules into clinical categories.
 const MODULE_GROUPS = [
-  { name: 'Fundamentals',       modules: ['doppler_basics', 'bernoulli_vti'] },
+  { name: 'Fundamentals',       modules: ['doppler_basics', 'bernoulli_vti', 'strain_primer'] },
   { name: 'Diastolic Function', modules: ['diastolic', 'diastolic_af', 'constrictive_vs_restrictive'] },
   { name: 'Valvular Calculators', modules: ['pisa', 'continuity', 'pht'] },
   { name: 'Valvular Patterns',  modules: ['as_atlas', 'ar_atlas', 'ms_atlas', 'mr_atlas', 'tr_atlas', 'ps_atlas', 'pr_atlas'] },
