@@ -554,6 +554,41 @@ body.dark .measure-value { color: #6eb0f7; }
 .measure-delta.up { color: var(--threshold); }
 .measure-delta.down { color: var(--c-IV); }
 
+/* ═══ SURFACE ECG CORRELATE ═══ */
+.ecg-panel {
+  margin: 0 12px 12px;
+  padding: 8px 12px 4px;
+  background: var(--panel-bg);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+}
+.ecg-label {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+  margin-bottom: 4px;
+  flex-wrap: wrap;
+}
+.ecg-label .ecg-sub {
+  font-size: 9.5px;
+  font-weight: 500;
+  letter-spacing: 0.02em;
+  text-transform: none;
+  color: var(--text-muted);
+}
+.ecg-panel canvas {
+  display: block;
+  width: 100%;
+  height: 90px;
+  background: var(--panel-bg-2);
+  border-radius: 4px;
+}
+
 /* ═══ ACTIVE DRUG STRIP ═══ */
 .active-strip {
   padding: 8px 12px 0;
@@ -896,6 +931,15 @@ body.dark .seo-content h2 { color: #6eb0f7; }
     <div class="active-strip" id="activeStrip"></div>
 
     <div class="measurements" id="measurements"></div>
+
+    <!-- Surface ECG correlate — translates the molecular AP to the bedside trace -->
+    <div class="ecg-panel">
+      <div class="ecg-label">
+        <span>Surface ECG (one beat)</span>
+        <span class="ecg-sub">QRS width tracks phase 0 dV/dt · QT tracks APD</span>
+      </div>
+      <canvas id="ecgCanvas"></canvas>
+    </div>
   </main>
 </div>
 
@@ -1528,6 +1572,130 @@ let sweepMs = 0;
 const SWEEP_SPEED = 220; // ms of AP-time per render second (slow enough to see)
 let lastFrameTime = 0;
 
+// ═══════════════════════════════════════════════════════════
+// SURFACE ECG SYNTHESIS
+// ═══════════════════════════════════════════════════════════
+// Generates a single-beat surface ECG that maps from the molecular AP:
+//   QRS width  = 80 / phase0Mult  (matches the QRS estimate measurement)
+//   QT         = 380 * apdMult    (matches the QT estimate measurement)
+// In pacemaker mode the cycle length tracks live HR so the TP segment
+// visibly stretches/compresses as the user adds rate-control drugs.
+const ecgCanvas = document.getElementById('ecgCanvas');
+const ecgCtx = ecgCanvas.getContext('2d');
+let ecgW = 0, ecgH = 0;
+
+function resizeEcgCanvas() {
+  const r = ecgCanvas.getBoundingClientRect();
+  ecgW = r.width; ecgH = r.height;
+  ecgCanvas.width = ecgW * DPR;
+  ecgCanvas.height = ecgH * DPR;
+  ecgCtx.setTransform(1, 0, 0, 1, 0, 0);
+  ecgCtx.scale(DPR, DPR);
+}
+
+function ecgWaveform(t, qrsWidthMs, qtMs) {
+  // Component centers — fixed in the cardiac cycle relative to a reference frame.
+  const tP = 130;          // P-wave peak
+  const tR = 310;          // R-wave peak (PR interval ~180 ms)
+  const tQ = tR - 14;
+  const tS = tR + 22 + (qrsWidthMs - 80) * 0.5; // S shifts later as QRS widens
+  const tT = tR + qtMs - qrsWidthMs * 0.5 - 60; // T centered late in QT segment
+
+  // Component widths
+  const sigP = 22;
+  const sigQ = 5;
+  const sigR = Math.max(7, qrsWidthMs / 6); // R fattens as QRS widens
+  const sigS = 9;
+  const sigTup = 30, sigTdown = 60; // asymmetric T
+
+  // Component amplitudes (mV)
+  const aP = 0.12, aQ = -0.05, aR = 1.0, aS = -0.20, aT = 0.30;
+
+  let v = 0;
+  const dP = (t - tP) / sigP;  v += aP * Math.exp(-(dP * dP));
+  const dQ = (t - tQ) / sigQ;  v += aQ * Math.exp(-(dQ * dQ));
+  const dR = (t - tR) / sigR;  v += aR * Math.exp(-(dR * dR));
+  const dS = (t - tS) / sigS;  v += aS * Math.exp(-(dS * dS));
+  // Asymmetric T: narrower upstroke, wider downstroke
+  const dTraw = t - tT;
+  const sigT = dTraw < 0 ? sigTup : sigTdown;
+  const dT = dTraw / sigT;     v += aT * Math.exp(-(dT * dT));
+  return v;
+}
+
+function drawECG(live, isPace) {
+  if (!ecgCanvas || !ecgW) return;
+  const styles = getStyles();
+
+  // Cycle length sets the x-axis span. Vent mode = fixed 1000ms (HR 60).
+  // Pace mode = live cycle length so TP segment shows HR change.
+  const cycleLen = isPace ? Math.max(400, Math.min(2400, pacemakerCycleLen(live))) : 1000;
+
+  // Map measurement formulas to ECG component widths.
+  // In pace mode, the AP being modeled is the SA/AV node, not the ventricle —
+  // so use a normal ventricular response (clamp to baseline).
+  const qrsWidthMs = isPace ? 80 : Math.max(60, Math.min(220, 80 / Math.max(0.05, live.phase0Mult)));
+  const qtMs       = isPace ? 380 : Math.max(220, Math.min(700, 380 * Math.max(0.3, live.apdMult)));
+
+  const padL = 14, padR = 10, padT = 6, padB = 6;
+  const plotW = ecgW - padL - padR;
+  const plotH = ecgH - padT - padB;
+  const yBase = padT + plotH * 0.62; // baseline sits at 62% down so positive R has room
+  const yPerMv = plotH / 2.0; // ±1 mV uses ~half the plot height
+
+  ecgCtx.clearRect(0, 0, ecgW, ecgH);
+
+  // Faint pink grid (small squares 5px × 5px)
+  const gridColor = document.body.classList.contains('dark') ? 'rgba(244, 114, 182, 0.14)' : 'rgba(244, 114, 182, 0.22)';
+  ecgCtx.strokeStyle = gridColor;
+  ecgCtx.lineWidth = 0.5;
+  for (let x = 0; x <= plotW; x += 10) {
+    ecgCtx.beginPath();
+    ecgCtx.moveTo(padL + x, padT);
+    ecgCtx.lineTo(padL + x, padT + plotH);
+    ecgCtx.stroke();
+  }
+  for (let y = 0; y <= plotH; y += 10) {
+    ecgCtx.beginPath();
+    ecgCtx.moveTo(padL, padT + y);
+    ecgCtx.lineTo(padL + plotW, padT + y);
+    ecgCtx.stroke();
+  }
+
+  // Zero-mV baseline reference (subtle)
+  ecgCtx.strokeStyle = 'rgba(148, 163, 184, 0.35)';
+  ecgCtx.lineWidth = 0.6;
+  ecgCtx.setLineDash([3, 3]);
+  ecgCtx.beginPath();
+  ecgCtx.moveTo(padL, yBase);
+  ecgCtx.lineTo(padL + plotW, yBase);
+  ecgCtx.stroke();
+  ecgCtx.setLineDash([]);
+
+  // Trace
+  ecgCtx.strokeStyle = styles.navy;
+  ecgCtx.lineWidth = 1.8;
+  ecgCtx.lineJoin = 'round';
+  ecgCtx.lineCap = 'round';
+  ecgCtx.beginPath();
+  const steps = Math.min(420, Math.floor(plotW * 1.5));
+  for (let i = 0; i <= steps; i++) {
+    const t = (i / steps) * cycleLen;
+    const v = ecgWaveform(t, qrsWidthMs, qtMs);
+    const x = padL + (t / cycleLen) * plotW;
+    const y = yBase - v * yPerMv;
+    if (i === 0) ecgCtx.moveTo(x, y); else ecgCtx.lineTo(x, y);
+  }
+  ecgCtx.stroke();
+
+  // Annotation: cycle length label in upper-right
+  ecgCtx.fillStyle = styles.textDim;
+  ecgCtx.font = '10px -apple-system, sans-serif';
+  ecgCtx.textAlign = 'right';
+  const hrStr = isPace ? `${Math.round(60000 / cycleLen)} bpm` : '60 bpm reference';
+  ecgCtx.fillText(hrStr, padL + plotW - 2, padT + 11);
+}
+
 function render(now) {
   if (!lastFrameTime) lastFrameTime = now;
   const dt = now - lastFrameTime;
@@ -1574,6 +1742,7 @@ function render(now) {
   drawTrace(live, isPace, styles.navy, 2.6, 0, sweepMs);
 
   updateMeasurements(live, baselineParams, isPace);
+  drawECG(live, isPace);
 
   requestAnimationFrame(render);
 }
@@ -1973,10 +2142,12 @@ try {
 // Resize
 window.addEventListener('resize', () => {
   resizeCanvas();
+  resizeEcgCanvas();
 });
 
 // INIT
 resizeCanvas();
+resizeEcgCanvas();
 updateDrugBtns();
 updateActiveStrip();
 params = calcParams('vent');
