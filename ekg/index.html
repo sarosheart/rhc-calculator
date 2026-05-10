@@ -354,6 +354,16 @@ body.dark .vessel-tab.active { color: #64b5f6; border-bottom-color: #64b5f6; }
   .panel-left { width: 100%; min-width: auto; max-height: 40vh; border-right: none; border-bottom: 1px solid var(--border); }
   .panel-right { min-height: 60vh; }
 }
+
+/* ═══ MOBILE NAV — horizontally scrollable tab bar (7 tabs need to fit on phone) ═══ */
+@media (max-width: 800px) {
+  .site-nav { overflow-x: auto; overflow-y: hidden; -webkit-overflow-scrolling: touch; padding: 0 12px; }
+  .site-nav::-webkit-scrollbar { display: none; }
+  .nav-brand { flex-shrink: 0; margin-right: 14px; font-size: 14px; }
+  .nav-tabs { flex-shrink: 0; gap: 0; }
+  .nav-tab { flex-shrink: 0; white-space: nowrap; padding: 0 10px; font-size: 11px; }
+  .nav-right { display: none; }
+}
 </style>
 </head>
 <body class="dark">
