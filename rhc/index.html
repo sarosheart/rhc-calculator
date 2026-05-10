@@ -3,7 +3,39 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>CathMath — Hemodynamic Tools</title>
+<title>RHC Calculator — Fick Cardiac Output, Gorlin AVA/MVA, PVR/SVR | CathMath</title>
+<meta name="description" content="Free right heart catheterization calculator. Fick cardiac output, cardiac index, Gorlin aortic & mitral valve area, PVR, SVR, PAPi, RVSWI, shunt calculations. Instant hemodynamic report for the cath lab.">
+<meta name="keywords" content="RHC calculator, right heart catheterization, Fick equation, cardiac output, cardiac index, Gorlin equation, aortic valve area, mitral valve area, PVR, SVR, pulmonary vascular resistance, systemic vascular resistance, PAPi, RVSWI, CPO, CPI, hemodynamics, cath lab, Fick vs thermodilution">
+<meta name="author" content="Dr. Saro Avedikian, MD, MPH">
+<meta name="robots" content="index, follow">
+<link rel="canonical" href="https://cathmath.org/rhc/">
+<link rel="icon" type="image/x-icon" href="/favicon.ico">
+<link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+<link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://cathmath.org/rhc/">
+<meta property="og:title" content="RHC Hemodynamic Calculator | CathMath">
+<meta property="og:description" content="Free right heart cath calculator: Fick CO, Gorlin AVA/MVA, PVR/SVR, PAPi, shunts, and more. Instant copy-paste report.">
+<meta property="og:image" content="https://cathmath.org/og-image.png">
+<meta property="og:site_name" content="CathMath">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="RHC Calculator | CathMath">
+<meta name="twitter:description" content="Free right heart cath calculator with Fick CO, Gorlin AVA/MVA, PVR/SVR, and instant hemodynamic report.">
+<meta name="twitter:image" content="https://cathmath.org/og-image.png">
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "WebApplication",
+  "name": "RHC Hemodynamic Calculator",
+  "url": "https://cathmath.org/rhc/",
+  "description": "Free right heart catheterization calculator with Fick cardiac output, Gorlin valve area, PVR/SVR, PAPi, and copy-paste hemodynamic report.",
+  "applicationCategory": "HealthApplication",
+  "operatingSystem": "Any",
+  "offers": {"@type": "Offer", "price": "0", "priceCurrency": "USD"},
+  "author": {"@type": "Person", "name": "Dr. Saro Avedikian", "honorificSuffix": "MD, MPH"},
+  "isPartOf": {"@type": "WebSite", "name": "CathMath", "url": "https://cathmath.org"}
+}
+</script>
 <style>
   :root {
     --navy: #0d2240;
@@ -531,25 +563,21 @@
   body.dark #mvaResults > .gorlin-heading { border-top-color: #3a3f4b; }
   body.dark #ava_math, body.dark #mva_math { color: #8890a0; }
 
-  /* ═══ MOBILE NAV — horizontally scrollable tab bar (7 tabs need to fit on phone) ═══ */
-  @media (max-width: 800px) {
-    .site-nav { overflow-x: auto; overflow-y: hidden; -webkit-overflow-scrolling: touch; padding: 0 12px; }
-    .site-nav::-webkit-scrollbar { display: none; }
-    .nav-brand { flex-shrink: 0; margin-right: 14px; font-size: 14px; }
-    .nav-tabs { flex-shrink: 0; gap: 0; }
-    .nav-tab { flex-shrink: 0; white-space: nowrap; padding: 0 10px; font-size: 11px; }
-    .nav-right { display: none; }
-  }
 </style>
 </head>
 <body>
 
 <!-- SITE NAV -->
 <div class="site-nav">
-  <div class="nav-brand">CathMath</div>
+  <a href="/" class="nav-brand" style="text-decoration:none;color:#fff;">CathMath</a>
   <div class="nav-tabs">
-    <a href="/" class="nav-tab active">Hemodynamics</a>
+    <a href="/rhc/" class="nav-tab active">RHC Calculator</a>
     <a href="/pvloop/" class="nav-tab">PV Loops</a>
+    <a href="/ekg/" class="nav-tab">EKG Simulator</a>
+    <a href="/embryology/" class="nav-tab">Embryology</a>
+    <a href="/hemodynamics/" class="nav-tab">Hemodynamics</a>
+    <a href="/ap/" class="nav-tab">Action Potential</a>
+    <a href="/echocalc/" class="nav-tab">Echo Calc</a>
   </div>
   <div class="nav-right">
     <div class="nav-credit">Developer: Saro Avedikian, MD, MPH</div>

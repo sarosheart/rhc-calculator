@@ -3,7 +3,39 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>CathMath — 12-Lead EKG Simulator</title>
+<title>12-Lead EKG Simulator — STEMI Localization, De Winter, Wellens, Sgarbossa | CathMath</title>
+<meta name="description" content="Interactive 12-lead EKG simulator. Visualize STEMI by coronary occlusion site (LAD, LCx, RCA), MI evolution, De Winter T-waves, Wellens syndrome, posterior MI, Sgarbossa criteria. Free cardiology teaching tool.">
+<meta name="keywords" content="EKG simulator, ECG simulator, 12-lead EKG, STEMI, myocardial infarction, LAD occlusion, RCA occlusion, LCx occlusion, De Winter T waves, Wellens syndrome, posterior MI, RV MI, Sgarbossa criteria, ST elevation, coronary artery anatomy, right dominant, left dominant">
+<meta name="author" content="Dr. Saro Avedikian, MD, MPH">
+<meta name="robots" content="index, follow">
+<link rel="canonical" href="https://cathmath.org/ekg/">
+<link rel="icon" type="image/x-icon" href="/favicon.ico">
+<link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+<link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://cathmath.org/ekg/">
+<meta property="og:title" content="12-Lead EKG Simulator | CathMath">
+<meta property="og:description" content="Interactive 12-lead EKG simulator with 15 coronary occlusion sites, MI evolution, De Winter, Wellens, and Sgarbossa patterns. Free.">
+<meta property="og:image" content="https://cathmath.org/og-image.png">
+<meta property="og:site_name" content="CathMath">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="12-Lead EKG Simulator | CathMath">
+<meta name="twitter:description" content="Interactive 12-lead EKG simulator for STEMI localization and special patterns.">
+<meta name="twitter:image" content="https://cathmath.org/og-image.png">
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "WebApplication",
+  "name": "12-Lead EKG Simulator",
+  "url": "https://cathmath.org/ekg/",
+  "description": "Interactive 12-lead EKG simulator with coronary occlusion mapping, MI evolution, and special patterns including De Winter, Wellens, and Sgarbossa.",
+  "applicationCategory": "HealthApplication",
+  "operatingSystem": "Any",
+  "offers": {"@type": "Offer", "price": "0", "priceCurrency": "USD"},
+  "author": {"@type": "Person", "name": "Dr. Saro Avedikian", "honorificSuffix": "MD, MPH"},
+  "isPartOf": {"@type": "WebSite", "name": "CathMath", "url": "https://cathmath.org"}
+}
+</script>
 <style>
 /* ===== RESET & BASE ===== */
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -322,27 +354,21 @@ body.dark .vessel-tab.active { color: #64b5f6; border-bottom-color: #64b5f6; }
   .panel-left { width: 100%; min-width: auto; max-height: 40vh; border-right: none; border-bottom: 1px solid var(--border); }
   .panel-right { min-height: 60vh; }
 }
-
-/* ═══ MOBILE NAV — horizontally scrollable tab bar (7 tabs need to fit on phone) ═══ */
-@media (max-width: 800px) {
-  .site-nav { overflow-x: auto; overflow-y: hidden; -webkit-overflow-scrolling: touch; padding: 0 12px; }
-  .site-nav::-webkit-scrollbar { display: none; }
-  .nav-brand { flex-shrink: 0; margin-right: 14px; font-size: 14px; }
-  .nav-tabs { flex-shrink: 0; gap: 0; }
-  .nav-tab { flex-shrink: 0; white-space: nowrap; padding: 0 10px; font-size: 11px; }
-  .nav-right { display: none; }
-}
 </style>
 </head>
 <body class="dark">
 
 <!-- SITE NAV -->
 <div class="site-nav">
-  <div class="nav-brand">CathMath</div>
+  <a href="/" class="nav-brand" style="text-decoration:none;color:#fff;">CathMath</a>
   <div class="nav-tabs">
-    <a href="/" class="nav-tab">Hemodynamics</a>
+    <a href="/rhc/" class="nav-tab">RHC Calculator</a>
     <a href="/pvloop/" class="nav-tab">PV Loops</a>
     <a href="/ekg/" class="nav-tab active">EKG Simulator</a>
+    <a href="/embryology/" class="nav-tab">Embryology</a>
+    <a href="/hemodynamics/" class="nav-tab">Hemodynamics</a>
+    <a href="/ap/" class="nav-tab">Action Potential</a>
+    <a href="/echocalc/" class="nav-tab">Echo Calc</a>
   </div>
   <div class="nav-right">
     <div class="nav-credit">Developer: Saro Avedikian, MD, MPH</div>
@@ -486,6 +512,104 @@ body.dark .vessel-tab.active { color: #64b5f6; border-bottom-color: #64b5f6; }
   </div><!-- /panel-right -->
 
 </div><!-- /main-container -->
+
+<!-- ══════ SEO / EDUCATIONAL CONTENT ══════ -->
+<style>
+.seo-section {
+  background: var(--panel-right-bg, #f4f6f9);
+  color: var(--text, #1a1a2e);
+  padding: 48px 32px 64px;
+  border-top: 1px solid var(--border, #d0d8e0);
+}
+.seo-section .seo-inner {
+  max-width: 980px;
+  margin: 0 auto;
+  font-size: 14.5px;
+  line-height: 1.7;
+}
+.seo-section h2 {
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--navy, #0d2240);
+  margin: 0 0 8px;
+}
+.seo-section .seo-lead {
+  color: var(--text-muted, #6b7280);
+  margin-bottom: 28px;
+  font-size: 15px;
+}
+.seo-section h3 {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--navy, #0d2240);
+  margin: 28px 0 8px;
+}
+.seo-section p { margin: 0 0 12px; }
+.seo-section ul { margin: 0 0 12px 20px; padding: 0; }
+.seo-section li { margin-bottom: 4px; }
+.seo-section .seo-related {
+  margin-top: 32px;
+  padding-top: 24px;
+  border-top: 1px solid var(--border, #d0d8e0);
+  font-size: 13px;
+  color: var(--text-muted, #6b7280);
+}
+.seo-section .seo-related a {
+  color: var(--navy, #0d2240);
+  text-decoration: none;
+  border-bottom: 1px solid rgba(13,34,64,0.25);
+  margin-right: 14px;
+  white-space: nowrap;
+}
+.seo-section .seo-related a:hover { border-bottom-color: var(--navy, #0d2240); }
+.seo-section .seo-related strong { color: var(--navy, #0d2240); margin-right: 14px; }
+body.dark .seo-section h2,
+body.dark .seo-section h3 { color: var(--text-hi, #e8ecf2); }
+body.dark .seo-section .seo-related a { color: var(--text-hi, #e8ecf2); border-bottom-color: rgba(232,236,242,0.3); }
+body.dark .seo-section .seo-related strong { color: var(--text-hi, #e8ecf2); }
+</style>
+
+<section class="seo-section" aria-label="About this EKG simulator">
+  <div class="seo-inner">
+    <h2>About the 12-Lead EKG Simulator</h2>
+    <p class="seo-lead">A free interactive tool for visualizing how acute coronary artery occlusion changes the 12-lead electrocardiogram. Choose a coronary lesion site and see the predicted ST-segment changes lead-by-lead, watch ST-elevation myocardial infarction (STEMI) evolve through hyperacute, acute, subacute, and chronic phases, and explore high-yield patterns that don't always meet classic STEMI criteria.</p>
+
+    <h3>STEMI localization by coronary territory</h3>
+    <p>The 12-lead EKG localizes the culprit vessel before the cath lab activation. The simulator covers the major occlusion sites:</p>
+    <ul>
+      <li><strong>Proximal LAD</strong> — anterior STEMI (V1–V4) with reciprocal change in the inferior leads. Wraparound LAD lesions extend ST elevation to V5–V6 and the inferior wall.</li>
+      <li><strong>Mid/distal LAD</strong> — anteroseptal or apical pattern with less reciprocal change.</li>
+      <li><strong>RCA (right-dominant circulation)</strong> — inferior STEMI (II, III, aVF) with reciprocal depression in I and aVL. Always check right-sided leads (V4R) for RV infarct, and posterior leads (V7–V9) for posterior involvement.</li>
+      <li><strong>Left circumflex</strong> — lateral or posterior pattern. The LCx is the classic "electrocardiographically silent" vessel; a posterior MI may appear only as ST depression in V1–V3.</li>
+      <li><strong>Left main</strong> — diffuse ST depression with ST elevation in aVR &gt; V1, often with hemodynamic instability.</li>
+    </ul>
+
+    <h3>STEMI equivalents and special patterns</h3>
+    <p>Not every occlusion shows ST elevation. The simulator includes:</p>
+    <ul>
+      <li><strong>Wellens syndrome</strong> — biphasic (Type A) or deeply inverted (Type B) T-waves in V2–V3 in the pain-free state, signaling critical proximal LAD stenosis.</li>
+      <li><strong>De Winter T-waves</strong> — upsloping ST depression at the J-point with tall, symmetric T-waves in V1–V6, a STEMI-equivalent for proximal LAD occlusion.</li>
+      <li><strong>Posterior MI</strong> — ST depression in V1–V3 with prominent R-waves; obtain V7–V9 to confirm.</li>
+      <li><strong>RV infarction</strong> — ST elevation in V4R, often with inferior STEMI; preload-sensitive, avoid nitrates.</li>
+      <li><strong>Sgarbossa criteria</strong> — diagnosing acute MI in the setting of left bundle branch block (LBBB) or ventricular pacing using concordance and discordance rules; the modified Smith criteria add proportionality.</li>
+    </ul>
+
+    <h3>MI evolution over time</h3>
+    <p>Coronary occlusion produces a characteristic time-course on the surface EKG: hyperacute T-waves within minutes, ST elevation within the first hour, Q-wave development over hours to days, T-wave inversion as the infarct matures, and eventual normalization or persistent Q-waves and T-wave changes in the chronic phase. The simulator lets you scrub through these phases for any coronary territory.</p>
+
+    <h3>Who this tool is for</h3>
+    <p>Built for cardiology fellows, internal medicine and emergency medicine residents, medical students preparing for boards, and any clinician reviewing high-yield ECG patterns. It is an educational visualization, not a diagnostic device — always correlate with clinical presentation, troponin, and imaging.</p>
+
+    <div class="seo-related">
+      <strong>Related tools:</strong>
+      <a href="/rhc/">RHC Calculator</a>
+      <a href="/hemodynamics/">Hemodynamic Waveforms</a>
+      <a href="/pvloop/">PV Loop Simulator</a>
+      <a href="/embryology/">Cardiac Embryology</a>
+      <a href="/">All CathMath tools</a>
+    </div>
+  </div>
+</section>
 
 <script>
 // ========================================================
