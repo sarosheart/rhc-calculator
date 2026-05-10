@@ -642,8 +642,10 @@ body.dark .measure-value { color: #6eb0f7; }
 body.dark .global-tip { background: #2a3548; }
 
 /* ═══ SEO CONTENT (below the simulator) ═══ */
+/* Wrapped in <details> so the wall-of-text doesn't dominate every visit.
+   Google still indexes content inside collapsed <details> per their docs. */
 .seo-content {
-  padding: 36px 24px 56px;
+  padding: 16px 24px 32px;
   background: var(--panel-bg);
   border-top: 1px solid var(--border);
   font-size: 14.5px;
@@ -651,36 +653,71 @@ body.dark .global-tip { background: #2a3548; }
   color: var(--text);
 }
 .seo-content .seo-inner { max-width: 920px; margin: 0 auto; }
-.seo-content h2 {
-  font-size: 22px;
-  font-weight: 700;
-  margin-bottom: 16px;
-  color: var(--navy);
-  letter-spacing: -0.01em;
+.seo-section { margin: 0; padding: 0; }
+.seo-section summary {
+  list-style: none;
+  cursor: pointer;
+  padding: 10px 16px;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  color: var(--text-muted);
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  border-radius: 8px;
+  border: 1px solid transparent;
+  transition: color 0.15s, background 0.15s, border-color 0.15s;
+  user-select: none;
 }
-body.dark .seo-content h2 { color: #6eb0f7; }
-.seo-content h3 {
+.seo-section summary::-webkit-details-marker { display: none; }
+.seo-section summary::before {
+  content: '▸';
+  font-size: 10px;
+  display: inline-block;
+  transition: transform 0.2s;
+}
+.seo-section[open] summary::before { transform: rotate(90deg); }
+.seo-section summary:hover {
+  color: var(--text);
+  background: var(--panel-bg-2);
+  border-color: var(--border);
+}
+.seo-section[open] summary { margin-bottom: 8px; }
+.seo-content-body {
+  padding: 24px 28px;
+  background: var(--panel-bg-2);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  animation: seoFadeIn 0.25s ease-out;
+}
+@keyframes seoFadeIn { from { opacity: 0; transform: translateY(-4px); } to { opacity: 1; transform: translateY(0); } }
+.seo-content-body h3 {
   font-size: 16px;
   font-weight: 700;
   margin: 22px 0 8px;
   color: var(--text);
   letter-spacing: -0.005em;
 }
-.seo-content p { margin-bottom: 12px; }
-.seo-content ul { padding-left: 22px; margin-bottom: 12px; }
-.seo-content ul li { margin-bottom: 6px; }
-.seo-content strong { color: var(--text); font-weight: 700; }
-.seo-content .related-tools {
+.seo-content-body h3:first-child { margin-top: 0; }
+.seo-content-body p { margin: 0 0 12px; color: var(--text-dim); }
+.seo-content-body ul { padding-left: 22px; margin-bottom: 12px; }
+.seo-content-body ul li { margin-bottom: 6px; color: var(--text-dim); }
+.seo-content-body strong { color: var(--text); font-weight: 600; }
+body.dark .seo-content-body p,
+body.dark .seo-content-body ul li { color: #c4ccda; }
+body.dark .seo-content-body h3 { color: #e8ecf2; }
+.seo-content-body .related-tools {
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
-  margin-top: 12px;
+  margin-top: 8px;
   font-size: 13px;
 }
-.seo-content .related-tools a {
+.seo-content-body .related-tools a {
   display: inline-block;
   padding: 6px 14px;
-  background: var(--panel-bg-2);
+  background: var(--panel-bg);
   border: 1px solid var(--border);
   border-radius: 16px;
   color: var(--text);
@@ -688,7 +725,7 @@ body.dark .seo-content h2 { color: #6eb0f7; }
   font-weight: 600;
   transition: all 0.15s;
 }
-.seo-content .related-tools a:hover {
+.seo-content-body .related-tools a:hover {
   border-color: var(--accent);
   color: var(--accent);
 }
@@ -748,9 +785,11 @@ body.dark .seo-content h2 { color: #6eb0f7; }
     <!-- CELL TYPE -->
     <div class="card">
       <div class="card-title">Cell Type</div>
-      <div class="seg-toggle" id="cellToggle">
-        <button class="seg-btn active" data-cell="vent">Ventricular</button>
-        <button class="seg-btn" data-cell="pace">Pacemaker</button>
+      <div class="seg-toggle seg-4 cell-toggle" id="cellToggle">
+        <button class="seg-btn active" data-cell="vent" data-tip="Ventricular myocyte — long plateau (phase 2 ~180 ms), the workhorse fast-response cell. Most antiarrhythmic effects you see clinically.">Vent</button>
+        <button class="seg-btn"        data-cell="atrial" data-tip="Atrial myocyte — shorter plateau (~120 ms), shorter APD (~200 ms). Faster Na recovery. Why Class IC drugs work in AF.">Atrial</button>
+        <button class="seg-btn"        data-cell="purkinje" data-tip="Purkinje fiber — longest APD (~370 ms) of the conduction system. Slowest recovery from Na inactivation at fast HR. Class IB selectivity.">Purkinje</button>
+        <button class="seg-btn"        data-cell="pace" data-tip="SA / AV nodal cell — Ca-dependent phase 0, no stable resting potential, spontaneous phase 4 depolarization. Substrate for β-blockers, CCBs, adenosine.">Pace</button>
       </div>
     </div>
 
@@ -943,10 +982,13 @@ body.dark .seo-content h2 { color: #6eb0f7; }
   </main>
 </div>
 
-<!-- ═══ SEO / EDUCATIONAL CONTENT ═══ -->
+<!-- ═══ SEO / EDUCATIONAL CONTENT — wrapped in <details> so the wall-of-text
+     doesn't dominate every visit. Google still indexes collapsed <details>. ═══ -->
 <section class="seo-content">
   <div class="seo-inner">
-    <h2>About the Cardiac Action Potential Simulator</h2>
+    <details class="seo-section">
+      <summary>About the Cardiac Action Potential Simulator</summary>
+      <div class="seo-content-body">
     <p>The cardiac action potential is the voltage waveform that drives every heartbeat. Its shape — and how that shape is reshaped by drugs and disease — is one of the most testable concepts in clinical cardiology. This free interactive simulator visualizes the five phases of the ventricular myocyte action potential and the spontaneous-firing waveform of the SA/AV nodal pacemaker, then lets you stack any combination of <strong>antiarrhythmic drugs</strong> in real time to see how each class reshapes the trace.</p>
 
     <h3>The Vaughan-Williams classification</h3>
@@ -992,6 +1034,8 @@ body.dark .seo-content h2 { color: #6eb0f7; }
       <a href="/hemodynamics/">Hemodynamic Waveforms</a>
       <a href="/echocalc/">Echo Hemodynamics Calculator</a>
     </div>
+      </div>
+    </details>
   </div>
 </section>
 
@@ -1146,12 +1190,39 @@ const BASELINE_VENT = {
   phase0Dur: 2, phase1Dur: 7, phase2Dur: 180, phase3Dur: 100,
   phase0Mult: 1.0, apdMult: 1.0, erpFraction: 0.85,
 };
+// Atrial myocyte: shorter phase 2 plateau (~120 ms), shorter phase 3 → APD ~200 ms.
+// Less prominent phase 1 notch. Why Class IC drugs are effective in AF — atrial APs
+// recover Na channels faster, so use-dependent strong Na block has bigger relative effect.
+const BASELINE_ATRIAL = {
+  vRest: -80, vPeak: 25, vNotch: 4, vPlateau: 10,
+  phase0Dur: 2, phase1Dur: 4, phase2Dur: 120, phase3Dur: 80,
+  phase0Mult: 1.0, apdMult: 1.0, erpFraction: 0.80,
+};
+// Purkinje fiber: longest APD (~350 ms) of the conduction system. Deepest phase 4-like
+// drift (subthreshold), prominent phase 1 notch. Why Class IB drugs are selective at high
+// HR — Purkinje recovery from inactivation is slow at fast pacing rates.
+const BASELINE_PURKINJE = {
+  vRest: -90, vPeak: 35, vNotch: -8, vPlateau: 14,
+  phase0Dur: 2, phase1Dur: 9, phase2Dur: 240, phase3Dur: 130,
+  phase0Mult: 1.0, apdMult: 1.0, erpFraction: 0.88,
+};
 const BASELINE_PACE = {
   MDP: -65, threshold: -40, peak: 10,
   phase0Dur: 30, apDuration: 200,
   phase4Slope: 0.05,
   phase0Mult: 1.0, apdMult: 1.0,
 };
+
+// Atrial / Purkinje share the same fast-response state buckets as Vent — they're
+// variants of "ventricular-like" cells with different baseline phase durations and
+// resting potentials. Drug deltas use the `vent` map for all three.
+function getBaselineFor(c) {
+  if (c === 'pace')     return BASELINE_PACE;
+  if (c === 'atrial')   return BASELINE_ATRIAL;
+  if (c === 'purkinje') return BASELINE_PURKINJE;
+  return BASELINE_VENT;
+}
+function isFastResponse(c) { return c !== 'pace'; }
 
 let cellType = 'vent';
 let activeDrugs = new Set();
@@ -1291,13 +1362,15 @@ function applyDrugDeltas(baseline, key) {
 function calcParams(forCellType) {
   // 3-layer model: baseline → disease (substrate) → drug deltas → user overrides.
   // Disease writes establish a NEW baseline so drugs stack on the diseased substrate.
-  const rawBaseline = forCellType === 'vent' ? BASELINE_VENT : BASELINE_PACE;
-  const dovr = forCellType === 'vent' ? diseaseOverrides : diseaseOverridesPace;
+  const rawBaseline = getBaselineFor(forCellType);
+  const isPace = !isFastResponse(forCellType);
+  const dovr = isPace ? diseaseOverridesPace : diseaseOverrides;
   const baseline = { ...rawBaseline, ...dovr };
-  const key = forCellType === 'vent' ? 'vent' : 'pace';
+  // Atrial / Purkinje use the vent drug-delta map (all are fast-response cells).
+  const key = isPace ? 'pace' : 'vent';
   const out = applyDrugDeltas(baseline, key);
   // User slider overrides win over everything — final say.
-  const uovr = forCellType === 'vent' ? userOverrides : userOverridesPace;
+  const uovr = isPace ? userOverridesPace : userOverrides;
   for (const [k, v] of Object.entries(uovr)) {
     if (v !== undefined) out[k] = v;
   }
@@ -1384,13 +1457,21 @@ function drawAxes(margin, vMin, vMax, tMax, isPace) {
   }
 }
 
-function drawTrace(p, isPace, color, width, t0, sweepMs) {
+// Helper: compute the x-axis time range for a fast-response or pacemaker trace.
+// Adapts to APD so prolonged-APD substrates (Purkinje, Long-QT scenarios) don't
+// get clipped at the right edge.
+function computeTMax(p, isPace) {
+  if (isPace) return Math.max(800, pacemakerCycleLen(p) + 100);
+  return Math.max(600, Math.ceil((ventAPDuration(p) + 80) / 100) * 100);
+}
+
+function drawTrace(p, isPace, color, width, t0, sweepMs, tMaxAxis) {
   const styles = getStyles();
   const margin = { l: 56, r: 18, t: 24, b: 28 };
   const plotW = W - margin.l - margin.r;
   const plotH = H - margin.t - margin.b;
   const vMin = -100, vMax = 40;
-  const tMax = isPace ? Math.max(800, pacemakerCycleLen(p) + 100) : 600;
+  const tMax = tMaxAxis ?? computeTMax(p, isPace);
 
   ctx.strokeStyle = color;
   ctx.lineWidth = width;
@@ -1703,7 +1784,7 @@ function render(now) {
 
   // Sweep advance
   const isPace = cellType === 'pace';
-  const tMax = isPace ? Math.max(800, pacemakerCycleLen(params) + 100) : 600;
+  const tMax = computeTMax(params, isPace);
   sweepMs += dt * 0.6; // 0.6 ms AP-time per ms wall (~1.7s sweep)
   if (sweepMs > tMax + 60) sweepMs = 0;
 
@@ -1726,20 +1807,22 @@ function render(now) {
   drawAxes(margin, -100, 40, tMax, isPace);
 
   const live = isPace ? paceParams : params;
-  const baselineParams = isPace ? BASELINE_PACE : BASELINE_VENT;
+  const baselineParams = getBaselineFor(cellType);
 
   // Phase regions go FIRST so they sit behind everything else.
   drawPhaseRegions(live, isPace);
   drawErpShading(live, isPace);
   drawThreshold(live, isPace);
 
-  // Ghost (baseline) — drawn first so live trace overlays
+  // Ghost (baseline) — drawn first so live trace overlays.
+  // Pass the SAME tMax as the live trace so the time axes align (matters at
+  // long-APD substrates like Purkinje + Long QT).
   if (document.getElementById('ovGhost').checked) {
-    drawTrace(baselineParams, isPace, 'rgba(148, 163, 184, 0.55)', 1.6, 0, isPace ? Math.max(800, pacemakerCycleLen(baselineParams) + 100) : 600);
+    drawTrace(baselineParams, isPace, 'rgba(148, 163, 184, 0.55)', 1.6, 0, tMax, tMax);
   }
 
   // Live
-  drawTrace(live, isPace, styles.navy, 2.6, 0, sweepMs);
+  drawTrace(live, isPace, styles.navy, 2.6, 0, sweepMs, tMax);
 
   updateMeasurements(live, baselineParams, isPace);
   drawECG(live, isPace);
@@ -1792,7 +1875,7 @@ function updateMeasurements(live, baseline, isPace) {
 // ═══════════════════════════════════════════════════════════
 function startTransition() {
   const target = calcParams(cellType);
-  animFrom = { ...(cellType === 'vent' ? params : paceParams) };
+  animFrom = { ...(isFastResponse(cellType) ? params : paceParams) };
   animTo = target;
   animStart = performance.now();
   animating = true;
@@ -1849,14 +1932,17 @@ function setCellTypeUI(c) {
   document.querySelectorAll('#cellToggle .seg-btn').forEach(b => {
     b.classList.toggle('active', b.dataset.cell === c);
   });
-  document.getElementById('ventSliders').style.display = c === 'vent' ? '' : 'none';
+  // Atrial / Purkinje share the vent slider panel (same parameter set as vent).
+  document.getElementById('ventSliders').style.display = isFastResponse(c) ? '' : 'none';
   document.getElementById('paceSliders').style.display = c === 'pace' ? '' : 'none';
   // Drop any drug whose deltas for the target cell type are empty — keeps the
   // active strip honest (no "phantom" inert drugs after a cell switch).
+  // Atrial / Purkinje use the vent delta map for the empty check.
+  const deltaKey = isFastResponse(c) ? 'vent' : 'pace';
   for (const id of [...activeDrugs]) {
     const drug = DRUGS[id];
     if (!drug) continue;
-    const deltas = drug[c] || {};
+    const deltas = drug[deltaKey] || {};
     if (Object.keys(deltas).length === 0) activeDrugs.delete(id);
   }
   sweepMs = 0;
@@ -1988,7 +2074,7 @@ function updateDrugBtns() {
     // Park off-screen so it can't intercept anything
     tip.style.transform = 'translate(-9999px, -9999px)';
   }
-  document.querySelectorAll('.drug-btn').forEach(btn => {
+  document.querySelectorAll('.drug-btn, #cellToggle .seg-btn[data-tip]').forEach(btn => {
     btn.addEventListener('mouseenter', show);
     btn.addEventListener('mouseleave', hide);
     btn.addEventListener('focus', show);
