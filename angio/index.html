@@ -492,6 +492,29 @@ body.dark .label-toggle:hover { background: rgba(60, 80, 110, 0.92); }
 .vessel-tiny { stroke-width: 1.2; }
 .heart-silhouette { fill: rgba(120, 110, 110, 0.06); stroke: rgba(120, 110, 110, 0.18); stroke-width: 1; stroke-dasharray: 3 3; }
 
+/* ═══ X-RAY (FLUORO) RENDER MODE ═══
+   When `.viz-wrap.xray` is on, the canvas takes on a dark fluoroscopy look.
+   Vessels and silhouette colors are picked in JS so we can apply per-element
+   filters (bloom) — CSS here just paints the chamber/background ambiance. */
+.viz-wrap.xray {
+  background: radial-gradient(ellipse 70% 60% at 50% 50%,
+    #2a2e36 0%, #161a22 60%, #07090f 100%);
+}
+.viz-wrap.xray .label-line { stroke: rgba(220, 230, 245, 0.55); }
+.viz-wrap.xray .label-dot { fill: rgba(240, 245, 255, 0.9); }
+.viz-wrap.xray .label-text { fill: #d8dde6; }
+.viz-wrap.xray .label-text.lead { fill: #f0f4fb; }
+.viz-wrap.xray .view-label {
+  background: rgba(0, 0, 0, 0.75);
+  color: #e8ecf2;
+  border: 1px solid rgba(220, 230, 245, 0.18);
+}
+.viz-wrap.xray .label-toggle {
+  background: rgba(0, 0, 0, 0.75);
+  color: #d8dde6;
+  border: 1px solid rgba(220, 230, 245, 0.18);
+}
+
 /* Label leader lines + text */
 .label-line { stroke: rgba(180, 180, 180, 0.55); stroke-width: 0.9; fill: none; }
 .label-dot { fill: rgba(220, 220, 220, 0.85); }
@@ -763,8 +786,11 @@ body.dark .label-text.lead { fill: #e8ecf2; }
       <label style="display:flex;align-items:center;gap:8px;font-size:12px;color:var(--text-dim);cursor:pointer;margin-bottom:6px;">
         <input type="checkbox" id="ovBoth"> Show both LCA + RCA
       </label>
-      <label style="display:flex;align-items:center;gap:8px;font-size:12px;color:var(--text-dim);cursor:pointer;">
+      <label style="display:flex;align-items:center;gap:8px;font-size:12px;color:var(--text-dim);cursor:pointer;margin-bottom:6px;">
         <input type="checkbox" id="ovSilhouette" checked> Heart silhouette
+      </label>
+      <label style="display:flex;align-items:center;gap:8px;font-size:12px;color:var(--text-dim);cursor:pointer;">
+        <input type="checkbox" id="ovXray"> X-ray render mode
       </label>
     </div>
   </aside>
@@ -1197,6 +1223,7 @@ let animating = false;
 let animStart = 0;
 const ANIM_MS = 500;
 let labelMode = 'detailed';     // 'detailed' | 'simplified' | 'off'
+let xrayMode = false;           // when true, render as fluoroscopy (dark bg, bright vessels with bloom)
 let prevNonOffMode = 'detailed'; // remember the last "on" mode for the on-viz toggle
 
 function easeOutCubic(t) { return 1 - Math.pow(1 - t, 3); }
@@ -1217,7 +1244,10 @@ const WIDTH_MAP = {
 };
 
 function strokeColor(side) {
-  // LCA = warm red-orange, RCA = cool blue. Slight transparency for layering.
+  // X-ray mode: vessels are bright (radiopaque-on-detector look), no L/R color
+  // distinction — both branches look like real contrast injections.
+  if (xrayMode) return 'rgba(245, 248, 255, 0.95)';
+  // Schematic mode: LCA = warm red-orange, RCA = cool blue.
   return side === 'left' ? 'rgba(220, 60, 50, 0.92)' : 'rgba(80, 140, 220, 0.92)';
 }
 
@@ -1270,13 +1300,47 @@ function render() {
   // manipulation per-frame.
   const parts = [];
 
-  // Background (transparent — let CSS handle it)
-  parts.push(`<rect x="0" y="0" width="${SVG_W}" height="${SVG_H}" fill="transparent"/>`);
+  // ── X-ray mode: SVG defs (bloom filter + soft cardiac shadow gradient) ──
+  if (xrayMode) {
+    parts.push(`<defs>
+      <filter id="xrayBloom" x="-25%" y="-25%" width="150%" height="150%" filterUnits="userSpaceOnUse">
+        <feGaussianBlur in="SourceGraphic" stdDeviation="1.4" result="b1"/>
+        <feMerge>
+          <feMergeNode in="b1"/>
+          <feMergeNode in="SourceGraphic"/>
+        </feMerge>
+      </filter>
+      <radialGradient id="cardiacShadow" cx="50%" cy="50%" r="55%">
+        <stop offset="0%" stop-color="rgba(255,255,255,0.13)"/>
+        <stop offset="70%" stop-color="rgba(255,255,255,0.05)"/>
+        <stop offset="100%" stop-color="rgba(255,255,255,0)"/>
+      </radialGradient>
+      <radialGradient id="diaphragmShadow" cx="50%" cy="0%" r="80%">
+        <stop offset="0%" stop-color="rgba(0,0,0,0.55)"/>
+        <stop offset="100%" stop-color="rgba(0,0,0,0)"/>
+      </radialGradient>
+    </defs>`);
 
-  // Heart silhouette (drawn first, behind vessels)
+    // Mediastinal mound (faint lighter ellipse where heart sits) — sits BEHIND the silhouette
+    // path so the silhouette outline still reads as the cardiac contour.
+    parts.push(`<ellipse cx="${CX}" cy="${CY + SCALE * 0.05}" rx="${SCALE * 1.05}" ry="${SCALE * 1.20}" fill="url(#cardiacShadow)"/>`);
+
+    // Diaphragm shadow at the bottom — broad dome
+    parts.push(`<ellipse cx="${CX}" cy="${SVG_H + 40}" rx="${SVG_W * 0.7}" ry="${SVG_H * 0.30}" fill="url(#diaphragmShadow)"/>`);
+  } else {
+    // Schematic mode background (transparent — CSS handles it)
+    parts.push(`<rect x="0" y="0" width="${SVG_W}" height="${SVG_H}" fill="transparent"/>`);
+  }
+
+  // Heart silhouette (drawn behind vessels; rendered slightly differently in X-ray mode)
   if (showSilhouette) {
     const hd = heartPath(liveLao, liveCra, CX, CY, SCALE);
-    parts.push(`<path d="${hd}" class="heart-silhouette"/>`);
+    if (xrayMode) {
+      // Soft cardiac border — like a real fluoroscopy mediastinal contour
+      parts.push(`<path d="${hd}" fill="rgba(255,255,255,0.025)" stroke="rgba(255,255,255,0.18)" stroke-width="1"/>`);
+    } else {
+      parts.push(`<path d="${hd}" class="heart-silhouette"/>`);
+    }
   }
 
   // Vessels — compute paths and z-sort so posterior vessels render first.
@@ -1293,12 +1357,50 @@ function render() {
   // Sort: smaller (more negative) depth first → drawn first → behind.
   projected.sort((a, b) => a.depth - b.depth);
 
+  // X-ray mode: a "vessels" group with the bloom filter so contrast edges glow.
+  if (xrayMode) parts.push(`<g filter="url(#xrayBloom)">`);
+
+  // Catheter line — in X-ray mode only. Comes from the upper-left (radial access
+  // through the descending aorta) and engages the ostium of the active side.
+  if (xrayMode) {
+    const ostiumKey = activeSide === 'left' ? 'LM' : 'RCA_prox';
+    if (COR[ostiumKey]) {
+      const ostiumPt3D = COR[ostiumKey].points[0];
+      const ost = project3D(ostiumPt3D, liveLao, liveCra);
+      const ostX = CX + ost.sx * SCALE;
+      const ostY = CY + ost.sy * SCALE;
+      // Bezier from upper-left into the ostium
+      const cathStartX = -10, cathStartY = SVG_H * 0.18;
+      const cp1X = SVG_W * 0.22, cp1Y = SVG_H * 0.42;
+      const cp2X = ostX - 60,    cp2Y = ostY - 40;
+      const cathD = `M ${cathStartX} ${cathStartY} C ${cp1X} ${cp1Y}, ${cp2X} ${cp2Y}, ${ostX} ${ostY}`;
+      // Wider dark shadow then narrower bright line — gives the "tip" highlight look
+      parts.push(`<path d="${cathD}" fill="none" stroke="rgba(0,0,0,0.55)" stroke-width="6" stroke-linecap="round"/>`);
+      parts.push(`<path d="${cathD}" fill="none" stroke="rgba(245,248,255,0.92)" stroke-width="2.4" stroke-linecap="round"/>`);
+    }
+  }
+
   for (const item of projected) {
     const w = WIDTH_MAP[item.v.width] || WIDTH_MAP.mid;
     const col = strokeColor(item.v.side);
     // Depth-cue: posterior vessels slightly more transparent, anterior slightly bolder
     const alpha = 0.55 + 0.45 * Math.min(1, Math.max(0, (item.depth + 1) / 2));
     parts.push(`<path d="${item.path.d}" fill="none" stroke="${col}" stroke-opacity="${alpha.toFixed(2)}" stroke-width="${w}" stroke-linecap="round" stroke-linejoin="round"/>`);
+  }
+
+  if (xrayMode) parts.push(`</g>`);
+
+  // X-ray fluoro UI overlay — corner readouts that mimic a real cath-lab monitor.
+  if (xrayMode) {
+    const laoTxt = liveLao > 0.5 ? `LAO ${Math.round(liveLao)}°` : liveLao < -0.5 ? `RAO ${Math.round(-liveLao)}°` : '';
+    const craTxt = liveCra > 0.5 ? `CRA ${Math.round(liveCra)}°` : liveCra < -0.5 ? `CAU ${Math.round(-liveCra)}°` : '';
+    const fluoTxt = (laoTxt && craTxt) ? `${laoTxt} · ${craTxt}` : (laoTxt || craTxt || 'AP');
+    parts.push(`<g pointer-events="none" font-family="SF Mono, Menlo, Consolas, monospace" fill="rgba(220,230,245,0.55)" font-size="13" font-weight="600">
+      <text x="14" y="22" text-anchor="start">${fluoTxt || 'AP'}</text>
+      <text x="${SVG_W - 14}" y="22" text-anchor="end">WW 215  WL 84</text>
+      <text x="14" y="${SVG_H - 12}" text-anchor="start">FOV 22 cm</text>
+      <text x="${SVG_W - 14}" y="${SVG_H - 12}" text-anchor="end">15 fps</text>
+    </g>`);
   }
 
   // Labels with leader lines pointing from a margin strip into the vessel midpoint.
@@ -1996,6 +2098,16 @@ document.getElementById('slCra').addEventListener('input', () => {
 // Display options
 ['ovBoth', 'ovSilhouette'].forEach(id => {
   document.getElementById(id).addEventListener('change', render);
+});
+
+// X-ray render mode — toggles a class on the viz-wrap and a JS flag.
+const ovXrayInput = document.getElementById('ovXray');
+const vizWrapEl = document.querySelector('.viz-wrap');
+ovXrayInput.addEventListener('change', () => {
+  xrayMode = ovXrayInput.checked;
+  vizWrapEl.classList.toggle('xray', xrayMode);
+  // Heart silhouette toggle still applies in X-ray mode — leave it as the user set it.
+  render();
 });
 
 // Label-mode segmented toggle (Detailed / Simplified / Hidden)
