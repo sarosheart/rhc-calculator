@@ -57,7 +57,8 @@
     {"@type": "ListItem", "position": 5, "url": "https://cathmath.org/embryology/", "name": "Cardiac Embryology Simulator"},
     {"@type": "ListItem", "position": 6, "url": "https://cathmath.org/ap/", "name": "Cardiac Action Potential Simulator"},
     {"@type": "ListItem", "position": 7, "url": "https://cathmath.org/echocalc/", "name": "Echo Hemodynamics Calculator"},
-    {"@type": "ListItem", "position": 8, "url": "https://cathmath.org/angio/", "name": "Coronary Angiography Views Simulator"}
+    {"@type": "ListItem", "position": 8, "url": "https://cathmath.org/angio/", "name": "Coronary Angiography Views Simulator"},
+    {"@type": "ListItem", "position": 9, "url": "https://cathmath.org/intracoronary/", "name": "Intracoronary Physiology & Imaging Simulator"}
   ]
 }
 </script>
@@ -776,6 +777,23 @@ body {
         </div>
       </div>
     </a>
+
+    <!-- Intracoronary Physiology & Imaging -->
+    <a class="tool-card" id="cardIntra" href="/intracoronary/">
+      <div class="card-canvas-wrap">
+        <canvas id="canvasIntra"></canvas>
+      </div>
+      <div class="card-info">
+        <div class="card-title">Intracoronary Physiology &amp; Imaging <span class="card-arrow">&rarr;</span></div>
+        <div class="card-desc">FFR, iFR, NHPRs, IVUS, OCT — animated Pa/Pd tracings, pullback gradient maps, three-layer cross-sections, and plaque morphology atlas.</div>
+        <div class="card-tags">
+          <span class="card-tag">FFR / iFR</span>
+          <span class="card-tag">Pullback</span>
+          <span class="card-tag">IVUS</span>
+          <span class="card-tag">OCT</span>
+        </div>
+      </div>
+    </a>
   </div>
 </section>
 
@@ -1007,6 +1025,7 @@ body {
       startApAnimation(loops);
       startEchoAnimation(loops);
       startAngioAnimation(loops);
+      startIntraAnimation(loops);
     }, instant ? 100 : 600);
   }
 
@@ -1104,6 +1123,7 @@ body {
       apSetup = setupCanvas('canvasAp');
       echoSetup = setupCanvas('canvasEcho');
       angioSetup = setupCanvas('canvasAngio');
+      intraSetup = setupCanvas('canvasIntra');
       // Redraw final frames if animations completed
       if (hemoDone) drawHemoFrame(hemoSetup, 1);
       if (rhcDone) drawRhcFrame(rhcSetup, 1);
@@ -1113,13 +1133,14 @@ body {
       if (apDone) drawApFrame(apSetup, 1);
       if (echoDone) drawEchoFrame(echoSetup, 1);
       if (angioDone) drawAngioFrame(angioSetup, 1);
+      if (intraDone) drawIntraFrame(intraSetup, 1);
     }, 200);
   });
 
   // Lazy init — canvases may not have dimensions yet
-  var hemoSetup, rhcSetup, pvSetup, ekgSetup, embryoSetup, apSetup, echoSetup, angioSetup;
-  var hemoDone = false, rhcDone = false, pvDone = false, ekgDone = false, embryoDone = false, apDone = false, echoDone = false, angioDone = false;
-  var hemoRunning = false, rhcRunning = false, pvRunning = false, ekgRunning = false, embryoRunning = false, apRunning = false, echoRunning = false, angioRunning = false;
+  var hemoSetup, rhcSetup, pvSetup, ekgSetup, embryoSetup, apSetup, echoSetup, angioSetup, intraSetup;
+  var hemoDone = false, rhcDone = false, pvDone = false, ekgDone = false, embryoDone = false, apDone = false, echoDone = false, angioDone = false, intraDone = false;
+  var hemoRunning = false, rhcRunning = false, pvRunning = false, ekgRunning = false, embryoRunning = false, apRunning = false, echoRunning = false, angioRunning = false, intraRunning = false;
 
   function ensureSetup() {
     if (!hemoSetup) hemoSetup = setupCanvas('canvasHemo');
@@ -1130,6 +1151,7 @@ body {
     if (!apSetup) apSetup = setupCanvas('canvasAp');
     if (!echoSetup) echoSetup = setupCanvas('canvasEcho');
     if (!angioSetup) angioSetup = setupCanvas('canvasAngio');
+    if (!intraSetup) intraSetup = setupCanvas('canvasIntra');
   }
 
 
@@ -2123,6 +2145,158 @@ body {
 
 
   /* ══════════════════════════════════════
+     INTRACORONARY card animation — Pa (red) + Pd (blue) pressure tracings,
+     gradient widens after an "Adenosine" marker mid-strip.
+     ══════════════════════════════════════ */
+  function drawIntraFrame(s, progress) {
+    var ctx = s.ctx, W = s.w, H = s.h;
+    ctx.clearRect(0, 0, W, H);
+
+    // y-scale: pressure 40-130 mmHg, top→high
+    var Pmax = 130, Pmin = 40;
+    var margin = { l: 10, r: 10, t: 14, b: 14 };
+    var plotW = W - margin.l - margin.r;
+    var plotH = H - margin.t - margin.b;
+    function yOf(P) { return margin.t + plotH * (1 - (P - Pmin) / (Pmax - Pmin)); }
+
+    // 4 beats, sweep reveal left→right
+    var beats = 4;
+    var beatW = plotW / beats;
+    function paPress(u) {
+      if (u < 0.32)      return 70 + 40 * (1 - Math.pow(1 - u / 0.32, 2.2));
+      if (u < 0.42)      return 110 - 20 * (u - 0.32) / 0.10;
+      if (u < 0.50)      return 90 - 5 * Math.sin(Math.PI * (u - 0.42) / 0.08);
+      return 90 - 22 * (1 - Math.pow(1 - (u - 0.50) / 0.50, 1.3));
+    }
+
+    var sweepX = margin.l + plotW * progress;
+
+    // Adenosine vertical guide at the transition (beat 2)
+    var adenosineX = margin.l + beatW * 1.4;
+    if (progress > 0.30) {
+      ctx.strokeStyle = 'rgba(253,204,77,0.45)';
+      ctx.lineWidth = 1;
+      ctx.setLineDash([3, 3]);
+      ctx.beginPath();
+      ctx.moveTo(adenosineX, margin.t);
+      ctx.lineTo(adenosineX, margin.t + plotH);
+      ctx.stroke();
+      ctx.setLineDash([]);
+      ctx.fillStyle = 'rgba(253,204,77,0.85)';
+      ctx.font = '600 9px DM Sans, sans-serif';
+      ctx.textAlign = 'left';
+      ctx.fillText('Adenosine', adenosineX + 3, margin.t + 10);
+    }
+
+    // Helper: ratio at a given absolute beat-position
+    // First 1.4 beats: resting (~ 0.93). After: ramps to 0.70 over ~ 1.5 beats.
+    function ratioAt(beatPos) {
+      var resting = 0.93;
+      var maxHyp = 0.70;
+      if (beatPos < 1.4) return resting;
+      var u = Math.min(1, (beatPos - 1.4) / 1.5);
+      return resting + (maxHyp - resting) * (1 - Math.pow(1 - u, 1.4));
+    }
+
+    // Clip to sweep
+    ctx.save();
+    ctx.beginPath();
+    ctx.rect(margin.l, margin.t, sweepX - margin.l, plotH);
+    ctx.clip();
+
+    // Pa tracing
+    ctx.strokeStyle = '#ef4444';
+    ctx.lineWidth = 1.8;
+    ctx.shadowColor = 'rgba(239,68,68,0.5)';
+    ctx.shadowBlur = 4;
+    ctx.beginPath();
+    for (var b = 0; b < beats; b++) {
+      for (var i = 0; i <= 36; i++) {
+        var u = i / 36;
+        var Pa = paPress(u);
+        var x = margin.l + (b + u) * beatW;
+        var y = yOf(Pa);
+        if (b === 0 && i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+      }
+    }
+    ctx.stroke();
+
+    // Pd tracing
+    ctx.strokeStyle = '#4a90d9';
+    ctx.lineWidth = 1.8;
+    ctx.shadowColor = 'rgba(74,144,217,0.5)';
+    ctx.beginPath();
+    for (var b2 = 0; b2 < beats; b2++) {
+      for (var j = 0; j <= 36; j++) {
+        var u2 = j / 36;
+        var Pa2 = paPress(u2);
+        var ratio = ratioAt(b2 + u2);
+        var Pd = Pa2 * ratio;
+        var x2 = margin.l + (b2 + u2) * beatW;
+        var y2 = yOf(Pd);
+        if (b2 === 0 && j === 0) ctx.moveTo(x2, y2); else ctx.lineTo(x2, y2);
+      }
+    }
+    ctx.stroke();
+    ctx.shadowBlur = 0;
+    ctx.restore();
+
+    // FFR caliper at the very end (revealed after sweep passes the last beat)
+    if (progress > 0.85) {
+      var calX = margin.l + plotW - 14;
+      var PaMean = 88;
+      var PdMean = PaMean * 0.70;
+      ctx.strokeStyle = 'rgba(253,204,77,0.85)';
+      ctx.lineWidth = 1.4;
+      ctx.setLineDash([3, 2]);
+      ctx.beginPath();
+      ctx.moveTo(calX, yOf(PaMean));
+      ctx.lineTo(calX, yOf(PdMean));
+      ctx.stroke();
+      ctx.setLineDash([]);
+      ctx.fillStyle = 'rgba(253,204,77,0.95)';
+      ctx.font = '700 11px DM Sans, sans-serif';
+      ctx.textAlign = 'right';
+      ctx.fillText('FFR 0.70', calX - 4, yOf((PaMean + PdMean) / 2) + 4);
+    }
+
+    // Labels
+    if (progress > 0.50) {
+      ctx.font = '600 9px DM Sans, sans-serif';
+      ctx.textAlign = 'left';
+      ctx.fillStyle = 'rgba(239,68,68,0.85)';
+      ctx.fillText('— Pa', margin.l + 4, margin.t + 10);
+      ctx.fillStyle = 'rgba(74,144,217,0.85)';
+      ctx.fillText('— Pd', margin.l + 4, margin.t + 22);
+    }
+  }
+
+  function startIntraAnimation(loops) {
+    if (intraRunning) return;
+    loops = loops || 1;
+    ensureSetup();
+    if (!intraSetup) return;
+    intraDone = false; intraRunning = true;
+    var dur = 2800, loopIdx = 0;
+    function runLoop() {
+      var t0 = performance.now();
+      function frame() {
+        var p = Math.min((performance.now() - t0) / dur, 1);
+        drawIntraFrame(intraSetup, p);
+        if (p < 1) requestAnimationFrame(frame);
+        else {
+          loopIdx++;
+          if (loopIdx < loops) { setTimeout(runLoop, 200); }
+          else { intraDone = true; intraRunning = false; }
+        }
+      }
+      requestAnimationFrame(frame);
+    }
+    runLoop();
+  }
+
+
+  /* ══════════════════════════════════════
      HOVER REPLAY
      ══════════════════════════════════════ */
   function addHoverReplay(cardId, startFn) {
@@ -2152,6 +2326,7 @@ body {
     addHoverReplay('cardAp', startApAnimation);
     addHoverReplay('cardEcho', startEchoAnimation);
     addHoverReplay('cardAngio', startAngioAnimation);
+    addHoverReplay('cardIntra', startIntraAnimation);
   });
 
   // Auto-skip animation if already seen on this device within 48 hours

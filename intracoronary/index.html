@@ -1,0 +1,2396 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Intracoronary Physiology & Imaging — FFR, iFR, IVUS, OCT | CathMath</title>
+<meta name="description" content="Interactive intracoronary physiology and intravascular imaging simulator. FFR, iFR, NHPRs, pressure-flow relationships, IVUS quantitative measurements, OCT plaque morphology, strut apposition — with animated visualizations and pitfalls.">
+<meta name="keywords" content="FFR, fractional flow reserve, iFR, instantaneous wave-free ratio, NHPR, non-hyperemic pressure ratio, dPR, DFR, RFR, coronary physiology, pressure wire, pullback, IVUS, intravascular ultrasound, MLA, minimum lumen area, EEM, external elastic membrane, plaque burden, OCT, optical coherence tomography, strut apposition, plaque morphology, Gould curve, coronary flow reserve, FAME, DEFINE-FLAIR, DEFER, left main FFR, post-PCI FFR">
+<meta name="author" content="Dr. Saro Avedikian, MD, MPH">
+<meta name="robots" content="index, follow">
+<link rel="canonical" href="https://cathmath.org/intracoronary/">
+<link rel="icon" type="image/x-icon" href="/favicon.ico">
+<link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://cathmath.org/intracoronary/">
+<meta property="og:title" content="Intracoronary Physiology & Imaging | CathMath">
+<meta property="og:description" content="FFR, iFR, NHPRs, IVUS, OCT — animated pressure tracings, cross-sections, pullback maps, and clinical pitfalls.">
+<meta property="og:image" content="https://cathmath.org/og-image.png">
+<meta property="og:site_name" content="CathMath">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Intracoronary Physiology & Imaging | CathMath">
+<meta name="twitter:description" content="FFR · iFR · NHPRs · IVUS · OCT — animated, with clinical pitfalls.">
+<meta name="twitter:image" content="https://cathmath.org/og-image.png">
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "WebApplication",
+  "name": "Intracoronary Physiology & Imaging Simulator",
+  "url": "https://cathmath.org/intracoronary/",
+  "description": "Interactive simulator covering coronary physiology (pressure-flow relationship, Gould curve, FFR, iFR, NHPRs, pullback) and intravascular imaging (IVUS three-layer anatomy, quantitative MLA / EEM, OCT plaque morphology, stent strut apposition) with animated visualizations and pitfall callouts.",
+  "applicationCategory": "EducationalApplication",
+  "operatingSystem": "Web",
+  "offers": {"@type": "Offer", "price": "0"},
+  "author": {"@type": "Person", "name": "Dr. Saro Avedikian", "jobTitle": "Cardiology Fellow"}
+}
+</script>
+<style>
+:root {
+  --navy: #0d2240;
+  --navy-deep: #091a33;
+  --bg: #f4f6f9;
+  --panel-bg: #ffffff;
+  --panel-bg-2: #f9fafc;
+  --border: #d8dfe8;
+  --text: #1a1a2e;
+  --text-dim: #5a6478;
+  --text-muted: #8892a4;
+  --accent: #3b82f6;
+  --severity-mild: #10b981;
+  --severity-mod: #f59e0b;
+  --severity-severe: #ef4444;
+  --slider-track: #e3e7ee;
+  --slider-thumb: var(--navy);
+}
+body.dark {
+  --bg: #0a1220;
+  --panel-bg: #131a26;
+  --panel-bg-2: #0f1722;
+  --border: #2a3340;
+  --text: #d8dce4;
+  --text-dim: #9aa3b3;
+  --text-muted: #6b7587;
+  --slider-track: #2a3340;
+  --slider-thumb: #4a90d9;
+  --navy: #4a90d9;
+  --navy-deep: #1e2740;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { height: 100%; }
+body {
+  font-family: -apple-system, "Helvetica Neue", Helvetica, Arial, sans-serif;
+  font-size: 14px;
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ═══ SITE NAV ═══ */
+.site-nav {
+  background: #0a1628;
+  color: #fff;
+  display: flex;
+  align-items: center;
+  padding: 0 24px;
+  height: 42px;
+  position: sticky;
+  top: 0;
+  z-index: 200;
+  border-bottom: 1px solid rgba(255,255,255,0.06);
+  flex-shrink: 0;
+}
+.nav-brand { font-size: 16px; font-weight: 800; margin-right: 32px; color: #fff; text-decoration: none; letter-spacing: 0.3px; }
+.nav-tabs { display: flex; height: 100%; }
+.nav-tab {
+  display: flex; align-items: center;
+  padding: 0 16px; height: 42px;
+  font-size: 13px; font-weight: 600;
+  color: rgba(255,255,255,0.5);
+  text-decoration: none;
+  border-bottom: 2px solid transparent;
+  transition: color 0.2s, border-color 0.2s;
+  white-space: nowrap;
+}
+.nav-tab:hover { color: rgba(255,255,255,0.85); }
+.nav-tab.active { color: #fff; border-bottom-color: #4a90d9; }
+.nav-right { margin-left: auto; display: flex; align-items: center; gap: 16px; }
+.nav-credit { font-size: 11px; opacity: 0.5; font-weight: 400; }
+.nav-right button {
+  background: rgba(255,255,255,0.1);
+  color: #fff;
+  border: 1px solid rgba(255,255,255,0.18);
+  padding: 4px 12px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 11px;
+  font-weight: 600;
+  transition: background 0.2s;
+}
+.nav-right button:hover { background: rgba(255,255,255,0.2); }
+
+/* ═══ MAIN ═══ */
+.main { display: flex; flex: 1; min-height: 0; }
+
+/* ═══ LEFT SIDEBAR ═══ */
+.left {
+  width: 260px;
+  flex-shrink: 0;
+  background: var(--panel-bg);
+  border-right: 1px solid var(--border);
+  overflow-y: auto;
+  padding: 16px;
+}
+.sidebar-header {
+  margin-bottom: 14px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--border);
+}
+.sidebar-header h1 {
+  font-size: 13.5px;
+  font-weight: 700;
+  margin: 0;
+  color: var(--text);
+  letter-spacing: -0.01em;
+  line-height: 1.2;
+}
+.sidebar-header .sub {
+  font-size: 10.5px;
+  color: var(--text-dim);
+  margin-top: 3px;
+  line-height: 1.3;
+}
+.module-list { display: flex; flex-direction: column; gap: 2px; }
+.module-group-header {
+  font-size: 9.5px;
+  font-weight: 700;
+  letter-spacing: 0.10em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  padding: 12px 10px 4px;
+}
+.module-group-header:first-child { padding-top: 4px; }
+.module-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 10px;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  color: var(--text);
+  font-size: 12.5px;
+  font-weight: 600;
+  text-align: left;
+  cursor: pointer;
+  transition: all 0.15s;
+  width: 100%;
+}
+.module-btn:hover {
+  background: var(--panel-bg-2);
+  border-color: var(--border);
+}
+.module-btn.active {
+  background: rgba(59,130,246,0.08);
+  border-color: rgba(59,130,246,0.3);
+  color: var(--accent);
+}
+body.dark .module-btn.active { background: rgba(74,144,217,0.15); border-color: rgba(74,144,217,0.4); color: #6eb0f7; }
+.module-btn .num {
+  font-family: "SF Mono", Menlo, Consolas, monospace;
+  font-size: 10.5px;
+  font-weight: 700;
+  color: var(--text-muted);
+  flex-shrink: 0;
+  width: 14px;
+  text-align: right;
+}
+.module-btn.active .num { color: var(--accent); }
+body.dark .module-btn.active .num { color: #6eb0f7; }
+
+/* ═══ MAIN PANEL ═══ */
+.right {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  background: var(--bg);
+  min-width: 0;
+  overflow-y: auto;
+}
+.module-pane {
+  padding: 24px 32px;
+  max-width: 1040px;
+  width: 100%;
+  margin: 0 auto;
+}
+.module-title {
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--text);
+  margin-bottom: 4px;
+  letter-spacing: -0.01em;
+}
+.module-purpose {
+  font-size: 13px;
+  color: var(--text-dim);
+  margin-bottom: 18px;
+  line-height: 1.5;
+}
+
+/* ═══ VIZ CANVAS ═══ */
+.viz-wrap {
+  background: var(--panel-bg);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 14px;
+  margin-bottom: 16px;
+  position: relative;
+}
+.viz-canvas-wrap {
+  width: 100%;
+  height: 320px;
+  position: relative;
+  border-radius: 6px;
+  overflow: hidden;
+  background: #0d1019;
+}
+.viz-canvas-wrap canvas { display: block; width: 100%; height: 100%; }
+
+/* ═══ ATLAS → CALCULATOR LINK BUTTON ═══ */
+.calc-link-row {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 12px;
+}
+.calc-link-btn {
+  background: linear-gradient(180deg, rgba(59,130,246,0.14) 0%, rgba(59,130,246,0.08) 100%);
+  border: 1px solid rgba(59,130,246,0.35);
+  color: var(--accent);
+  padding: 8px 14px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 12.5px;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  transition: all 0.15s;
+  font-family: inherit;
+}
+.calc-link-btn:hover {
+  background: rgba(59,130,246,0.20);
+  border-color: rgba(59,130,246,0.55);
+}
+body.dark .calc-link-btn { color: #6eb0f7; }
+
+/* ═══ FORMULA CARD ═══ */
+.formula-card {
+  background: linear-gradient(180deg, var(--panel-bg) 0%, var(--panel-bg-2) 100%);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 14px 20px;
+  margin-bottom: 16px;
+  display: flex;
+  align-items: flex-start;
+  gap: 18px;
+  flex-wrap: wrap;
+}
+.formula-label {
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: 0.10em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  flex-shrink: 0;
+  padding-top: 3px;
+}
+.formula-body {
+  font-family: -apple-system, "Helvetica Neue", "Segoe UI", Helvetica, Arial, sans-serif;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text);
+  letter-spacing: 0;
+  line-height: 1.55;
+  flex: 1;
+  min-width: 0;
+}
+.formula-body sub, .formula-body sup { font-size: 0.78em; font-weight: 600; }
+.formula-body em { color: var(--accent); font-style: normal; font-weight: 600; }
+.formula-body strong { color: var(--navy); font-weight: 700; }
+body.dark .formula-body strong { color: #6eb0f7; }
+
+/* ═══ INPUTS PANEL ═══ */
+.inputs-card, .outputs-card, .pitfalls-card {
+  background: var(--panel-bg);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 14px 18px;
+  margin-bottom: 16px;
+}
+.card-title {
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--navy);
+  margin-bottom: 10px;
+}
+body.dark .card-title { color: var(--text); }
+
+.input-row {
+  display: grid;
+  grid-template-columns: 140px 1fr 80px 36px;
+  gap: 10px;
+  align-items: center;
+  margin-bottom: 10px;
+  font-size: 12.5px;
+}
+.input-row:last-child { margin-bottom: 0; }
+.input-row label { font-weight: 600; color: var(--text); cursor: help; }
+.input-row input[type=range] {
+  -webkit-appearance: none;
+  appearance: none;
+  height: 4px;
+  background: var(--slider-track);
+  border-radius: 2px;
+  outline: none;
+  cursor: pointer;
+  width: 100%;
+}
+.input-row input[type=range]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: var(--slider-thumb);
+  cursor: pointer;
+  border: 2px solid var(--panel-bg);
+  box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+}
+.input-row .val {
+  font-family: "SF Mono", Menlo, Consolas, monospace;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--navy);
+  text-align: right;
+}
+body.dark .input-row .val { color: #6eb0f7; }
+.input-row .unit {
+  font-size: 10.5px;
+  color: var(--text-muted);
+}
+
+/* ═══ INPUT — PICKER (e.g. RAP) ═══ */
+.picker-row {
+  display: grid;
+  grid-template-columns: 140px 1fr;
+  gap: 10px;
+  align-items: center;
+  margin-bottom: 10px;
+  font-size: 12.5px;
+}
+.picker-row label { font-weight: 600; color: var(--text); }
+.picker-options { display: flex; gap: 4px; flex-wrap: wrap; }
+.picker-opt {
+  padding: 5px 10px;
+  background: var(--panel-bg-2);
+  border: 1px solid var(--border);
+  border-radius: 5px;
+  color: var(--text);
+  font-size: 11.5px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.picker-opt:hover { border-color: var(--accent); color: var(--accent); }
+.picker-opt.active {
+  background: var(--accent);
+  color: #fff;
+  border-color: var(--accent);
+}
+.picker-row .picker-help {
+  font-size: 10px;
+  color: var(--text-muted);
+  grid-column: 2;
+  margin-top: 2px;
+}
+
+/* ═══ OUTPUTS ═══ */
+.outputs-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 10px;
+}
+.output-cell {
+  background: var(--panel-bg-2);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 10px 12px;
+}
+.output-label {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  margin-bottom: 3px;
+}
+.output-value {
+  font-family: "SF Mono", Menlo, Consolas, monospace;
+  font-size: 17px;
+  font-weight: 700;
+  color: var(--navy);
+}
+body.dark .output-value { color: #6eb0f7; }
+.output-unit { font-size: 11px; color: var(--text-muted); margin-left: 3px; }
+.severity-pill {
+  display: inline-block;
+  font-size: 9.5px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  padding: 2px 7px;
+  border-radius: 10px;
+  margin-top: 4px;
+}
+
+/* Text-style output cells (atlas modules) — sans-serif, wraps cleanly */
+.output-cell.text .output-value {
+  font-family: -apple-system, "Helvetica Neue", "Segoe UI", Helvetica, Arial, sans-serif;
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1.45;
+  letter-spacing: 0;
+  white-space: normal;
+  color: var(--text);
+}
+.output-cell.wide {
+  grid-column: span 2;
+}
+.severity-pill.normal { background: rgba(16,185,129,0.15); color: var(--severity-mild); }
+.severity-pill.mild { background: rgba(16,185,129,0.15); color: var(--severity-mild); }
+.severity-pill.moderate { background: rgba(245,158,11,0.18); color: var(--severity-mod); }
+.severity-pill.severe { background: rgba(239,68,68,0.18); color: var(--severity-severe); }
+
+/* ═══ PITFALLS ═══ */
+.pitfalls-card .card-title { color: var(--severity-mod); }
+.pitfall {
+  display: flex;
+  gap: 10px;
+  font-size: 12.5px;
+  color: var(--text);
+  line-height: 1.5;
+  padding-left: 4px;
+  margin-bottom: 6px;
+}
+.pitfall::before {
+  content: '⚠';
+  flex-shrink: 0;
+  color: var(--severity-mod);
+  font-weight: 700;
+}
+.pitfall:last-child { margin-bottom: 0; }
+
+/* ═══ SEO CONTENT SECTION — collapsed by default, expandable ═══ */
+/* Content remains in the DOM so Google indexes it (per Google's documented
+ * stance on collapsed <details> elements being treated as visible content
+ * for ranking). Just visually hidden until the user clicks the summary. */
+.seo-section {
+  max-width: 880px;
+  margin: 16px auto 24px;
+  padding: 0;
+}
+.seo-section summary {
+  list-style: none;
+  cursor: pointer;
+  padding: 10px 16px;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  color: var(--text-muted);
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  border-radius: 8px;
+  border: 1px solid transparent;
+  transition: color 0.15s, background 0.15s, border-color 0.15s;
+  user-select: none;
+}
+.seo-section summary::-webkit-details-marker { display: none; }
+.seo-section summary::before {
+  content: '▸';
+  font-size: 10px;
+  display: inline-block;
+  transition: transform 0.2s;
+}
+.seo-section[open] summary::before { transform: rotate(90deg); }
+.seo-section summary:hover {
+  color: var(--text);
+  background: var(--panel-bg-2);
+  border-color: var(--border);
+}
+.seo-section[open] summary {
+  margin-bottom: 8px;
+}
+.seo-content-body {
+  padding: 24px 28px;
+  background: var(--panel-bg);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  font-size: 14.5px;
+  line-height: 1.65;
+  color: var(--text);
+  animation: seoFadeIn 0.25s ease-out;
+}
+@keyframes seoFadeIn { from { opacity: 0; transform: translateY(-4px); } to { opacity: 1; transform: translateY(0); } }
+.seo-content-body h3 {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--text);
+  margin: 24px 0 10px;
+  letter-spacing: -0.005em;
+}
+.seo-content-body h3:first-child { margin-top: 0; }
+.seo-content-body p {
+  margin: 0 0 14px;
+  color: var(--text-dim);
+}
+.seo-content-body strong {
+  color: var(--text);
+  font-weight: 600;
+}
+body.dark .seo-content-body { background: var(--panel-bg-2); }
+body.dark .seo-content-body p { color: #c4ccda; }
+body.dark .seo-content-body h3 { color: #e8ecf2; }
+
+/* ═══ MOBILE ═══ */
+@media (max-width: 800px) {
+  .main { flex-direction: column; }
+  .left { width: 100%; max-height: 38vh; border-right: none; border-bottom: 1px solid var(--border); }
+  .module-pane { padding: 14px 16px; }
+  .input-row { grid-template-columns: 120px 1fr 70px 30px; font-size: 11.5px; }
+
+  /* Mobile nav: 7 tabs need to fit on phone — scroll horizontally */
+  .site-nav { overflow-x: auto; overflow-y: hidden; -webkit-overflow-scrolling: touch; padding: 0 12px; }
+  .site-nav::-webkit-scrollbar { display: none; }
+  .nav-brand { flex-shrink: 0; margin-right: 14px; font-size: 14px; }
+  .nav-tabs { flex-shrink: 0; gap: 0; }
+  .nav-tab { flex-shrink: 0; white-space: nowrap; padding: 0 10px; font-size: 11px; }
+  .nav-right { display: none; }
+}
+
+/* ═══ SEO "About" POPOVER — small trigger in the nav that opens a modal-style
+   panel. Content stays in the DOM for indexing but doesn't clutter the canvas. ═══ */
+.seo-popover { display: inline-block; position: relative; }
+.seo-trigger {
+  list-style: none;
+  cursor: pointer;
+  background: rgba(255, 255, 255, 0.1);
+  color: rgba(255, 255, 255, 0.78);
+  border: 1px solid transparent;
+  border-radius: 4px;
+  padding: 5px 10px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  transition: all 0.15s;
+}
+.seo-trigger::-webkit-details-marker { display: none; }
+.seo-trigger:hover {
+  background: rgba(255, 255, 255, 0.2);
+  color: #fff;
+  border-color: rgba(255, 255, 255, 0.22);
+}
+.seo-popover[open] .seo-trigger {
+  background: rgba(253, 204, 77, 0.18);
+  color: #fdcc4d;
+  border-color: rgba(253, 204, 77, 0.42);
+}
+.seo-popover-body { display: none; }
+.seo-popover[open] .seo-popover-body {
+  display: block;
+  position: fixed;
+  top: 54px;
+  right: 12px;
+  width: min(640px, calc(100vw - 24px));
+  max-height: calc(100vh - 70px);
+  overflow-y: auto;
+  background: var(--panel-bg, #fff);
+  color: var(--text, #1a1a2e);
+  border: 1px solid var(--border, #d8dfe8);
+  border-radius: 10px;
+  padding: 24px 28px;
+  z-index: 1000;
+  box-shadow: 0 14px 44px rgba(0, 0, 0, 0.55);
+  font-size: 13.5px;
+  line-height: 1.6;
+  animation: seoPopoverFadeIn 0.18s ease-out;
+}
+@keyframes seoPopoverFadeIn {
+  from { opacity: 0; transform: translateY(-8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.seo-popover-body h2 {
+  font-size: 17px; font-weight: 700; margin: 0 0 10px;
+  color: var(--text, #1a1a2e); letter-spacing: -0.005em;
+}
+.seo-popover-body h3 {
+  font-size: 13.5px; font-weight: 700; margin: 16px 0 6px;
+  color: var(--text, #1a1a2e);
+}
+.seo-popover-body h3:first-of-type { margin-top: 0; }
+.seo-popover-body p { margin: 0 0 9px; color: var(--text-dim, #5a6478); }
+.seo-popover-body ul { padding-left: 20px; margin-bottom: 9px; }
+.seo-popover-body ul li { margin-bottom: 4px; color: var(--text-dim, #5a6478); }
+.seo-popover-body ul ul { margin-top: 4px; padding-left: 20px; }
+.seo-popover-body strong { color: var(--text, #1a1a2e); font-weight: 600; }
+.seo-popover-body .related-tools {
+  display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px; font-size: 12px;
+}
+.seo-popover-body .related-tools a {
+  display: inline-block; padding: 4px 11px;
+  background: var(--panel-bg-2, #f9fafc);
+  border: 1px solid var(--border, #d8dfe8);
+  border-radius: 12px;
+  color: var(--text, #1a1a2e); text-decoration: none; font-weight: 600;
+  transition: all 0.15s;
+}
+.seo-popover-body .related-tools a:hover {
+  border-color: var(--accent, #3b82f6); color: var(--accent, #3b82f6);
+}
+.seo-popover[open]::before {
+  content: '';
+  position: fixed; inset: 0;
+  background: rgba(0, 0, 0, 0.30);
+  z-index: 999;
+  pointer-events: none;
+}
+@media (max-width: 800px) {
+  .seo-trigger { padding: 4px 7px; font-size: 10.5px; }
+  .seo-trigger-text { display: none; }
+  .seo-popover[open] .seo-popover-body {
+    top: 50px; right: 8px; left: 8px; width: auto;
+    max-height: calc(100vh - 64px); padding: 18px 20px;
+  }
+}
+
+</style>
+</head>
+<body class="dark">
+
+<!-- ═══ SITE NAV ═══ -->
+<nav class="site-nav">
+  <a href="/" class="nav-brand">CathMath</a>
+  <div class="nav-tabs">
+    <a href="/rhc/" class="nav-tab">RHC Calculator</a>
+    <a href="/pvloop/" class="nav-tab">PV Loops</a>
+    <a href="/ekg/" class="nav-tab">EKG Simulator</a>
+    <a href="/embryology/" class="nav-tab">Embryology</a>
+    <a href="/hemodynamics/" class="nav-tab">Hemodynamics</a>
+    <a href="/ap/" class="nav-tab">Action Potential</a>
+    <a href="/echocalc/" class="nav-tab">Echo Calc</a>
+    <a href="/angio/" class="nav-tab">Angio Views</a>
+    <a href="/intracoronary/" class="nav-tab active">Intracoronary</a>
+  </div>
+  <div class="nav-right">
+    <span class="nav-credit">Dr. Saro Avedikian, MD, MPH</span>
+    <details class="seo-popover" id="seoPopover">
+      <summary class="seo-trigger" title="About this simulator">
+        <span aria-hidden="true">ⓘ</span>
+        <span class="seo-trigger-text">About</span>
+      </summary>
+      <div class="seo-popover-body">
+        <h2>About the Intracoronary Physiology &amp; Imaging Simulator</h2>
+        <p>This is a free, browser-based teaching tool for two intertwined topics in interventional cardiology: <strong>coronary physiology</strong> (FFR, iFR, NHPRs, pressure-flow relationships, pullback gradient mapping) and <strong>intravascular imaging</strong> (IVUS and OCT — three-layer anatomy, plaque morphology, quantitative measurements, and stent-strut assessment). The same lesion is often interrogated with both a pressure wire and an imaging catheter, and the simulator treats them as one workflow rather than two separate worlds.</p>
+
+          <h3>What the simulator covers</h3>
+          <p><strong>Coronary Physiology</strong> introduces the pressure-flow relationship under resting and hyperemic conditions, the Gould curve relating coronary flow reserve to percent diameter stenosis, the conceptual basis of fractional flow reserve (FFR = Pd / Pa at maximal hyperemia), the instantaneous wave-free ratio (iFR) and the diastolic wave-free period, and a side-by-side comparison of the non-hyperemic pressure ratios (iFR, dPR, DFR, RFR, resting Pd/Pa) with their published cutoffs and trial evidence.</p>
+
+          <p><strong>FFR Clinical</strong> covers serial-lesion pullback interpretation (where the gradient lives matters more than the composite FFR), the left main perfusion-bed-size sensitivity that makes FFR less binary than for non-LM vessels, and the prognostic value of post-PCI physiology in identifying suboptimal results before the patient leaves the table.</p>
+
+          <p><strong>IVUS</strong> begins with the bright–dark–bright three-layer appearance (intima–media–adventitia), then moves to quantitative measurements (external elastic membrane, minimum lumen area, plaque burden, stent under-expansion), and applies the framework to left-main intermediate stenosis (MLA cutoff 6.0 mm² for the LM, ~4.0 mm² for non-LM intermediate lesions).</p>
+
+          <p><strong>OCT</strong> exploits the ~10–20 µm axial resolution to characterize plaque morphology (fibrous, lipid-rich with thin-cap fibroatheroma, calcific with sharp borders and signal poor shadow patterns) and to measure stent-strut apposition with the precision that matters for late acquired malapposition and uncovered struts. The IVUS-vs-OCT trade-offs (penetration depth vs axial resolution, blood handling, frame rate) are surfaced where they affect clinical decisions.</p>
+
+          <h3>How to use it</h3>
+          <p>Click any module in the sidebar to open its visualisation. Interactive modules expose sliders and pickers; outputs and the visualisation update in real time. Atlas modules show side-by-side comparisons with picker views. Animation runs for three seconds on each module switch and then fades — slider adjustments redraw without restarting the animation. Every module has a Common Pitfalls section listing the gotchas, exclusions, and special-population considerations.</p>
+
+          <h3>Who it's for</h3>
+          <p>Built for cardiology fellows, interventional fellows, advanced practice providers, and attending cardiologists who want a fast, on-call-friendly reference for the coronary catheterization laboratory. The cutoffs and algorithms shown are based on published guidelines and large randomized trials and are intended for educational reference. Always integrate invasive measurements with the clinical scenario, non-invasive imaging, and anatomic appropriateness for revascularization before making management decisions.</p>
+
+          <h3>Source references</h3>
+          <p>Anatomy, physiology principles, and figure inspiration drawn from Grossman &amp; Baim's Cardiac Catheterization, Angiography, and Intervention (9th edition). Trial evidence: FAME (Tonino et al, NEJM 2009), FAME 2 (De Bruyne et al, NEJM 2012), DEFER (Pijls et al, JACC 2007 + 15-yr follow-up), DEFINE-FLAIR (Davies et al, NEJM 2017), iFR-SWEDEHEART (Götberg et al, NEJM 2017), DANAMI-3-PRIMULTI (Engstrøm et al, Lancet 2015). IVUS and OCT methodologies follow the 2018 EAPCI/ACVC consensus document (Räber et al, Eur Heart J 2018) on clinical use of intracoronary imaging.</p>
+      </div>
+    </details>
+    <button id="darkToggle" onclick="toggleDark()">Light Mode</button>
+  </div>
+</nav>
+
+<!-- ═══ MAIN ═══ -->
+<div class="main">
+  <!-- LEFT PANEL -->
+  <aside class="left">
+    <div class="sidebar-header">
+      <h1>Intracoronary Physiology &amp; Imaging</h1>
+      <div class="sub">FFR · iFR · NHPRs · IVUS · OCT — animated with clinical pitfalls</div>
+    </div>
+    <div class="module-list" id="moduleList"></div>
+  </aside>
+
+  <!-- RIGHT PANEL -->
+  <main class="right">
+    <div class="module-pane" id="modulePane">
+      <div class="module-title" id="modTitle">—</div>
+      <div class="module-purpose" id="modPurpose">—</div>
+
+      <div class="viz-wrap">
+        <div class="viz-canvas-wrap"><canvas id="vizCanvas"></canvas></div>
+      </div>
+
+      <div class="calc-link-row" id="calcLinkRow" style="display:none;">
+        <button class="calc-link-btn" id="calcLinkBtn"></button>
+      </div>
+
+      <div class="formula-card">
+        <div class="formula-label">Formula</div>
+        <div class="formula-body" id="modFormula">—</div>
+      </div>
+
+      <div class="inputs-card">
+        <div class="card-title">Inputs</div>
+        <div id="modInputs"></div>
+      </div>
+
+      <div class="outputs-card">
+        <div class="card-title">Outputs</div>
+        <div class="outputs-grid" id="modOutputs"></div>
+      </div>
+
+      <div class="pitfalls-card">
+        <div class="card-title">Common Pitfalls</div>
+        <div id="modPitfalls"></div>
+      </div>
+
+      <!-- ═══ SEO content — collapsed by default, expandable. Content remains in DOM
+           for crawlability per Google's documented treatment of <details> elements. ═══ -->
+      
+    </div>
+  </main>
+</div>
+
+<script>
+'use strict';
+
+// ═══════════════════════════════════════════════════════════
+// SEVERITY GRADERS (return {label, klass})
+// ═══════════════════════════════════════════════════════════
+function gradeFFR(v) {
+  if (v <= 0.75) return { label: 'definitely ischemic', klass: 'severe' };
+  if (v <= 0.80) return { label: 'ischemic (PCI)', klass: 'severe' };
+  if (v <= 0.90) return { label: 'gray zone — defer with caution', klass: 'moderate' };
+  return { label: 'not ischemic — defer', klass: 'normal' };
+}
+function gradeIFR(v) {
+  if (v <= 0.89) return { label: 'ischemic (PCI)', klass: 'severe' };
+  return { label: 'not ischemic — defer', klass: 'normal' };
+}
+function gradeLM_MLA(v) {
+  if (v < 4.5) return { label: 'severe — PCI/CABG', klass: 'severe' };
+  if (v < 6.0) return { label: 'borderline — confirm with FFR', klass: 'moderate' };
+  return { label: 'non-significant LM', klass: 'normal' };
+}
+function gradeNonLM_MLA(v) {
+  if (v < 2.4) return { label: 'severe / flow-limiting', klass: 'severe' };
+  if (v < 4.0) return { label: 'intermediate — pair with FFR', klass: 'moderate' };
+  return { label: 'non-significant', klass: 'normal' };
+}
+function gradeCFR(v) {
+  if (v < 2.0) return { label: 'abnormal CFR', klass: 'severe' };
+  if (v < 2.5) return { label: 'borderline', klass: 'moderate' };
+  return { label: 'normal CFR', klass: 'normal' };
+}
+function gradePlaqueBurden(v) {
+  if (v >= 70) return { label: 'high — vulnerable risk', klass: 'severe' };
+  if (v >= 50) return { label: 'moderate', klass: 'moderate' };
+  return { label: 'low', klass: 'normal' };
+}
+function gradePdPa(v) {
+  // Resting Pd/Pa — when below 0.92, FFR likely abnormal
+  if (v < 0.92) return { label: 'likely ischemic — proceed to hyperemia', klass: 'moderate' };
+  return { label: 'unlikely ischemic at rest', klass: 'normal' };
+}
+
+// ═══════════════════════════════════════════════════════════
+// MODULE REGISTRY
+// ═══════════════════════════════════════════════════════════
+const MODULES = {
+  // ─────────────────────────────────────────────────────────
+  // GROUP 1: CORONARY PHYSIOLOGY
+  // ─────────────────────────────────────────────────────────
+  pressure_flow: {
+    id: 'pressure_flow',
+    title: 'Pressure–Flow Relationship',
+    purpose: 'The coronary pressure–flow relationship has two faces. At rest, autoregulation keeps myocardial flow nearly constant across a wide range of perfusion pressures (~60–140 mmHg). After a maximal hyperemic stimulus (adenosine), autoregulation is abolished and flow becomes a linear function of pressure — and the slope of that line falls in proportion to epicardial stenosis severity. Slide the stenosis to watch the hyperemic line flatten.',
+    formula: '<strong>Rest:</strong> CBF held flat by autoregulation across the plateau range &nbsp;·&nbsp; <strong>Hyperemia:</strong> CBF ≈ k · (P<sub>distal</sub> − P<sub>v</sub>), slope = 1 / resistance &nbsp;·&nbsp; <strong>CFR</strong> = hyperemic CBF / resting CBF',
+    inputs: [
+      { type: 'slider', key: 'stenosis', label: 'Stenosis (% diameter)', unit: '%', min: 0, max: 90, step: 5, default: 0, decimals: 0 },
+    ],
+    compute: (p) => {
+      const s = p.stenosis / 100;
+      // Hyperemic flow at Pa = 100 mmHg — relative to maximal (no stenosis) flow.
+      // Empirically falls off non-linearly above ~50% (matches Gould/Lipscomb 1974).
+      const maxHyperemic = 4.0;  // CFR at no stenosis
+      const restingNorm = 1.0;
+      const k = 1 - Math.pow(s, 0.55);  // 1.0 at 0%, ~0.41 at 50%, ~0.10 at 90%
+      const hyperemicNorm = Math.max(0.6, maxHyperemic * k);
+      const cfr = hyperemicNorm / restingNorm;
+      return [
+        { key: 'cfr',  label: 'CFR (estimate)',   value: cfr.toFixed(2), unit: '×', severity: gradeCFR(cfr) },
+        { key: 'rest', label: 'Resting CBF',      value: '~ 1', unit: 'rel', text: false },
+        { key: 'hyp',  label: 'Hyperemic CBF',    value: hyperemicNorm.toFixed(2), unit: 'rel' },
+        { key: 'note', label: 'Concept',          value: 'Autoregulation collapses progressively as stenosis intrudes on the maximal hyperemic flow ceiling. Resting flow is preserved (compensatory distal vasodilation) until the lesion is severe (~85–90% diameter).', text: true, wide: true },
+      ];
+    },
+    draw: drawPressureFlow,
+    pitfalls: [
+      'CFR is a composite measurement — abnormal CFR can reflect either an epicardial stenosis OR microvascular dysfunction. A discordant CFR / FFR result suggests microvascular involvement.',
+      'Resting flow is NOT a reliable surrogate for hyperemic flow. A nearly normal resting Pd/Pa can coexist with a severely abnormal FFR.',
+      'The autoregulatory plateau is narrower in hypertensive LVH and shifts rightward — flow falls earlier on the upstream limb.',
+      'Adenosine and regadenoson should reach steady-state hyperemia (60–90 sec IV adenosine, ~2 min after regadenoson). Sub-maximal hyperemia OVERESTIMATES FFR.',
+    ],
+  },
+
+  // ─────────────────────────────────────────────────────────
+  gould_curve: {
+    id: 'gould_curve',
+    title: 'Gould Curve — CFR vs % stenosis',
+    purpose: 'The Gould curve (Lipscomb &amp; Gould 1974) describes how coronary flow reserve falls with progressive epicardial narrowing. Resting flow is preserved until ~85–90% stenosis; hyperemic flow begins to fall at ~50% stenosis and reaches resting flow at ~85–90% — the point where CFR = 1 and angina at rest emerges. The curve underpins every modern physiologic threshold.',
+    formula: '<strong>CFR</strong> = max hyperemic flow / resting flow &nbsp;·&nbsp; <strong>Normal:</strong> ≥ 2.5–3 &nbsp;·&nbsp; <strong>Abnormal:</strong> &lt; 2.0 &nbsp;·&nbsp; <strong>CFR = 1</strong> when resting and hyperemic flow converge (severe stenosis or microvascular disease)',
+    inputs: [
+      { type: 'slider', key: 'stenosis', label: 'Stenosis', unit: '%', min: 0, max: 95, step: 1, default: 50, decimals: 0 },
+    ],
+    compute: (p) => {
+      const s = p.stenosis;
+      // Gould curve approximation
+      const cfr = s < 40 ? 4.0 - 0.005 * s
+                : s < 70 ? 4.0 - 0.005 * s - 0.045 * (s - 40)
+                : s < 90 ? Math.max(1.0, 2.45 - 0.072 * (s - 70))
+                : Math.max(0.85, 1.0 - 0.02 * (s - 90));
+      let phase;
+      if (s < 40)      phase = 'Flat portion — hyperemic ceiling preserved.';
+      else if (s < 70) phase = 'Inflection — hyperemic flow falling, resting flow still preserved.';
+      else if (s < 90) phase = 'Steep limb — hyperemic and resting flow converging.';
+      else             phase = 'Critical stenosis — resting ischemia, CFR ≈ 1.';
+      return [
+        { key: 'cfr',   label: 'CFR @ stenosis', value: cfr.toFixed(2), unit: '×', severity: gradeCFR(cfr) },
+        { key: 'phase', label: 'Curve segment',  value: phase, unit: '', text: true, wide: true },
+      ];
+    },
+    draw: drawGouldCurve,
+    pitfalls: [
+      'The original Gould curve was a controlled experimental preparation (instrumented dog LAD); the clinical curve has more scatter because of collaterals, microvascular state, and diffuse disease upstream.',
+      'CFR cannot distinguish epicardial from microvascular cause — pair with FFR or use coronary flow / IMR for microvascular work-up.',
+      'Resting CBF rises with anemia, tachycardia, hyperthyroidism, AS — all REDUCE the achievable CFR even at normal coronary anatomy.',
+      'Diameter stenosis on angiography systematically underestimates plaque burden vs IVUS — a 50% angiographic narrowing may be ~70% by plaque burden.',
+    ],
+  },
+
+  // ─────────────────────────────────────────────────────────
+  ffr_concept: {
+    id: 'ffr_concept',
+    title: 'FFR — Pa, Pd at Hyperemia',
+    purpose: 'Fractional flow reserve is the ratio of distal coronary pressure (Pd) to aortic pressure (Pa), measured at maximal hyperemia. At baseline the two tracings nearly overlap. After IV adenosine the pressure gradient widens — FFR = Pd / Pa at peak hyperemia. Slide adenosine to watch the gradient open.',
+    formula: '<strong>FFR</strong> = P<sub>d</sub> / P<sub>a</sub> at steady-state hyperemia &nbsp;·&nbsp; <strong>Cut-off:</strong> ≤ 0.80 → PCI · &gt; 0.80 → defer · 0.75–0.80 = gray zone where clinical context guides',
+    inputs: [
+      { type: 'slider', key: 'stenosis', label: 'Stenosis (% diameter)', unit: '%', min: 0, max: 90, step: 5, default: 70, decimals: 0 },
+      { type: 'slider', key: 'hyperemia', label: 'Hyperemia level', unit: '%', min: 0, max: 100, step: 5, default: 100, decimals: 0 },
+    ],
+    compute: (p) => {
+      const s = p.stenosis / 100;
+      const h = p.hyperemia / 100;
+      const Pa = 95;
+      // Resting Pd/Pa ratio (typically 0.92–0.96 even with significant stenosis)
+      const restingPdPa = Math.max(0.86, 1 - 0.18 * Math.pow(s, 2.5));
+      // FFR (maximal hyperemia) drops more steeply
+      const maxHypFFR = Math.max(0.50, 1 - 0.55 * Math.pow(s, 1.7));
+      // Interpolate based on adenosine effect
+      const current = restingPdPa + (maxHypFFR - restingPdPa) * h;
+      const Pd = Pa * current;
+      return [
+        { key: 'pa',    label: 'P​a (aortic)',    value: Pa.toFixed(0), unit: 'mmHg' },
+        { key: 'pd',    label: 'P​d (distal)',    value: Pd.toFixed(0), unit: 'mmHg' },
+        { key: 'ratio', label: h === 1 ? 'FFR' : 'Pd / Pa', value: current.toFixed(2), unit: '', severity: h === 1 ? gradeFFR(current) : gradePdPa(current) },
+        { key: 'note',  label: 'Interpretation', value: h < 0.3 ? 'Resting gradient is small — even severe lesions look nearly equipotent without hyperemia.' : h < 0.7 ? 'Sub-maximal hyperemia — gradient widening but not steady-state. Wait for plateau.' : current <= 0.80 ? 'Ischemic FFR — flow-limiting lesion. PCI indicated (FAME).' : current <= 0.90 ? 'Gray zone — consider iFR co-registration or repeat measurement.' : 'Non-ischemic — defer PCI safely (DEFER 15-yr data: hard event rate equivalent to medical therapy).', text: true, wide: true },
+      ];
+    },
+    draw: drawFFRConcept,
+    pitfalls: [
+      'Sub-maximal hyperemia OVERESTIMATES FFR. With IV adenosine, allow 60–90 sec to plateau; with regadenoson, ~ 2 min. Always check the live waveform.',
+      'Pressure-wire drift (mean Pa ≠ Pd at the same anatomic position) requires re-equalization at the catheter tip before pullback.',
+      'Side-hole guide catheters falsely lower Pa during contrast/saline injection — disengage the guide before recording.',
+      'FFR loses interpretive power in left main lesions with diffuse downstream disease (perfusion bed shrinks) — see the LM module.',
+      'In ostial lesions, an aortic-pressure cuff from the manifold may be more accurate than guide-catheter Pa during measurement.',
+    ],
+  },
+
+  // ─────────────────────────────────────────────────────────
+  nhpr_compare: {
+    id: 'nhpr_compare',
+    title: 'NHPR Comparison — iFR / dPR / DFR / RFR',
+    purpose: 'Non-hyperemic pressure ratios (NHPRs) eliminate the adenosine step. iFR samples the diastolic wave-free period; dPR uses whole-of-diastole; DFR is similar; RFR is the single lowest Pd/Pa in any cardiac phase. All four converge on a 0.89 cut-off matched to FFR 0.80 in head-to-head studies. Resting whole-cycle Pd/Pa uses a higher cut-off (≤ 0.92).',
+    formula: '<strong>iFR</strong>: mean Pd/Pa in wave-free period (25%–end of diastole) &nbsp;·&nbsp; <strong>dPR / DFR</strong>: whole-of-diastole mean &nbsp;·&nbsp; <strong>RFR</strong>: minimum Pd/Pa in any cardiac phase &nbsp;·&nbsp; <strong>Pd/Pa rest</strong>: mean over whole cycle',
+    inputs: [
+      { type: 'picker', key: 'view', label: 'View', default: 'cutoffs',
+        options: [
+          { v: 'cutoffs',  text: 'Cutoffs at a glance',  help: 'All NHPRs and their published ischemia thresholds' },
+          { v: 'evidence', text: 'Pivotal trials',       help: 'DEFINE-FLAIR + iFR-SWEDEHEART for iFR; smaller cohorts for dPR/DFR/RFR' },
+          { v: 'where',    text: 'When to use which',    help: 'Practical decision algorithm' },
+        ],
+      },
+    ],
+    compute: (p) => {
+      const cells = {
+        cutoffs: [
+          { key: 'ifr',  label: 'iFR (Volcano / Philips)',    value: '≤ 0.89 → PCI · &gt; 0.89 → defer. Wave-free period = last 75% of diastole.', text: true, wide: true },
+          { key: 'dpr',  label: 'dPR / DFR (Boston Scientific / Acist)', value: '≤ 0.89 → PCI. Whole-of-diastole mean Pd/Pa. Numerically near-identical to iFR in head-to-head studies.', text: true, wide: true },
+          { key: 'rfr',  label: 'RFR (Abbott)',               value: '≤ 0.89 → PCI. Minimum Pd/Pa in any phase of the cardiac cycle. Equivalent diagnostic performance to iFR.', text: true, wide: true },
+          { key: 'pdpa', label: 'Resting Pd/Pa (whole cycle)', value: '≤ 0.92 → likely ischemic (proceed to hyperemia). Higher cut-off because the resting gradient is smaller than the diastolic-only gradient.', text: true, wide: true },
+        ],
+        evidence: [
+          { key: 'flair', label: 'DEFINE-FLAIR (NEJM 2017)',   value: 'iFR vs FFR (n = 2,492). Non-inferior MACE at 1 yr. Less chest pain, no adenosine. Time savings of ~ 4 min per procedure.', text: true, wide: true },
+          { key: 'swed',  label: 'iFR-SWEDEHEART (NEJM 2017)', value: 'iFR vs FFR (n = 2,037). Non-inferior 12-mo MACE (6.7% vs 6.1%). Provided the second confirmatory trial for iFR.', text: true, wide: true },
+          { key: 'rfr',   label: 'VALIDATE-RFR / RE-VALIDATE-RFR', value: 'RFR ≤ 0.89 matched FFR ≤ 0.80 with ~ 90% concordance. Class I/IIa recommendation in current European appropriateness guidelines.', text: true, wide: true },
+        ],
+        where: [
+          { key: 'adenosine_ok',  label: 'Adenosine contra-indicated or poorly tolerated', value: 'Asthma, severe COPD, sick sinus, AV block without pacemaker, hypotension. Use NHPR by default.', text: true, wide: true },
+          { key: 'ostial', label: 'Ostial lesion', value: 'Aortocoronary pressure damping during guide engagement can corrupt FFR; NHPR less affected because no provocation needed. Always disengage and re-record.', text: true, wide: true },
+          { key: 'tandem', label: 'Tandem / serial lesions',  value: 'Pullback under any NHPR identifies which lesion has the gradient — same principle as FFR pullback but without sustained hyperemia.', text: true, wide: true },
+        ],
+      };
+      return cells[p.view] || cells.cutoffs;
+    },
+    draw: drawNHPRCompare,
+    pitfalls: [
+      'NHPRs and FFR are NOT interchangeable in the gray zone (FFR 0.75–0.80 or NHPR 0.86–0.93). Discordance rates of 15–20% are routine — clinical context decides.',
+      'NHPRs are insensitive to microvascular disease (no hyperemic stimulus). When CFR is the question, use Doppler or thermodilution-derived CFR / IMR.',
+      'iFR sampling depends on accurate ECG gating of the wave-free period; ectopy, AF, and severe LVH may corrupt the diastolic window.',
+      'A single NHPR pullback does not replace FFR for documenting hemodynamic improvement after PCI in equivocal cases.',
+    ],
+  },
+
+  // ─────────────────────────────────────────────────────────
+  // GROUP 2: FFR CLINICAL
+  // ─────────────────────────────────────────────────────────
+  ffr_pullback: {
+    id: 'ffr_pullback',
+    title: 'Pullback — Serial Lesions',
+    purpose: 'When two lesions sit in the same vessel, the composite FFR understates each lesion (the more distal one is unmasked only after the proximal one is treated). A motorized pullback under sustained hyperemia maps WHERE the gradient lives. The same logic applies to iFR pullback — without sustained adenosine.',
+    formula: '<strong>Across each lesion:</strong> ΔP<sub>i</sub> = (P<sub>proximal</sub> − P<sub>distal</sub>) / P<sub>aortic</sub>. The lesion with the largest ΔP / mm of pullback wins the PCI.',
+    inputs: [
+      { type: 'slider', key: 'proxStenosis', label: 'Proximal stenosis', unit: '%', min: 0, max: 90, step: 5, default: 60, decimals: 0 },
+      { type: 'slider', key: 'distStenosis', label: 'Distal stenosis',   unit: '%', min: 0, max: 90, step: 5, default: 50, decimals: 0 },
+    ],
+    compute: (p) => {
+      const sp = p.proxStenosis / 100;
+      const sd = p.distStenosis / 100;
+      const Pa = 95;
+      // Independent-lesion FFR equivalents
+      const ffrProxAlone = Math.max(0.55, 1 - 0.55 * Math.pow(sp, 1.7));
+      const ffrDistAlone = Math.max(0.55, 1 - 0.55 * Math.pow(sd, 1.7));
+      // Composite (multiplicative-ish underestimate)
+      const composite = ffrProxAlone * ffrDistAlone + 0.04 * (1 - ffrProxAlone) * (1 - ffrDistAlone);
+      const compositeBounded = Math.max(0.45, composite);
+      const dropProx = (1 - ffrProxAlone) * 100;
+      const dropDist = (1 - ffrDistAlone) * 100;
+      let action;
+      if (compositeBounded > 0.80) action = 'Composite FFR &gt; 0.80 — defer the vessel. Neither lesion alone meets the ischemic threshold.';
+      else if (dropProx > dropDist) action = 'Proximal lesion carries the larger gradient. Treat it first, then re-measure FFR; the distal lesion may no longer require PCI.';
+      else if (dropDist > dropProx) action = 'Distal lesion carries the larger gradient. Treat it first, then re-measure; the proximal lesion may no longer require PCI.';
+      else action = 'Gradients are similar — staged approach with re-measurement between PCIs.';
+      return [
+        { key: 'comp', label: 'Composite FFR', value: compositeBounded.toFixed(2), unit: '', severity: gradeFFR(compositeBounded) },
+        { key: 'dp',   label: 'ΔP — proximal', value: dropProx.toFixed(0), unit: '%' },
+        { key: 'dd',   label: 'ΔP — distal',   value: dropDist.toFixed(0), unit: '%' },
+        { key: 'plan', label: 'Pullback strategy', value: action, text: true, wide: true },
+      ];
+    },
+    draw: drawFFRPullback,
+    pitfalls: [
+      'A composite FFR / iFR does NOT predict the post-PCI value when only one lesion is treated. The downstream lesion is partially "masked" by the upstream one.',
+      'Pullback under iFR (no hyperemia) can localize gradients without the patient feeling adenosine — useful in awake fellows-driven cases.',
+      'A diffusely diseased vessel without focal lesions shows a continuous gradient on pullback — there is no single point to stent, and PCI rarely normalizes physiology.',
+      'Co-registration of pullback with angiography (offered by current Philips / Abbott consoles) is the cleanest way to plan stent length and landing zones.',
+    ],
+  },
+
+  // ─────────────────────────────────────────────────────────
+  // GROUP 3: IVUS
+  // ─────────────────────────────────────────────────────────
+  ivus_normal: {
+    id: 'ivus_normal',
+    title: 'IVUS — Normal Three-Layer Anatomy',
+    purpose: 'A normal coronary artery on IVUS shows a bright–dark–bright three-layer pattern: bright intimal echo, dark media (low collagen / elastin → low reflectance), bright adventitia. The catheter sits in the lumen with a central ring-down artifact. The external elastic membrane (EEM) is the outer bright border of the media.',
+    formula: '<strong>Lumen contour</strong>: intima-lumen interface &nbsp;·&nbsp; <strong>EEM contour</strong>: outer media border (adventitia interface) &nbsp;·&nbsp; <strong>Plaque + media area</strong> = EEM area − Lumen area &nbsp;·&nbsp; <strong>Plaque burden</strong> = (EEM − Lumen) / EEM × 100%',
+    inputs: [
+      { type: 'picker', key: 'view', label: 'View', default: 'normal',
+        options: [
+          { v: 'normal',   text: 'Normal',                help: 'Bright-dark-bright three-layer pattern, fully patent lumen' },
+          { v: 'fatty',    text: 'Fatty / soft plaque',   help: 'Hypoechoic — darker than the adventitia. Lipid-rich, vulnerable.' },
+          { v: 'fibrotic', text: 'Fibrotic plaque',       help: 'Isoechoic / hyperechoic without shadowing' },
+          { v: 'calcific', text: 'Calcific plaque',       help: 'Hyperechoic with deep acoustic shadow — IVUS cannot see beyond' },
+        ],
+      },
+    ],
+    compute: (p) => {
+      const views = {
+        normal: [
+          { label: 'Intima',     value: 'Bright thin line — reflects more strongly than media. Spillover slightly overestimates intimal thickness.', text: true, wide: true },
+          { label: 'Media',      value: 'Dark layer — low collagen / elastin gives low ultrasound reflectance. Slightly underestimated due to intimal spillover.', text: true, wide: true },
+          { label: 'Adventitia', value: 'Bright outer rim — high collagen content. Continues seamlessly into perivascular tissue.', text: true, wide: true },
+        ],
+        fatty: [
+          { label: 'Echogenicity', value: 'Hypoechoic — DARKER than the adventitia. Lipid pool is acoustically transparent.', text: true, wide: true },
+          { label: 'Vulnerability', value: 'Lipid-rich plaques carry the highest risk of plaque rupture and ACS. NIRS-IVUS quantifies lipid burden (MaxLCBI₄mm).', text: true, wide: true },
+          { label: 'Acoustic shadow', value: 'None — ultrasound penetrates fatty material.', text: true, wide: true },
+        ],
+        fibrotic: [
+          { label: 'Echogenicity', value: 'Iso- to hyperechoic relative to the adventitia. No shadowing.', text: true, wide: true },
+          { label: 'Histology',    value: 'Fibrous tissue with smooth-muscle cells and collagen. Mechanically stable plaque.', text: true, wide: true },
+          { label: 'Acoustic shadow', value: 'None to mild — ultrasound penetrates but with attenuation.', text: true, wide: true },
+        ],
+        calcific: [
+          { label: 'Echogenicity', value: 'Brightly hyperechoic — BRIGHTER than the adventitia.', text: true, wide: true },
+          { label: 'Acoustic shadow', value: 'Deep — IVUS cannot image structures behind calcium. OCT is similarly limited; both modalities estimate thickness from the leading edge only.', text: true, wide: true },
+          { label: 'PCI implication', value: 'Heavy calcium (especially &gt; 270° arc, &gt; 5 mm length) raises risk of stent under-expansion. Consider atherectomy or lithotripsy.', text: true, wide: true },
+        ],
+      };
+      return views[p.view] || views.normal;
+    },
+    draw: drawIVUSNormal,
+    pitfalls: [
+      'IVUS RESOLUTION: axial ~100–150 µm, lateral ~ 250 µm. Cannot reliably detect the thin fibrous cap of a vulnerable plaque (~ 65 µm threshold) — OCT is the modality of choice for cap thickness.',
+      'Ring-down artifact creates a central blind zone of ~ 0.5–1.0 mm; do not measure within it.',
+      'NURD (non-uniform rotational distortion) in mechanical catheters distorts the cross-section. Solid-state phased-array (Volcano Eagle Eye) avoids NURD.',
+      'IVUS over-estimates intimal thickness because of acoustic spillover from the bright intima into the darker media.',
+    ],
+  },
+
+  // ─────────────────────────────────────────────────────────
+  ivus_quantitative: {
+    id: 'ivus_quantitative',
+    title: 'IVUS — Quantitative MLA / EEM / Plaque Burden',
+    purpose: 'Trace two contours per frame: the lumen and the EEM. The difference is the plaque-plus-media area; expressed as a percentage of EEM area, this is the plaque burden. Lumen area at the narrowest cross-section is the MLA. These three numbers drive most IVUS-derived PCI decisions.',
+    formula: '<strong>Plaque burden</strong> = (EEM<sub>area</sub> − Lumen<sub>area</sub>) / EEM<sub>area</sub> × 100% &nbsp;·&nbsp; <strong>MLA cut-offs:</strong> LM &lt; 6.0 mm² severe · non-LM &lt; 4.0 mm² intermediate-flow-limiting · stent under-expansion &lt; 80% of reference',
+    inputs: [
+      { type: 'slider', key: 'eem',   label: 'EEM area',    unit: 'mm²', min: 6.0, max: 22.0, step: 0.1, default: 14.0, decimals: 1 },
+      { type: 'slider', key: 'lumen', label: 'Lumen area',  unit: 'mm²', min: 1.5, max: 18.0, step: 0.1, default: 5.5,  decimals: 1 },
+      { type: 'picker', key: 'context', label: 'Lesion location', default: 'nonlm',
+        options: [
+          { v: 'lm',    text: 'Left main',  help: 'MLA threshold 6.0 mm² for severe LM stenosis (some studies use 4.5 mm²).' },
+          { v: 'nonlm', text: 'Non-LM',     help: 'MLA threshold 4.0 mm² as a screen; pair with FFR for intermediate lesions.' },
+        ],
+      },
+    ],
+    compute: (p) => {
+      const eem = p.eem;
+      const lumen = Math.min(p.lumen, eem - 0.5);
+      const plaqueArea = eem - lumen;
+      const burden = (plaqueArea / eem) * 100;
+      const severity = p.context === 'lm' ? gradeLM_MLA(lumen) : gradeNonLM_MLA(lumen);
+      let recommendation;
+      if (p.context === 'lm') {
+        recommendation = lumen < 4.5 ? 'Severe LM stenosis — PCI or CABG indicated.'
+          : lumen < 6.0 ? 'Borderline LM. Confirm with FFR (≤ 0.80) or proceed if other criteria support.'
+          : 'Non-significant LM by IVUS criteria.';
+      } else {
+        recommendation = lumen < 2.4 ? 'Severe non-LM lesion likely flow-limiting; consider PCI.'
+          : lumen < 4.0 ? 'Intermediate by IVUS — physiologic assessment (FFR / iFR) should drive treatment.'
+          : 'Non-significant by IVUS MLA.';
+      }
+      return [
+        { key: 'mla',  label: 'MLA',              value: lumen.toFixed(1), unit: 'mm²', severity },
+        { key: 'eem',  label: 'EEM area',         value: eem.toFixed(1),   unit: 'mm²' },
+        { key: 'pa',   label: 'Plaque + media',   value: plaqueArea.toFixed(1), unit: 'mm²' },
+        { key: 'pb',   label: 'Plaque burden',    value: burden.toFixed(0), unit: '%', severity: gradePlaqueBurden(burden) },
+        { key: 'note', label: 'Recommendation',   value: recommendation, text: true, wide: true },
+      ];
+    },
+    draw: drawIVUSQuantitative,
+    pitfalls: [
+      'EEM tracing is unreliable behind heavy calcium because acoustic shadowing prevents imaging the outer media border. In that frame, plaque burden is underestimated.',
+      'MLA cutoffs are population-derived and vary with vessel size — small (&lt; 3 mm reference) and large (&gt; 4 mm reference) vessels need scaled thresholds.',
+      'IVUS-derived plaque burden &gt; 70% is associated with future ACS events in PROSPECT, but the positive predictive value is modest (~ 18%) — most high-burden lesions never rupture.',
+      'Post-stent under-expansion is the strongest predictor of in-stent restenosis and stent thrombosis. Target stent area ≥ 80% of mean reference lumen.',
+    ],
+  },
+
+  // ─────────────────────────────────────────────────────────
+  // GROUP 4: OCT
+  // ─────────────────────────────────────────────────────────
+  oct_normal: {
+    id: 'oct_normal',
+    title: 'OCT — Normal Three-Layer + Plaque Morphology',
+    purpose: 'OCT axial resolution (~ 10–20 µm) is 10× IVUS — enough to resolve the fibrous cap of a vulnerable plaque (threshold ~ 65 µm). The trade-off is penetration: only ~ 1–2 mm into the vessel wall, vs IVUS\'s ~ 4–8 mm. The three layers (intima, media, adventitia) are crisper than on IVUS; lipid plaques produce a sharply attenuated signal, calcium produces sharp leading edges with low signal beyond.',
+    formula: '<strong>TCFA</strong> (thin-cap fibroatheroma) = lipid plaque with overlying fibrous cap &lt; 65 µm &nbsp;·&nbsp; <strong>Lipid signature</strong>: signal-poor with diffuse attenuation, no sharp leading edge &nbsp;·&nbsp; <strong>Calcium signature</strong>: signal-poor with SHARP leading edge and low backscatter beyond',
+    inputs: [
+      { type: 'picker', key: 'view', label: 'Morphology', default: 'normal',
+        options: [
+          { v: 'normal',   text: 'Normal',          help: 'Crisp three-layer pattern, fully patent lumen' },
+          { v: 'fibrous',  text: 'Fibrous plaque',  help: 'Homogeneous bright signal with low attenuation' },
+          { v: 'lipid',    text: 'Lipid / TCFA',    help: 'Signal-poor with DIFFUSE shadow; thin cap if &lt; 65 µm' },
+          { v: 'calcium',  text: 'Calcific plaque', help: 'Signal-poor with SHARP leading edge — pathognomonic on OCT' },
+        ],
+      },
+    ],
+    compute: (p) => {
+      const views = {
+        normal: [
+          { label: 'Lumen', value: 'Sharp dark central region. Blood must be cleared with contrast or saline flush — the modality cannot image through whole blood.', text: true, wide: true },
+          { label: 'Three layers', value: 'Crisper than IVUS — intima (bright thin), media (dark band, sometimes 2 sub-layers), adventitia (bright outer).', text: true, wide: true },
+          { label: 'Resolution', value: 'Axial 10–20 µm, lateral 20–40 µm — high enough to see individual stent struts and a thin fibrous cap.', text: true, wide: true },
+        ],
+        fibrous: [
+          { label: 'Signal',  value: 'Homogeneous bright (signal-rich) with low attenuation. Light penetrates deeply.', text: true, wide: true },
+          { label: 'Stability', value: 'Mechanically stable. Low rupture risk. Does not require deferral of PCI on plaque grounds.', text: true, wide: true },
+          { label: 'Treatment', value: 'Standard stent landing zone if angiographically appropriate.', text: true, wide: true },
+        ],
+        lipid: [
+          { label: 'Signature', value: 'Signal-poor with DIFFUSE attenuation — light is absorbed by lipid. No sharp leading edge (vs calcium).', text: true, wide: true },
+          { label: 'Cap thickness', value: 'OCT measures from the lumen-cap interface to the lumen-lipid interface. TCFA = cap &lt; 65 µm.', text: true, wide: true },
+          { label: 'Clinical', value: 'Lipid-rich plaques with thin caps are the substrate of ACS. Aggressive medical therapy + careful stent landing zone selection.', text: true, wide: true },
+        ],
+        calcium: [
+          { label: 'Signature', value: 'Signal-poor with SHARP leading edge and well-defined inner border. Pathognomonic of calcium on OCT.', text: true, wide: true },
+          { label: 'Measurement', value: 'Unlike IVUS, OCT can image THROUGH calcium when it is not too thick — calcium thickness, arc, and length all directly measurable.', text: true, wide: true },
+          { label: 'PCI plan', value: 'Calcium score &gt; 2 (thickness &gt; 0.5 mm, arc &gt; 180°, length &gt; 5 mm) predicts stent under-expansion; consider atherectomy or IVL.', text: true, wide: true },
+        ],
+      };
+      return views[p.view] || views.normal;
+    },
+    draw: drawOCTNormal,
+    pitfalls: [
+      'OCT cannot image through residual blood — incomplete flush gives swirling artifact that hides plaque morphology. Use 4–6 mL/s contrast for 3 sec via the guide catheter.',
+      'Guidewire shadow creates a radial blind sector — rotate the wire or accept that one segment is uninterpretable.',
+      'Penetration limit (~ 1–2 mm) misses the EEM in larger vessels — DO NOT use OCT for EEM-based plaque burden in vessels &gt; 4 mm reference.',
+      'OCT is NOT validated for left main PCI guidance (limited penetration in a vessel of that calibre). IVUS remains the modality of choice for LM.',
+    ],
+  },
+};
+
+// ═══════════════════════════════════════════════════════════
+// CANVAS — SHARED HELPERS
+// ═══════════════════════════════════════════════════════════
+const canvas = document.getElementById('vizCanvas');
+const ctx = canvas.getContext('2d');
+const DPR = window.devicePixelRatio || 1;
+let W = 0, H = 0;
+
+function resizeCanvas() {
+  const r = canvas.parentElement.getBoundingClientRect();
+  W = r.width; H = r.height;
+  canvas.width = W * DPR;
+  canvas.height = H * DPR;
+  ctx.setTransform(1, 0, 0, 1, 0, 0);
+  ctx.scale(DPR, DPR);
+}
+
+// ═══════════════════════════════════════════════════════════
+// SHARED DRAW HELPERS
+// ═══════════════════════════════════════════════════════════
+
+// Centralised label styles — bumped sizes/contrast for legibility
+function lblTitle(text, x, y, align) {
+  ctx.fillStyle = '#dde2ec';
+  ctx.font = '700 13px DM Sans, system-ui, sans-serif';
+  ctx.textAlign = align || 'center';
+  ctx.fillText(text, x, y);
+}
+function lblTick(text, x, y, align) {
+  ctx.fillStyle = '#a8b1c0';
+  ctx.font = '600 11px DM Sans, system-ui, sans-serif';
+  ctx.textAlign = align || 'left';
+  ctx.fillText(text, x, y);
+}
+function lblCaliper(text, x, y, align) {
+  ctx.fillStyle = '#fdcc4d';
+  ctx.font = '700 13px DM Sans, system-ui, sans-serif';
+  ctx.textAlign = align || 'center';
+  ctx.fillText(text, x, y);
+}
+function lblHint(text, x, y, align) {
+  ctx.fillStyle = '#9aa3b3';
+  ctx.font = '600 11px DM Sans, system-ui, sans-serif';
+  ctx.textAlign = align || 'center';
+  ctx.fillText(text, x, y);
+}
+
+// CardioQFlow-style sinus rhythm ECG. Renders `beats` cycles into [x, x+totalW] at baseline y.
+// Amplitudes scale with `amp` (R-wave peak = amp pixels above baseline).
+function drawECGStrip(x, y, totalW, beats, amp, color) {
+  const beatW = totalW / beats;
+  // Per-beat morphology pulled from CardioQFlow landing path (baseline=110, R apex=5, S nadir=185, scaled).
+  // Each entry is [u (0..1 through beat), dy (relative to baseline; negative = up; positive = down)].
+  // Amplitude reference: R = -105 → scale to -amp. So scale = amp / 105.
+  const s = amp / 105;
+  const path = [
+    ['L', 75/387, 0],
+    ['C', 88/387, 0,    97/387, -15*s,   108/387, -15*s],   // P start
+    ['C', 118/387, -15*s, 128/387, 0,    152/387, 0],       // P end
+    ['L', 175/387, 0],                                       // PR seg
+    ['C', 178/387, 0,    180/387, -105*s, 184/387, -105*s], // Q to R
+    ['C', 187/387, -105*s, 188/387, 75*s, 191/387, 75*s],   // R to S
+    ['C', 194/387, 75*s, 197/387, 0,     208/387, 0],       // S to baseline
+    ['L', 245/387, 0],                                       // ST
+    ['C', 273/387, 0,    295/387, -50*s, 325/387, -50*s],   // T start
+    ['C', 355/387, -50*s, 373/387, 0,    387/387, 0],       // T end
+  ];
+  ctx.strokeStyle = color || '#3b8b59';
+  ctx.lineWidth = 1.4;
+  ctx.beginPath();
+  ctx.moveTo(x, y);
+  for (let b = 0; b < beats; b++) {
+    const bx = x + b * beatW;
+    ctx.lineTo(bx, y);
+    for (const seg of path) {
+      if (seg[0] === 'L') {
+        ctx.lineTo(bx + seg[1] * beatW, y + seg[2]);
+      } else {
+        ctx.bezierCurveTo(
+          bx + seg[1] * beatW, y + seg[2],
+          bx + seg[3] * beatW, y + seg[4],
+          bx + seg[5] * beatW, y + seg[6]
+        );
+      }
+    }
+  }
+  ctx.lineTo(x + totalW, y);
+  ctx.stroke();
+}
+
+function roundRect(x, y, w, h, r) {
+  ctx.beginPath();
+  ctx.moveTo(x + r, y);
+  ctx.lineTo(x + w - r, y);
+  ctx.quadraticCurveTo(x + w, y, x + w, y + r);
+  ctx.lineTo(x + w, y + h - r);
+  ctx.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
+  ctx.lineTo(x + r, y + h);
+  ctx.quadraticCurveTo(x, y + h, x, y + h - r);
+  ctx.lineTo(x, y + r);
+  ctx.quadraticCurveTo(x, y, x + r, y);
+  ctx.closePath();
+}
+
+// ═══════════════════════════════════════════════════════════
+// VISUALIZATIONS
+// ═══════════════════════════════════════════════════════════
+
+// 1. PRESSURE-FLOW RELATIONSHIP -- two limbs (resting plateau + hyperemic line)
+function drawPressureFlow(p, t) {
+  ctx.clearRect(0, 0, W, H);
+  const m = { l: 70, r: 60, top: 30, bot: 36 };
+  const plotW = W - m.l - m.r, plotH = H - m.top - m.bot;
+  // Axes
+  ctx.strokeStyle = '#2a3340'; ctx.lineWidth = 1;
+  ctx.beginPath();
+  ctx.moveTo(m.l, m.top);
+  ctx.lineTo(m.l, m.top + plotH);
+  ctx.lineTo(m.l + plotW, m.top + plotH);
+  ctx.stroke();
+  // x axis: Pressure (40-160 mmHg)
+  const Pmin = 40, Pmax = 160;
+  const xOf = P => m.l + plotW * (P - Pmin) / (Pmax - Pmin);
+  // y axis: CBF (0 - 5 relative)
+  const Fmax = 5;
+  const yOf = F => m.top + plotH * (1 - F / Fmax);
+
+  // Axis labels
+  lblTick('Coronary perfusion pressure (mmHg)', m.l + plotW / 2, m.top + plotH + 24, 'center');
+  ctx.save();
+  ctx.translate(20, m.top + plotH / 2);
+  ctx.rotate(-Math.PI / 2);
+  lblTick('CBF (rel)', 0, 0, 'center');
+  ctx.restore();
+
+  // Tick marks
+  for (let P = 40; P <= 160; P += 20) {
+    const x = xOf(P);
+    ctx.strokeStyle = '#2a3340';
+    ctx.beginPath(); ctx.moveTo(x, m.top + plotH); ctx.lineTo(x, m.top + plotH + 4); ctx.stroke();
+    lblTick(String(P), x, m.top + plotH + 14, 'center');
+  }
+  for (let F = 0; F <= Fmax; F += 1) {
+    const y = yOf(F);
+    ctx.strokeStyle = '#2a3340';
+    ctx.beginPath(); ctx.moveTo(m.l - 4, y); ctx.lineTo(m.l, y); ctx.stroke();
+    lblTick(String(F), m.l - 8, y + 4, 'right');
+  }
+
+  // Autoregulation plateau (resting): flat at CBF=1, plateau 60-140 mmHg, falls outside
+  ctx.strokeStyle = '#5fc97a';
+  ctx.lineWidth = 2.2;
+  ctx.shadowColor = 'rgba(95,201,122,0.4)';
+  ctx.shadowBlur = 4;
+  ctx.beginPath();
+  // Falling left limb
+  ctx.moveTo(xOf(40), yOf(0.5));
+  ctx.lineTo(xOf(60), yOf(1.0));
+  // Plateau
+  ctx.lineTo(xOf(140), yOf(1.0));
+  // Falling right limb (pressure-induced damage)
+  ctx.lineTo(xOf(160), yOf(1.2));
+  ctx.stroke();
+  ctx.shadowBlur = 0;
+
+  // Hyperemic line (linear): slope decreases with stenosis severity
+  const s = p.stenosis / 100;
+  const slopeFactor = 1 - Math.pow(s, 0.55); // 1.0 at 0%, ~0.41 at 50%, ~0.10 at 90%
+  const maxSlope = 4 / 100; // (CBF=4 at P=100 normalized)
+  const slope = maxSlope * slopeFactor;
+  // CBF = slope * (P - Pzf), Pzf ≈ 20 mmHg
+  const Pzf = 20;
+  ctx.strokeStyle = '#4a90d9';
+  ctx.lineWidth = 2.2;
+  ctx.shadowColor = 'rgba(74,144,217,0.45)';
+  ctx.shadowBlur = 4;
+  ctx.beginPath();
+  ctx.moveTo(xOf(Pzf), yOf(0));
+  ctx.lineTo(xOf(Pmax), yOf(Math.min(Fmax, slope * (Pmax - Pzf))));
+  ctx.stroke();
+  ctx.shadowBlur = 0;
+
+  // Marker at P=100 (typical coronary perfusion)
+  const Phold = 100;
+  const Frest = 1.0;
+  const Fhyp = slope * (Phold - Pzf);
+  ctx.fillStyle = '#5fc97a';
+  ctx.beginPath(); ctx.arc(xOf(Phold), yOf(Frest), 4, 0, Math.PI*2); ctx.fill();
+  ctx.fillStyle = '#4a90d9';
+  ctx.beginPath(); ctx.arc(xOf(Phold), yOf(Math.min(Fmax, Fhyp)), 4, 0, Math.PI*2); ctx.fill();
+
+  // CFR caliper from rest to hyperemic
+  ctx.strokeStyle = '#fdcc4d';
+  ctx.lineWidth = 1.4;
+  ctx.setLineDash([3, 3]);
+  ctx.beginPath(); ctx.moveTo(xOf(Phold), yOf(Frest)); ctx.lineTo(xOf(Phold), yOf(Math.min(Fmax, Fhyp))); ctx.stroke();
+  ctx.setLineDash([]);
+  const cfr = Math.min(Fmax, Fhyp) / Frest;
+  lblCaliper('CFR ' + cfr.toFixed(1), xOf(Phold) + 10, yOf((Frest + Math.min(Fmax, Fhyp)) / 2) + 4, 'left');
+
+  // Legend
+  ctx.fillStyle = '#5fc97a'; ctx.font = '600 11px DM Sans, system-ui, sans-serif'; ctx.textAlign = 'left';
+  ctx.fillText('● Resting (autoregulation)', m.l + 12, m.top + 14);
+  ctx.fillStyle = '#4a90d9';
+  ctx.fillText('● Hyperemic (adenosine)', m.l + 12, m.top + 28);
+  // Stenosis annotation
+  lblHint('Stenosis ' + p.stenosis + '%', m.l + plotW - 8, m.top + 14, 'right');
+}
+
+// 2. GOULD CURVE -- CFR vs % stenosis
+function drawGouldCurve(p, t) {
+  ctx.clearRect(0, 0, W, H);
+  const m = { l: 70, r: 60, top: 30, bot: 36 };
+  const plotW = W - m.l - m.r, plotH = H - m.top - m.bot;
+  ctx.strokeStyle = '#2a3340'; ctx.lineWidth = 1;
+  ctx.beginPath();
+  ctx.moveTo(m.l, m.top); ctx.lineTo(m.l, m.top + plotH); ctx.lineTo(m.l + plotW, m.top + plotH);
+  ctx.stroke();
+  // x: stenosis 0-100, y: flow 0-5
+  const xOf = S => m.l + plotW * S / 100;
+  const Fmax = 5;
+  const yOf = F => m.top + plotH * (1 - F / Fmax);
+  // Ticks
+  for (let S = 0; S <= 100; S += 20) {
+    const x = xOf(S);
+    ctx.strokeStyle = '#2a3340';
+    ctx.beginPath(); ctx.moveTo(x, m.top + plotH); ctx.lineTo(x, m.top + plotH + 4); ctx.stroke();
+    lblTick(S + '%', x, m.top + plotH + 14, 'center');
+  }
+  for (let F = 0; F <= Fmax; F += 1) {
+    const y = yOf(F);
+    ctx.strokeStyle = '#2a3340';
+    ctx.beginPath(); ctx.moveTo(m.l - 4, y); ctx.lineTo(m.l, y); ctx.stroke();
+    lblTick(String(F), m.l - 8, y + 4, 'right');
+  }
+  // Axis labels
+  lblTick('Diameter stenosis', m.l + plotW / 2, m.top + plotH + 24, 'center');
+  ctx.save(); ctx.translate(20, m.top + plotH / 2); ctx.rotate(-Math.PI / 2);
+  lblTick('CBF (rel to rest)', 0, 0, 'center');
+  ctx.restore();
+
+  // Resting flow: flat at 1.0, falls off above ~85%
+  ctx.strokeStyle = '#5fc97a'; ctx.lineWidth = 2.2;
+  ctx.shadowColor = 'rgba(95,201,122,0.4)'; ctx.shadowBlur = 4;
+  ctx.beginPath();
+  for (let S = 0; S <= 100; S++) {
+    const rest = S < 85 ? 1.0 : Math.max(0.3, 1 - 0.06 * (S - 85));
+    if (S === 0) ctx.moveTo(xOf(S), yOf(rest)); else ctx.lineTo(xOf(S), yOf(rest));
+  }
+  ctx.stroke();
+  ctx.shadowBlur = 0;
+
+  // Hyperemic flow: 4 at 0%, falls along Gould curve
+  ctx.strokeStyle = '#4a90d9'; ctx.lineWidth = 2.2;
+  ctx.shadowColor = 'rgba(74,144,217,0.45)'; ctx.shadowBlur = 4;
+  ctx.beginPath();
+  for (let S = 0; S <= 100; S++) {
+    const k = 1 - Math.pow(S / 100, 0.55);
+    const hyp = Math.max(0.4, 4 * k);
+    const rest = S < 85 ? 1.0 : Math.max(0.3, 1 - 0.06 * (S - 85));
+    const F = Math.max(rest, hyp);  // hyperemic cannot fall below resting
+    if (S === 0) ctx.moveTo(xOf(S), yOf(F)); else ctx.lineTo(xOf(S), yOf(F));
+  }
+  ctx.stroke();
+  ctx.shadowBlur = 0;
+
+  // Markers at current stenosis
+  const S = p.stenosis;
+  const k = 1 - Math.pow(S / 100, 0.55);
+  const hyp = Math.max(0.4, 4 * k);
+  const rest = S < 85 ? 1.0 : Math.max(0.3, 1 - 0.06 * (S - 85));
+  ctx.fillStyle = '#5fc97a';
+  ctx.beginPath(); ctx.arc(xOf(S), yOf(rest), 4, 0, Math.PI*2); ctx.fill();
+  ctx.fillStyle = '#4a90d9';
+  ctx.beginPath(); ctx.arc(xOf(S), yOf(Math.max(rest, hyp)), 4, 0, Math.PI*2); ctx.fill();
+
+  // CFR vertical caliper
+  ctx.strokeStyle = '#fdcc4d'; ctx.lineWidth = 1.4;
+  ctx.setLineDash([3, 3]);
+  ctx.beginPath(); ctx.moveTo(xOf(S), yOf(rest)); ctx.lineTo(xOf(S), yOf(Math.max(rest, hyp))); ctx.stroke();
+  ctx.setLineDash([]);
+  const cfr = Math.max(rest, hyp) / rest;
+  lblCaliper('CFR ' + cfr.toFixed(1), xOf(S) + 8, yOf((rest + Math.max(rest, hyp)) / 2) + 4, 'left');
+
+  // Vertical guide at S
+  ctx.strokeStyle = 'rgba(253,204,77,0.25)'; ctx.lineWidth = 1;
+  ctx.beginPath(); ctx.moveTo(xOf(S), m.top); ctx.lineTo(xOf(S), m.top + plotH); ctx.stroke();
+
+  // Legend
+  ctx.fillStyle = '#5fc97a'; ctx.font = '600 11px DM Sans, system-ui, sans-serif'; ctx.textAlign = 'left';
+  ctx.fillText('● Resting flow', m.l + 12, m.top + 14);
+  ctx.fillStyle = '#4a90d9';
+  ctx.fillText('● Hyperemic flow', m.l + 12, m.top + 28);
+
+  // Threshold band: hyperemic flow falls below ~ FFR cut-off around 60-70% stenosis
+  lblHint('Stenosis ' + S + '%', m.l + plotW - 8, m.top + 14, 'right');
+}
+
+// 3. FFR CONCEPT -- animated Pa and Pd tracings with adenosine slider
+function drawFFRConcept(p, t) {
+  ctx.clearRect(0, 0, W, H);
+  // ECG strip top
+  drawECGStrip(6, 22, W - 12, 4, 14, '#5fc97a');
+  // Pressure plot below
+  const m = { l: 50, r: 60, top: 50, bot: 32 };
+  const plotW = W - m.l - m.r, plotH = H - m.top - m.bot;
+  // y axis: pressure 0-130 mmHg
+  const Pmax = 130;
+  const yOf = P => m.top + plotH * (1 - P / Pmax);
+  // Frame
+  ctx.fillStyle = '#0d1019';
+  ctx.fillRect(m.l, m.top, plotW, plotH);
+  ctx.strokeStyle = '#2a3340'; ctx.lineWidth = 0.6;
+  // Horizontal grid every 20 mmHg
+  for (let P = 0; P <= Pmax; P += 20) {
+    const y = yOf(P);
+    ctx.beginPath(); ctx.moveTo(m.l, y); ctx.lineTo(m.l + plotW, y); ctx.stroke();
+    lblTick(String(P), m.l - 6, y + 4, 'right');
+  }
+  // Compute
+  const s = p.stenosis / 100;
+  const h = p.hyperemia / 100;
+  const restingPdPa = Math.max(0.86, 1 - 0.18 * Math.pow(s, 2.5));
+  const maxHypFFR = Math.max(0.50, 1 - 0.55 * Math.pow(s, 1.7));
+  const current = restingPdPa + (maxHypFFR - restingPdPa) * h;
+  // 4 beats, sinusoidal-ish aortic pressure
+  const beats = 4;
+  const beatW = plotW / beats;
+  // Heart rate-aware Pa morphology: systolic peak ~110 mmHg, diastolic ~70 mmHg
+  function paPress(u) {
+    // u in [0,1] within beat
+    // Systole: rapid rise then dicrotic-shaped fall
+    if (u < 0.32) {
+      const r = u / 0.32;
+      return 70 + 40 * (1 - Math.pow(1 - r, 2.2)); // 70 → 110
+    } else if (u < 0.42) {
+      const r = (u - 0.32) / 0.10;
+      return 110 - 20 * r; // 110 → 90 (incisura)
+    } else if (u < 0.50) {
+      const r = (u - 0.42) / 0.08;
+      return 90 - 5 * Math.sin(Math.PI * r); // dicrotic bump
+    } else {
+      const r = (u - 0.50) / 0.50;
+      return 90 - 22 * (1 - Math.pow(1 - r, 1.3)); // diastolic decay 90 → 68
+    }
+  }
+  // Pa tracing
+  ctx.strokeStyle = '#ef4444';
+  ctx.lineWidth = 1.8;
+  ctx.shadowColor = 'rgba(239,68,68,0.45)';
+  ctx.shadowBlur = 4;
+  ctx.beginPath();
+  for (let b = 0; b < beats; b++) {
+    for (let i = 0; i <= 60; i++) {
+      const u = i / 60;
+      const Pa = paPress(u);
+      const x = m.l + b * beatW + u * beatW;
+      const y = yOf(Pa);
+      if (b === 0 && i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+    }
+  }
+  ctx.stroke();
+  ctx.shadowBlur = 0;
+
+  // Pd tracing: scales by current ratio. The ratio sharpens from resting to maximal hyperemia gradually across beats.
+  ctx.strokeStyle = '#4a90d9';
+  ctx.lineWidth = 1.8;
+  ctx.shadowColor = 'rgba(74,144,217,0.45)';
+  ctx.shadowBlur = 4;
+  ctx.beginPath();
+  for (let b = 0; b < beats; b++) {
+    // First half of strip is resting; second half is current hyperemia state
+    const beatFrac = b / Math.max(1, beats - 1);
+    const ratio = restingPdPa + (current - restingPdPa) * Math.min(1, beatFrac * 1.6);
+    for (let i = 0; i <= 60; i++) {
+      const u = i / 60;
+      const Pa = paPress(u);
+      const Pd = Pa * ratio;
+      const x = m.l + b * beatW + u * beatW;
+      const y = yOf(Pd);
+      if (b === 0 && i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+    }
+  }
+  ctx.stroke();
+  ctx.shadowBlur = 0;
+
+  // Adenosine arrow at the transition point (beat 2)
+  const adenosineX = m.l + beatW * 1.0;
+  ctx.strokeStyle = '#fdcc4d';
+  ctx.lineWidth = 1.2;
+  ctx.setLineDash([3, 3]);
+  ctx.beginPath();
+  ctx.moveTo(adenosineX, m.top);
+  ctx.lineTo(adenosineX, m.top + plotH);
+  ctx.stroke();
+  ctx.setLineDash([]);
+  ctx.fillStyle = '#fdcc4d';
+  ctx.font = '700 11px DM Sans, system-ui, sans-serif';
+  ctx.textAlign = 'left';
+  ctx.fillText('Adenosine', adenosineX + 4, m.top + 14);
+
+  // Final beat FFR caliper
+  const lastBeatX = m.l + (beats - 1) * beatW + beatW * 0.5;
+  const PaMean = 88;
+  const PdMean = PaMean * current;
+  ctx.strokeStyle = '#fdcc4d';
+  ctx.lineWidth = 1.6;
+  ctx.setLineDash([3, 2]);
+  ctx.beginPath();
+  ctx.moveTo(lastBeatX, yOf(PaMean));
+  ctx.lineTo(lastBeatX, yOf(PdMean));
+  ctx.stroke();
+  ctx.setLineDash([]);
+  lblCaliper((h === 1 ? 'FFR ' : 'Pd/Pa ') + current.toFixed(2), lastBeatX + 6, yOf((PaMean + PdMean) / 2) + 4, 'left');
+
+  // Legend
+  ctx.fillStyle = '#ef4444'; ctx.font = '600 11px DM Sans, system-ui, sans-serif'; ctx.textAlign = 'left';
+  ctx.fillText('— Pa (aortic)', m.l + 8, m.top + 14);
+  ctx.fillStyle = '#4a90d9';
+  ctx.fillText('— Pd (distal)', m.l + 8, m.top + 28);
+}
+
+// 4. NHPR COMPARE -- atlas of cutoffs and trials in a table-like layout
+function drawNHPRCompare(p, t) {
+  ctx.clearRect(0, 0, W, H);
+  ctx.fillStyle = '#0d1019';
+  ctx.fillRect(0, 0, W, H);
+  const cx = W / 2, cy = H / 2;
+
+  if (p.view === 'cutoffs') {
+    // Vertical bar plot — each NHPR plotted with its 0.89 cut-off line
+    const m = { l: 80, r: 60, top: 30, bot: 40 };
+    const plotW = W - m.l - m.r, plotH = H - m.top - m.bot;
+    // y: ratio 0.70 - 1.00
+    const yOf = r => m.top + plotH * (1.00 - r) / 0.30;
+    // y ticks
+    for (let r = 0.70; r <= 1.00; r += 0.05) {
+      const y = yOf(r);
+      ctx.strokeStyle = '#2a3340'; ctx.lineWidth = 0.6;
+      ctx.beginPath(); ctx.moveTo(m.l, y); ctx.lineTo(m.l + plotW, y); ctx.stroke();
+      lblTick(r.toFixed(2), m.l - 6, y + 4, 'right');
+    }
+    // FFR cut-off band (0.75-0.80, severe)
+    ctx.fillStyle = 'rgba(239,68,68,0.15)';
+    ctx.fillRect(m.l, yOf(0.80), plotW, yOf(0.75) - yOf(0.80));
+    // 0.89 cut-off line (NHPR)
+    ctx.strokeStyle = '#fdcc4d'; ctx.lineWidth = 1.4;
+    ctx.setLineDash([4, 3]);
+    ctx.beginPath(); ctx.moveTo(m.l, yOf(0.89)); ctx.lineTo(m.l + plotW, yOf(0.89)); ctx.stroke();
+    ctx.setLineDash([]);
+    lblCaliper('NHPR ≤ 0.89 → PCI', m.l + plotW - 4, yOf(0.89) - 5, 'right');
+    // 0.80 cut-off line (FFR)
+    ctx.strokeStyle = '#ef4444'; ctx.lineWidth = 1.4;
+    ctx.setLineDash([4, 3]);
+    ctx.beginPath(); ctx.moveTo(m.l, yOf(0.80)); ctx.lineTo(m.l + plotW, yOf(0.80)); ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.fillStyle = '#ef4444';
+    ctx.font = '700 11px DM Sans, system-ui, sans-serif'; ctx.textAlign = 'right';
+    ctx.fillText('FFR ≤ 0.80 → PCI', m.l + plotW - 4, yOf(0.80) - 5);
+    // 0.92 line (Pd/Pa rest)
+    ctx.strokeStyle = '#5fc97a'; ctx.lineWidth = 1.2;
+    ctx.setLineDash([2, 4]);
+    ctx.beginPath(); ctx.moveTo(m.l, yOf(0.92)); ctx.lineTo(m.l + plotW, yOf(0.92)); ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.fillStyle = '#5fc97a';
+    ctx.fillText('Pd/Pa rest ≤ 0.92', m.l + plotW - 4, yOf(0.92) - 5);
+    // x bars for each NHPR
+    const labels = ['iFR', 'dPR', 'DFR', 'RFR', 'Pd/Pa', 'FFR'];
+    const cutoffs = [0.89, 0.89, 0.89, 0.89, 0.92, 0.80];
+    const colors  = ['#4a90d9', '#4a90d9', '#4a90d9', '#4a90d9', '#5fc97a', '#ef4444'];
+    const barW = plotW / labels.length;
+    for (let i = 0; i < labels.length; i++) {
+      const x = m.l + i * barW + barW * 0.5;
+      ctx.fillStyle = colors[i];
+      ctx.beginPath(); ctx.arc(x, yOf(cutoffs[i]), 6, 0, Math.PI*2); ctx.fill();
+      ctx.fillStyle = '#dde2ec';
+      ctx.font = '700 12px DM Sans, system-ui, sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText(labels[i], x, m.top + plotH + 22);
+      ctx.fillStyle = colors[i];
+      ctx.font = '600 11px DM Sans, system-ui, sans-serif';
+      ctx.fillText(cutoffs[i].toFixed(2), x, yOf(cutoffs[i]) - 12);
+    }
+    lblTitle('NHPR / FFR cut-off thresholds at a glance', cx, m.top - 12);
+  }
+
+  if (p.view === 'evidence') {
+    // Two-column comparison: trial name + key endpoint as boxes
+    const trials = [
+      { name: 'DEFINE-FLAIR', mode: 'iFR vs FFR', n: 2492, endpt: 'Non-inferior MACE at 1y', year: '2017' },
+      { name: 'iFR-SWEDEHEART', mode: 'iFR vs FFR', n: 2037, endpt: 'Non-inferior MACE at 12mo', year: '2017' },
+      { name: 'VALIDATE-RFR',  mode: 'RFR vs FFR', n: 651,  endpt: 'RFR ≤ 0.89 matched FFR ≤ 0.80', year: '2018' },
+      { name: 'FAME',          mode: 'FFR vs angio', n: 1005, endpt: 'MACE 13% vs 18% at 2y', year: '2009' },
+    ];
+    const rowH = (H - 60) / trials.length;
+    for (let i = 0; i < trials.length; i++) {
+      const y = 40 + i * rowH;
+      ctx.strokeStyle = '#2a3340'; ctx.lineWidth = 1;
+      ctx.strokeRect(20, y, W - 40, rowH - 10);
+      ctx.fillStyle = '#1c2532';
+      ctx.fillRect(20, y, W - 40, rowH - 10);
+      ctx.fillStyle = '#4a90d9';
+      ctx.font = '700 14px DM Sans, system-ui, sans-serif';
+      ctx.textAlign = 'left';
+      ctx.fillText(trials[i].name, 36, y + 24);
+      ctx.fillStyle = '#a8b1c0';
+      ctx.font = '500 11px DM Sans, system-ui, sans-serif';
+      ctx.fillText(trials[i].mode + '  ·  n = ' + trials[i].n.toLocaleString() + '  ·  ' + trials[i].year, 36, y + 40);
+      ctx.fillStyle = '#dde2ec';
+      ctx.font = '600 12px DM Sans, system-ui, sans-serif';
+      ctx.textAlign = 'right';
+      ctx.fillText(trials[i].endpt, W - 36, y + 32);
+    }
+    lblTitle('Pivotal trials — non-hyperemic ratios and FFR', cx, 22);
+  }
+
+  if (p.view === 'where') {
+    // Decision flowchart-ish layout
+    lblTitle('When to use which?', cx, 30);
+    const items = [
+      { x: 50,        y: 65,  label: 'Adenosine OK?',    color: '#dde2ec' },
+      { x: cx - 130,  y: 130, label: 'YES → FFR',         color: '#5fc97a' },
+      { x: cx + 30,   y: 130, label: 'NO → use NHPR',     color: '#4a90d9' },
+      { x: 50,        y: 195, label: 'Ostial / left main?', color: '#dde2ec' },
+      { x: cx - 130,  y: 250, label: 'Disengage guide first', color: '#fdcc4d' },
+      { x: cx + 30,   y: 250, label: 'Consider both; pullback', color: '#4a90d9' },
+    ];
+    for (const it of items) {
+      ctx.fillStyle = '#1c2532';
+      ctx.strokeStyle = it.color;
+      ctx.lineWidth = 1.4;
+      const tw = ctx.measureText(it.label).width + 24;
+      ctx.beginPath();
+      roundRect(it.x, it.y, tw, 32, 6);
+      ctx.fill();
+      ctx.stroke();
+      ctx.fillStyle = it.color;
+      ctx.font = '600 12.5px DM Sans, system-ui, sans-serif';
+      ctx.textAlign = 'left';
+      ctx.fillText(it.label, it.x + 12, it.y + 21);
+    }
+  }
+}
+
+// 5. FFR PULLBACK -- vessel schematic with serial lesions + pressure trace
+function drawFFRPullback(p, t) {
+  ctx.clearRect(0, 0, W, H);
+  ctx.fillStyle = '#0d1019';
+  ctx.fillRect(0, 0, W, H);
+
+  const sp = p.proxStenosis / 100;
+  const sd = p.distStenosis / 100;
+  const Pa = 95;
+  const ffrProxAlone = Math.max(0.55, 1 - 0.55 * Math.pow(sp, 1.7));
+  const ffrDistAlone = Math.max(0.55, 1 - 0.55 * Math.pow(sd, 1.7));
+
+  // Vessel schematic (top half)
+  const vyc = 70;
+  const vR = 22;  // baseline radius
+  const vL = 60, vR0 = W - 60;
+  // Lumen path: starts at radius vR, narrows at proximal lesion (~ 35%), reopens, narrows at distal (~ 65%), reopens
+  const lesionProxX = vL + (vR0 - vL) * 0.32;
+  const lesionDistX = vL + (vR0 - vL) * 0.68;
+  const lesionW = 40;
+  function lumenAt(x) {
+    let r = vR;
+    if (Math.abs(x - lesionProxX) < lesionW) {
+      const u = (x - lesionProxX + lesionW) / (2 * lesionW); // 0..1
+      const narrow = Math.sin(u * Math.PI); // 0 at edges, 1 mid
+      r = vR * (1 - sp * narrow);
+    }
+    if (Math.abs(x - lesionDistX) < lesionW) {
+      const u = (x - lesionDistX + lesionW) / (2 * lesionW);
+      const narrow = Math.sin(u * Math.PI);
+      r = vR * (1 - sd * narrow);
+    }
+    return r;
+  }
+  // Vessel wall (outer)
+  ctx.fillStyle = '#1c2532';
+  ctx.beginPath();
+  ctx.moveTo(vL, vyc - vR - 3);
+  ctx.lineTo(vR0, vyc - vR - 3);
+  ctx.lineTo(vR0, vyc + vR + 3);
+  ctx.lineTo(vL, vyc + vR + 3);
+  ctx.closePath();
+  ctx.fill();
+  ctx.strokeStyle = '#2a3340'; ctx.lineWidth = 1; ctx.stroke();
+  // Lumen
+  ctx.fillStyle = '#0d1019';
+  ctx.beginPath();
+  ctx.moveTo(vL, vyc - lumenAt(vL));
+  for (let x = vL; x <= vR0; x += 2) ctx.lineTo(x, vyc - lumenAt(x));
+  for (let x = vR0; x >= vL; x -= 2) ctx.lineTo(x, vyc + lumenAt(x));
+  ctx.closePath();
+  ctx.fill();
+  ctx.strokeStyle = '#ef4444'; ctx.lineWidth = 1.2;
+  ctx.beginPath();
+  ctx.moveTo(vL, vyc - lumenAt(vL));
+  for (let x = vL; x <= vR0; x += 2) ctx.lineTo(x, vyc - lumenAt(x));
+  ctx.stroke();
+  ctx.beginPath();
+  ctx.moveTo(vL, vyc + lumenAt(vL));
+  for (let x = vL; x <= vR0; x += 2) ctx.lineTo(x, vyc + lumenAt(x));
+  ctx.stroke();
+  // Labels
+  lblTitle('Pullback under hyperemia', W / 2, 22);
+  ctx.fillStyle = '#a8b1c0'; ctx.font = '600 10.5px DM Sans, system-ui, sans-serif'; ctx.textAlign = 'center';
+  ctx.fillText('proximal lesion ' + p.proxStenosis + '%', lesionProxX, vyc + vR + 18);
+  ctx.fillText('distal lesion ' + p.distStenosis + '%', lesionDistX, vyc + vR + 18);
+
+  // Pressure trace (bottom half) — Pa flat, Pd steps down across each lesion
+  const py0 = vyc + vR + 36;
+  const plotW = vR0 - vL;
+  const plotH = H - py0 - 30;
+  ctx.strokeStyle = '#2a3340'; ctx.lineWidth = 0.6;
+  ctx.beginPath();
+  ctx.moveTo(vL, py0); ctx.lineTo(vL, py0 + plotH);
+  ctx.lineTo(vR0, py0 + plotH);
+  ctx.stroke();
+  // Pa (flat at the top)
+  const PaY = py0 + 18;
+  ctx.strokeStyle = '#ef4444'; ctx.lineWidth = 1.8;
+  ctx.shadowColor = 'rgba(239,68,68,0.4)'; ctx.shadowBlur = 4;
+  ctx.beginPath(); ctx.moveTo(vL, PaY); ctx.lineTo(vR0, PaY); ctx.stroke();
+  ctx.shadowBlur = 0;
+  lblTick('Pa', vR0 + 4, PaY + 4, 'left');
+  // Pd: drops at lesionProxX by ΔP_prox, then again at lesionDistX by ΔP_dist
+  // ΔP / Pa = 1 - FFR_lesion
+  const dPprox = (1 - ffrProxAlone);
+  const dPdist = (1 - ffrDistAlone);
+  const totalDrop = (1 - ffrProxAlone * ffrDistAlone);
+  const maxDropPx = plotH - 24;
+  const dropProxPx = dPprox / Math.max(0.5, totalDrop) * maxDropPx * 0.5;
+  const dropDistPx = dPdist / Math.max(0.5, totalDrop) * maxDropPx * 0.5;
+  ctx.strokeStyle = '#4a90d9'; ctx.lineWidth = 2;
+  ctx.shadowColor = 'rgba(74,144,217,0.4)'; ctx.shadowBlur = 4;
+  ctx.beginPath();
+  ctx.moveTo(vL, PaY);
+  ctx.lineTo(lesionProxX - lesionW * 0.4, PaY);
+  ctx.lineTo(lesionProxX + lesionW * 0.4, PaY + dropProxPx);
+  ctx.lineTo(lesionDistX - lesionW * 0.4, PaY + dropProxPx);
+  ctx.lineTo(lesionDistX + lesionW * 0.4, PaY + dropProxPx + dropDistPx);
+  ctx.lineTo(vR0, PaY + dropProxPx + dropDistPx);
+  ctx.stroke();
+  ctx.shadowBlur = 0;
+  lblTick('Pd', vR0 + 4, PaY + dropProxPx + dropDistPx + 4, 'left');
+  // Caliper labels at each step
+  ctx.fillStyle = '#fdcc4d'; ctx.font = '700 11px DM Sans, system-ui, sans-serif'; ctx.textAlign = 'center';
+  ctx.fillText('ΔP ' + (dPprox * 100).toFixed(0) + '%', lesionProxX, py0 + plotH - 4);
+  ctx.fillText('ΔP ' + (dPdist * 100).toFixed(0) + '%', lesionDistX, py0 + plotH - 4);
+  // Composite FFR label at far right
+  const composite = ffrProxAlone * ffrDistAlone + 0.04 * (1 - ffrProxAlone) * (1 - ffrDistAlone);
+  const compositeBounded = Math.max(0.45, composite);
+  ctx.fillStyle = '#dde2ec'; ctx.font = '700 12px DM Sans, system-ui, sans-serif'; ctx.textAlign = 'right';
+  ctx.fillText('Composite FFR ' + compositeBounded.toFixed(2), vR0 - 6, py0 + 14);
+}
+
+// 6. IVUS NORMAL -- circular cross-section view
+function drawIVUSNormal(p, t) {
+  ctx.clearRect(0, 0, W, H);
+  ctx.fillStyle = '#0d1019';
+  ctx.fillRect(0, 0, W, H);
+  const cx = W / 2, cy = H / 2 + 6;
+  const R = Math.min(W, H) * 0.36;
+
+  // Outer ring = adventitia (bright)
+  ctx.fillStyle = '#cdd5e0';
+  ctx.beginPath(); ctx.arc(cx, cy, R * 1.02, 0, Math.PI * 2); ctx.fill();
+
+  // Media (dark band)
+  ctx.fillStyle = '#222b3a';
+  ctx.beginPath(); ctx.arc(cx, cy, R * 0.92, 0, Math.PI * 2); ctx.fill();
+
+  // Intima (bright thin)
+  ctx.fillStyle = '#aab3c1';
+  ctx.beginPath(); ctx.arc(cx, cy, R * 0.84, 0, Math.PI * 2); ctx.fill();
+
+  // Lumen modifications based on plaque type
+  let lumenR = R * 0.78;
+  let lumenColor = '#0a0d14';
+  if (p.view === 'fatty') {
+    // hypoechoic plaque (darker than adventitia), eccentric on one side
+    lumenR = R * 0.58;
+    ctx.fillStyle = '#3b4150';
+    ctx.beginPath();
+    ctx.arc(cx, cy, R * 0.82, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = '#0a0d14';
+    ctx.beginPath();
+    ctx.arc(cx + R * 0.10, cy - R * 0.05, lumenR, 0, Math.PI * 2);
+    ctx.fill();
+  } else if (p.view === 'fibrotic') {
+    // isoechoic / hyperechoic plaque
+    lumenR = R * 0.58;
+    ctx.fillStyle = '#7e8898';
+    ctx.beginPath();
+    ctx.arc(cx, cy, R * 0.82, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = '#0a0d14';
+    ctx.beginPath();
+    ctx.arc(cx - R * 0.06, cy + R * 0.08, lumenR, 0, Math.PI * 2);
+    ctx.fill();
+  } else if (p.view === 'calcific') {
+    // hyperechoic plaque with shadow (radial dark sector)
+    ctx.fillStyle = '#0a0d14';
+    ctx.beginPath();
+    ctx.arc(cx, cy, R * 0.84, 0, Math.PI * 2);
+    ctx.fill();
+    // calcium arc (bright) — superficial
+    ctx.fillStyle = '#f0f4fb';
+    ctx.beginPath();
+    ctx.arc(cx, cy, R * 0.84, -Math.PI * 0.18, Math.PI * 0.18);
+    ctx.arc(cx, cy, R * 0.62, Math.PI * 0.18, -Math.PI * 0.18, true);
+    ctx.closePath();
+    ctx.fill();
+    // shadow sector
+    ctx.save();
+    ctx.globalAlpha = 0.85;
+    ctx.fillStyle = '#0a0d14';
+    ctx.beginPath();
+    ctx.moveTo(cx, cy);
+    ctx.arc(cx, cy, R * 0.95, -Math.PI * 0.18, Math.PI * 0.18);
+    ctx.closePath();
+    ctx.fill();
+    ctx.restore();
+    // lumen offset
+    lumenR = R * 0.48;
+    ctx.fillStyle = '#0a0d14';
+    ctx.beginPath();
+    ctx.arc(cx - R * 0.10, cy, lumenR, 0, Math.PI * 2);
+    ctx.fill();
+  } else {
+    // Normal: clean lumen
+    ctx.fillStyle = '#0a0d14';
+    ctx.beginPath();
+    ctx.arc(cx, cy, lumenR, 0, Math.PI * 2);
+    ctx.fill();
+  }
+
+  // Imaging catheter at the centre (ring-down artifact)
+  ctx.fillStyle = '#dde2ec';
+  ctx.beginPath(); ctx.arc(cx, cy, 9, 0, Math.PI * 2); ctx.fill();
+  ctx.fillStyle = '#1e2840';
+  ctx.beginPath(); ctx.arc(cx, cy, 4, 0, Math.PI * 2); ctx.fill();
+  // Faint ring artifact
+  ctx.strokeStyle = 'rgba(220,225,235,0.18)';
+  ctx.lineWidth = 1.4;
+  ctx.beginPath(); ctx.arc(cx, cy, 14, 0, Math.PI * 2); ctx.stroke();
+  ctx.beginPath(); ctx.arc(cx, cy, 18, 0, Math.PI * 2); ctx.stroke();
+
+  // Caliper labels — point to each layer
+  if (p.view === 'normal') {
+    ctx.strokeStyle = '#fdcc4d'; ctx.lineWidth = 1;
+    ctx.setLineDash([2, 3]);
+    // Adventitia
+    ctx.beginPath(); ctx.moveTo(cx + R * 1.02 + 4, cy); ctx.lineTo(cx + R * 1.02 + 28, cy); ctx.stroke();
+    // Media
+    ctx.beginPath(); ctx.moveTo(cx + R * 0.88 + 4, cy + 6); ctx.lineTo(cx + R * 1.02 + 28, cy + 24); ctx.stroke();
+    // Intima
+    ctx.beginPath(); ctx.moveTo(cx + R * 0.82 + 4, cy + 12); ctx.lineTo(cx + R * 1.02 + 28, cy + 44); ctx.stroke();
+    ctx.setLineDash([]);
+    lblCaliper('Adventitia (bright)', cx + R * 1.02 + 32, cy + 4, 'left');
+    lblCaliper('Media (dark)',        cx + R * 1.02 + 32, cy + 28, 'left');
+    lblCaliper('Intima (bright)',     cx + R * 1.02 + 32, cy + 48, 'left');
+  } else if (p.view === 'calcific') {
+    ctx.strokeStyle = '#fdcc4d'; ctx.lineWidth = 1; ctx.setLineDash([2, 3]);
+    ctx.beginPath(); ctx.moveTo(cx + R * 0.95, cy + 8); ctx.lineTo(cx + R + 28, cy + 18); ctx.stroke();
+    ctx.setLineDash([]);
+    lblCaliper('Acoustic shadow', cx + R + 32, cy + 22, 'left');
+    lblCaliper('Calcium arc',     cx + R * 0.96, cy - R * 0.16, 'center');
+  }
+
+  // Title + scale bar
+  lblTitle('IVUS cross-section — ' + (p.view === 'normal' ? 'normal' : p.view === 'fatty' ? 'fatty / soft plaque' : p.view === 'fibrotic' ? 'fibrotic plaque' : 'calcific plaque'), cx, 24);
+  // 1 mm scale bar
+  const sb = R / 5;
+  ctx.strokeStyle = '#dde2ec'; ctx.lineWidth = 2;
+  ctx.beginPath(); ctx.moveTo(20, H - 16); ctx.lineTo(20 + sb, H - 16); ctx.stroke();
+  lblTick('1 mm', 20, H - 22, 'left');
+  // Modality marker
+  ctx.fillStyle = '#4a90d9'; ctx.font = '700 11px DM Sans, system-ui, sans-serif'; ctx.textAlign = 'right';
+  ctx.fillText('IVUS', W - 14, H - 14);
+}
+
+// 7. IVUS QUANTITATIVE -- shows EEM contour + lumen contour + plaque + measurements
+function drawIVUSQuantitative(p, t) {
+  ctx.clearRect(0, 0, W, H);
+  ctx.fillStyle = '#0d1019';
+  ctx.fillRect(0, 0, W, H);
+  const cx = W / 2, cy = H / 2 + 6;
+  const sizePx = Math.min(W, H) * 0.36;
+  // Scale: 1 mm² shown as sizePx² / (eem × scaleFactor)
+  // Use a fixed visual scale where EEM = 22 mm² fills the canvas; smaller EEMs use proportional radius
+  const Reem = sizePx * Math.sqrt(p.eem / 22);
+  const Rlum = sizePx * Math.sqrt(Math.min(p.lumen, p.eem - 0.5) / 22);
+
+  // Background tissue
+  ctx.fillStyle = '#1c2532';
+  ctx.beginPath(); ctx.arc(cx, cy, Reem + 8, 0, Math.PI * 2); ctx.fill();
+  // EEM (outer bright)
+  ctx.fillStyle = '#cdd5e0';
+  ctx.beginPath(); ctx.arc(cx, cy, Reem, 0, Math.PI * 2); ctx.fill();
+  // Plaque (gradient gray)
+  const grad = ctx.createRadialGradient(cx, cy, Rlum, cx, cy, Reem);
+  grad.addColorStop(0, '#4a5466');
+  grad.addColorStop(1, '#2a3340');
+  ctx.fillStyle = grad;
+  ctx.beginPath(); ctx.arc(cx, cy, Reem * 0.96, 0, Math.PI * 2); ctx.fill();
+  // Lumen (dark)
+  ctx.fillStyle = '#0a0d14';
+  ctx.beginPath(); ctx.arc(cx, cy, Rlum, 0, Math.PI * 2); ctx.fill();
+
+  // Contours
+  ctx.strokeStyle = '#4a90d9'; ctx.lineWidth = 1.4;
+  ctx.beginPath(); ctx.arc(cx, cy, Reem * 0.96, 0, Math.PI * 2); ctx.stroke();
+  ctx.strokeStyle = '#fdcc4d'; ctx.lineWidth = 1.4;
+  ctx.beginPath(); ctx.arc(cx, cy, Rlum, 0, Math.PI * 2); ctx.stroke();
+
+  // Catheter centre
+  ctx.fillStyle = '#dde2ec';
+  ctx.beginPath(); ctx.arc(cx, cy, 9, 0, Math.PI * 2); ctx.fill();
+  ctx.fillStyle = '#1e2840';
+  ctx.beginPath(); ctx.arc(cx, cy, 4, 0, Math.PI * 2); ctx.fill();
+
+  // Calipers (radius arrows from centre)
+  ctx.strokeStyle = '#4a90d9'; ctx.lineWidth = 1.2;
+  ctx.setLineDash([3, 2]);
+  ctx.beginPath(); ctx.moveTo(cx, cy); ctx.lineTo(cx + Reem * 0.96 * Math.cos(-Math.PI*0.25), cy + Reem * 0.96 * Math.sin(-Math.PI*0.25));
+  ctx.stroke();
+  ctx.strokeStyle = '#fdcc4d';
+  ctx.beginPath(); ctx.moveTo(cx, cy); ctx.lineTo(cx + Rlum * Math.cos(Math.PI*0.18), cy + Rlum * Math.sin(Math.PI*0.18));
+  ctx.stroke();
+  ctx.setLineDash([]);
+
+  // Title + scale + labels
+  lblTitle('IVUS quantitative measurement', cx, 24);
+  // Labels box on right
+  const lx = W - 130;
+  ctx.fillStyle = 'rgba(28,37,50,0.92)';
+  roundRect(lx, 50, 120, 130, 8);
+  ctx.fill();
+  ctx.strokeStyle = '#2a3340'; ctx.lineWidth = 1;
+  ctx.stroke();
+  ctx.fillStyle = '#4a90d9'; ctx.font = '700 11px DM Sans, system-ui, sans-serif'; ctx.textAlign = 'left';
+  ctx.fillText('EEM', lx + 10, 70);
+  ctx.fillStyle = '#dde2ec'; ctx.font = '600 13px DM Sans, system-ui, sans-serif';
+  ctx.fillText(p.eem.toFixed(1) + ' mm²', lx + 10, 86);
+  ctx.fillStyle = '#fdcc4d'; ctx.font = '700 11px DM Sans, system-ui, sans-serif';
+  ctx.fillText('MLA', lx + 10, 106);
+  ctx.fillStyle = '#dde2ec'; ctx.font = '600 13px DM Sans, system-ui, sans-serif';
+  ctx.fillText(Math.min(p.lumen, p.eem - 0.5).toFixed(1) + ' mm²', lx + 10, 122);
+  ctx.fillStyle = '#a8b1c0'; ctx.font = '700 11px DM Sans, system-ui, sans-serif';
+  ctx.fillText('Plaque burden', lx + 10, 142);
+  const pb = ((p.eem - Math.min(p.lumen, p.eem - 0.5)) / p.eem) * 100;
+  ctx.fillStyle = pb >= 70 ? '#ef4444' : pb >= 50 ? '#f59e0b' : '#5fc97a';
+  ctx.font = '600 13px DM Sans, system-ui, sans-serif';
+  ctx.fillText(pb.toFixed(0) + ' %', lx + 10, 158);
+
+  // 1 mm scale
+  ctx.strokeStyle = '#dde2ec'; ctx.lineWidth = 2;
+  ctx.beginPath(); ctx.moveTo(20, H - 16); ctx.lineTo(20 + sizePx / 5, H - 16); ctx.stroke();
+  lblTick('1 mm', 20, H - 22, 'left');
+  ctx.fillStyle = '#4a90d9'; ctx.font = '700 11px DM Sans, system-ui, sans-serif'; ctx.textAlign = 'right';
+  ctx.fillText('IVUS', lx - 16, H - 14);
+}
+
+// 8. OCT NORMAL -- circular cross-section, sharper layer rendering, plaque morphology variants
+function drawOCTNormal(p, t) {
+  ctx.clearRect(0, 0, W, H);
+  ctx.fillStyle = '#0d1019';
+  ctx.fillRect(0, 0, W, H);
+  const cx = W / 2, cy = H / 2 + 6;
+  const R = Math.min(W, H) * 0.36;
+
+  // Adventitia (outer bright)
+  ctx.fillStyle = '#e8eef7';
+  ctx.beginPath(); ctx.arc(cx, cy, R * 1.02, 0, Math.PI * 2); ctx.fill();
+  // Media (dark band - crisper than IVUS)
+  ctx.fillStyle = '#0d1422';
+  ctx.beginPath(); ctx.arc(cx, cy, R * 0.92, 0, Math.PI * 2); ctx.fill();
+  // Intima (bright thin)
+  ctx.fillStyle = '#c5cdd9';
+  ctx.beginPath(); ctx.arc(cx, cy, R * 0.84, 0, Math.PI * 2); ctx.fill();
+
+  // Morphology overlays
+  if (p.view === 'fibrous') {
+    // Homogeneous bright signal-rich plaque
+    ctx.fillStyle = '#a8b2c1';
+    ctx.beginPath();
+    ctx.arc(cx, cy, R * 0.82, -Math.PI * 0.3, Math.PI * 0.45);
+    ctx.arc(cx, cy, R * 0.58, Math.PI * 0.45, -Math.PI * 0.3, true);
+    ctx.closePath();
+    ctx.fill();
+  }
+  if (p.view === 'lipid') {
+    // Signal-poor with DIFFUSE attenuation (gradient fading outward)
+    const grad = ctx.createRadialGradient(cx + R * 0.2, cy, R * 0.05, cx + R * 0.2, cy, R * 0.6);
+    grad.addColorStop(0, '#5b6478');
+    grad.addColorStop(0.5, '#34394a');
+    grad.addColorStop(1, '#15192a');
+    ctx.fillStyle = grad;
+    ctx.beginPath();
+    ctx.arc(cx, cy, R * 0.82, -Math.PI * 0.35, Math.PI * 0.20);
+    ctx.arc(cx, cy, R * 0.50, Math.PI * 0.20, -Math.PI * 0.35, true);
+    ctx.closePath();
+    ctx.fill();
+    // Thin fibrous cap (bright thin line over the lipid)
+    ctx.strokeStyle = '#dde2ec'; ctx.lineWidth = 1.4;
+    ctx.beginPath();
+    ctx.arc(cx, cy, R * 0.80, -Math.PI * 0.32, Math.PI * 0.18);
+    ctx.stroke();
+  }
+  if (p.view === 'calcium') {
+    // Signal-poor with SHARP leading edge (pathognomonic)
+    ctx.fillStyle = '#1a1f2e';
+    ctx.beginPath();
+    ctx.arc(cx, cy, R * 0.78, -Math.PI * 0.18, Math.PI * 0.18);
+    ctx.arc(cx, cy, R * 0.50, Math.PI * 0.18, -Math.PI * 0.18, true);
+    ctx.closePath();
+    ctx.fill();
+    // Sharp leading edge — pathognomonic on OCT
+    ctx.strokeStyle = '#dde2ec'; ctx.lineWidth = 2.4;
+    ctx.beginPath();
+    ctx.arc(cx, cy, R * 0.78, -Math.PI * 0.18, Math.PI * 0.18);
+    ctx.stroke();
+    // Sharp trailing edge (visible because no acoustic shadow on OCT for thin calcium)
+    ctx.strokeStyle = 'rgba(220,225,235,0.45)'; ctx.lineWidth = 1.4;
+    ctx.beginPath();
+    ctx.arc(cx, cy, R * 0.52, -Math.PI * 0.18, Math.PI * 0.18);
+    ctx.stroke();
+  }
+
+  // Lumen
+  let lumenR = R * 0.78;
+  let lcx = cx, lcy = cy;
+  if (p.view === 'fibrous' || p.view === 'lipid' || p.view === 'calcium') {
+    lumenR = R * 0.55;
+    lcx = cx - R * 0.08;
+  }
+  ctx.fillStyle = '#0a0d14';
+  ctx.beginPath(); ctx.arc(lcx, lcy, lumenR, 0, Math.PI * 2); ctx.fill();
+
+  // Catheter
+  ctx.fillStyle = '#dde2ec';
+  ctx.beginPath(); ctx.arc(cx, cy, 7, 0, Math.PI * 2); ctx.fill();
+  ctx.fillStyle = '#1e2840';
+  ctx.beginPath(); ctx.arc(cx, cy, 3, 0, Math.PI * 2); ctx.fill();
+  // Wire shadow (one radial sector unilluminated)
+  ctx.save();
+  ctx.fillStyle = 'rgba(10,13,20,0.55)';
+  ctx.beginPath();
+  ctx.moveTo(cx, cy);
+  ctx.arc(cx, cy, R * 1.05, Math.PI * 0.55, Math.PI * 0.60);
+  ctx.closePath();
+  ctx.fill();
+  // Wire dot
+  ctx.fillStyle = '#dde2ec';
+  ctx.beginPath();
+  ctx.arc(cx + 14 * Math.cos(Math.PI * 0.575), cy + 14 * Math.sin(Math.PI * 0.575), 2, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.restore();
+
+  // Annotations
+  if (p.view === 'normal') {
+    ctx.strokeStyle = '#fdcc4d'; ctx.lineWidth = 1;
+    ctx.setLineDash([2, 3]);
+    ctx.beginPath(); ctx.moveTo(cx + R * 1.04, cy - 18); ctx.lineTo(cx + R * 1.04 + 30, cy - 28); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(cx + R * 0.88, cy + 8); ctx.lineTo(cx + R + 32, cy + 18); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(cx + R * 0.82, cy + 24); ctx.lineTo(cx + R + 32, cy + 42); ctx.stroke();
+    ctx.setLineDash([]);
+    lblCaliper('Adventitia',  cx + R * 1.04 + 34, cy - 24, 'left');
+    lblCaliper('Media',       cx + R + 36, cy + 22, 'left');
+    lblCaliper('Intima',      cx + R + 36, cy + 46, 'left');
+  }
+  if (p.view === 'lipid') {
+    ctx.strokeStyle = '#fdcc4d'; ctx.lineWidth = 1; ctx.setLineDash([2, 3]);
+    ctx.beginPath(); ctx.moveTo(cx + R * 0.80, cy - R * 0.18); ctx.lineTo(cx + R + 32, cy - R * 0.35); ctx.stroke();
+    ctx.setLineDash([]);
+    lblCaliper('Fibrous cap (~ 65 µm)', cx + R + 36, cy - R * 0.32, 'left');
+    lblCaliper('Lipid pool (diffuse)',  cx + R + 36, cy + R * 0.05, 'left');
+  }
+  if (p.view === 'calcium') {
+    ctx.strokeStyle = '#fdcc4d'; ctx.lineWidth = 1; ctx.setLineDash([2, 3]);
+    ctx.beginPath(); ctx.moveTo(cx + R * 0.80, cy - R * 0.06); ctx.lineTo(cx + R + 32, cy - R * 0.18); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(cx + R * 0.52, cy - R * 0.06); ctx.lineTo(cx + R + 32, cy + R * 0.10); ctx.stroke();
+    ctx.setLineDash([]);
+    lblCaliper('Sharp leading edge', cx + R + 36, cy - R * 0.14, 'left');
+    lblCaliper('Inner border (visible)', cx + R + 36, cy + R * 0.14, 'left');
+  }
+
+  // Title + scale
+  const titleMap = { normal: 'OCT — normal three-layer', fibrous: 'OCT — fibrous plaque', lipid: 'OCT — lipid plaque / TCFA', calcium: 'OCT — calcific plaque' };
+  lblTitle(titleMap[p.view] || 'OCT cross-section', cx, 24);
+  ctx.strokeStyle = '#dde2ec'; ctx.lineWidth = 2;
+  ctx.beginPath(); ctx.moveTo(20, H - 16); ctx.lineTo(20 + R / 5, H - 16); ctx.stroke();
+  lblTick('1 mm', 20, H - 22, 'left');
+  ctx.fillStyle = '#5fc97a'; ctx.font = '700 11px DM Sans, system-ui, sans-serif'; ctx.textAlign = 'right';
+  ctx.fillText('OCT', W - 14, H - 14);
+}
+
+// ═══════════════════════════════════════════════════════════
+// MODULE LIFECYCLE
+// ═══════════════════════════════════════════════════════════
+let activeModule = 'ffr_concept';
+let inputState = {}; // current parameter values for active module
+
+// Sidebar grouping. Order modules into clinical categories.
+const MODULE_GROUPS = [
+  { name: 'Coronary Physiology', modules: ['pressure_flow', 'gould_curve', 'ffr_concept', 'nhpr_compare'] },
+  { name: 'FFR Clinical',        modules: ['ffr_pullback'] },
+  { name: 'IVUS',                modules: ['ivus_normal', 'ivus_quantitative'] },
+  { name: 'OCT',                 modules: ['oct_normal'] },
+];
+
+function buildSidebar() {
+  const list = document.getElementById('moduleList');
+  list.innerHTML = '';
+  let i = 1;
+  for (const group of MODULE_GROUPS) {
+    const header = document.createElement('div');
+    header.className = 'module-group-header';
+    header.textContent = group.name;
+    list.appendChild(header);
+    for (const id of group.modules) {
+      const m = MODULES[id];
+      if (!m) continue;
+      const btn = document.createElement('button');
+      btn.className = 'module-btn' + (id === activeModule ? ' active' : '');
+      btn.dataset.module = id;
+      btn.innerHTML = `<span class="num">${i}</span><span>${m.title.replace(/<sub>(.*?)<\/sub>/g, '$1').replace(/<sup>(.*?)<\/sup>/g, '$1')}</span>`;
+      btn.onclick = () => selectModule(id);
+      list.appendChild(btn);
+      i++;
+    }
+  }
+}
+
+function selectModule(id) {
+  activeModule = id;
+  document.querySelectorAll('.module-btn').forEach(b => b.classList.toggle('active', b.dataset.module === id));
+  const m = MODULES[id];
+  document.getElementById('modTitle').innerHTML = m.title;
+  document.getElementById('modPurpose').innerHTML = m.purpose;
+  document.getElementById('modFormula').innerHTML = m.formula;
+  // Calculator cross-link button (only for atlas modules with a calculatorLink)
+  const linkRow = document.getElementById('calcLinkRow');
+  const linkBtn = document.getElementById('calcLinkBtn');
+  if (m.calculatorLink && MODULES[m.calculatorLink]) {
+    const target = MODULES[m.calculatorLink];
+    const targetTitle = target.title.replace(/<sub>(.*?)<\/sub>/g, '$1').replace(/<sup>(.*?)<\/sup>/g, '$1');
+    linkBtn.innerHTML = '→ Open ' + targetTitle + ' calculator';
+    linkBtn.onclick = (e) => { e.stopPropagation(); selectModule(m.calculatorLink); };
+    linkRow.style.display = '';
+  } else {
+    linkRow.style.display = 'none';
+  }
+  buildInputs(m);
+  recompute();
+  startAnim();
+}
+
+function buildInputs(m) {
+  const wrap = document.getElementById('modInputs');
+  wrap.innerHTML = '';
+  inputState = {};
+  // Hide the Inputs card entirely for static atlas modules with no inputs
+  const inputsCard = document.querySelector('.inputs-card');
+  if (inputsCard) inputsCard.style.display = (m.inputs && m.inputs.length > 0) ? '' : 'none';
+  for (const inp of m.inputs) {
+    inputState[inp.key] = inp.default;
+    if (inp.type === 'slider') {
+      const row = document.createElement('div');
+      row.className = 'input-row';
+      row.innerHTML = `
+        <label>${inp.label}</label>
+        <input type="range" min="${inp.min}" max="${inp.max}" step="${inp.step}" value="${inp.default}" data-key="${inp.key}" data-decimals="${inp.decimals || 1}">
+        <span class="val" id="val-${inp.key}">${(+inp.default).toFixed(inp.decimals || 1)}</span>
+        <span class="unit">${inp.unit}</span>
+      `;
+      wrap.appendChild(row);
+      const slider = row.querySelector('input');
+      slider.addEventListener('input', () => {
+        const v = parseFloat(slider.value);
+        inputState[inp.key] = v;
+        document.getElementById('val-' + inp.key).textContent = v.toFixed(inp.decimals || 1);
+        recompute();
+      });
+    } else if (inp.type === 'picker') {
+      const row = document.createElement('div');
+      row.className = 'picker-row';
+      row.innerHTML = `<label>${inp.label}</label><div class="picker-options"></div><div class="picker-help" id="help-${inp.key}"></div>`;
+      const opts = row.querySelector('.picker-options');
+      const help = row.querySelector('.picker-help');
+      for (const opt of inp.options) {
+        const b = document.createElement('button');
+        b.className = 'picker-opt' + (opt.v === inp.default ? ' active' : '');
+        b.textContent = opt.text;
+        b.onclick = () => {
+          inputState[inp.key] = opt.v;
+          opts.querySelectorAll('.picker-opt').forEach(o => o.classList.remove('active'));
+          b.classList.add('active');
+          help.textContent = opt.help;
+          recompute();
+        };
+        opts.appendChild(b);
+        if (opt.v === inp.default) help.textContent = opt.help;
+      }
+      wrap.appendChild(row);
+    }
+  }
+}
+
+function recompute() {
+  const m = MODULES[activeModule];
+  const out = m.compute(inputState);
+  const wrap = document.getElementById('modOutputs');
+  wrap.innerHTML = out.map(o => {
+    const classes = ['output-cell'];
+    if (o.text) classes.push('text');
+    if (o.wide) classes.push('wide');
+    const sev = o.severity ? `<div class="severity-pill ${o.severity.klass}">${o.severity.label}</div>` : '';
+    return `<div class="${classes.join(' ')}">
+      <div class="output-label">${o.label}</div>
+      <div class="output-value">${o.value}${o.unit ? `<span class="output-unit">${o.unit}</span>` : ''}</div>
+      ${sev}
+    </div>`;
+  }).join('');
+  // Pitfalls
+  const pitfallsWrap = document.getElementById('modPitfalls');
+  pitfallsWrap.innerHTML = m.pitfalls.map(p => `<div class="pitfall"><span>${p}</span></div>`).join('');
+  refreshDraw();
+}
+
+// ═══════════════════════════════════════════════════════════
+// ANIMATION LOOP — runs ~3 sec on click / module switch, then fades out
+// ═══════════════════════════════════════════════════════════
+const ANIM_DURATION_MS = 3000;
+const ANIM_FADE_MS = 800;     // last fraction of the window where motion fades to 0
+let animActive = false;
+let animStartTime = 0;
+let phase = 0;        // monotonic time fed into draw() — only advances during the animation window
+let lastT = 0;
+let animFade = 0;     // 0..1 multiplier on motion-element opacity (particles, pulses)
+
+function refreshDraw() {
+  const m = MODULES[activeModule];
+  if (m && m.draw) m.draw(inputState, phase);
+}
+
+function loop(t) {
+  if (lastT === 0) lastT = t;
+  phase += (t - lastT);
+  lastT = t;
+  const elapsed = t - animStartTime;
+  if (elapsed < ANIM_DURATION_MS - ANIM_FADE_MS) {
+    animFade = 1;
+  } else if (elapsed < ANIM_DURATION_MS) {
+    animFade = (ANIM_DURATION_MS - elapsed) / ANIM_FADE_MS;
+  } else {
+    animFade = 0;
+  }
+  refreshDraw();
+  if (elapsed < ANIM_DURATION_MS) {
+    requestAnimationFrame(loop);
+  } else {
+    animActive = false;
+    lastT = 0;
+  }
+}
+
+function startAnim() {
+  animStartTime = performance.now();
+  animFade = 1;
+  if (!animActive) {
+    animActive = true;
+    lastT = 0;
+    requestAnimationFrame(loop);
+  }
+}
+document.addEventListener('click', startAnim);
+
+// ═══════════════════════════════════════════════════════════
+// DARK MODE
+// ═══════════════════════════════════════════════════════════
+function toggleDark() {
+  document.body.classList.toggle('dark');
+  const isDark = document.body.classList.contains('dark');
+  document.getElementById('darkToggle').textContent = isDark ? 'Light Mode' : 'Dark Mode';
+  try { localStorage.setItem('cathmath_dark', isDark ? '1' : '0'); } catch(e) {}
+}
+try {
+  const pref = localStorage.getItem('cathmath_dark');
+  if (pref === '0') {
+    document.body.classList.remove('dark');
+    document.getElementById('darkToggle').textContent = 'Dark Mode';
+  }
+} catch(e) {}
+
+// ═══════════════════════════════════════════════════════════
+// INIT
+// ═══════════════════════════════════════════════════════════
+window.addEventListener('resize', () => { resizeCanvas(); refreshDraw(); });
+resizeCanvas();
+buildSidebar();
+selectModule('ffr_concept');
+
+// SEO popover — close on outside click + Escape
+(function setupSeoPopover() {
+  const popover = document.getElementById('seoPopover');
+  if (!popover) return;
+  document.addEventListener('click', (e) => {
+    if (!popover.open) return;
+    if (e.target.closest('.seo-popover')) return;
+    popover.removeAttribute('open');
+  });
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && popover.open) popover.removeAttribute('open');
+  });
+})();
+
+</script>
+</body>
+</html>
