@@ -865,61 +865,6 @@ body.dark .seo-content-body h3 { color: #e8ecf2; }
     <a href="/angio/" class="nav-tab">Angio Views</a>
   </div>
   <div class="nav-right">
-    <span class="nav-credit">Dr. Saro Avedikian, MD, MPH</span>
-    <details class="seo-popover" id="seoPopover">
-      <summary class="seo-trigger" title="About this simulator">
-        <span aria-hidden="true">ⓘ</span>
-        <span class="seo-trigger-text">About</span>
-      </summary>
-      <div class="seo-popover-body">
-        <h2>About the Cardiac Action Potential Simulator</h2>
-        <p>The cardiac action potential is the voltage waveform that drives every heartbeat. Its shape — and how that shape is reshaped by drugs and disease — is one of the most testable concepts in clinical cardiology. This free interactive simulator visualizes the five phases of the ventricular myocyte action potential and the spontaneous-firing waveform of the SA/AV nodal pacemaker, then lets you stack any combination of <strong>antiarrhythmic drugs</strong> in real time to see how each class reshapes the trace.</p>
-
-    <h3>The Vaughan-Williams classification</h3>
-    <p>Ernst Vaughan-Williams' 1970 classification organizes antiarrhythmics by their primary ion-channel target:</p>
-    <ul>
-      <li><strong>Class I — Sodium channel blockers.</strong> Slow the upstroke (phase 0) of the ventricular action potential. Subdivided by binding kinetics:
-        <ul>
-          <li><strong>Class IA</strong> (quinidine, procainamide, disopyramide) — moderate Na block plus K block, prolonging both QRS and QT.</li>
-          <li><strong>Class IB</strong> (lidocaine, mexiletine, phenytoin) — weak Na block with fast off-kinetics. Use-dependent: preferentially blocks depolarized or rapidly firing tissue, making it ischemia-selective.</li>
-          <li><strong>Class IC</strong> (flecainide, propafenone) — strong Na block with slow off-kinetics. Markedly widens QRS. Avoided in structural heart disease (CAST trial).</li>
-        </ul>
-      </li>
-      <li><strong>Class II — β-adrenergic blockers</strong> (metoprolol, atenolol, esmolol, propranolol). Reduce sympathetic drive on the SA node, flattening the phase 4 slope of the pacemaker action potential and slowing AV nodal conduction.</li>
-      <li><strong>Class III — Potassium channel blockers</strong> (amiodarone, sotalol, dofetilide, ibutilide, dronedarone). Block the delayed-rectifier I<sub>Kr</sub> current, prolonging phase 3 repolarization, lengthening APD and ERP. Excessive QT prolongation drives torsades-de-pointes.</li>
-      <li><strong>Class IV — Non-dihydropyridine calcium channel blockers</strong> (verapamil, diltiazem). Block L-type Ca²⁺ current — the dominant phase 0 carrier in SA and AV nodal cells. They have minimal effect on ventricular phase 0 (which is Na-dependent).</li>
-      <li><strong>Other</strong> — adenosine, digoxin, magnesium. Adenosine opens I<sub>KAch</sub> via the A1 receptor, hyperpolarizing the AV node and producing transient block. Digoxin slows the AV node via vagal tone. Magnesium is first-line for torsades-de-pointes.</li>
-    </ul>
-
-    <h3>Ventricular vs pacemaker action potentials</h3>
-    <p><strong>Ventricular myocytes</strong> have a stable, polarized resting potential of about −85 mV maintained by inward-rectifier I<sub>K1</sub>. They depolarize abruptly when stimulated, with a fast Na-driven phase 0, an early I<sub>to</sub>-mediated notch (phase 1), a long Ca²⁺-driven plateau (phase 2), and a K-driven repolarization (phase 3).</p>
-    <p><strong>Pacemaker cells</strong> (SA and AV nodes) have no stable resting potential. After repolarization to a maximum diastolic potential of about −60 to −65 mV, the cell spontaneously depolarizes through phase 4 — driven by the funny current I<sub>f</sub>, T-type Ca²⁺ current, and decaying I<sub>K</sub>. When this drift reaches threshold, an L-type Ca²⁺ current opens and triggers the upstroke. This is why β-blockers and CCBs slow heart rate, why adenosine produces transient AV block, and why pure Class I and III drugs have minimal effect on nodal cells.</p>
-
-    <h3>Disease states and clinical scenarios</h3>
-    <p>Built-in disease presets let you visualize the substrate before adding drugs:</p>
-    <ul>
-      <li><strong>Long QT syndrome</strong> — inherited K-channel loss-of-function prolongs APD. Stacking a Class III drug on this substrate is dangerous.</li>
-      <li><strong>Short QT syndrome</strong> — K-channel gain-of-function shortens APD. Substrate for atrial fibrillation and idiopathic ventricular fibrillation.</li>
-      <li><strong>Brugada syndrome</strong> — SCN5A loss-of-function reduces phase 0 in epicardium. Class IC drugs (flecainide) are diagnostic but proarrhythmic.</li>
-      <li><strong>Ischemia</strong> — depolarized resting potential (−65 mV) inactivates Na channels. Class IB drugs preferentially bind these inactivated channels — the structural basis of "use-dependence".</li>
-    </ul>
-    <p>Clinical scenarios apply ready-made drug-and-substrate combinations: lidocaine for VT in ischemia, amiodarone for atrial fibrillation, flecainide pill-in-pocket cardioversion, metoprolol for sinus tachycardia, adenosine for SVT, verapamil for AVNRT, and the proarrhythmic stories of sotalol-induced torsades and the historic "quinidine syncope".</p>
-
-    <h3>How to use this simulator</h3>
-    <p>Choose <strong>Ventricular</strong> or <strong>Pacemaker</strong> mode, then either click a <strong>Clinical Scenario</strong> (a preconfigured drug + substrate combination) or apply a <strong>Disease State</strong> and stack drugs on top. Adjust individual parameters with the sliders. The dashed grey ghost trace shows your baseline so you can see exactly what each intervention changes. Live measurements (APD, ERP, dV/dt, estimated QRS, QT, heart rate, cycle length) update with every change.</p>
-    <p>This tool is built for cardiology fellows preparing for board exams, residents studying for in-service exams, and medical students who want to see Vaughan-Williams classes come alive on a real action potential trace. It is for educational use only and is not a substitute for clinical judgment.</p>
-
-    <h3>Related tools</h3>
-    <div class="related-tools">
-      <a href="/rhc/">RHC Calculator</a>
-      <a href="/pvloop/">PV Loop Simulator</a>
-      <a href="/ekg/">EKG Simulator</a>
-      <a href="/embryology/">Cardiac Embryology</a>
-      <a href="/hemodynamics/">Hemodynamic Waveforms</a>
-      <a href="/echocalc/">Echo Hemodynamics Calculator</a>
-    </div>
-      </div>
-    </details>
     <button id="darkToggle" onclick="toggleDark()">Light Mode</button>
   </div>
 </nav>
@@ -2420,19 +2365,6 @@ requestAnimationFrame(render);
 
 
 // SEO popover — close on outside click + Escape
-(function setupSeoPopover() {
-  const popover = document.getElementById('seoPopover');
-  if (!popover) return;
-  document.addEventListener('click', (e) => {
-    if (!popover.open) return;
-    if (e.target.closest('.seo-popover')) return;
-    popover.removeAttribute('open');
-  });
-  document.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape' && popover.open) popover.removeAttribute('open');
-  });
-})();
-
 </script>
 
 </body>

@@ -688,67 +688,6 @@ body.dark .label-text.lead { fill: #e8ecf2; }
     <a href="/angio/" class="nav-tab active">Angio Views</a>
   </div>
   <div class="nav-right">
-    <span class="nav-credit">Dr. Saro Avedikian, MD, MPH</span>
-    <details class="seo-popover" id="seoPopover">
-      <summary class="seo-trigger" title="About this simulator">
-        <span aria-hidden="true">ⓘ</span>
-        <span class="seo-trigger-text">About</span>
-      </summary>
-      <div class="seo-popover-body">
-        <h2>About the Coronary Angiography Views simulator</h2>
-        <p>Coronary angiography is the two-dimensional shadow of a three-dimensional vascular tree. Because every projection compresses depth onto a flat image, no single view shows every segment without foreshortening or overlap. The art of the angiographer is to pick the right combination of <strong>C-arm angles</strong> for each lesion. This free interactive simulator rotates a 3D coronary tree through every standard projection so trainees can build the mental model that experienced operators carry in their heads.</p>
-
-        <h3>C-arm angle conventions</h3>
-        <p>The C-arm position is described by two independent angles, both referenced to the image intensifier (the detector "looking down" at the patient):</p>
-        <ul>
-          <li><strong>LAO / RAO (left/right anterior oblique).</strong> Rotation around the patient's craniocaudal axis. LAO 45° places the detector over the patient's left shoulder; the image looks at the heart from the left-anterior direction. RAO 30° looks from the right-anterior side. AP is 0°. Lateral is LAO 90°.</li>
-          <li><strong>Cranial / Caudal.</strong> Tilt of the detector along the patient's long axis. Cranial angulation tips the detector toward the head, producing a "looking up from below" projection. Caudal does the opposite.</li>
-        </ul>
-
-        <h3>Why each angle exists — the bifurcation problem</h3>
-        <p>The <strong>left main bifurcation</strong> sits in a near-coronal plane: the LAD heads anteriorly and downward, the LCx heads posteriorly. In a pure AP view they overlap. To separate them you need a <strong>caudal</strong> tilt (which "drops" the LAD away from the LCx) and an obliquity that opens the angle between them. That is exactly what the <strong>LAO caudal ("Spider") view</strong> does — it is the bread-and-butter view for the LM bifurcation and the ostia of the LAD and LCx.</p>
-        <p>The <strong>mid-LAD</strong> runs in the anterior interventricular groove with the great cardiac vein and is hidden by the LAD itself in AP. <strong>RAO cranial</strong> (RAO ~30°, CRA ~30°) lifts the mid-LAD off the spine and separates it from the diagonals — the workhorse view for mid-LAD lesions and proximal diagonal disease.</p>
-        <p>The <strong>RCA</strong> sits in the right AV groove and curves around the heart. The <strong>LAO ~45° straight</strong> view profiles the whole vessel from ostium to crux without foreshortening; the <strong>RAO</strong> view shows the AV groove portion in profile and is ideal for the acute marginal branches. The <strong>AP cranial</strong> view opens up the distal RCA bifurcation into PDA and PLV at the crux.</p>
-
-        <h3>Standard left-coronary view set</h3>
-        <ul>
-          <li><strong>AP cranial (0° / CRA 30°)</strong> — mid- and distal-LAD on the cardiac silhouette, diagonals splayed.</li>
-          <li><strong>AP caudal (0° / CAU 30°)</strong> — left main bifurcation, proximal LCx; less optimal than LAO caudal but useful as a confirmatory view.</li>
-          <li><strong>RAO cranial (RAO 30° / CRA 30°)</strong> — mid-LAD, septal vs diagonal separation, distal LAD.</li>
-          <li><strong>RAO caudal (RAO 20° / CAU 20°)</strong> — proximal LAD, proximal LCx, ramus intermedius, obtuse marginals.</li>
-          <li><strong>LAO cranial (LAO 45° / CRA 25°)</strong> — mid-LAD without diagonal overlap.</li>
-          <li><strong>LAO caudal "Spider" (LAO 45° / CAU 30°)</strong> — LM bifurcation, ostia of LAD and LCx, proximal LCx, ramus.</li>
-          <li><strong>Lateral (LAO 90°)</strong> — LM, ostial LAD, proximal-mid LAD profile.</li>
-        </ul>
-
-        <h3>Standard right-coronary view set</h3>
-        <ul>
-          <li><strong>LAO straight (LAO 45°)</strong> — whole RCA from ostium to crux, ideal for PDA origin.</li>
-          <li><strong>LAO cranial (LAO 30° / CRA 25°)</strong> — distal RCA bifurcation, PDA and PLV separated.</li>
-          <li><strong>RAO straight (RAO 30°)</strong> — RCA mid-segment, acute marginal branches in profile.</li>
-          <li><strong>AP cranial (0° / CRA 30°)</strong> — distal RCA bifurcation at the crux when the LAO cranial is suboptimal.</li>
-          <li><strong>Lateral (LAO 90°)</strong> — RCA ostium and proximal RCA, useful in anomalous origins.</li>
-        </ul>
-
-        <h3>How to use this simulator</h3>
-        <p>Drag the LAO/RAO and cranial/caudal sliders to rotate the heart continuously, or click any preset for a canonical view. The view label at the top of the image and the clinical note at the bottom describe what's best seen at that angle and which segments are foreshortened. Toggle Left / Right coronary to switch the visible vessel set; toggle "Show both" to overlay them. The C-arm orientation icon in the corner of the viewer shows the detector position from the foot of the bed for spatial reference.</p>
-        <p>This tool is built for cardiology fellows starting on the cath lab service, interventional fellows refining their view selection, and medical students learning coronary anatomy. It is not a substitute for hands-on cath lab experience; the schematic is intentionally cleaner than a real angiogram so the underlying anatomy is visible without contrast noise.</p>
-
-        <h3>References</h3>
-        <p>The view-set conventions follow <strong>Kern MJ, Bonnet ME, eds. Cardiac Catheterization Handbook (6th ed., Elsevier 2015)</strong>, and Behan MWH, Holm NR et al. "Optimal angiographic views for invasive coronary angiography: a guide for trainees." <em>Br J Cardiol</em> 2016;23(3):103–8. The labelled angiographic frames used as visual references during construction are sourced from a teaching dataset; the SVG schematic is an original interpretation, not a tracing of patient data.</p>
-
-        <h3>Related tools</h3>
-        <div class="related-tools">
-          <a href="/rhc/">RHC Calculator</a>
-          <a href="/pvloop/">PV Loop Simulator</a>
-          <a href="/ekg/">EKG Simulator</a>
-          <a href="/hemodynamics/">Hemodynamic Waveforms</a>
-          <a href="/echocalc/">Echo Calc</a>
-          <a href="/embryology/">Cardiac Embryology</a>
-          <a href="/ap/">Action Potential</a>
-        </div>
-      </div>
-    </details>
     <button id="darkToggle" onclick="toggleDark()">Light Mode</button>
   </div>
 </nav>
@@ -2113,19 +2052,6 @@ updateSliderReadouts();
 requestAnimationFrame(tick);
 
 // SEO popover — close on outside click + Escape
-(function setupSeoPopover() {
-  const popover = document.getElementById('seoPopover');
-  if (!popover) return;
-  document.addEventListener('click', (e) => {
-    if (!popover.open) return;
-    if (e.target.closest('.seo-popover')) return;
-    popover.removeAttribute('open');
-  });
-  document.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape' && popover.open) popover.removeAttribute('open');
-  });
-})();
-
 </script>
 
 </body>

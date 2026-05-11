@@ -579,11 +579,34 @@ body {
 
 /* ══════ FOOTER ══════ */
 .footer {
+  max-width: 920px;
+  margin: 40px auto 0;
+  padding: 28px 32px 36px;
+  color: var(--text-muted);
+  border-top: 1px solid var(--border);
+}
+.footer-about {
+  font-size: 13.5px;
+  line-height: 1.7;
+  color: rgba(220, 225, 235, 0.62);
+  margin-bottom: 22px;
+}
+.footer-about h2 {
+  font-size: 13.5px;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: rgba(220, 225, 235, 0.92);
+  margin: 0 0 10px;
+}
+.footer-about p { margin: 0 0 10px; }
+.footer-about p:last-child { margin-bottom: 0; }
+.footer-copyright {
   text-align: center;
-  padding: 32px 24px;
   font-size: 10px;
   letter-spacing: 0.12em;
   color: var(--text-muted);
+  padding-top: 18px;
   border-top: 1px solid var(--border);
 }
 
@@ -832,7 +855,13 @@ body {
 </section>
 
 <footer class="footer">
-  &copy; 2026 CathMath &mdash; Hemodynamic Education Tools
+  <div class="footer-about">
+    <h2>About CathMath</h2>
+    <p>CathMath is a free suite of interactive cardiology teaching tools — hemodynamic calculators, simulators, and visualisations built around the calculations and pattern recognition exercises a cardiology fellow uses every day on rounds and in the cath lab. Every tool is browser-based, requires no login, and works on a phone the night before call.</p>
+    <p>The tools cover invasive hemodynamics (Fick CO, PVR/SVR, Gorlin, PH classification, RHC waveforms, PV loops), electrophysiology (12-lead EKG, action potentials with antiarrhythmic effects), echocardiography (PISA, continuity, PASP, diastolic algorithm, valvular pattern atlases), coronary intervention (LAO/RAO angiographic projections, FFR / iFR / NHPRs, IVUS, OCT), and cardiac embryology. Each tool surfaces formulas, cut-offs, and the trial evidence that anchors them, with common pitfalls explicitly called out.</p>
+    <p>Developed by <a class="credit-link" href="https://x.com/Sarotonin_" target="_blank" rel="noopener">Dr. Saro Avedikian, MD, MPH</a>. The site is intended for educational reference — not a substitute for clinical judgment, complete imaging, or invasive measurements when they are required.</p>
+  </div>
+  <div class="footer-copyright">&copy; 2026 CathMath &mdash; Hemodynamic Education Tools</div>
 </footer>
 
 <script>

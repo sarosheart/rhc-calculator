@@ -304,6 +304,13 @@ body.dark .calc-link-btn { color: #6eb0f7; }
   min-width: 0;
 }
 .formula-body sub, .formula-body sup { font-size: 0.78em; font-weight: 600; }
+.formula-body { display: flex; flex-direction: column; gap: 8px; }
+.formula-line { line-height: 1.5; }
+.formula-line + .formula-line {
+  padding-top: 8px;
+  border-top: 1px dashed rgba(120, 130, 150, 0.18);
+}
+
 .formula-body em { color: var(--accent); font-style: normal; font-weight: 600; }
 .formula-body strong { color: var(--navy); font-weight: 700; }
 body.dark .formula-body strong { color: #6eb0f7; }
@@ -686,35 +693,6 @@ body.dark .seo-content-body h3 { color: #e8ecf2; }
     <a href="/intracoronary/" class="nav-tab active">Intracoronary</a>
   </div>
   <div class="nav-right">
-    <span class="nav-credit">Dr. Saro Avedikian, MD, MPH</span>
-    <details class="seo-popover" id="seoPopover">
-      <summary class="seo-trigger" title="About this simulator">
-        <span aria-hidden="true">ⓘ</span>
-        <span class="seo-trigger-text">About</span>
-      </summary>
-      <div class="seo-popover-body">
-        <h2>About the Intracoronary Physiology &amp; Imaging Simulator</h2>
-        <p>This is a free, browser-based teaching tool for two intertwined topics in interventional cardiology: <strong>coronary physiology</strong> (FFR, iFR, NHPRs, pressure-flow relationships, pullback gradient mapping) and <strong>intravascular imaging</strong> (IVUS and OCT — three-layer anatomy, plaque morphology, quantitative measurements, and stent-strut assessment). The same lesion is often interrogated with both a pressure wire and an imaging catheter, and the simulator treats them as one workflow rather than two separate worlds.</p>
-
-          <h3>What the simulator covers</h3>
-          <p><strong>Coronary Physiology</strong> introduces the pressure-flow relationship under resting and hyperemic conditions, the Gould curve relating coronary flow reserve to percent diameter stenosis, the conceptual basis of fractional flow reserve (FFR = Pd / Pa at maximal hyperemia), the instantaneous wave-free ratio (iFR) and the diastolic wave-free period, and a side-by-side comparison of the non-hyperemic pressure ratios (iFR, dPR, DFR, RFR, resting Pd/Pa) with their published cutoffs and trial evidence.</p>
-
-          <p><strong>FFR Clinical</strong> covers serial-lesion pullback interpretation (where the gradient lives matters more than the composite FFR), the left main perfusion-bed-size sensitivity that makes FFR less binary than for non-LM vessels, and the prognostic value of post-PCI physiology in identifying suboptimal results before the patient leaves the table.</p>
-
-          <p><strong>IVUS</strong> begins with the bright–dark–bright three-layer appearance (intima–media–adventitia), then moves to quantitative measurements (external elastic membrane, minimum lumen area, plaque burden, stent under-expansion), and applies the framework to left-main intermediate stenosis (MLA cutoff 6.0 mm² for the LM, ~4.0 mm² for non-LM intermediate lesions).</p>
-
-          <p><strong>OCT</strong> exploits the ~10–20 µm axial resolution to characterize plaque morphology (fibrous, lipid-rich with thin-cap fibroatheroma, calcific with sharp borders and signal poor shadow patterns) and to measure stent-strut apposition with the precision that matters for late acquired malapposition and uncovered struts. The IVUS-vs-OCT trade-offs (penetration depth vs axial resolution, blood handling, frame rate) are surfaced where they affect clinical decisions.</p>
-
-          <h3>How to use it</h3>
-          <p>Click any module in the sidebar to open its visualisation. Interactive modules expose sliders and pickers; outputs and the visualisation update in real time. Atlas modules show side-by-side comparisons with picker views. Animation runs for three seconds on each module switch and then fades — slider adjustments redraw without restarting the animation. Every module has a Common Pitfalls section listing the gotchas, exclusions, and special-population considerations.</p>
-
-          <h3>Who it's for</h3>
-          <p>Built for cardiology fellows, interventional fellows, advanced practice providers, and attending cardiologists who want a fast, on-call-friendly reference for the coronary catheterization laboratory. The cutoffs and algorithms shown are based on published guidelines and large randomized trials and are intended for educational reference. Always integrate invasive measurements with the clinical scenario, non-invasive imaging, and anatomic appropriateness for revascularization before making management decisions.</p>
-
-          <h3>Source references</h3>
-          <p>Anatomy, physiology principles, and figure inspiration drawn from Grossman &amp; Baim's Cardiac Catheterization, Angiography, and Intervention (9th edition). Trial evidence: FAME (Tonino et al, NEJM 2009), FAME 2 (De Bruyne et al, NEJM 2012), DEFER (Pijls et al, JACC 2007 + 15-yr follow-up), DEFINE-FLAIR (Davies et al, NEJM 2017), iFR-SWEDEHEART (Götberg et al, NEJM 2017), DANAMI-3-PRIMULTI (Engstrøm et al, Lancet 2015). IVUS and OCT methodologies follow the 2018 EAPCI/ACVC consensus document (Räber et al, Eur Heart J 2018) on clinical use of intracoronary imaging.</p>
-      </div>
-    </details>
     <button id="darkToggle" onclick="toggleDark()">Light Mode</button>
   </div>
 </nav>
@@ -893,7 +871,7 @@ const MODULES = {
     id: 'ffr_concept',
     title: 'FFR — Pa, Pd at Hyperemia',
     purpose: 'Fractional flow reserve is the ratio of distal coronary pressure (Pd) to aortic pressure (Pa), measured at maximal hyperemia. At baseline the two tracings nearly overlap. After IV adenosine the pressure gradient widens — FFR = Pd / Pa at peak hyperemia. Slide adenosine to watch the gradient open.',
-    formula: '<strong>FFR</strong> = P<sub>d</sub> / P<sub>a</sub> at steady-state hyperemia &nbsp;·&nbsp; <strong>Cut-off:</strong> ≤ 0.80 → PCI · &gt; 0.80 → defer · 0.75–0.80 = gray zone where clinical context guides',
+    formula: '<strong>FFR</strong> = P<sub>d</sub> / P<sub>a</sub> at steady-state hyperemia &nbsp;·&nbsp; <strong>Cut-off:</strong> ≤ 0.80 → PCI &nbsp;·&nbsp; &gt; 0.80 → defer &nbsp;·&nbsp; 0.75–0.80 = gray zone where clinical context guides',
     inputs: [
       { type: 'slider', key: 'stenosis', label: 'Stenosis (% diameter)', unit: '%', min: 0, max: 90, step: 5, default: 70, decimals: 0 },
       { type: 'slider', key: 'hyperemia', label: 'Hyperemia level', unit: '%', min: 0, max: 100, step: 5, default: 100, decimals: 0 },
@@ -1073,7 +1051,7 @@ const MODULES = {
     id: 'ivus_quantitative',
     title: 'IVUS — Quantitative MLA / EEM / Plaque Burden',
     purpose: 'Trace two contours per frame: the lumen and the EEM. The difference is the plaque-plus-media area; expressed as a percentage of EEM area, this is the plaque burden. Lumen area at the narrowest cross-section is the MLA. These three numbers drive most IVUS-derived PCI decisions.',
-    formula: '<strong>Plaque burden</strong> = (EEM<sub>area</sub> − Lumen<sub>area</sub>) / EEM<sub>area</sub> × 100% &nbsp;·&nbsp; <strong>MLA cut-offs:</strong> LM &lt; 6.0 mm² severe · non-LM &lt; 4.0 mm² intermediate-flow-limiting · stent under-expansion &lt; 80% of reference',
+    formula: '<strong>Plaque burden</strong> = (EEM<sub>area</sub> − Lumen<sub>area</sub>) / EEM<sub>area</sub> × 100% &nbsp;·&nbsp; <strong>MLA cut-offs:</strong> LM &lt; 6.0 mm² severe &nbsp;·&nbsp; non-LM &lt; 4.0 mm² intermediate-flow-limiting &nbsp;·&nbsp; stent under-expansion &lt; 80% of reference',
     inputs: [
       { type: 'slider', key: 'eem',   label: 'EEM area',    unit: 'mm²', min: 6.0, max: 22.0, step: 0.1, default: 14.0, decimals: 1 },
       { type: 'slider', key: 'lumen', label: 'Lumen area',  unit: 'mm²', min: 1.5, max: 18.0, step: 0.1, default: 5.5,  decimals: 1 },
@@ -2214,7 +2192,13 @@ function selectModule(id) {
   const m = MODULES[id];
   document.getElementById('modTitle').innerHTML = m.title;
   document.getElementById('modPurpose').innerHTML = m.purpose;
-  document.getElementById('modFormula').innerHTML = m.formula;
+  (function renderFormula() {
+    // Split on `&nbsp;·&nbsp;` (the explicit separator). Plain ` · ` is treated as math
+    // (e.g. `4 · (TR Vmax)²`) and stays on the same line.
+    const raw = m.formula || '';
+    const parts = raw.split(/&nbsp;\s*·\s*&nbsp;/).map(s => s.trim()).filter(Boolean);
+    document.getElementById('modFormula').innerHTML = parts.map(p => `<div class="formula-line">${p}</div>`).join('');
+  })();
   // Calculator cross-link button (only for atlas modules with a calculatorLink)
   const linkRow = document.getElementById('calcLinkRow');
   const linkBtn = document.getElementById('calcLinkBtn');
@@ -2378,19 +2362,6 @@ buildSidebar();
 selectModule('ffr_concept');
 
 // SEO popover — close on outside click + Escape
-(function setupSeoPopover() {
-  const popover = document.getElementById('seoPopover');
-  if (!popover) return;
-  document.addEventListener('click', (e) => {
-    if (!popover.open) return;
-    if (e.target.closest('.seo-popover')) return;
-    popover.removeAttribute('open');
-  });
-  document.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape' && popover.open) popover.removeAttribute('open');
-  });
-})();
-
 </script>
 </body>
 </html>
