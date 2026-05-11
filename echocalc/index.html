@@ -3667,13 +3667,27 @@ function drawAtlasEnvelope(area, opts) {
   ctx.beginPath(); ctx.moveTo(x, baseline); ctx.lineTo(x + w, baseline); ctx.stroke();
   lblTick('0', x + 4, dir === 'down' ? baseline - 3 : baseline + 11);
 
-  // Reference lines
+  // Reference lines — tick labels in right margin, set BELOW the line on `down` envelopes
+  // and ABOVE the line on `up` envelopes so they sit in the white space between trace lobes.
   if (refLines) {
     for (const v of refLines) {
       const yy = vToY(v);
       ctx.strokeStyle = 'rgba(255,255,255,0.06)';
       ctx.beginPath(); ctx.moveTo(x, yy); ctx.lineTo(x + w, yy); ctx.stroke();
-      lblTick(v + ' m/s', x + w - 4, dir === 'down' ? yy - 3 : yy + 11, 'right');
+      // Place label just inside the right edge, with a subtle dark backing so it's readable
+      // even when the trace fill extends underneath.
+      const lblX = x + w - 6;
+      const lblY = dir === 'down' ? yy - 4 : yy + 12;
+      const txt = v + ' m/s';
+      ctx.save();
+      ctx.font = '600 11px DM Sans, system-ui, sans-serif';
+      ctx.textAlign = 'right';
+      ctx.fillStyle = 'rgba(13, 16, 25, 0.85)';
+      const tw = ctx.measureText(txt).width;
+      ctx.fillRect(lblX - tw - 4, lblY - 10, tw + 6, 12);
+      ctx.fillStyle = '#a8b1c0';
+      ctx.fillText(txt, lblX, lblY);
+      ctx.restore();
     }
   }
 
@@ -5231,21 +5245,24 @@ function drawDB_PWvsCW() {
 }
 
 // Schematic apical 4-chamber view showing LV / LA / MV with optional PW sample volume or CW beam.
-// LAYOUT RULE: anatomy region is left of `LABEL_X` only. ALL text labels live in the right
-// label strip (after LABEL_X). Marker shapes (sample volume box, beam line) stay in anatomy
-// region but never carry inline text — text lives on the right strip with a leader line.
+// LAYOUT RULE: two non-overlapping label strips bracket the anatomy region.
+//   LEFT strip  — modality marker labels (sample volume / CW beam)
+//   RIGHT strip — chamber labels (LV / LA)
+// This decouples the two label families so they never compete for the same vertical band.
 function drawDB_FlowSchematic(x, y, w, h, opts) {
-  // Layout zones (named constants, never magic numbers).
-  const LABEL_STRIP_W = 80;                // reserved zone for text labels
-  const padX = 6;
-  const anatomyLeft = x + padX;
-  const anatomyRight = x + w - LABEL_STRIP_W - padX;
+  const LEFT_STRIP_W = 72;                  // sample-volume / CW-beam labels live here
+  const RIGHT_STRIP_W = 32;                 // short LV / LA labels live here
+  const padX = 4;
+  const anatomyLeft = x + LEFT_STRIP_W + padX;
+  const anatomyRight = x + w - RIGHT_STRIP_W - padX;
   const cx = (anatomyLeft + anatomyRight) / 2;
   const half = (anatomyRight - anatomyLeft) / 2;
-  const lvTop = y + 8;
+  const probeY = y + 4;
+  const lvTop = y + 14;
   const mvY = y + h * 0.55;
   const laBot = y + h - 6;
-  const labelX = anatomyRight + 8;          // start of label text
+  const rightLabelX = anatomyRight + 6;
+  const leftLabelX = anatomyLeft - 6;
 
   // ── LV chamber outline ──
   ctx.strokeStyle = '#5b6677';
@@ -5278,28 +5295,33 @@ function drawDB_FlowSchematic(x, y, w, h, opts) {
   // ── Probe at top ──
   ctx.fillStyle = '#7a8499';
   ctx.beginPath();
-  ctx.moveTo(cx - 10, y);
-  ctx.lineTo(cx + 10, y);
+  ctx.moveTo(cx - 10, probeY);
+  ctx.lineTo(cx + 10, probeY);
   ctx.lineTo(cx + 4, lvTop);
   ctx.lineTo(cx - 4, lvTop);
   ctx.closePath();
   ctx.fill();
 
-  // ── Chamber labels — in label strip, with leader line ──
+  // ── Chamber labels — RIGHT strip, vertically centered on each chamber ──
+  // LV center y = midpoint between lvTop and mvY; LA center y = midpoint between mvY and laBot.
+  const lvCenterY = (lvTop + mvY) / 2;
+  const laCenterY = (mvY + laBot) / 2;
   ctx.fillStyle = '#a8b1c0';
   ctx.font = '700 11px DM Sans, system-ui, sans-serif';
   ctx.textAlign = 'left';
-  ctx.fillText('LV', labelX, lvTop + 22);
-  ctx.fillText('LA', labelX, laBot - 8);
-  // Leader lines from labels to chamber centers (subtle)
+  ctx.textBaseline = 'middle';
+  ctx.fillText('LV', rightLabelX, lvCenterY);
+  ctx.fillText('LA', rightLabelX, laCenterY);
+  ctx.textBaseline = 'alphabetic';
+  // Leader lines from chamber centers to the right strip
   ctx.strokeStyle = 'rgba(168, 177, 192, 0.30)';
   ctx.lineWidth = 0.8;
   ctx.beginPath();
-  ctx.moveTo(labelX - 4, lvTop + 18); ctx.lineTo(cx, (lvTop + mvY) / 2);
-  ctx.moveTo(labelX - 4, laBot - 12); ctx.lineTo(cx, (mvY + laBot) / 2);
+  ctx.moveTo(cx + half * 0.55, lvCenterY); ctx.lineTo(rightLabelX - 2, lvCenterY);
+  ctx.moveTo(cx + half * 0.55, laCenterY); ctx.lineTo(rightLabelX - 2, laCenterY);
   ctx.stroke();
 
-  // ── PW sample volume marker (anatomy region) + label (label strip) ──
+  // ── PW sample volume marker (anatomy region) + label (LEFT strip) ──
   if (opts.highlightSampleVolume) {
     const svY = mvY - 14;
     ctx.strokeStyle = '#3b82f6';
@@ -5314,21 +5336,21 @@ function drawDB_FlowSchematic(x, y, w, h, opts) {
     ctx.lineTo(cx, svY);
     ctx.stroke();
     ctx.setLineDash([]);
-    // Leader from sample volume to label strip
-    ctx.strokeStyle = 'rgba(59,130,246,0.55)';
+    // Leader from sample volume LEFTWARD to the left label strip
+    ctx.strokeStyle = 'rgba(59,130,246,0.6)';
     ctx.lineWidth = 1;
     ctx.beginPath();
-    ctx.moveTo(cx + 6, svY + 4); ctx.lineTo(labelX - 4, svY + 4);
+    ctx.moveTo(cx - 6, svY + 4); ctx.lineTo(leftLabelX + 2, svY + 4);
     ctx.stroke();
-    // Label in label strip
+    // Label in LEFT strip, right-aligned so it sits flush against the leader
     ctx.fillStyle = '#5fa5f0';
     ctx.font = '700 11px DM Sans, system-ui, sans-serif';
-    ctx.textAlign = 'left';
-    ctx.fillText('sample', labelX, svY + 2);
-    ctx.fillText('volume', labelX, svY + 14);
+    ctx.textAlign = 'right';
+    ctx.fillText('sample',  leftLabelX - 2, svY);
+    ctx.fillText('volume',  leftLabelX - 2, svY + 12);
   }
 
-  // ── CW beam line (anatomy region) + label (label strip) ──
+  // ── CW beam line (anatomy region) + label (LEFT strip) ──
   if (opts.highlightBeam) {
     ctx.strokeStyle = '#ef4444';
     ctx.lineWidth = 2;
@@ -5336,19 +5358,22 @@ function drawDB_FlowSchematic(x, y, w, h, opts) {
     ctx.moveTo(cx, lvTop);
     ctx.lineTo(cx, laBot);
     ctx.stroke();
-    // Leader from beam mid-point to label strip
-    ctx.strokeStyle = 'rgba(239, 68, 68, 0.55)';
+    // Leader from mid-beam LEFTWARD to the left label strip
+    const beamMidY = (lvTop + laBot) / 2;
+    ctx.strokeStyle = 'rgba(239, 68, 68, 0.6)';
     ctx.lineWidth = 1;
     ctx.beginPath();
-    ctx.moveTo(cx, mvY - 18); ctx.lineTo(labelX - 4, mvY - 18);
+    ctx.moveTo(cx - 4, beamMidY); ctx.lineTo(leftLabelX + 2, beamMidY);
     ctx.stroke();
-    // Label in label strip — placed ABOVE the MV-Y to avoid the MV line and any leaders below
+    // Label in LEFT strip, right-aligned
     ctx.fillStyle = '#f57878';
     ctx.font = '700 11px DM Sans, system-ui, sans-serif';
-    ctx.textAlign = 'left';
-    ctx.fillText('CW', labelX, mvY - 22);
-    ctx.fillText('beam', labelX, mvY - 10);
+    ctx.textAlign = 'right';
+    ctx.fillText('CW',   leftLabelX - 2, beamMidY - 6);
+    ctx.fillText('beam', leftLabelX - 2, beamMidY + 6);
   }
+  // Reset text alignment for subsequent draws
+  ctx.textAlign = 'left';
 }
 
 function drawDB_Aliasing() {
