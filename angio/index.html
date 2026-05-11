@@ -322,16 +322,104 @@ body.dark .preset-btn { background: var(--panel-bg-2); }
 }
 #angioSvg { display: block; width: 100%; height: 100%; }
 
-/* Orientation widget (top-left of viz): C-arm position + heart projection */
-.carm-icon {
+/* Orientation widget — draggable/resizable container showing 3D-style
+   C-arm + patient figure. Position + size persist via localStorage. */
+.orient-widget {
   position: absolute;
-  top: 10px;
-  left: 10px;
-  width: 96px;
-  height: 160px;
-  pointer-events: none;
-  opacity: 0.92;
+  top: 14px;
+  left: 14px;
+  width: 220px;
+  background: rgba(15, 22, 38, 0.94);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 6px;
+  overflow: hidden;
+  user-select: none;
+  z-index: 5;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.35);
+  display: flex;
+  flex-direction: column;
 }
+body:not(.dark) .orient-widget {
+  background: rgba(255, 255, 255, 0.96);
+  border-color: rgba(0, 0, 0, 0.12);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.12);
+}
+.orient-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 10px;
+  background: rgba(0, 0, 0, 0.28);
+  cursor: move;
+  font-size: 10.5px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  font-weight: 700;
+  color: rgba(220, 220, 230, 0.78);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  flex-shrink: 0;
+}
+body:not(.dark) .orient-header {
+  background: rgba(0, 0, 0, 0.06);
+  color: rgba(40, 50, 70, 0.78);
+  border-bottom-color: rgba(0, 0, 0, 0.08);
+}
+.orient-grip {
+  font-size: 11px;
+  letter-spacing: -2px;
+  color: rgba(220, 220, 230, 0.4);
+}
+.orient-title { flex: 1; }
+.orient-readout {
+  font-weight: 700;
+  color: #fdcc4d;
+  font-size: 10.5px;
+  letter-spacing: 0.03em;
+}
+.orient-collapse {
+  background: transparent;
+  border: none;
+  color: rgba(220, 220, 230, 0.7);
+  font-size: 13px;
+  cursor: pointer;
+  width: 18px;
+  height: 18px;
+  line-height: 1;
+  padding: 0;
+  border-radius: 3px;
+  transition: background 0.15s;
+}
+.orient-collapse:hover { background: rgba(255, 255, 255, 0.08); }
+body:not(.dark) .orient-collapse { color: rgba(40, 50, 70, 0.7); }
+body:not(.dark) .orient-collapse:hover { background: rgba(0, 0, 0, 0.06); }
+.orient-body {
+  padding: 6px;
+  min-height: 0;
+  flex: 1;
+}
+#orientSvg {
+  display: block;
+  width: 100%;
+  height: auto;
+  border-radius: 3px;
+}
+.orient-resize {
+  position: absolute;
+  bottom: 0;
+  right: 0;
+  width: 16px;
+  height: 16px;
+  cursor: nwse-resize;
+  background: linear-gradient(135deg,
+    transparent 0%, transparent 45%,
+    rgba(180, 200, 230, 0.5) 45%, rgba(180, 200, 230, 0.5) 55%,
+    transparent 55%, transparent 65%,
+    rgba(180, 200, 230, 0.4) 65%, rgba(180, 200, 230, 0.4) 75%,
+    transparent 75%);
+  border-bottom-right-radius: 6px;
+}
+.orient-widget.collapsed .orient-body { display: none; }
+.orient-widget.collapsed .orient-resize { display: none; }
 
 /* View label overlay (top-center of viz) */
 .view-label {
@@ -587,7 +675,18 @@ body.dark .label-text.lead { fill: #e8ecf2; }
   <main class="right">
     <div class="viz-wrap">
       <svg id="angioSvg" viewBox="0 0 800 600" preserveAspectRatio="xMidYMid meet"></svg>
-      <svg class="carm-icon" id="carmIcon" viewBox="0 0 100 165"></svg>
+      <div class="orient-widget" id="orientWidget">
+        <div class="orient-header" id="orientHeader">
+          <span class="orient-grip">⋮⋮</span>
+          <span class="orient-title">C-arm Position</span>
+          <span class="orient-readout" id="orientReadout">AP</span>
+          <button class="orient-collapse" id="orientCollapse" title="Collapse / expand">−</button>
+        </div>
+        <div class="orient-body">
+          <svg id="orientSvg" viewBox="0 0 300 240" preserveAspectRatio="xMidYMid meet"></svg>
+        </div>
+        <div class="orient-resize" id="orientResize" title="Drag corner to resize"></div>
+      </div>
       <div class="view-label" id="viewLabel">AP — Anteroposterior</div>
       <button class="label-toggle" id="labelToggleBtn" title="Hide or show anatomical labels">
         <span class="icon">⎘</span><span id="labelToggleText">Hide labels</span>
@@ -1193,8 +1292,8 @@ function render() {
 
   svg.innerHTML = parts.join('');
 
-  // Update C-arm icon
-  renderCarmIcon();
+  // Update the orientation widget (3D-style C-arm + patient illustration)
+  renderOrientationWidget();
 }
 
 // Distribute labels vertically in a tight column right next to the vessel
@@ -1283,167 +1382,423 @@ function placeLabels(labels, which, parts) {
 }
 
 // ═══════════════════════════════════════════════════════════
-// C-ARM ORIENTATION ICON
+// ORIENTATION WIDGET — 3D-style C-arm + patient illustration
 // ═══════════════════════════════════════════════════════════
-// Schematic of the patient (chest up) with a curved C-arm rotating around them.
-// LAO/RAO rotates the C-arm in the patient's transverse plane.
-// Cranial/caudal tilts it along the long axis.
-function renderCarmIcon() {
-  const icon = document.getElementById('carmIcon');
-  const cx = 50, cy = 52;
-  // Patient body: oval (transverse cross-section). Cranial = up.
-  const bodyEllipse = `<ellipse cx="${cx}" cy="${cy + 6}" rx="14" ry="9" fill="rgba(200, 200, 210, 0.18)" stroke="rgba(220,220,220,0.55)" stroke-width="0.8"/>`;
-  // Spine dot
-  const spineDot = `<circle cx="${cx}" cy="${cy + 10}" r="1.8" fill="rgba(220,220,220,0.7)"/>`;
-  // Sternum tick (anterior)
-  const sternumTick = `<line x1="${cx}" y1="${cy - 3}" x2="${cx}" y2="${cy - 1}" stroke="rgba(220,220,220,0.6)" stroke-width="1"/>`;
+// Single perspective view (3/4 above, slightly to the right) showing the
+// patient on a table and the C-arm in its current LAO/RAO + CRA/CAU position.
+// Container is draggable (via header) and resizable (corner handle); state
+// persists in localStorage.
+//
+// World coordinates (intuitive anatomical):
+//   +x = patient's LEFT (lateral)
+//   +y = CRANIAL (head up)
+//   +z = ANTERIOR (out of chest)
 
-  // C-arm position: rotated by liveLao around the patient's craniocaudal axis.
-  // LAO 0 (AP) = detector directly above patient (sternal side). Angle convention:
-  // positive LAO swings the detector to the patient's LEFT (which on this schematic
-  // — patient facing toward viewer — is to the viewer's RIGHT).
-  const r = 28;
-  const ang = (liveLao - 90) * Math.PI / 180;  // -90 puts detector at top in AP
-  const detX = cx + r * Math.cos(ang);
-  const detY = cy + r * Math.sin(ang);
-  const srcX = cx - r * Math.cos(ang);
-  const srcY = cy - r * Math.sin(ang);
-  // Detector arc (larger square-ish shape on detector side)
-  const detW = 8, detH = 5;
-  // Source (X-ray tube) — small square
-  const srcW = 5, srcH = 4;
-  // Arm — the curve connecting them
-  const armPath = `M ${detX} ${detY} A ${r + 4} ${r + 4} 0 0 0 ${srcX} ${srcY}`;
-  // Detector rectangle (rotated to face the patient center)
-  const detAng = Math.atan2(cy - detY, cx - detX) * 180 / Math.PI;
-  const srcAng = Math.atan2(cy - srcY, cx - srcX) * 180 / Math.PI;
+function renderOrientationWidget() {
+  const svg = document.getElementById('orientSvg');
+  if (!svg) return;
 
-  // Cranial/caudal indicator: a small triangle on the side of the icon
-  // Up arrow = cranial, down arrow = caudal
-  let craBadge = '';
-  if (Math.abs(liveCra) > 2) {
-    const cranial = liveCra > 0;
-    const bx = 88, by = cranial ? 12 : 88;
-    const dir = cranial ? -1 : 1;
-    craBadge = `
-      <path d="M ${bx} ${by} L ${bx - 5} ${by + 6 * dir} L ${bx + 5} ${by + 6 * dir} Z" fill="${cranial ? 'rgba(20,184,166,0.85)' : 'rgba(245,158,11,0.85)'}"/>
-      <text x="${bx}" y="${cranial ? by - 2 : by + 12}" text-anchor="middle" font-size="7" font-weight="700" fill="${cranial ? 'rgb(20,184,166)' : 'rgb(245,158,11)'}">${Math.round(Math.abs(liveCra))}°</text>
-    `;
+  // Camera: 3/4 view from upper-right-foot of bed (gives a clear "teaching poster" perspective)
+  const CAM_AZIMUTH   =  32 * Math.PI / 180;  // rotate world around Y
+  const CAM_ELEVATION = -22 * Math.PI / 180;  // tilt camera down
+
+  function proj(p) {
+    let x1 = p.x * Math.cos(CAM_AZIMUTH) + p.z * Math.sin(CAM_AZIMUTH);
+    let y1 = p.y;
+    let z1 = -p.x * Math.sin(CAM_AZIMUTH) + p.z * Math.cos(CAM_AZIMUTH);
+    let x2 = x1;
+    let y2 =  y1 * Math.cos(CAM_ELEVATION) - z1 * Math.sin(CAM_ELEVATION);
+    let z2 =  y1 * Math.sin(CAM_ELEVATION) + z1 * Math.cos(CAM_ELEVATION);
+    // Orthographic project. ViewBox is 300×240; origin slightly above center.
+    return { x: 150 + x2 * 62, y: 130 - y2 * 62, depth: z2 };
   }
 
-  // ─── Sagittal view (bottom half) — shows cranial/caudal tilt ─
-  // Patient lying flat, viewed from the patient's right side. Head at top,
-  // feet at bottom; anterior on viewer's left, posterior on viewer's right.
-  // The C-arm pivots around the heart and tilts with CRA/CAU.
-  const SCX = 50, SCY = 128;  // sagittal panel center
-  // Body outline (head + torso + abdomen profile)
-  const bodyPath = `
-    M ${SCX - 6} ${SCY - 30}
-    Q ${SCX - 8} ${SCY - 34} ${SCX - 4} ${SCY - 36}
-    Q ${SCX} ${SCY - 38} ${SCX + 4} ${SCY - 36}
-    Q ${SCX + 7} ${SCY - 34} ${SCX + 5} ${SCY - 30}
-    L ${SCX + 6} ${SCY - 26}
-    Q ${SCX + 9} ${SCY - 18} ${SCX + 10} ${SCY - 8}
-    Q ${SCX + 11} ${SCY + 5} ${SCX + 10} ${SCY + 18}
-    Q ${SCX + 9} ${SCY + 24} ${SCX + 7} ${SCY + 28}
-    L ${SCX - 7} ${SCY + 28}
-    Q ${SCX - 9} ${SCY + 24} ${SCX - 10} ${SCY + 18}
-    Q ${SCX - 11} ${SCY + 5} ${SCX - 10} ${SCY - 8}
-    Q ${SCX - 9} ${SCY - 18} ${SCX - 6} ${SCY - 26}
-    Z`;
-  // Heart inside body (small bean, anterior side of upper chest)
-  const heartCx = SCX - 3, heartCy = SCY - 8;
-  // C-arm tilt: positive cranial → detector tilts toward head (negative y)
-  // The detector pivots around the heart at radius R.
-  // Sign convention: cranial moves detector up (toward head); caudal down.
-  const Rs = 20;
-  const sagAng = -liveCra * Math.PI / 180 - Math.PI / 2;  // -90° = anterior (left)
-  // We want positive CRA to tilt the detector toward the head AND keep it
-  // mostly anterior. So combine: anterior unit vector rotated by -CRA around
-  // the heart in the sagittal plane.
-  const detSagX = heartCx + Rs * Math.cos(sagAng);
-  const detSagY = heartCy + Rs * Math.sin(sagAng);
-  const srcSagX = heartCx - Rs * Math.cos(sagAng);
-  const srcSagY = heartCy - Rs * Math.sin(sagAng);
-  // Detector arc
-  const sagArmPath = `M ${detSagX} ${detSagY} A ${Rs + 4} ${Rs + 4} 0 0 0 ${srcSagX} ${srcSagY}`;
-  // Detector + source rectangles oriented to face the heart
-  const detSagAng = Math.atan2(heartCy - detSagY, heartCx - detSagX) * 180 / Math.PI;
-  const srcSagAng = Math.atan2(heartCy - srcSagY, heartCx - srcSagX) * 180 / Math.PI;
+  // ─── Compute C-arm geometry ─────────────────────────────
+  const heart = { x: 0, y: 0.15, z: 0 };
+  const R = 1.05;                    // C-arm radius
 
-  // Tilt-direction caption: "cranial" or "caudal" arrow on the patient side
-  let tiltCaption = '';
-  if (Math.abs(liveCra) > 2) {
-    const cranial = liveCra > 0;
-    const tx = SCX - 16;
-    const ty = cranial ? heartCy - 14 : heartCy + 14;
-    const dir = cranial ? -1 : 1;
-    tiltCaption = `
-      <path d="M ${tx} ${ty} L ${tx - 3} ${ty + 4 * dir} L ${tx + 3} ${ty + 4 * dir} Z"
-            fill="${cranial ? 'rgba(20,184,166,0.85)' : 'rgba(245,158,11,0.85)'}"/>
-      <text x="${tx}" y="${ty + 9 * dir + (cranial ? 0 : 2)}" text-anchor="middle"
-            font-size="5.5" font-weight="700"
-            fill="${cranial ? 'rgb(20,184,166)' : 'rgb(245,158,11)'}">
-        ${cranial ? 'CRA' : 'CAU'} ${Math.round(Math.abs(liveCra))}°
-      </text>
-    `;
+  // Detector direction: start at +z (anterior in AP) → rotate LAO around Y →
+  // tilt CRA around X. +LAO swings detector to patient's LEFT (+x).
+  const laoRad = liveLao * Math.PI / 180;
+  const craRad = liveCra * Math.PI / 180;
+  let dx = 0, dy = 0, dz = 1;
+  // Rotate around Y by +LAO  (detector swings to patient's left)
+  const dx1 = dx * Math.cos(laoRad) + dz * Math.sin(laoRad);
+  const dz1 = -dx * Math.sin(laoRad) + dz * Math.cos(laoRad);
+  dx = dx1; dz = dz1;
+  // Rotate around X by +CRA  (detector tilts toward head)
+  const dy2 = dy * Math.cos(craRad) - dz * Math.sin(craRad);
+  const dz2 = dy * Math.sin(craRad) + dz * Math.cos(craRad);
+  dy = dy2; dz = dz2;
+
+  const detPos = { x: heart.x + dx * R, y: heart.y + dy * R, z: heart.z + dz * R };
+  const srcPos = { x: heart.x - dx * R, y: heart.y - dy * R, z: heart.z - dz * R };
+  const detP = proj(detPos);
+  const srcP = proj(srcPos);
+
+  // C-arm arc: semicircle from detector to source through a "bulge" direction
+  // perpendicular to the det-src axis. Pick the bulge so it points sideways
+  // (lateral) rather than crashing through the patient. We use cross(det, world-up)
+  // when det isn't near-vertical, else cross(det, world-anterior).
+  let upRef = { x: 0, y: 1, z: 0 };
+  const detDotUp = dx * upRef.x + dy * upRef.y + dz * upRef.z;
+  if (Math.abs(detDotUp) > 0.92) upRef = { x: 0, y: 0, z: 1 };
+  let bx = dy * upRef.z - dz * upRef.y;
+  let by = dz * upRef.x - dx * upRef.z;
+  let bz = dx * upRef.y - dy * upRef.x;
+  const bLen = Math.sqrt(bx*bx + by*by + bz*bz) || 1;
+  bx /= bLen; by /= bLen; bz /= bLen;
+
+  // Sample the arc — 22 points for a smooth curve, depth-sorted for occlusion
+  const arcPts = [];
+  for (let i = 0; i <= 22; i++) {
+    const t = i / 22;
+    const ang = t * Math.PI;
+    const c = Math.cos(ang), s = Math.sin(ang);
+    const px = heart.x + (dx * c + bx * s) * R;
+    const py = heart.y + (dy * c + by * s) * R;
+    const pz = heart.z + (dz * c + bz * s) * R;
+    arcPts.push(proj({ x: px, y: py, z: pz }));
+  }
+  const arcPath = 'M ' + arcPts.map(p => `${p.x.toFixed(1)} ${p.y.toFixed(1)}`).join(' L ');
+
+  // ─── Project patient + table anchors ────────────────────
+  const tableCorners = [
+    { x: -1.0, y:  1.7, z: -0.35 },
+    { x:  1.0, y:  1.7, z: -0.35 },
+    { x:  1.0, y: -1.7, z: -0.35 },
+    { x: -1.0, y: -1.7, z: -0.35 },
+  ].map(proj);
+  const tablePath = 'M ' + tableCorners.map(c => `${c.x.toFixed(1)} ${c.y.toFixed(1)}`).join(' L ') + ' Z';
+
+  // Body part anchors (head, torso, hips, legs) — drawn as projected ellipses.
+  // Width depends on the rotated x-axis projection, height on y-axis.
+  const headP  = proj({ x: 0, y:  1.30, z: 0 });
+  const neckP  = proj({ x: 0, y:  0.95, z: 0 });
+  const torsoP = proj({ x: 0, y:  0.15, z: 0 });
+  const hipP   = proj({ x: 0, y: -0.50, z: 0 });
+  const legsP  = proj({ x: 0, y: -1.20, z: 0 });
+  const heartP = proj(heart);
+
+  // Approximate body widths in the projected image. Patient body lies along
+  // the y-axis; its lateral half-width in world is ~0.30, foreshortened by the
+  // camera azimuth. We sample two points across (±x) to find the projected width.
+  function bodyWidth(centerY, halfWidth) {
+    const a = proj({ x: -halfWidth, y: centerY, z: 0 });
+    const b = proj({ x:  halfWidth, y: centerY, z: 0 });
+    return Math.hypot(a.x - b.x, a.y - b.y);
+  }
+  const headW = bodyWidth(1.30, 0.20);
+  const torsoW = bodyWidth(0.15, 0.34);
+  const hipW = bodyWidth(-0.50, 0.30);
+  const legsW = bodyWidth(-1.20, 0.18);
+
+  // ─── Depth sorting ──────────────────────────────────────
+  // Decide whether the arc goes "behind" the patient (lower z than heart) or
+  // "in front of" it. Split the arc accordingly so the back portion renders
+  // first (under the body), then the body, then the front portion (over the body).
+  const heartDepth = proj(heart).depth;
+  const arcFrontSegments = [];
+  const arcBackSegments  = [];
+  let currentSegmentPts = [];
+  let currentSegmentFront = arcPts[0].depth > heartDepth;
+  for (const p of arcPts) {
+    const isFront = p.depth > heartDepth;
+    if (isFront !== currentSegmentFront && currentSegmentPts.length > 0) {
+      // Switch segment — but include the current point to bridge
+      currentSegmentPts.push(p);
+      (currentSegmentFront ? arcFrontSegments : arcBackSegments).push(currentSegmentPts);
+      currentSegmentPts = [p];
+      currentSegmentFront = isFront;
+    } else {
+      currentSegmentPts.push(p);
+    }
+  }
+  if (currentSegmentPts.length > 0) {
+    (currentSegmentFront ? arcFrontSegments : arcBackSegments).push(currentSegmentPts);
+  }
+  function segmentPath(seg) {
+    return 'M ' + seg.map(p => `${p.x.toFixed(1)} ${p.y.toFixed(1)}`).join(' L ');
   }
 
-  icon.innerHTML = `
-    <!-- ═══ TOP: AXIAL (transverse) view — for LAO/RAO ═══ -->
-    <text x="50" y="6" text-anchor="middle" font-size="5.5" font-weight="700"
-          fill="rgba(220,220,230,0.6)" letter-spacing="0.5">AXIAL · LAO ↔ RAO</text>
-    ${bodyEllipse}
-    ${spineDot}
-    ${sternumTick}
-    <path d="${armPath}" fill="none" stroke="rgba(220, 220, 230, 0.5)" stroke-width="1.6"/>
-    <g transform="translate(${detX} ${detY}) rotate(${detAng - 90})">
-      <rect x="${-detW/2}" y="${-detH}" width="${detW}" height="${detH}" rx="1"
-            fill="rgba(120,170,220,0.85)" stroke="rgba(180,220,255,0.6)" stroke-width="0.6"/>
-    </g>
-    <g transform="translate(${srcX} ${srcY}) rotate(${srcAng + 90})">
-      <rect x="${-srcW/2}" y="${-srcH/2}" width="${srcW}" height="${srcH}" rx="0.6"
-            fill="rgba(180,180,180,0.7)" stroke="rgba(220,220,220,0.5)" stroke-width="0.5"/>
-    </g>
-    <text x="${cx}" y="${cy + 22}" text-anchor="middle" font-size="5.5" font-weight="600"
-          fill="rgba(220,220,230,0.45)">view from foot</text>
-    ${craBadge}
+  // ─── Detector / source visual cues ──────────────────────
+  // Detector: a "paddle" — larger rectangle, oriented to face the heart.
+  // Source: a smaller "cube" on the opposite end. Both are drawn as 2D
+  // rectangles rotated to face the patient (simpler than full 3D box).
+  const detAng = Math.atan2(heartP.y - detP.y, heartP.x - detP.x) * 180 / Math.PI;
+  const srcAng = Math.atan2(heartP.y - srcP.y, heartP.x - srcP.x) * 180 / Math.PI;
+  const detInFront = detP.depth > heartDepth;
+  const srcInFront = srcP.depth > heartDepth;
 
-    <!-- Divider -->
-    <line x1="8" y1="86" x2="92" y2="86" stroke="rgba(255,255,255,0.10)" stroke-width="0.6"/>
+  // ─── Build SVG ──────────────────────────────────────────
+  // Layer order (back to front):
+  //   1. Background fill + table
+  //   2. Body shadow under table
+  //   3. Arc BACK segments (behind body)
+  //   4. Body
+  //   5. Heart marker on body
+  //   6. Arc FRONT segments (over body)
+  //   7. Detector + source (drawn in their depth position relative to heart)
+  //   8. Optional labels around the edge
 
-    <!-- ═══ BOTTOM: SAGITTAL view — for CRA/CAU ═══ -->
-    <text x="50" y="93" text-anchor="middle" font-size="5.5" font-weight="700"
-          fill="rgba(220,220,230,0.6)" letter-spacing="0.5">SAGITTAL · CRA ↔ CAU</text>
-    <!-- Patient profile (head up, feet down, anterior on viewer's left) -->
-    <path d="${bodyPath}" fill="rgba(200, 200, 210, 0.10)"
-          stroke="rgba(220,220,220,0.45)" stroke-width="0.8"/>
-    <!-- Heart inside chest -->
-    <ellipse cx="${heartCx}" cy="${heartCy}" rx="4" ry="5"
-             fill="rgba(220, 60, 50, 0.18)" stroke="rgba(220, 60, 50, 0.55)" stroke-width="0.8"/>
-    <!-- C-arm pivoting around heart in sagittal plane -->
-    <path d="${sagArmPath}" fill="none" stroke="rgba(220,220,230,0.5)" stroke-width="1.3"/>
-    <g transform="translate(${detSagX.toFixed(2)} ${detSagY.toFixed(2)}) rotate(${(detSagAng - 90).toFixed(1)})">
-      <rect x="-4" y="-4" width="8" height="4" rx="1"
-            fill="rgba(120,170,220,0.85)" stroke="rgba(180,220,255,0.6)" stroke-width="0.5"/>
-    </g>
-    <g transform="translate(${srcSagX.toFixed(2)} ${srcSagY.toFixed(2)}) rotate(${(srcSagAng + 90).toFixed(1)})">
-      <rect x="-2.5" y="-2" width="5" height="4" rx="0.5"
-            fill="rgba(180,180,180,0.7)" stroke="rgba(220,220,220,0.5)" stroke-width="0.4"/>
-    </g>
-    <!-- Anterior / head labels for sagittal orientation -->
-    <text x="${SCX + 17}" y="${SCY - 28}" font-size="5" font-weight="600"
-          fill="rgba(200,200,210,0.5)">head</text>
-    <text x="${SCX - 17}" y="${SCY + 24}" font-size="5" font-weight="600"
-          fill="rgba(200,200,210,0.5)" text-anchor="end">feet</text>
-    <text x="${SCX - 13}" y="${heartCy}" font-size="5" font-weight="600"
-          fill="rgba(200,200,210,0.45)" text-anchor="end">ant</text>
-    ${tiltCaption}
-    <text x="${SCX}" y="${SCY + 34}" text-anchor="middle" font-size="5.5" font-weight="600"
-          fill="rgba(220,220,230,0.45)">view from right</text>
-  `;
+  // Patient skin gradient
+  const skinTop = '#d8b59a', skinBot = '#a37a5a';
+  // Patient body fill paths — use ellipses approximating each body region
+
+  let html = '';
+
+  // Background (transparent — let widget bg show through)
+  // Subtle ground shadow
+  const shadowCx = (tableCorners[0].x + tableCorners[2].x) / 2;
+  const shadowCy = tableCorners[2].y + 4;
+  html += `<ellipse cx="${shadowCx.toFixed(1)}" cy="${shadowCy.toFixed(1)}" rx="${(Math.abs(tableCorners[1].x-tableCorners[0].x)/2).toFixed(1)}" ry="6" fill="rgba(0,0,0,0.32)"/>`;
+
+  // Table
+  html += `<defs>
+    <linearGradient id="tableGrad" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#3a4458"/>
+      <stop offset="100%" stop-color="#212a3a"/>
+    </linearGradient>
+    <linearGradient id="bodyGrad" x1="0" y1="0" x2="1" y2="0.4">
+      <stop offset="0%" stop-color="${skinTop}"/>
+      <stop offset="100%" stop-color="${skinBot}"/>
+    </linearGradient>
+    <linearGradient id="armGrad" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#e8edf3"/>
+      <stop offset="100%" stop-color="#8a95a8"/>
+    </linearGradient>
+    <linearGradient id="detGrad" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#6eb0f7"/>
+      <stop offset="100%" stop-color="#3a78c8"/>
+    </linearGradient>
+    <linearGradient id="srcGrad" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#c8cdd5"/>
+      <stop offset="100%" stop-color="#7a8499"/>
+    </linearGradient>
+  </defs>`;
+  html += `<path d="${tablePath}" fill="url(#tableGrad)" stroke="rgba(180,190,210,0.35)" stroke-width="1"/>`;
+
+  // Back-of-body arc segments first (so body covers them)
+  // Draw arc with a slight shadow underneath for depth
+  for (const seg of arcBackSegments) {
+    const d = segmentPath(seg);
+    html += `<path d="${d}" fill="none" stroke="rgba(0,0,0,0.3)" stroke-width="9" stroke-linecap="round" stroke-opacity="0.4"/>`;
+    html += `<path d="${d}" fill="none" stroke="url(#armGrad)" stroke-width="6" stroke-linecap="round"/>`;
+  }
+
+  // Detector + source, if they're behind the body
+  if (!detInFront) html += renderDetector(detP, detAng, false);
+  if (!srcInFront) html += renderSource(srcP, srcAng, false);
+
+  // Body — drawn over the back arc
+  // Use rounded ellipses for each region
+  html += `<ellipse cx="${headP.x.toFixed(1)}" cy="${headP.y.toFixed(1)}" rx="${(headW*0.55).toFixed(1)}" ry="${(headW*0.65).toFixed(1)}" fill="url(#bodyGrad)" stroke="rgba(0,0,0,0.25)" stroke-width="0.6"/>`;
+  // Neck (subtle - just a small ellipse blending head and torso)
+  html += `<ellipse cx="${neckP.x.toFixed(1)}" cy="${neckP.y.toFixed(1)}" rx="${(headW*0.4).toFixed(1)}" ry="${(headW*0.25).toFixed(1)}" fill="url(#bodyGrad)" stroke="rgba(0,0,0,0.2)" stroke-width="0.4"/>`;
+  // Torso (rounded rectangle)
+  html += `<ellipse cx="${torsoP.x.toFixed(1)}" cy="${torsoP.y.toFixed(1)}" rx="${(torsoW*0.5).toFixed(1)}" ry="${(torsoW*0.95).toFixed(1)}" fill="url(#bodyGrad)" stroke="rgba(0,0,0,0.25)" stroke-width="0.6"/>`;
+  // Hips
+  html += `<ellipse cx="${hipP.x.toFixed(1)}" cy="${hipP.y.toFixed(1)}" rx="${(hipW*0.55).toFixed(1)}" ry="${(hipW*0.6).toFixed(1)}" fill="url(#bodyGrad)" stroke="rgba(0,0,0,0.25)" stroke-width="0.5"/>`;
+  // Legs
+  html += `<ellipse cx="${legsP.x.toFixed(1)}" cy="${legsP.y.toFixed(1)}" rx="${(legsW*0.6).toFixed(1)}" ry="${(legsW*1.3).toFixed(1)}" fill="url(#bodyGrad)" stroke="rgba(0,0,0,0.22)" stroke-width="0.5"/>`;
+
+  // Heart marker on chest (subtle red bean, anterior-left of torso)
+  const heartMarker = proj({ x: -0.10, y: 0.20, z: 0.18 });
+  html += `<ellipse cx="${heartMarker.x.toFixed(1)}" cy="${heartMarker.y.toFixed(1)}" rx="6" ry="7" fill="rgba(220, 60, 50, 0.72)" stroke="rgba(180,30,30,0.6)" stroke-width="0.6"/>`;
+
+  // Front-of-body arc segments — drawn over the body
+  for (const seg of arcFrontSegments) {
+    const d = segmentPath(seg);
+    html += `<path d="${d}" fill="none" stroke="rgba(0,0,0,0.35)" stroke-width="9" stroke-linecap="round" stroke-opacity="0.6"/>`;
+    html += `<path d="${d}" fill="none" stroke="url(#armGrad)" stroke-width="6" stroke-linecap="round"/>`;
+  }
+
+  // Detector + source, if they're in front of the body
+  if (detInFront) html += renderDetector(detP, detAng, true);
+  if (srcInFront) html += renderSource(srcP, srcAng, true);
+
+  // Compass labels in margin (head / feet / R / L) — fixed corners of the
+  // patient frame, projected so they're always positioned next to the correct
+  // anatomical direction.
+  const lblHead  = proj({ x: 0, y:  1.65, z: 0 });
+  const lblFeet  = proj({ x: 0, y: -1.65, z: 0 });
+  const lblRight = proj({ x: -0.95, y: 0, z: 0 });  // patient's right = -x
+  const lblLeft  = proj({ x:  0.95, y: 0, z: 0 });
+  html += `<text x="${lblHead.x.toFixed(1)}" y="${lblHead.y.toFixed(1)}" text-anchor="middle" font-size="9" font-weight="700" fill="rgba(220,220,230,0.55)">HEAD</text>`;
+  html += `<text x="${lblFeet.x.toFixed(1)}" y="${lblFeet.y.toFixed(1)}" text-anchor="middle" font-size="9" font-weight="700" fill="rgba(220,220,230,0.55)">FEET</text>`;
+  html += `<text x="${lblRight.x.toFixed(1)}" y="${lblRight.y.toFixed(1)}" text-anchor="end" font-size="9" font-weight="700" fill="rgba(220,220,230,0.45)">R</text>`;
+  html += `<text x="${lblLeft.x.toFixed(1)}" y="${lblLeft.y.toFixed(1)}" text-anchor="start" font-size="9" font-weight="700" fill="rgba(220,220,230,0.45)">L</text>`;
+
+  // Angle readout in the corner of the SVG
+  const angTxt = formatAngleReadout();
+  html += `<text x="6" y="232" font-size="9" font-weight="700" fill="rgba(253, 204, 77, 0.9)" letter-spacing="0.04em">${angTxt}</text>`;
+
+  svg.innerHTML = html;
+
+  // Also update the header readout
+  const readout = document.getElementById('orientReadout');
+  if (readout) readout.textContent = angTxt;
 }
 
+function renderDetector(p, angleDeg, inFront) {
+  // Larger paddle — facing the patient
+  const w = 22, h = 13;
+  const opacity = inFront ? 1.0 : 0.78;
+  return `<g transform="translate(${p.x.toFixed(1)} ${p.y.toFixed(1)}) rotate(${(angleDeg - 90).toFixed(1)})" opacity="${opacity}">
+    <rect x="${-w/2}" y="${-h - 2}" width="${w}" height="3" fill="rgba(70, 100, 140, 0.9)"/>
+    <rect x="${-w/2}" y="${-h + 1}" width="${w}" height="${h - 1}" rx="1.5" fill="url(#detGrad)" stroke="rgba(180,220,255,0.6)" stroke-width="0.6"/>
+  </g>`;
+}
+
+function renderSource(p, angleDeg, inFront) {
+  // Smaller box on the opposite end
+  const w = 13, h = 11;
+  const opacity = inFront ? 1.0 : 0.78;
+  return `<g transform="translate(${p.x.toFixed(1)} ${p.y.toFixed(1)}) rotate(${(angleDeg + 90).toFixed(1)})" opacity="${opacity}">
+    <rect x="${-w/2}" y="${-h/2}" width="${w}" height="${h}" rx="1" fill="url(#srcGrad)" stroke="rgba(220,220,220,0.6)" stroke-width="0.6"/>
+    <circle cx="0" cy="${h/2 - 2}" r="1.5" fill="rgba(40,40,40,0.8)"/>
+  </g>`;
+}
+
+function formatAngleReadout() {
+  const lao = Math.round(liveLao);
+  const cra = Math.round(liveCra);
+  const lr =
+    Math.abs(lao) < 3 ? 'AP'
+    : Math.abs(lao) > 87 ? 'LAT'
+    : lao > 0 ? `LAO ${lao}°`
+    : `RAO ${-lao}°`;
+  const cc =
+    Math.abs(cra) < 2 ? ''
+    : cra > 0 ? ` / CRA ${cra}°`
+    : ` / CAU ${-cra}°`;
+  return lr + cc;
+}
+
+// ═══════════════════════════════════════════════════════════
+// ORIENTATION WIDGET — drag + resize + collapse + persistence
+// ═══════════════════════════════════════════════════════════
+(function setupOrientWidget() {
+  const widget = document.getElementById('orientWidget');
+  const header = document.getElementById('orientHeader');
+  const collapse = document.getElementById('orientCollapse');
+  const resize = document.getElementById('orientResize');
+  if (!widget || !header || !resize) return;
+
+  // Load saved state
+  const SAVE_KEY = 'cathmath_angio_orient_widget';
+  try {
+    const saved = JSON.parse(localStorage.getItem(SAVE_KEY) || '{}');
+    if (typeof saved.left === 'number')  widget.style.left  = saved.left  + 'px';
+    if (typeof saved.top === 'number')   widget.style.top   = saved.top   + 'px';
+    if (typeof saved.width === 'number') widget.style.width = saved.width + 'px';
+    if (saved.collapsed) {
+      widget.classList.add('collapsed');
+      collapse.textContent = '+';
+    }
+  } catch (e) {}
+
+  function save() {
+    try {
+      localStorage.setItem(SAVE_KEY, JSON.stringify({
+        left: widget.offsetLeft,
+        top: widget.offsetTop,
+        width: widget.offsetWidth,
+        collapsed: widget.classList.contains('collapsed'),
+      }));
+    } catch (e) {}
+  }
+
+  // ─── Drag (via header) ───
+  let dragging = false, dragOffsetX = 0, dragOffsetY = 0;
+  function dragStart(clientX, clientY) {
+    dragging = true;
+    const r = widget.getBoundingClientRect();
+    dragOffsetX = clientX - r.left;
+    dragOffsetY = clientY - r.top;
+  }
+  function dragMove(clientX, clientY) {
+    if (!dragging) return;
+    const parent = widget.parentElement.getBoundingClientRect();
+    const newL = clientX - parent.left - dragOffsetX;
+    const newT = clientY - parent.top  - dragOffsetY;
+    const maxL = parent.width  - widget.offsetWidth  - 2;
+    const maxT = parent.height - widget.offsetHeight - 2;
+    widget.style.left = Math.max(2, Math.min(maxL, newL)) + 'px';
+    widget.style.top  = Math.max(2, Math.min(maxT, newT)) + 'px';
+  }
+  function dragEnd() { if (dragging) { dragging = false; save(); } }
+
+  // Mouse
+  header.addEventListener('mousedown', e => {
+    if (e.target === collapse) return;
+    dragStart(e.clientX, e.clientY);
+    e.preventDefault();
+  });
+  document.addEventListener('mousemove', e => dragMove(e.clientX, e.clientY));
+  document.addEventListener('mouseup', dragEnd);
+  // Touch
+  header.addEventListener('touchstart', e => {
+    if (e.target === collapse) return;
+    if (!e.touches.length) return;
+    const t = e.touches[0];
+    dragStart(t.clientX, t.clientY);
+    e.preventDefault();
+  }, { passive: false });
+  document.addEventListener('touchmove', e => {
+    if (!dragging || !e.touches.length) return;
+    const t = e.touches[0];
+    dragMove(t.clientX, t.clientY);
+    e.preventDefault();
+  }, { passive: false });
+  document.addEventListener('touchend', dragEnd);
+  document.addEventListener('touchcancel', dragEnd);
+
+  // ─── Resize (corner handle) ───
+  let resizing = false, resizeStartX = 0, resizeStartY = 0, resizeStartW = 0;
+  function resizeStart(clientX, clientY) {
+    resizing = true;
+    resizeStartX = clientX;
+    resizeStartY = clientY;
+    resizeStartW = widget.offsetWidth;
+  }
+  function resizeMove(clientX, clientY) {
+    if (!resizing) return;
+    const dx = clientX - resizeStartX;
+    const newW = Math.max(160, Math.min(600, resizeStartW + dx));
+    widget.style.width = newW + 'px';
+  }
+  function resizeEnd() { if (resizing) { resizing = false; save(); } }
+
+  resize.addEventListener('mousedown', e => {
+    resizeStart(e.clientX, e.clientY);
+    e.stopPropagation();
+    e.preventDefault();
+  });
+  document.addEventListener('mousemove', e => resizeMove(e.clientX, e.clientY));
+  document.addEventListener('mouseup', resizeEnd);
+  resize.addEventListener('touchstart', e => {
+    if (!e.touches.length) return;
+    const t = e.touches[0];
+    resizeStart(t.clientX, t.clientY);
+    e.stopPropagation();
+    e.preventDefault();
+  }, { passive: false });
+  document.addEventListener('touchmove', e => {
+    if (!resizing || !e.touches.length) return;
+    const t = e.touches[0];
+    resizeMove(t.clientX, t.clientY);
+    e.preventDefault();
+  }, { passive: false });
+  document.addEventListener('touchend', resizeEnd);
+
+  // ─── Collapse / expand ───
+  collapse.addEventListener('click', () => {
+    const isCollapsed = widget.classList.toggle('collapsed');
+    collapse.textContent = isCollapsed ? '+' : '−';
+    save();
+  });
+})();
 // ═══════════════════════════════════════════════════════════
 // VIEW LABELS
 // ═══════════════════════════════════════════════════════════
