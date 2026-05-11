@@ -1,0 +1,1411 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Coronary Angiography Views — C-arm Angles & Anatomy | CathMath</title>
+<meta name="description" content="Interactive coronary angiography view simulator. See how LAO/RAO and cranial/caudal C-arm angles change the apparent anatomy of the LAD, LCx, RCA, and all major branches. Free cardiology fellow teaching tool.">
+<meta name="keywords" content="coronary angiography, angio views, LAO, RAO, cranial, caudal, Spider view, LAD, LCx, RCA, left main, diagonal, obtuse marginal, PDA, PLV, AV groove, C-arm, fluoroscopy, cardiology fellowship">
+<meta name="author" content="Dr. Saro Avedikian, MD, MPH">
+<meta name="robots" content="index, follow">
+<link rel="canonical" href="https://cathmath.org/angio/">
+<link rel="icon" type="image/x-icon" href="/favicon.ico">
+<link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+<link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://cathmath.org/angio/">
+<meta property="og:title" content="Coronary Angiography Views | CathMath">
+<meta property="og:description" content="See how C-arm angles change the apparent coronary anatomy. Interactive 3D-rotated coronary tree with all major segments labeled.">
+<meta property="og:image" content="https://cathmath.org/og-image.png">
+<meta property="og:site_name" content="CathMath">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Coronary Angiography Views | CathMath">
+<meta name="twitter:description" content="Interactive teaching tool: rotate a 3D coronary tree through every standard angio view (RAO cranial, LAO caudal Spider, lateral, etc.) and see which segments are best evaluated at each.">
+<meta name="twitter:image" content="https://cathmath.org/og-image.png">
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "WebApplication",
+  "name": "Coronary Angiography Views",
+  "url": "https://cathmath.org/angio/",
+  "description": "Interactive simulator showing how C-arm angles change the apparent coronary anatomy. All major arteries and branches labeled. Built for cardiology fellows learning invasive coronary angiography.",
+  "applicationCategory": "EducationalApplication",
+  "operatingSystem": "Any",
+  "offers": {"@type": "Offer", "price": "0", "priceCurrency": "USD"},
+  "author": {"@type": "Person", "name": "Dr. Saro Avedikian", "honorificSuffix": "MD, MPH"},
+  "isPartOf": {"@type": "WebSite", "name": "CathMath", "url": "https://cathmath.org"}
+}
+</script>
+<style>
+:root {
+  --navy: #0d2240;
+  --navy-deep: #091a33;
+  --navy-card: #0c1f3a;
+  --bg: #f4f6f9;
+  --panel-bg: #ffffff;
+  --panel-bg-2: #f9fafc;
+  --border: #d8dfe8;
+  --text: #1a1a2e;
+  --text-dim: #5a6478;
+  --text-muted: #8892a4;
+  --accent: #3b82f6;
+  --threshold: #ef4444;
+  --rao: #6366f1;
+  --lao: #ef6464;
+  --cra: #14b8a6;
+  --cau: #f59e0b;
+  --lca: #c43838;
+  --rca: #4a90d9;
+}
+body.dark {
+  --bg: #0a1220;
+  --panel-bg: #131a26;
+  --panel-bg-2: #0f1722;
+  --border: #2a3340;
+  --text: #d8dce4;
+  --text-dim: #9aa3b3;
+  --text-muted: #6b7587;
+  --navy: #4a90d9;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { height: 100%; }
+body {
+  font-family: -apple-system, "Helvetica Neue", Helvetica, Arial, sans-serif;
+  font-size: 14px;
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ═══ SITE NAV ═══ */
+.site-nav {
+  background: #0a1628;
+  color: #fff;
+  display: flex;
+  align-items: center;
+  padding: 0 24px;
+  height: 42px;
+  position: sticky;
+  top: 0;
+  z-index: 200;
+  border-bottom: 1px solid rgba(255,255,255,0.06);
+  flex-shrink: 0;
+}
+.nav-brand { font-size: 16px; font-weight: 800; letter-spacing: 0.5px; margin-right: 32px; color: #fff; text-decoration: none; }
+.nav-tabs { display: flex; height: 100%; }
+.nav-tab {
+  display: flex; align-items: center;
+  padding: 0 16px; height: 42px;
+  font-size: 13px; font-weight: 600;
+  color: rgba(255,255,255,0.5);
+  text-decoration: none;
+  border-bottom: 2px solid transparent;
+  transition: color 0.2s, border-color 0.2s;
+}
+.nav-tab:hover { color: rgba(255,255,255,0.85); }
+.nav-tab.active { color: #fff; border-bottom-color: #fdcc4d; }
+.nav-right { margin-left: auto; display: flex; align-items: center; gap: 16px; }
+.nav-credit { font-size: 11px; color: rgba(255,255,255,0.55); }
+.nav-right button {
+  background: rgba(255,255,255,0.1);
+  color: #fff;
+  border: none;
+  border-radius: 4px;
+  padding: 6px 12px;
+  cursor: pointer;
+  font-size: 11px;
+  font-weight: 600;
+  transition: background 0.2s;
+}
+.nav-right button:hover { background: rgba(255,255,255,0.2); }
+
+/* ═══ SIDEBAR HEADER ═══ */
+.sidebar-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 12px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--border);
+}
+.sidebar-header .titles { min-width: 0; }
+.sidebar-header h1 {
+  font-size: 13.5px;
+  font-weight: 700;
+  margin: 0;
+  letter-spacing: -0.01em;
+  color: var(--text);
+  line-height: 1.2;
+}
+.sidebar-header .sub {
+  font-size: 10.5px;
+  color: var(--text-dim);
+  margin-top: 2px;
+  line-height: 1.3;
+}
+.btn-reset {
+  flex-shrink: 0;
+  background: transparent;
+  border: 1px solid var(--border);
+  border-radius: 5px;
+  padding: 4px 11px;
+  color: var(--text-dim);
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: border-color 0.15s, color 0.15s;
+}
+.btn-reset:hover { border-color: var(--threshold); color: var(--threshold); }
+
+/* ═══ MAIN LAYOUT ═══ */
+.main {
+  display: flex;
+  flex: 1;
+  min-height: calc(100vh - 42px);
+}
+.left {
+  width: 340px;
+  flex-shrink: 0;
+  background: var(--panel-bg);
+  border-right: 1px solid var(--border);
+  overflow-y: auto;
+  padding: 16px;
+}
+.card {
+  background: var(--panel-bg-2);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 12px 14px;
+  margin-bottom: 12px;
+}
+.card-title {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--navy);
+  margin-bottom: 10px;
+}
+body.dark .card-title { color: var(--text); }
+
+/* ═══ SIDE TOGGLE (Left vs Right coronary) ═══ */
+.seg-toggle {
+  display: flex;
+  background: var(--bg);
+  border-radius: 6px;
+  padding: 3px;
+  gap: 2px;
+}
+body.dark .seg-toggle { background: #1a2030; }
+.seg-btn {
+  flex: 1;
+  padding: 7px 8px;
+  background: transparent;
+  border: none;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-dim);
+  cursor: pointer;
+  transition: all 0.18s;
+}
+.seg-btn.active {
+  background: var(--panel-bg);
+  color: var(--navy);
+  box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+}
+.seg-btn.active.lca-active { color: var(--lca); }
+.seg-btn.active.rca-active { color: var(--rca); }
+body.dark .seg-btn.active.lca-active { color: #ff7676; }
+body.dark .seg-btn.active.rca-active { color: #6eb0f7; }
+
+/* ═══ SLIDERS ═══ */
+.slider-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 10px;
+  font-size: 12px;
+}
+.slider-row:last-child { margin-bottom: 0; }
+.slider-label {
+  flex: 0 0 90px;
+  font-weight: 600;
+  color: var(--text);
+  font-size: 11.5px;
+}
+.slider-row input[type=range] {
+  -webkit-appearance: none;
+  appearance: none;
+  flex: 1;
+  height: 4px;
+  background: var(--bg);
+  border-radius: 2px;
+  outline: none;
+  cursor: pointer;
+}
+body.dark .slider-row input[type=range] { background: #1a2030; }
+.slider-row input[type=range]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: var(--navy);
+  cursor: pointer;
+  border: 2px solid var(--panel-bg);
+  box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+}
+.slider-val {
+  font-family: "SF Mono", Menlo, Consolas, monospace;
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--navy);
+  min-width: 58px;
+  text-align: right;
+}
+body.dark .slider-val { color: #6eb0f7; }
+
+/* ═══ PRESET BUTTONS ═══ */
+.preset-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 5px;
+}
+.preset-btn {
+  padding: 7px 8px;
+  background: var(--panel-bg);
+  color: var(--text);
+  border: 1px solid var(--border);
+  border-radius: 5px;
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: border-color 0.15s, color 0.15s, background 0.15s;
+  white-space: nowrap;
+  text-align: left;
+  line-height: 1.2;
+}
+body.dark .preset-btn { background: var(--panel-bg-2); }
+.preset-btn:hover { border-color: var(--accent); color: var(--accent); }
+.preset-btn.active { background: var(--accent); color: #fff; border-color: var(--accent); }
+.preset-btn .ang {
+  display: block;
+  font-size: 9px;
+  font-weight: 500;
+  color: var(--text-muted);
+  letter-spacing: 0.04em;
+  margin-top: 2px;
+}
+.preset-btn.active .ang { color: rgba(255,255,255,0.85); }
+
+/* ═══ RIGHT PANEL ═══ */
+.right {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  background: var(--bg);
+  min-width: 0;
+}
+.viz-wrap {
+  flex: 1;
+  position: relative;
+  background: var(--panel-bg);
+  margin: 12px 12px 0;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  overflow: hidden;
+  min-height: 380px;
+}
+#angioSvg { display: block; width: 100%; height: 100%; }
+
+/* C-arm orientation icon (small, top-left of viz) */
+.carm-icon {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  width: 88px;
+  height: 88px;
+  pointer-events: none;
+  opacity: 0.92;
+}
+
+/* View label overlay (top-center of viz) */
+.view-label {
+  position: absolute;
+  top: 10px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(13, 16, 25, 0.78);
+  color: #f0f0f0;
+  font-size: 11.5px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  padding: 5px 12px;
+  border-radius: 4px;
+  pointer-events: none;
+}
+body.dark .view-label { background: rgba(40, 50, 70, 0.85); }
+
+/* Clinical note panel (bottom) */
+.clin-note {
+  margin: 12px;
+  padding: 12px 16px;
+  background: var(--panel-bg);
+  border: 1px solid var(--border);
+  border-left: 4px solid var(--accent);
+  border-radius: 6px;
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--text-dim);
+}
+.clin-note strong { color: var(--text); font-weight: 700; }
+
+/* ═══ SVG VESSEL STYLES ═══ */
+.vessel { fill: none; stroke-linecap: round; stroke-linejoin: round; }
+.vessel-major { stroke-width: 3.6; }
+.vessel-mid { stroke-width: 2.6; }
+.vessel-small { stroke-width: 1.8; }
+.vessel-tiny { stroke-width: 1.2; }
+.heart-silhouette { fill: rgba(120, 110, 110, 0.06); stroke: rgba(120, 110, 110, 0.18); stroke-width: 1; stroke-dasharray: 3 3; }
+
+/* Label leader lines + text */
+.label-line { stroke: rgba(180, 180, 180, 0.55); stroke-width: 0.9; fill: none; }
+.label-dot { fill: rgba(220, 220, 220, 0.85); }
+.label-text { fill: var(--text-dim); font-size: 11px; font-weight: 600; }
+.label-text.lead { fill: var(--text); }
+body.dark .label-text { fill: #c4ccda; }
+body.dark .label-text.lead { fill: #e8ecf2; }
+
+/* ═══ SEO CONTENT (collapsed by default) ═══ */
+.seo-content {
+  padding: 16px 24px 32px;
+  background: var(--panel-bg);
+  border-top: 1px solid var(--border);
+  font-size: 14.5px;
+  line-height: 1.65;
+  color: var(--text);
+}
+.seo-content .seo-inner { max-width: 920px; margin: 0 auto; }
+.seo-section summary {
+  list-style: none;
+  cursor: pointer;
+  padding: 10px 16px;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  color: var(--text-muted);
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  border-radius: 8px;
+  border: 1px solid transparent;
+  transition: color 0.15s, background 0.15s, border-color 0.15s;
+  user-select: none;
+}
+.seo-section summary::-webkit-details-marker { display: none; }
+.seo-section summary::before {
+  content: '▸';
+  font-size: 10px;
+  display: inline-block;
+  transition: transform 0.2s;
+}
+.seo-section[open] summary::before { transform: rotate(90deg); }
+.seo-section summary:hover { color: var(--text); background: var(--panel-bg-2); border-color: var(--border); }
+.seo-section[open] summary { margin-bottom: 8px; }
+.seo-content-body {
+  padding: 24px 28px;
+  background: var(--panel-bg-2);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+}
+.seo-content-body h3 { font-size: 16px; font-weight: 700; margin: 22px 0 8px; color: var(--text); }
+.seo-content-body h3:first-child { margin-top: 0; }
+.seo-content-body p { margin: 0 0 12px; color: var(--text-dim); }
+.seo-content-body ul { padding-left: 22px; margin-bottom: 12px; }
+.seo-content-body ul li { margin-bottom: 6px; color: var(--text-dim); }
+.seo-content-body strong { color: var(--text); font-weight: 600; }
+.related-tools { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px; font-size: 13px; }
+.related-tools a {
+  display: inline-block; padding: 6px 14px; background: var(--panel-bg);
+  border: 1px solid var(--border); border-radius: 16px;
+  color: var(--text); text-decoration: none; font-weight: 600; transition: all 0.15s;
+}
+.related-tools a:hover { border-color: var(--accent); color: var(--accent); }
+
+/* ═══ MOBILE ═══ */
+@media (max-width: 800px) {
+  .main { flex-direction: column; }
+  .left { width: 100%; max-height: 50vh; border-right: none; border-bottom: 1px solid var(--border); }
+  .viz-wrap { min-height: 280px; }
+  .seo-content { padding: 24px 16px 40px; font-size: 14px; }
+
+  /* Mobile nav: 7+ tabs need to fit on phone — scroll horizontally */
+  .site-nav { overflow-x: auto; overflow-y: hidden; -webkit-overflow-scrolling: touch; padding: 0 12px; }
+  .site-nav::-webkit-scrollbar { display: none; }
+  .nav-brand { flex-shrink: 0; margin-right: 14px; font-size: 14px; }
+  .nav-tabs { flex-shrink: 0; gap: 0; }
+  .nav-tab { flex-shrink: 0; white-space: nowrap; padding: 0 10px; font-size: 11px; }
+  .nav-right { display: none; }
+}
+</style>
+</head>
+<body class="dark">
+
+<!-- ═══ SITE NAV ═══ -->
+<nav class="site-nav">
+  <a href="/" class="nav-brand">CathMath</a>
+  <div class="nav-tabs">
+    <a href="/rhc/" class="nav-tab">RHC Calculator</a>
+    <a href="/pvloop/" class="nav-tab">PV Loops</a>
+    <a href="/ekg/" class="nav-tab">EKG Simulator</a>
+    <a href="/embryology/" class="nav-tab">Embryology</a>
+    <a href="/hemodynamics/" class="nav-tab">Hemodynamics</a>
+    <a href="/echocalc/" class="nav-tab">Echo Calc</a>
+    <a href="/ap/" class="nav-tab">Action Potential</a>
+    <a href="/angio/" class="nav-tab active">Angio Views</a>
+  </div>
+  <div class="nav-right">
+    <span class="nav-credit">Dr. Saro Avedikian, MD, MPH</span>
+    <button id="darkToggle" onclick="toggleDark()">Light Mode</button>
+  </div>
+</nav>
+
+<!-- ═══ MAIN ═══ -->
+<div class="main">
+
+  <!-- LEFT PANEL -->
+  <aside class="left">
+    <div class="sidebar-header">
+      <div class="titles">
+        <h1>Coronary Angiography Views</h1>
+        <div class="sub">C-arm angles → apparent anatomy</div>
+      </div>
+      <button class="btn-reset" onclick="resetAll()" title="Reset to AP view">Reset</button>
+    </div>
+
+    <!-- Coronary side selector -->
+    <div class="card">
+      <div class="card-title">Coronary System</div>
+      <div class="seg-toggle" id="sideToggle">
+        <button class="seg-btn active lca-active" data-side="left">Left coronary</button>
+        <button class="seg-btn rca-active" data-side="right">Right coronary</button>
+      </div>
+    </div>
+
+    <!-- C-arm angle sliders -->
+    <div class="card">
+      <div class="card-title">C-arm Angles</div>
+      <div class="slider-row">
+        <span class="slider-label">LAO / RAO</span>
+        <input type="range" id="slLao" min="-90" max="90" step="1" value="0">
+        <span class="slider-val" id="slLaoVal">AP</span>
+      </div>
+      <div class="slider-row">
+        <span class="slider-label">CRA / CAU</span>
+        <input type="range" id="slCra" min="-40" max="40" step="1" value="0">
+        <span class="slider-val" id="slCraVal">0°</span>
+      </div>
+    </div>
+
+    <!-- Preset views -->
+    <div class="card">
+      <div class="card-title">Standard Views</div>
+      <div class="preset-grid" id="presetGridLeft" style="display: grid;">
+        <button class="preset-btn" data-preset="ap-left">AP <span class="ang">0° / 0°</span></button>
+        <button class="preset-btn" data-preset="ap-cra">AP cranial <span class="ang">0° CRA 30°</span></button>
+        <button class="preset-btn" data-preset="ap-cau">AP caudal <span class="ang">0° CAU 30°</span></button>
+        <button class="preset-btn" data-preset="rao-cra">RAO cranial <span class="ang">RAO 30° CRA 30°</span></button>
+        <button class="preset-btn" data-preset="rao-cau">RAO caudal <span class="ang">RAO 20° CAU 20°</span></button>
+        <button class="preset-btn" data-preset="lao-cra">LAO cranial <span class="ang">LAO 45° CRA 25°</span></button>
+        <button class="preset-btn" data-preset="lao-cau">LAO caudal "Spider" <span class="ang">LAO 45° CAU 30°</span></button>
+        <button class="preset-btn" data-preset="lateral">Lateral <span class="ang">LAO 90°</span></button>
+      </div>
+      <div class="preset-grid" id="presetGridRight" style="display: none;">
+        <button class="preset-btn" data-preset="rca-lao">LAO straight <span class="ang">LAO 45° / 0°</span></button>
+        <button class="preset-btn" data-preset="rca-lao-cra">LAO cranial <span class="ang">LAO 30° CRA 25°</span></button>
+        <button class="preset-btn" data-preset="rca-rao">RAO <span class="ang">RAO 30° / 0°</span></button>
+        <button class="preset-btn" data-preset="rca-ap-cra">AP cranial <span class="ang">0° CRA 30°</span></button>
+        <button class="preset-btn" data-preset="rca-lat">Lateral <span class="ang">LAO 90°</span></button>
+      </div>
+    </div>
+
+    <!-- Display options -->
+    <div class="card">
+      <div class="card-title">Display</div>
+      <label style="display:flex;align-items:center;gap:8px;font-size:12px;color:var(--text-dim);cursor:pointer;margin-bottom:6px;">
+        <input type="checkbox" id="ovLabels" checked> Anatomical labels
+      </label>
+      <label style="display:flex;align-items:center;gap:8px;font-size:12px;color:var(--text-dim);cursor:pointer;margin-bottom:6px;">
+        <input type="checkbox" id="ovBoth"> Show both LCA + RCA
+      </label>
+      <label style="display:flex;align-items:center;gap:8px;font-size:12px;color:var(--text-dim);cursor:pointer;">
+        <input type="checkbox" id="ovSilhouette" checked> Heart silhouette
+      </label>
+    </div>
+  </aside>
+
+  <!-- RIGHT PANEL -->
+  <main class="right">
+    <div class="viz-wrap">
+      <svg id="angioSvg" viewBox="0 0 800 600" preserveAspectRatio="xMidYMid meet"></svg>
+      <svg class="carm-icon" id="carmIcon" viewBox="0 0 100 100"></svg>
+      <div class="view-label" id="viewLabel">AP — Anteroposterior</div>
+    </div>
+
+    <!-- Clinical note for the current view -->
+    <div class="clin-note" id="clinNote">
+      <strong>AP view (0° / 0°):</strong> Useful for an initial orientation, but most coronary segments overlap. Angulated views are preferred for diagnostic detail.
+    </div>
+  </main>
+</div>
+
+<!-- ═══ SEO / EDUCATIONAL CONTENT ═══ -->
+<section class="seo-content">
+  <div class="seo-inner">
+    <details class="seo-section">
+      <summary>About the Coronary Angiography Views simulator</summary>
+      <div class="seo-content-body">
+        <p>Coronary angiography is the two-dimensional shadow of a three-dimensional vascular tree. Because every projection compresses depth onto a flat image, no single view shows every segment without foreshortening or overlap. The art of the angiographer is to pick the right combination of <strong>C-arm angles</strong> for each lesion. This free interactive simulator rotates a 3D coronary tree through every standard projection so trainees can build the mental model that experienced operators carry in their heads.</p>
+
+        <h3>C-arm angle conventions</h3>
+        <p>The C-arm position is described by two independent angles, both referenced to the image intensifier (the detector "looking down" at the patient):</p>
+        <ul>
+          <li><strong>LAO / RAO (left/right anterior oblique).</strong> Rotation around the patient's craniocaudal axis. LAO 45° places the detector over the patient's left shoulder; the image looks at the heart from the left-anterior direction. RAO 30° looks from the right-anterior side. AP is 0°. Lateral is LAO 90°.</li>
+          <li><strong>Cranial / Caudal.</strong> Tilt of the detector along the patient's long axis. Cranial angulation tips the detector toward the head, producing a "looking up from below" projection. Caudal does the opposite.</li>
+        </ul>
+
+        <h3>Why each angle exists — the bifurcation problem</h3>
+        <p>The <strong>left main bifurcation</strong> sits in a near-coronal plane: the LAD heads anteriorly and downward, the LCx heads posteriorly. In a pure AP view they overlap. To separate them you need a <strong>caudal</strong> tilt (which "drops" the LAD away from the LCx) and an obliquity that opens the angle between them. That is exactly what the <strong>LAO caudal ("Spider") view</strong> does — it is the bread-and-butter view for the LM bifurcation and the ostia of the LAD and LCx.</p>
+        <p>The <strong>mid-LAD</strong> runs in the anterior interventricular groove with the great cardiac vein and is hidden by the LAD itself in AP. <strong>RAO cranial</strong> (RAO ~30°, CRA ~30°) lifts the mid-LAD off the spine and separates it from the diagonals — the workhorse view for mid-LAD lesions and proximal diagonal disease.</p>
+        <p>The <strong>RCA</strong> sits in the right AV groove and curves around the heart. The <strong>LAO ~45° straight</strong> view profiles the whole vessel from ostium to crux without foreshortening; the <strong>RAO</strong> view shows the AV groove portion in profile and is ideal for the acute marginal branches. The <strong>AP cranial</strong> view opens up the distal RCA bifurcation into PDA and PLV at the crux.</p>
+
+        <h3>Standard left-coronary view set</h3>
+        <ul>
+          <li><strong>AP cranial (0° / CRA 30°)</strong> — mid- and distal-LAD on the cardiac silhouette, diagonals splayed.</li>
+          <li><strong>AP caudal (0° / CAU 30°)</strong> — left main bifurcation, proximal LCx; less optimal than LAO caudal but useful as a confirmatory view.</li>
+          <li><strong>RAO cranial (RAO 30° / CRA 30°)</strong> — mid-LAD, septal vs diagonal separation, distal LAD.</li>
+          <li><strong>RAO caudal (RAO 20° / CAU 20°)</strong> — proximal LAD, proximal LCx, ramus intermedius, obtuse marginals.</li>
+          <li><strong>LAO cranial (LAO 45° / CRA 25°)</strong> — mid-LAD without diagonal overlap.</li>
+          <li><strong>LAO caudal "Spider" (LAO 45° / CAU 30°)</strong> — LM bifurcation, ostia of LAD and LCx, proximal LCx, ramus.</li>
+          <li><strong>Lateral (LAO 90°)</strong> — LM, ostial LAD, proximal-mid LAD profile.</li>
+        </ul>
+
+        <h3>Standard right-coronary view set</h3>
+        <ul>
+          <li><strong>LAO straight (LAO 45°)</strong> — whole RCA from ostium to crux, ideal for PDA origin.</li>
+          <li><strong>LAO cranial (LAO 30° / CRA 25°)</strong> — distal RCA bifurcation, PDA and PLV separated.</li>
+          <li><strong>RAO straight (RAO 30°)</strong> — RCA mid-segment, acute marginal branches in profile.</li>
+          <li><strong>AP cranial (0° / CRA 30°)</strong> — distal RCA bifurcation at the crux when the LAO cranial is suboptimal.</li>
+          <li><strong>Lateral (LAO 90°)</strong> — RCA ostium and proximal RCA, useful in anomalous origins.</li>
+        </ul>
+
+        <h3>How to use this simulator</h3>
+        <p>Drag the LAO/RAO and cranial/caudal sliders to rotate the heart continuously, or click any preset for a canonical view. The view label at the top of the image and the clinical note at the bottom describe what's best seen at that angle and which segments are foreshortened. Toggle Left / Right coronary to switch the visible vessel set; toggle "Show both" to overlay them. The C-arm orientation icon in the corner of the viewer shows the detector position from the foot of the bed for spatial reference.</p>
+        <p>This tool is built for cardiology fellows starting on the cath lab service, interventional fellows refining their view selection, and medical students learning coronary anatomy. It is not a substitute for hands-on cath lab experience; the schematic is intentionally cleaner than a real angiogram so the underlying anatomy is visible without contrast noise.</p>
+
+        <h3>References</h3>
+        <p>The view-set conventions follow <strong>Kern MJ, Bonnet ME, eds. Cardiac Catheterization Handbook (6th ed., Elsevier 2015)</strong>, and Behan MWH, Holm NR et al. "Optimal angiographic views for invasive coronary angiography: a guide for trainees." <em>Br J Cardiol</em> 2016;23(3):103–8. The labelled angiographic frames used as visual references during construction are sourced from a teaching dataset; the SVG schematic is an original interpretation, not a tracing of patient data.</p>
+
+        <h3>Related tools</h3>
+        <div class="related-tools">
+          <a href="/rhc/">RHC Calculator</a>
+          <a href="/pvloop/">PV Loop Simulator</a>
+          <a href="/ekg/">EKG Simulator</a>
+          <a href="/hemodynamics/">Hemodynamic Waveforms</a>
+          <a href="/echocalc/">Echo Calc</a>
+          <a href="/embryology/">Cardiac Embryology</a>
+          <a href="/ap/">Action Potential</a>
+        </div>
+      </div>
+    </details>
+  </div>
+</section>
+
+<script>
+'use strict';
+
+// ═══════════════════════════════════════════════════════════
+// 3D CORONARY ANATOMY MODEL
+// ═══════════════════════════════════════════════════════════
+// Heart-relative coordinates:
+//   +x = patient's LEFT  (in image space, +x goes to viewer's right in AP)
+//   -x = patient's RIGHT
+//   +y = CRANIAL (up)
+//   -y = CAUDAL (down)
+//   +z = ANTERIOR (out of chest, toward viewer in AP)
+//   -z = POSTERIOR
+//
+// Units are arbitrary — scale is set during projection. Numbers are tuned to
+// approximate real coronary anatomy as seen on standard angio views.
+
+// Vessel paths are arrays of 3D points. Smooth cubic-bezier curves are drawn
+// THROUGH each point — the projection happens per-point, then the curve
+// fits the projected 2D points.
+
+const COR = {
+  // ─── LEFT CORONARY SYSTEM ─────────────────────────────────
+  LM: {
+    label: 'Left Main',
+    side: 'left',
+    width: 'major',
+    points: [
+      { x: -0.10, y: 0.85, z: 0.55 },   // ostium (left coronary cusp)
+      { x: -0.35, y: 0.75, z: 0.55 },   // mid LM
+      { x: -0.55, y: 0.65, z: 0.50 },   // bifurcation
+    ],
+  },
+  LAD_prox: {
+    label: 'Proximal LAD',
+    side: 'left',
+    width: 'major',
+    points: [
+      { x: -0.55, y: 0.65, z: 0.50 },   // origin (bifurcation)
+      { x: -0.65, y: 0.55, z: 0.65 },
+      { x: -0.75, y: 0.35, z: 0.75 },   // before D1
+    ],
+  },
+  LAD_mid: {
+    label: 'Mid LAD',
+    side: 'left',
+    width: 'major',
+    points: [
+      { x: -0.75, y: 0.35, z: 0.75 },
+      { x: -0.85, y: 0.10, z: 0.80 },
+      { x: -0.95, y: -0.20, z: 0.78 },  // before D2
+    ],
+  },
+  LAD_dist: {
+    label: 'Distal LAD',
+    side: 'left',
+    width: 'mid',
+    points: [
+      { x: -0.95, y: -0.20, z: 0.78 },
+      { x: -1.00, y: -0.55, z: 0.65 },
+      { x: -0.95, y: -0.85, z: 0.40 },  // toward apex
+      { x: -0.80, y: -1.00, z: 0.15 },  // apex wrap
+    ],
+  },
+  D1: {
+    label: 'First diagonal (D1)',
+    side: 'left',
+    width: 'mid',
+    points: [
+      { x: -0.75, y: 0.35, z: 0.75 },
+      { x: -1.00, y: 0.20, z: 0.55 },
+      { x: -1.30, y: 0.00, z: 0.30 },
+    ],
+  },
+  D2: {
+    label: 'Second diagonal (D2)',
+    side: 'left',
+    width: 'mid',
+    points: [
+      { x: -0.95, y: -0.20, z: 0.78 },
+      { x: -1.20, y: -0.30, z: 0.50 },
+      { x: -1.45, y: -0.45, z: 0.20 },
+    ],
+  },
+  Septal: {
+    label: 'Septal perforators',
+    side: 'left',
+    width: 'small',
+    points: [
+      { x: -0.78, y: 0.30, z: 0.70 },
+      { x: -0.75, y: 0.15, z: 0.40 },   // septum: medial + posterior to LAD
+      { x: -0.65, y: -0.10, z: 0.10 },
+    ],
+  },
+  Septal2: {
+    label: '',  // unlabeled secondary septal
+    side: 'left',
+    width: 'small',
+    points: [
+      { x: -0.88, y: 0.05, z: 0.78 },
+      { x: -0.78, y: -0.05, z: 0.45 },
+      { x: -0.65, y: -0.20, z: 0.15 },
+    ],
+  },
+  LCx_prox: {
+    label: 'Proximal LCx',
+    side: 'left',
+    width: 'major',
+    points: [
+      { x: -0.55, y: 0.65, z: 0.50 },   // origin (LM bifurcation)
+      { x: -0.70, y: 0.55, z: 0.25 },
+      { x: -0.85, y: 0.40, z: -0.05 },
+    ],
+  },
+  LCx_mid: {
+    label: 'Mid LCx',
+    side: 'left',
+    width: 'mid',
+    points: [
+      { x: -0.85, y: 0.40, z: -0.05 },
+      { x: -1.00, y: 0.15, z: -0.30 },
+      { x: -1.10, y: -0.10, z: -0.55 },
+    ],
+  },
+  LCx_dist: {
+    label: 'Distal LCx',
+    side: 'left',
+    width: 'small',
+    points: [
+      { x: -1.10, y: -0.10, z: -0.55 },
+      { x: -1.05, y: -0.40, z: -0.70 },
+      { x: -0.85, y: -0.65, z: -0.75 },
+    ],
+  },
+  OM1: {
+    label: 'OM1',
+    side: 'left',
+    width: 'mid',
+    points: [
+      { x: -0.85, y: 0.40, z: -0.05 },
+      { x: -1.15, y: 0.10, z: 0.05 },
+      { x: -1.40, y: -0.20, z: 0.10 },
+    ],
+  },
+  OM2: {
+    label: 'OM2',
+    side: 'left',
+    width: 'small',
+    points: [
+      { x: -1.00, y: 0.15, z: -0.30 },
+      { x: -1.30, y: -0.10, z: -0.25 },
+      { x: -1.55, y: -0.40, z: -0.20 },
+    ],
+  },
+
+  // ─── RIGHT CORONARY SYSTEM ────────────────────────────────
+  RCA_prox: {
+    label: 'Proximal RCA',
+    side: 'right',
+    width: 'major',
+    points: [
+      { x:  0.10, y: 0.85, z: 0.55 },   // ostium (right coronary cusp)
+      { x:  0.40, y: 0.70, z: 0.50 },
+      { x:  0.70, y: 0.40, z: 0.30 },
+    ],
+  },
+  RCA_mid: {
+    label: 'Mid RCA',
+    side: 'right',
+    width: 'major',
+    points: [
+      { x: 0.70, y: 0.40, z: 0.30 },
+      { x: 0.85, y: 0.10, z: 0.00 },   // turning the corner of the AV groove
+      { x: 0.90, y: -0.20, z: -0.30 },
+    ],
+  },
+  RCA_dist: {
+    label: 'Distal RCA',
+    side: 'right',
+    width: 'major',
+    points: [
+      { x: 0.90, y: -0.20, z: -0.30 },
+      { x: 0.75, y: -0.45, z: -0.55 },
+      { x: 0.50, y: -0.60, z: -0.70 },  // crux of the heart
+    ],
+  },
+  PDA: {
+    label: 'PDA',
+    side: 'right',
+    width: 'mid',
+    points: [
+      { x: 0.50, y: -0.60, z: -0.70 },
+      { x: 0.30, y: -0.80, z: -0.55 },  // moves anteriorly toward inferior septum/apex
+      { x: 0.05, y: -0.95, z: -0.35 },
+    ],
+  },
+  PLV: {
+    label: 'PLV',
+    side: 'right',
+    width: 'mid',
+    points: [
+      { x: 0.50, y: -0.60, z: -0.70 },
+      { x: 0.30, y: -0.65, z: -0.85 },
+      { x: 0.00, y: -0.75, z: -0.90 },
+    ],
+  },
+  AM: {
+    label: 'Acute marginal',
+    side: 'right',
+    width: 'mid',
+    points: [
+      { x: 0.85, y: 0.10, z: 0.00 },
+      { x: 1.10, y: -0.10, z: 0.10 },
+      { x: 1.35, y: -0.30, z: 0.20 },
+    ],
+  },
+  SAN: {
+    label: 'SA nodal branch',
+    side: 'right',
+    width: 'small',
+    points: [
+      { x: 0.30, y: 0.75, z: 0.45 },
+      { x: 0.40, y: 0.95, z: 0.20 },
+      { x: 0.45, y: 1.05, z: -0.05 },
+    ],
+  },
+  Conus: {
+    label: 'Conus',
+    side: 'right',
+    width: 'small',
+    points: [
+      { x: 0.25, y: 0.80, z: 0.55 },
+      { x: 0.10, y: 0.85, z: 0.75 },
+      { x: -0.10, y: 0.80, z: 0.85 },
+    ],
+  },
+};
+
+// Heart silhouette: simplified LV+RV outline in 3D (approximates the cardiac
+// shadow on fluoroscopy). Points form a closed loop. The silhouette transforms
+// with the same projection.
+const HEART_OUTLINE = [
+  // Apex going clockwise (looking from anterior):
+  { x: -0.95, y: -1.10, z: 0.00 },   // apex tip
+  { x: -1.35, y: -0.85, z: 0.20 },   // left lateral wall low
+  { x: -1.55, y: -0.40, z: 0.10 },   // left lateral mid
+  { x: -1.55, y: 0.10,  z: -0.10 },  // left base
+  { x: -1.40, y: 0.55,  z: -0.20 },
+  { x: -1.00, y: 0.85,  z: -0.20 },  // LAA region
+  { x: -0.45, y: 1.00,  z: -0.10 },  // AV ring top
+  { x:  0.20, y: 1.05,  z:  0.00 },  // RA roof
+  { x:  0.90, y: 0.90,  z:  0.10 },  // RA lateral
+  { x:  1.30, y: 0.55,  z:  0.20 },  // RA / RV
+  { x:  1.50, y: 0.10,  z:  0.30 },  // RV lateral
+  { x:  1.45, y: -0.30, z:  0.20 },  // RV inferior
+  { x:  1.10, y: -0.65, z:  0.10 },
+  { x:  0.50, y: -0.95, z: -0.10 },  // diaphragmatic surface
+  { x: -0.30, y: -1.10, z: -0.20 },
+];
+
+// ═══════════════════════════════════════════════════════════
+// PROJECTION MATH
+// ═══════════════════════════════════════════════════════════
+// Apply LAO/RAO (rotation around Y-axis) then cranial/caudal (rotation around
+// X-axis), then orthographic-project onto the image plane.
+//
+// FLUORO CONVENTION:
+//   +LAO = detector to patient's LEFT (image flipped horizontally relative to
+//          the patient as we look at them from the front)
+//   +RAO = detector to patient's RIGHT
+//   +CRA = detector tilted toward head
+//   +CAU = detector tilted toward feet
+//
+// The slider value `lao` is positive for LAO, negative for RAO.
+// The slider value `cra` is positive for cranial, negative for caudal.
+function project3D(p, laoDeg, craDeg) {
+  const laoRad = laoDeg * Math.PI / 180;
+  const craRad = craDeg * Math.PI / 180;
+
+  // Rotation around Y-axis. +LAO rotates the heart so we see its right side
+  // foreshortened and its left side enlarged. Image-space convention: a point
+  // at heart +x (patient left) is on the LEFT of an AP image (because the
+  // image intensifier sees a mirror — but radiology convention flips this so
+  // patient-left appears on viewer-right). We will adopt the standard
+  // convention: in AP view, patient's RIGHT is on the viewer's LEFT.
+  // So we negate x in the projection step.
+  const cosL = Math.cos(laoRad), sinL = Math.sin(laoRad);
+  const cosC = Math.cos(craRad), sinC = Math.sin(craRad);
+
+  // Y-axis rotation
+  let x1 =  p.x * cosL + p.z * sinL;
+  let y1 =  p.y;
+  let z1 = -p.x * sinL + p.z * cosL;
+
+  // X-axis rotation (cranial/caudal)
+  let x2 = x1;
+  let y2 = y1 * cosC - z1 * sinC;
+  let z2 = y1 * sinC + z1 * cosC;
+
+  // Orthographic projection — image plane is xy.
+  // To match radiology convention (patient's right on viewer's left for AP),
+  // negate the x component.
+  return {
+    sx: -x2,
+    sy: -y2,  // canvas y is inverted (down = +y), but we want cranial = up,
+              // so we negate again. Caller will scale this.
+    depth: z2,  // for depth-cueing
+  };
+}
+
+// Convert a 3D vessel path into an SVG path string, sized to the SVG viewBox.
+function vesselPath(points3d, laoDeg, craDeg, cx, cy, scale) {
+  const projected = points3d.map(p => project3D(p, laoDeg, craDeg));
+  const pts = projected.map(pp => ({
+    x: cx + pp.sx * scale,
+    y: cy + pp.sy * scale,
+    depth: pp.depth,
+  }));
+
+  // Smooth cubic-bezier curve through the points (Catmull-Rom-style).
+  if (pts.length < 2) return { d: '', pts };
+  if (pts.length === 2) {
+    return { d: `M ${pts[0].x} ${pts[0].y} L ${pts[1].x} ${pts[1].y}`, pts };
+  }
+  let d = `M ${pts[0].x} ${pts[0].y}`;
+  for (let i = 0; i < pts.length - 1; i++) {
+    const p0 = pts[i - 1] || pts[i];
+    const p1 = pts[i];
+    const p2 = pts[i + 1];
+    const p3 = pts[i + 2] || p2;
+    const t = 0.25;
+    const c1x = p1.x + (p2.x - p0.x) * t;
+    const c1y = p1.y + (p2.y - p0.y) * t;
+    const c2x = p2.x - (p3.x - p1.x) * t;
+    const c2y = p2.y - (p3.y - p1.y) * t;
+    d += ` C ${c1x} ${c1y}, ${c2x} ${c2y}, ${p2.x} ${p2.y}`;
+  }
+  return { d, pts };
+}
+
+// Heart silhouette as a closed SVG path.
+function heartPath(laoDeg, craDeg, cx, cy, scale) {
+  const proj = HEART_OUTLINE.map(p => project3D(p, laoDeg, craDeg));
+  const pts = proj.map(pp => ({ x: cx + pp.sx * scale, y: cy + pp.sy * scale }));
+  // Close the loop with smooth curves.
+  let d = `M ${pts[0].x} ${pts[0].y}`;
+  const n = pts.length;
+  for (let i = 0; i < n; i++) {
+    const p0 = pts[(i - 1 + n) % n];
+    const p1 = pts[i];
+    const p2 = pts[(i + 1) % n];
+    const p3 = pts[(i + 2) % n];
+    const t = 0.20;
+    const c1x = p1.x + (p2.x - p0.x) * t;
+    const c1y = p1.y + (p2.y - p0.y) * t;
+    const c2x = p2.x - (p3.x - p1.x) * t;
+    const c2y = p2.y - (p3.y - p1.y) * t;
+    d += ` C ${c1x} ${c1y}, ${c2x} ${c2y}, ${p2.x} ${p2.y}`;
+  }
+  d += ' Z';
+  return d;
+}
+
+// ═══════════════════════════════════════════════════════════
+// PRESET VIEWS
+// ═══════════════════════════════════════════════════════════
+const PRESETS = {
+  // Left coronary
+  'ap-left':  { side: 'left',  lao:   0, cra:   0, name: 'AP', desc: 'Initial orientation. Most LCA segments overlap — use angulated views.' },
+  'ap-cra':   { side: 'left',  lao:   0, cra:  30, name: 'AP CRANIAL', desc: '<strong>AP cranial (0° / CRA 30°):</strong> Best for the mid- and distal-LAD on the cardiac silhouette and for separating diagonal branches.' },
+  'ap-cau':   { side: 'left',  lao:   0, cra: -30, name: 'AP CAUDAL', desc: '<strong>AP caudal (0° / CAU 30°):</strong> Useful for the LM bifurcation and proximal LCx. The "Spider" (LAO caudal) view is usually preferred.' },
+  'rao-cra':  { side: 'left',  lao: -30, cra:  30, name: 'RAO CRANIAL', desc: '<strong>RAO cranial (RAO 30° / CRA 30°):</strong> Workhorse view for the mid-LAD. Separates diagonal branches from septals, profiles the distal LAD.' },
+  'rao-cau':  { side: 'left',  lao: -20, cra: -20, name: 'RAO CAUDAL', desc: '<strong>RAO caudal (RAO 20° / CAU 20°):</strong> Proximal LAD, proximal LCx, ramus intermedius, obtuse marginals. Wide overview of the left system.' },
+  'lao-cra':  { side: 'left',  lao:  45, cra:  25, name: 'LAO CRANIAL', desc: '<strong>LAO cranial (LAO 45° / CRA 25°):</strong> Mid-LAD without diagonal overlap. Best for the LAD-D1 bifurcation.' },
+  'lao-cau':  { side: 'left',  lao:  45, cra: -30, name: 'LAO CAUDAL ("SPIDER")', desc: '<strong>LAO caudal "Spider" (LAO 45° / CAU 30°):</strong> The most important LCA view — LM bifurcation, ostia of LAD and LCx, proximal LCx, ramus intermedius.' },
+  'lateral':  { side: 'left',  lao:  90, cra:   0, name: 'LATERAL', desc: '<strong>Lateral (LAO 90°):</strong> Profiles the LM, ostial LAD, and proximal-to-mid LAD. Useful when other LAD views are foreshortened.' },
+  // Right coronary
+  'rca-lao':       { side: 'right', lao:  45, cra:   0, name: 'RCA LAO STRAIGHT', desc: '<strong>LAO straight (LAO 45°):</strong> Profiles the whole RCA from ostium to crux without foreshortening. The standard first view for the right coronary.' },
+  'rca-lao-cra':   { side: 'right', lao:  30, cra:  25, name: 'RCA LAO CRANIAL', desc: '<strong>LAO cranial (LAO 30° / CRA 25°):</strong> Best for the distal RCA bifurcation — separates the PDA and PLV branches at the crux.' },
+  'rca-rao':       { side: 'right', lao: -30, cra:   0, name: 'RCA RAO', desc: '<strong>RAO (RAO 30°):</strong> Profiles the RCA mid-segment in the AV groove. Best view for acute marginal branches.' },
+  'rca-ap-cra':    { side: 'right', lao:   0, cra:  30, name: 'RCA AP CRANIAL', desc: '<strong>AP cranial (0° / CRA 30°):</strong> Alternative view of the distal RCA bifurcation when the LAO cranial view is suboptimal.' },
+  'rca-lat':       { side: 'right', lao:  90, cra:   0, name: 'RCA LATERAL', desc: '<strong>Lateral (LAO 90°):</strong> Profiles the RCA ostium and proximal segment. Useful when ostial disease or an anomalous origin is suspected.' },
+};
+
+// ═══════════════════════════════════════════════════════════
+// STATE
+// ═══════════════════════════════════════════════════════════
+let activeSide = 'left';   // 'left' | 'right'
+let liveLao = 0;
+let liveCra = 0;
+let targetLao = 0;
+let targetCra = 0;
+let activePreset = 'ap-left';
+let animating = false;
+let animStart = 0;
+const ANIM_MS = 500;
+
+function easeOutCubic(t) { return 1 - Math.pow(1 - t, 3); }
+
+// ═══════════════════════════════════════════════════════════
+// RENDERING
+// ═══════════════════════════════════════════════════════════
+const svg = document.getElementById('angioSvg');
+const SVG_W = 800, SVG_H = 600;
+const CX = 400, CY = 300;
+const SCALE = 180;  // pixels per heart-coord unit
+
+const WIDTH_MAP = {
+  major: 4.0,
+  mid: 2.8,
+  small: 2.0,
+  tiny: 1.4,
+};
+
+function strokeColor(side) {
+  // LCA = warm red-orange, RCA = cool blue. Slight transparency for layering.
+  return side === 'left' ? 'rgba(220, 60, 50, 0.92)' : 'rgba(80, 140, 220, 0.92)';
+}
+
+// Decide which vessels to draw based on side selector and "show both" toggle.
+function vesselsForCurrentState() {
+  const showBoth = document.getElementById('ovBoth').checked;
+  if (showBoth) return Object.values(COR);
+  return Object.values(COR).filter(v => v.side === activeSide);
+}
+
+// Pick which vessels get a label — only the main named ones for clarity,
+// and only when labels are enabled and the vessel is not entirely behind the
+// heart (depth check on the midpoint).
+const LABELED_VESSELS = new Set([
+  'LM', 'LAD_prox', 'LAD_mid', 'LAD_dist', 'D1', 'D2', 'Septal',
+  'LCx_prox', 'LCx_mid', 'OM1',
+  'RCA_prox', 'RCA_mid', 'RCA_dist', 'PDA', 'PLV', 'AM',
+]);
+
+function render() {
+  const showSilhouette = document.getElementById('ovSilhouette').checked;
+  const showLabels = document.getElementById('ovLabels').checked;
+
+  // Build SVG content as an array of element strings — faster than DOM
+  // manipulation per-frame.
+  const parts = [];
+
+  // Background (transparent — let CSS handle it)
+  parts.push(`<rect x="0" y="0" width="${SVG_W}" height="${SVG_H}" fill="transparent"/>`);
+
+  // Heart silhouette (drawn first, behind vessels)
+  if (showSilhouette) {
+    const hd = heartPath(liveLao, liveCra, CX, CY, SCALE);
+    parts.push(`<path d="${hd}" class="heart-silhouette"/>`);
+  }
+
+  // Vessels — compute paths and z-sort so posterior vessels render first.
+  const vessels = vesselsForCurrentState();
+  const projected = [];
+  for (const [key, v] of Object.entries(COR)) {
+    if (!vessels.includes(v)) continue;
+    const path = vesselPath(v.points, liveLao, liveCra, CX, CY, SCALE);
+    // Midpoint depth for z-sorting
+    const mid = v.points[Math.floor(v.points.length / 2)];
+    const projMid = project3D(mid, liveLao, liveCra);
+    projected.push({ key, v, path, depth: projMid.depth });
+  }
+  // Sort: smaller (more negative) depth first → drawn first → behind.
+  projected.sort((a, b) => a.depth - b.depth);
+
+  for (const item of projected) {
+    const w = WIDTH_MAP[item.v.width] || WIDTH_MAP.mid;
+    const col = strokeColor(item.v.side);
+    // Depth-cue: posterior vessels slightly more transparent, anterior slightly bolder
+    const alpha = 0.55 + 0.45 * Math.min(1, Math.max(0, (item.depth + 1) / 2));
+    parts.push(`<path d="${item.path.d}" fill="none" stroke="${col}" stroke-opacity="${alpha.toFixed(2)}" stroke-width="${w}" stroke-linecap="round" stroke-linejoin="round"/>`);
+  }
+
+  // Labels with leader lines pointing from a margin strip into the vessel midpoint.
+  if (showLabels) {
+    // Build label list: take each labeled vessel currently in view,
+    // pick its midpoint as the leader-line target.
+    const labels = [];
+    for (const item of projected) {
+      if (!item.v.label || !LABELED_VESSELS.has(item.key)) continue;
+      const midIdx = Math.floor(item.path.pts.length / 2);
+      const target = item.path.pts[midIdx];
+      labels.push({
+        key: item.key,
+        text: item.v.label,
+        side: item.v.side,
+        targetX: target.x,
+        targetY: target.y,
+      });
+    }
+    // Place labels in two side strips — left strip for vessels on viewer's
+    // left half (sx < CX), right strip for the right half.
+    const leftLabels = labels.filter(L => L.targetX < CX);
+    const rightLabels = labels.filter(L => L.targetX >= CX);
+
+    placeLabels(leftLabels, 'left', parts);
+    placeLabels(rightLabels, 'right', parts);
+  }
+
+  svg.innerHTML = parts.join('');
+
+  // Update C-arm icon
+  renderCarmIcon();
+}
+
+// Distribute labels vertically along a side strip with no overlap.
+// `which`: 'left' (strip at x=0..LABEL_W) or 'right' (strip at x=SVG_W-LABEL_W..SVG_W).
+function placeLabels(labels, which, parts) {
+  if (labels.length === 0) return;
+  const LABEL_W = 130;
+  const PAD_Y = 30;
+  const usableH = SVG_H - 2 * PAD_Y;
+  const lineH = Math.min(34, usableH / Math.max(1, labels.length));
+  // Sort labels by their target y so leader lines don't cross awkwardly
+  labels.sort((a, b) => a.targetY - b.targetY);
+  const labelX = which === 'left' ? 6 : SVG_W - 6;
+  const lineStartX = which === 'left' ? LABEL_W - 4 : SVG_W - LABEL_W + 4;
+  for (let i = 0; i < labels.length; i++) {
+    const L = labels[i];
+    const ly = PAD_Y + (i + 0.5) * lineH;
+    const anchor = which === 'left' ? 'start' : 'end';
+    // Leader line: from (labelEndX, ly) curving to (target.x, target.y)
+    const sx = lineStartX;
+    const sy = ly;
+    const ex = L.targetX;
+    const ey = L.targetY;
+    // Smooth curve via cubic — control points 1/3 and 2/3 along
+    const c1x = (sx + ex) / 2;
+    const c1y = sy;
+    const c2x = (sx + ex) / 2;
+    const c2y = ey;
+    parts.push(`<path d="M ${sx} ${sy} C ${c1x} ${c1y}, ${c2x} ${c2y}, ${ex} ${ey}" class="label-line"/>`);
+    parts.push(`<circle cx="${ex}" cy="${ey}" r="2.5" class="label-dot"/>`);
+    parts.push(`<text x="${labelX}" y="${ly + 4}" text-anchor="${anchor}" class="label-text">${L.text}</text>`);
+  }
+}
+
+// ═══════════════════════════════════════════════════════════
+// C-ARM ORIENTATION ICON
+// ═══════════════════════════════════════════════════════════
+// Schematic of the patient (chest up) with a curved C-arm rotating around them.
+// LAO/RAO rotates the C-arm in the patient's transverse plane.
+// Cranial/caudal tilts it along the long axis.
+function renderCarmIcon() {
+  const icon = document.getElementById('carmIcon');
+  const cx = 50, cy = 52;
+  // Patient body: oval (transverse cross-section). Cranial = up.
+  const bodyEllipse = `<ellipse cx="${cx}" cy="${cy + 6}" rx="14" ry="9" fill="rgba(200, 200, 210, 0.18)" stroke="rgba(220,220,220,0.55)" stroke-width="0.8"/>`;
+  // Spine dot
+  const spineDot = `<circle cx="${cx}" cy="${cy + 10}" r="1.8" fill="rgba(220,220,220,0.7)"/>`;
+  // Sternum tick (anterior)
+  const sternumTick = `<line x1="${cx}" y1="${cy - 3}" x2="${cx}" y2="${cy - 1}" stroke="rgba(220,220,220,0.6)" stroke-width="1"/>`;
+
+  // C-arm position: rotated by liveLao around the patient's craniocaudal axis.
+  // LAO 0 (AP) = detector directly above patient (sternal side). Angle convention:
+  // positive LAO swings the detector to the patient's LEFT (which on this schematic
+  // — patient facing toward viewer — is to the viewer's RIGHT).
+  const r = 28;
+  const ang = (liveLao - 90) * Math.PI / 180;  // -90 puts detector at top in AP
+  const detX = cx + r * Math.cos(ang);
+  const detY = cy + r * Math.sin(ang);
+  const srcX = cx - r * Math.cos(ang);
+  const srcY = cy - r * Math.sin(ang);
+  // Detector arc (larger square-ish shape on detector side)
+  const detW = 8, detH = 5;
+  // Source (X-ray tube) — small square
+  const srcW = 5, srcH = 4;
+  // Arm — the curve connecting them
+  const armPath = `M ${detX} ${detY} A ${r + 4} ${r + 4} 0 0 0 ${srcX} ${srcY}`;
+  // Detector rectangle (rotated to face the patient center)
+  const detAng = Math.atan2(cy - detY, cx - detX) * 180 / Math.PI;
+  const srcAng = Math.atan2(cy - srcY, cx - srcX) * 180 / Math.PI;
+
+  // Cranial/caudal indicator: a small triangle on the side of the icon
+  // Up arrow = cranial, down arrow = caudal
+  let craBadge = '';
+  if (Math.abs(liveCra) > 2) {
+    const cranial = liveCra > 0;
+    const bx = 88, by = cranial ? 12 : 88;
+    const dir = cranial ? -1 : 1;
+    craBadge = `
+      <path d="M ${bx} ${by} L ${bx - 5} ${by + 6 * dir} L ${bx + 5} ${by + 6 * dir} Z" fill="${cranial ? 'rgba(20,184,166,0.85)' : 'rgba(245,158,11,0.85)'}"/>
+      <text x="${bx}" y="${cranial ? by - 2 : by + 12}" text-anchor="middle" font-size="7" font-weight="700" fill="${cranial ? 'rgb(20,184,166)' : 'rgb(245,158,11)'}">${Math.round(Math.abs(liveCra))}°</text>
+    `;
+  }
+
+  icon.innerHTML = `
+    ${bodyEllipse}
+    ${spineDot}
+    ${sternumTick}
+    <path d="${armPath}" fill="none" stroke="rgba(220, 220, 230, 0.5)" stroke-width="1.6"/>
+    <g transform="translate(${detX} ${detY}) rotate(${detAng - 90})">
+      <rect x="${-detW/2}" y="${-detH}" width="${detW}" height="${detH}" rx="1" fill="rgba(120,170,220,0.85)" stroke="rgba(180,220,255,0.6)" stroke-width="0.6"/>
+    </g>
+    <g transform="translate(${srcX} ${srcY}) rotate(${srcAng + 90})">
+      <rect x="${-srcW/2}" y="${-srcH/2}" width="${srcW}" height="${srcH}" rx="0.6" fill="rgba(180,180,180,0.7)" stroke="rgba(220,220,220,0.5)" stroke-width="0.5"/>
+    </g>
+    <text x="${cx}" y="${cy + 22}" text-anchor="middle" font-size="6" font-weight="600" fill="rgba(220,220,230,0.55)">view from foot</text>
+    ${craBadge}
+  `;
+}
+
+// ═══════════════════════════════════════════════════════════
+// VIEW LABELS
+// ═══════════════════════════════════════════════════════════
+function deriveViewName(lao, cra) {
+  const laoAbs = Math.abs(lao);
+  const craAbs = Math.abs(cra);
+  let lr;
+  if (laoAbs < 5) lr = 'AP';
+  else if (laoAbs > 85) lr = 'LATERAL';
+  else if (lao > 0) lr = `LAO ${Math.round(laoAbs)}°`;
+  else lr = `RAO ${Math.round(laoAbs)}°`;
+  let cc;
+  if (craAbs < 3) cc = '';
+  else if (cra > 0) cc = ` / CRA ${Math.round(craAbs)}°`;
+  else cc = ` / CAU ${Math.round(craAbs)}°`;
+  // Special names
+  if (lao >= 35 && lao <= 55 && cra <= -20 && cra >= -40) return 'LAO CAUDAL "SPIDER"';
+  return lr + cc;
+}
+
+function updateViewLabel() {
+  const label = document.getElementById('viewLabel');
+  label.textContent = deriveViewName(liveLao, liveCra);
+}
+
+function updateSliderReadouts() {
+  const lao = parseInt(document.getElementById('slLao').value);
+  const cra = parseInt(document.getElementById('slCra').value);
+  document.getElementById('slLaoVal').textContent =
+    Math.abs(lao) < 3 ? 'AP' :
+    lao > 0 ? `LAO ${lao}°` : `RAO ${-lao}°`;
+  document.getElementById('slCraVal').textContent =
+    Math.abs(cra) < 2 ? '0°' :
+    cra > 0 ? `CRA ${cra}°` : `CAU ${-cra}°`;
+}
+
+function updateClinNote(preset) {
+  const note = document.getElementById('clinNote');
+  if (preset && PRESETS[preset]) {
+    note.innerHTML = PRESETS[preset].desc;
+  } else {
+    note.innerHTML = '<strong>' + deriveViewName(liveLao, liveCra) + ':</strong> Custom view — drag the sliders to a preset or pick a button on the left for the standard view sets.';
+  }
+}
+
+// ═══════════════════════════════════════════════════════════
+// ANIMATION LOOP
+// ═══════════════════════════════════════════════════════════
+function startAnim(toLao, toCra) {
+  targetLao = toLao;
+  targetCra = toCra;
+  animStart = performance.now();
+  animating = true;
+}
+
+function tick(now) {
+  if (animating) {
+    const u = Math.min(1, (now - animStart) / ANIM_MS);
+    const e = easeOutCubic(u);
+    // Lerp from current live to target
+    if (!tick._from) {
+      tick._from = { lao: liveLao, cra: liveCra };
+    }
+    liveLao = tick._from.lao + (targetLao - tick._from.lao) * e;
+    liveCra = tick._from.cra + (targetCra - tick._from.cra) * e;
+    if (u >= 1) {
+      animating = false;
+      tick._from = null;
+    }
+    render();
+    updateViewLabel();
+  }
+  requestAnimationFrame(tick);
+}
+
+// ═══════════════════════════════════════════════════════════
+// INTERACTION
+// ═══════════════════════════════════════════════════════════
+function applyPreset(id) {
+  const p = PRESETS[id];
+  if (!p) return;
+  activePreset = id;
+  // Update side toggle if needed
+  if (p.side !== activeSide) {
+    setSide(p.side);
+  }
+  // Snap sliders to preset values
+  document.getElementById('slLao').value = p.lao;
+  document.getElementById('slCra').value = p.cra;
+  updateSliderReadouts();
+  // Animated transition
+  tick._from = { lao: liveLao, cra: liveCra };
+  startAnim(p.lao, p.cra);
+  // Update preset button active state
+  document.querySelectorAll('.preset-btn').forEach(b => {
+    b.classList.toggle('active', b.dataset.preset === id);
+  });
+  // Update clinical note
+  updateClinNote(id);
+}
+
+function setSide(side) {
+  activeSide = side;
+  document.querySelectorAll('#sideToggle .seg-btn').forEach(b => {
+    b.classList.toggle('active', b.dataset.side === side);
+  });
+  document.getElementById('presetGridLeft').style.display = side === 'left' ? 'grid' : 'none';
+  document.getElementById('presetGridRight').style.display = side === 'right' ? 'grid' : 'none';
+  render();
+}
+
+function resetAll() {
+  applyPreset(activeSide === 'left' ? 'ap-left' : 'rca-lao');
+}
+
+// Bind side toggle
+document.querySelectorAll('#sideToggle .seg-btn').forEach(btn => {
+  btn.onclick = () => setSide(btn.dataset.side);
+});
+
+// Bind presets
+document.querySelectorAll('.preset-btn').forEach(btn => {
+  btn.onclick = () => applyPreset(btn.dataset.preset);
+});
+
+// Bind sliders — direct manipulation cancels any animation
+document.getElementById('slLao').addEventListener('input', () => {
+  animating = false;
+  tick._from = null;
+  liveLao = parseFloat(document.getElementById('slLao').value);
+  updateSliderReadouts();
+  render();
+  updateViewLabel();
+  // Manual slider use deactivates preset highlight
+  document.querySelectorAll('.preset-btn').forEach(b => b.classList.remove('active'));
+  updateClinNote(null);
+  activePreset = null;
+});
+document.getElementById('slCra').addEventListener('input', () => {
+  animating = false;
+  tick._from = null;
+  liveCra = parseFloat(document.getElementById('slCra').value);
+  updateSliderReadouts();
+  render();
+  updateViewLabel();
+  document.querySelectorAll('.preset-btn').forEach(b => b.classList.remove('active'));
+  updateClinNote(null);
+  activePreset = null;
+});
+
+// Display option checkboxes
+['ovLabels', 'ovBoth', 'ovSilhouette'].forEach(id => {
+  document.getElementById(id).addEventListener('change', render);
+});
+
+// Dark mode
+function toggleDark() {
+  document.body.classList.toggle('dark');
+  const isDark = document.body.classList.contains('dark');
+  document.getElementById('darkToggle').textContent = isDark ? 'Light Mode' : 'Dark Mode';
+  try { localStorage.setItem('cathmath_dark', isDark ? '1' : '0'); } catch(e) {}
+  // Re-render so depth-cue colors update (they read from getComputedStyle indirectly)
+  render();
+}
+try {
+  const pref = localStorage.getItem('cathmath_dark');
+  if (pref === '0') {
+    document.body.classList.remove('dark');
+    document.getElementById('darkToggle').textContent = 'Dark Mode';
+  }
+} catch(e) {}
+
+// INIT
+applyPreset('ap-left');
+updateSliderReadouts();
+requestAnimationFrame(tick);
+</script>
+
+</body>
+</html>
