@@ -322,13 +322,13 @@ body.dark .preset-btn { background: var(--panel-bg-2); }
 }
 #angioSvg { display: block; width: 100%; height: 100%; }
 
-/* C-arm orientation icon (small, top-left of viz) */
+/* Orientation widget (top-left of viz): C-arm position + heart projection */
 .carm-icon {
   position: absolute;
   top: 10px;
   left: 10px;
-  width: 88px;
-  height: 88px;
+  width: 96px;
+  height: 160px;
   pointer-events: none;
   opacity: 0.92;
 }
@@ -568,9 +568,12 @@ body.dark .label-text.lead { fill: #e8ecf2; }
     <!-- Display options -->
     <div class="card">
       <div class="card-title">Display</div>
-      <label style="display:flex;align-items:center;gap:8px;font-size:12px;color:var(--text-dim);cursor:pointer;margin-bottom:6px;">
-        <input type="checkbox" id="ovLabels" checked> Anatomical labels
-      </label>
+      <div style="font-size:10.5px;font-weight:600;letter-spacing:0.05em;text-transform:uppercase;color:var(--text-dim);margin-bottom:6px;">Labels</div>
+      <div class="seg-toggle seg-3" id="labelModeToggle" style="margin-bottom:10px;">
+        <button class="seg-btn active" data-mode="detailed">Detailed</button>
+        <button class="seg-btn" data-mode="simplified">Simplified</button>
+        <button class="seg-btn" data-mode="off">Hidden</button>
+      </div>
       <label style="display:flex;align-items:center;gap:8px;font-size:12px;color:var(--text-dim);cursor:pointer;margin-bottom:6px;">
         <input type="checkbox" id="ovBoth"> Show both LCA + RCA
       </label>
@@ -584,7 +587,7 @@ body.dark .label-text.lead { fill: #e8ecf2; }
   <main class="right">
     <div class="viz-wrap">
       <svg id="angioSvg" viewBox="0 0 800 600" preserveAspectRatio="xMidYMid meet"></svg>
-      <svg class="carm-icon" id="carmIcon" viewBox="0 0 100 100"></svg>
+      <svg class="carm-icon" id="carmIcon" viewBox="0 0 100 165"></svg>
       <div class="view-label" id="viewLabel">AP — Anteroposterior</div>
       <button class="label-toggle" id="labelToggleBtn" title="Hide or show anatomical labels">
         <span class="icon">⎘</span><span id="labelToggleText">Hide labels</span>
@@ -1047,7 +1050,7 @@ const PRESETS = {
 // ═══════════════════════════════════════════════════════════
 // STATE
 // ═══════════════════════════════════════════════════════════
-let activeSide = 'left';   // 'left' | 'right'
+let activeSide = 'left';        // 'left' | 'right'
 let liveLao = 0;
 let liveCra = 0;
 let targetLao = 0;
@@ -1056,6 +1059,8 @@ let activePreset = 'ap-left';
 let animating = false;
 let animStart = 0;
 const ANIM_MS = 500;
+let labelMode = 'detailed';     // 'detailed' | 'simplified' | 'off'
+let prevNonOffMode = 'detailed'; // remember the last "on" mode for the on-viz toggle
 
 function easeOutCubic(t) { return 1 - Math.pow(1 - t, 3); }
 
@@ -1086,18 +1091,43 @@ function vesselsForCurrentState() {
   return Object.values(COR).filter(v => v.side === activeSide);
 }
 
-// Pick which vessels get a label — only the main named ones for clarity,
-// and only when labels are enabled and the vessel is not entirely behind the
-// heart (depth check on the midpoint).
-const LABELED_VESSELS = new Set([
-  'LM', 'LAD_prox', 'LAD_mid', 'LAD_dist', 'D1', 'D2', 'Septal',
-  'LCx_prox', 'LCx_mid', 'OM1',
-  'RCA_prox', 'RCA_mid', 'RCA_dist', 'PDA', 'PLV', 'AM',
-]);
+// Two label sets, switched by labelMode:
+//   - 'detailed' = full set of named segments (prox/mid/distal LAD, D1, D2, etc.)
+//   - 'simplified' = just the 5 core vessels (LM, LAD, LCx for the left;
+//     RCA + PDA for the right) — useful when teaching beginners or when the
+//     full label cloud is visually busy at extreme angles.
+const LABELS_DETAILED = {
+  'LM':        'Left Main',
+  'LAD_prox':  'Proximal LAD',
+  'LAD_mid':   'Mid LAD',
+  'LAD_dist':  'Distal LAD',
+  'D1':        'First diagonal (D1)',
+  'D2':        'Second diagonal (D2)',
+  'Septal':    'Septal perforators',
+  'LCx_prox':  'Proximal LCx',
+  'LCx_mid':   'Mid LCx',
+  'OM1':       'OM1',
+  'RCA_prox':  'Proximal RCA',
+  'RCA_mid':   'Mid RCA',
+  'RCA_dist':  'Distal RCA',
+  'PDA':       'PDA',
+  'PLV':       'PLV',
+  'AM':        'Acute marginal',
+};
+const LABELS_SIMPLIFIED = {
+  'LM':       'LM',
+  'LAD_mid':  'LAD',     // attached to mid LAD as the representative point
+  'LCx_mid':  'LCx',
+  'RCA_mid':  'RCA',
+  'PDA':      'PDA',
+};
+function getLabelMap() {
+  return labelMode === 'simplified' ? LABELS_SIMPLIFIED : LABELS_DETAILED;
+}
 
 function render() {
   const showSilhouette = document.getElementById('ovSilhouette').checked;
-  const showLabels = document.getElementById('ovLabels').checked;
+  const showLabels = labelMode !== 'off';
 
   // Build SVG content as an array of element strings — faster than DOM
   // manipulation per-frame.
@@ -1136,16 +1166,17 @@ function render() {
 
   // Labels with leader lines pointing from a margin strip into the vessel midpoint.
   if (showLabels) {
-    // Build label list: take each labeled vessel currently in view,
-    // pick its midpoint as the leader-line target.
+    // Build label list using the active map (detailed vs simplified).
+    const labelMap = getLabelMap();
     const labels = [];
     for (const item of projected) {
-      if (!item.v.label || !LABELED_VESSELS.has(item.key)) continue;
+      const text = labelMap[item.key];
+      if (!text) continue;
       const midIdx = Math.floor(item.path.pts.length / 2);
       const target = item.path.pts[midIdx];
       labels.push({
         key: item.key,
-        text: item.v.label,
+        text,
         side: item.v.side,
         targetX: target.x,
         targetY: target.y,
@@ -1166,35 +1197,88 @@ function render() {
   renderCarmIcon();
 }
 
-// Distribute labels vertically along a side strip with no overlap.
-// `which`: 'left' (strip at x=0..LABEL_W) or 'right' (strip at x=SVG_W-LABEL_W..SVG_W).
+// Distribute labels vertically in a tight column right next to the vessel
+// cluster — no long swooping leader lines across the canvas. Two columns
+// (one per side of the figure). Each label sits next to its target with a
+// short straight (or near-straight) leader line.
+//
+// Strategy:
+//   1. Compute the bounding box of the labels' targets to decide the label
+//      column position. Left labels go in a column at (minX − GAP); right
+//      labels at (maxX + GAP).
+//   2. Sort by target Y so leader lines don't cross.
+//   3. Distribute label Y positions within the y-range of their targets,
+//      pushing apart only enough to avoid line-height overlap.
+//   4. Use SHORT STRAIGHT leaders — from label endpoint to a small dot on
+//      the vessel.
 function placeLabels(labels, which, parts) {
   if (labels.length === 0) return;
-  const LABEL_W = 130;
-  const PAD_Y = 30;
-  const usableH = SVG_H - 2 * PAD_Y;
-  const lineH = Math.min(34, usableH / Math.max(1, labels.length));
-  // Sort labels by their target y so leader lines don't cross awkwardly
+  const LABEL_LINE_H = 16;       // vertical pixels per label
+  const HORIZ_GAP = 28;          // pixels between vessel cluster and label column
+  const SVG_EDGE_PAD = 6;        // min distance from SVG edge
+
+  // Sort labels by target Y so leaders are roughly parallel (no crossings)
   labels.sort((a, b) => a.targetY - b.targetY);
-  const labelX = which === 'left' ? 6 : SVG_W - 6;
-  const lineStartX = which === 'left' ? LABEL_W - 4 : SVG_W - LABEL_W + 4;
+
+  // Tight bounding box of targets on this side
+  const minTX = Math.min(...labels.map(L => L.targetX));
+  const maxTX = Math.max(...labels.map(L => L.targetX));
+  const minTY = Math.min(...labels.map(L => L.targetY));
+  const maxTY = Math.max(...labels.map(L => L.targetY));
+
+  // Label column X — close to the vessel cluster, but inside SVG bounds
+  const labelX = which === 'left'
+    ? Math.max(SVG_EDGE_PAD, minTX - HORIZ_GAP)
+    : Math.min(SVG_W - SVG_EDGE_PAD, maxTX + HORIZ_GAP);
+  const anchor = which === 'left' ? 'end' : 'start';
+
+  // Decide label Y positions. Start from each target Y as the "ideal" position,
+  // then enforce a minimum gap by sweeping top-to-bottom and pushing down,
+  // followed by a bottom-to-top sweep to redistribute fairly.
+  const idealY = labels.map(L => L.targetY);
+  const placedY = idealY.slice();
+  // First pass: enforce min gap going down
+  for (let i = 1; i < placedY.length; i++) {
+    if (placedY[i] < placedY[i - 1] + LABEL_LINE_H) {
+      placedY[i] = placedY[i - 1] + LABEL_LINE_H;
+    }
+  }
+  // Second pass: enforce SVG_H bottom bound going up
+  for (let i = placedY.length - 1; i >= 0; i--) {
+    const maxAllowed = SVG_H - SVG_EDGE_PAD - 4 - (placedY.length - 1 - i) * LABEL_LINE_H;
+    if (placedY[i] > maxAllowed) placedY[i] = maxAllowed;
+  }
+  // Third pass: down again (top bound + min gap)
+  for (let i = 0; i < placedY.length; i++) {
+    const minAllowed = SVG_EDGE_PAD + 10 + i * LABEL_LINE_H;
+    if (placedY[i] < minAllowed) placedY[i] = minAllowed;
+    if (i > 0 && placedY[i] < placedY[i - 1] + LABEL_LINE_H) {
+      placedY[i] = placedY[i - 1] + LABEL_LINE_H;
+    }
+  }
+
   for (let i = 0; i < labels.length; i++) {
     const L = labels[i];
-    const ly = PAD_Y + (i + 0.5) * lineH;
-    const anchor = which === 'left' ? 'start' : 'end';
-    // Leader line: from (labelEndX, ly) curving to (target.x, target.y)
-    const sx = lineStartX;
-    const sy = ly;
+    const ly = placedY[i];
     const ex = L.targetX;
     const ey = L.targetY;
-    // Smooth curve via cubic — control points 1/3 and 2/3 along
-    const c1x = (sx + ex) / 2;
-    const c1y = sy;
-    const c2x = (sx + ex) / 2;
-    const c2y = ey;
-    parts.push(`<path d="M ${sx} ${sy} C ${c1x} ${c1y}, ${c2x} ${c2y}, ${ex} ${ey}" class="label-line"/>`);
-    parts.push(`<circle cx="${ex}" cy="${ey}" r="2.5" class="label-dot"/>`);
-    parts.push(`<text x="${labelX}" y="${ly + 4}" text-anchor="${anchor}" class="label-text">${L.text}</text>`);
+    // Short straight leader: from label-column position (labelX) to the dot.
+    // If label Y matches target Y closely, the line is horizontal; otherwise
+    // a single elbow keeps it crisp without curving across the figure.
+    const startX = labelX + (which === 'left' ? -2 : 2);
+    const dy = Math.abs(ly - ey);
+    let pathD;
+    if (dy < 3) {
+      // Pure horizontal — single straight line
+      pathD = `M ${startX.toFixed(1)} ${ly.toFixed(1)} L ${ex.toFixed(1)} ${ey.toFixed(1)}`;
+    } else {
+      // Elbow: from label end → 80% horizontally to the elbow point → vessel dot
+      const elbowX = startX + (ex - startX) * 0.75;
+      pathD = `M ${startX.toFixed(1)} ${ly.toFixed(1)} L ${elbowX.toFixed(1)} ${ly.toFixed(1)} L ${ex.toFixed(1)} ${ey.toFixed(1)}`;
+    }
+    parts.push(`<path d="${pathD}" class="label-line"/>`);
+    parts.push(`<circle cx="${ex.toFixed(1)}" cy="${ey.toFixed(1)}" r="2.5" class="label-dot"/>`);
+    parts.push(`<text x="${labelX}" y="${(ly + 4).toFixed(1)}" text-anchor="${anchor}" class="label-text">${L.text}</text>`);
   }
 }
 
@@ -1247,19 +1331,116 @@ function renderCarmIcon() {
     `;
   }
 
+  // ─── Sagittal view (bottom half) — shows cranial/caudal tilt ─
+  // Patient lying flat, viewed from the patient's right side. Head at top,
+  // feet at bottom; anterior on viewer's left, posterior on viewer's right.
+  // The C-arm pivots around the heart and tilts with CRA/CAU.
+  const SCX = 50, SCY = 128;  // sagittal panel center
+  // Body outline (head + torso + abdomen profile)
+  const bodyPath = `
+    M ${SCX - 6} ${SCY - 30}
+    Q ${SCX - 8} ${SCY - 34} ${SCX - 4} ${SCY - 36}
+    Q ${SCX} ${SCY - 38} ${SCX + 4} ${SCY - 36}
+    Q ${SCX + 7} ${SCY - 34} ${SCX + 5} ${SCY - 30}
+    L ${SCX + 6} ${SCY - 26}
+    Q ${SCX + 9} ${SCY - 18} ${SCX + 10} ${SCY - 8}
+    Q ${SCX + 11} ${SCY + 5} ${SCX + 10} ${SCY + 18}
+    Q ${SCX + 9} ${SCY + 24} ${SCX + 7} ${SCY + 28}
+    L ${SCX - 7} ${SCY + 28}
+    Q ${SCX - 9} ${SCY + 24} ${SCX - 10} ${SCY + 18}
+    Q ${SCX - 11} ${SCY + 5} ${SCX - 10} ${SCY - 8}
+    Q ${SCX - 9} ${SCY - 18} ${SCX - 6} ${SCY - 26}
+    Z`;
+  // Heart inside body (small bean, anterior side of upper chest)
+  const heartCx = SCX - 3, heartCy = SCY - 8;
+  // C-arm tilt: positive cranial → detector tilts toward head (negative y)
+  // The detector pivots around the heart at radius R.
+  // Sign convention: cranial moves detector up (toward head); caudal down.
+  const Rs = 20;
+  const sagAng = -liveCra * Math.PI / 180 - Math.PI / 2;  // -90° = anterior (left)
+  // We want positive CRA to tilt the detector toward the head AND keep it
+  // mostly anterior. So combine: anterior unit vector rotated by -CRA around
+  // the heart in the sagittal plane.
+  const detSagX = heartCx + Rs * Math.cos(sagAng);
+  const detSagY = heartCy + Rs * Math.sin(sagAng);
+  const srcSagX = heartCx - Rs * Math.cos(sagAng);
+  const srcSagY = heartCy - Rs * Math.sin(sagAng);
+  // Detector arc
+  const sagArmPath = `M ${detSagX} ${detSagY} A ${Rs + 4} ${Rs + 4} 0 0 0 ${srcSagX} ${srcSagY}`;
+  // Detector + source rectangles oriented to face the heart
+  const detSagAng = Math.atan2(heartCy - detSagY, heartCx - detSagX) * 180 / Math.PI;
+  const srcSagAng = Math.atan2(heartCy - srcSagY, heartCx - srcSagX) * 180 / Math.PI;
+
+  // Tilt-direction caption: "cranial" or "caudal" arrow on the patient side
+  let tiltCaption = '';
+  if (Math.abs(liveCra) > 2) {
+    const cranial = liveCra > 0;
+    const tx = SCX - 16;
+    const ty = cranial ? heartCy - 14 : heartCy + 14;
+    const dir = cranial ? -1 : 1;
+    tiltCaption = `
+      <path d="M ${tx} ${ty} L ${tx - 3} ${ty + 4 * dir} L ${tx + 3} ${ty + 4 * dir} Z"
+            fill="${cranial ? 'rgba(20,184,166,0.85)' : 'rgba(245,158,11,0.85)'}"/>
+      <text x="${tx}" y="${ty + 9 * dir + (cranial ? 0 : 2)}" text-anchor="middle"
+            font-size="5.5" font-weight="700"
+            fill="${cranial ? 'rgb(20,184,166)' : 'rgb(245,158,11)'}">
+        ${cranial ? 'CRA' : 'CAU'} ${Math.round(Math.abs(liveCra))}°
+      </text>
+    `;
+  }
+
   icon.innerHTML = `
+    <!-- ═══ TOP: AXIAL (transverse) view — for LAO/RAO ═══ -->
+    <text x="50" y="6" text-anchor="middle" font-size="5.5" font-weight="700"
+          fill="rgba(220,220,230,0.6)" letter-spacing="0.5">AXIAL · LAO ↔ RAO</text>
     ${bodyEllipse}
     ${spineDot}
     ${sternumTick}
     <path d="${armPath}" fill="none" stroke="rgba(220, 220, 230, 0.5)" stroke-width="1.6"/>
     <g transform="translate(${detX} ${detY}) rotate(${detAng - 90})">
-      <rect x="${-detW/2}" y="${-detH}" width="${detW}" height="${detH}" rx="1" fill="rgba(120,170,220,0.85)" stroke="rgba(180,220,255,0.6)" stroke-width="0.6"/>
+      <rect x="${-detW/2}" y="${-detH}" width="${detW}" height="${detH}" rx="1"
+            fill="rgba(120,170,220,0.85)" stroke="rgba(180,220,255,0.6)" stroke-width="0.6"/>
     </g>
     <g transform="translate(${srcX} ${srcY}) rotate(${srcAng + 90})">
-      <rect x="${-srcW/2}" y="${-srcH/2}" width="${srcW}" height="${srcH}" rx="0.6" fill="rgba(180,180,180,0.7)" stroke="rgba(220,220,220,0.5)" stroke-width="0.5"/>
+      <rect x="${-srcW/2}" y="${-srcH/2}" width="${srcW}" height="${srcH}" rx="0.6"
+            fill="rgba(180,180,180,0.7)" stroke="rgba(220,220,220,0.5)" stroke-width="0.5"/>
     </g>
-    <text x="${cx}" y="${cy + 22}" text-anchor="middle" font-size="6" font-weight="600" fill="rgba(220,220,230,0.55)">view from foot</text>
+    <text x="${cx}" y="${cy + 22}" text-anchor="middle" font-size="5.5" font-weight="600"
+          fill="rgba(220,220,230,0.45)">view from foot</text>
     ${craBadge}
+
+    <!-- Divider -->
+    <line x1="8" y1="86" x2="92" y2="86" stroke="rgba(255,255,255,0.10)" stroke-width="0.6"/>
+
+    <!-- ═══ BOTTOM: SAGITTAL view — for CRA/CAU ═══ -->
+    <text x="50" y="93" text-anchor="middle" font-size="5.5" font-weight="700"
+          fill="rgba(220,220,230,0.6)" letter-spacing="0.5">SAGITTAL · CRA ↔ CAU</text>
+    <!-- Patient profile (head up, feet down, anterior on viewer's left) -->
+    <path d="${bodyPath}" fill="rgba(200, 200, 210, 0.10)"
+          stroke="rgba(220,220,220,0.45)" stroke-width="0.8"/>
+    <!-- Heart inside chest -->
+    <ellipse cx="${heartCx}" cy="${heartCy}" rx="4" ry="5"
+             fill="rgba(220, 60, 50, 0.18)" stroke="rgba(220, 60, 50, 0.55)" stroke-width="0.8"/>
+    <!-- C-arm pivoting around heart in sagittal plane -->
+    <path d="${sagArmPath}" fill="none" stroke="rgba(220,220,230,0.5)" stroke-width="1.3"/>
+    <g transform="translate(${detSagX.toFixed(2)} ${detSagY.toFixed(2)}) rotate(${(detSagAng - 90).toFixed(1)})">
+      <rect x="-4" y="-4" width="8" height="4" rx="1"
+            fill="rgba(120,170,220,0.85)" stroke="rgba(180,220,255,0.6)" stroke-width="0.5"/>
+    </g>
+    <g transform="translate(${srcSagX.toFixed(2)} ${srcSagY.toFixed(2)}) rotate(${(srcSagAng + 90).toFixed(1)})">
+      <rect x="-2.5" y="-2" width="5" height="4" rx="0.5"
+            fill="rgba(180,180,180,0.7)" stroke="rgba(220,220,220,0.5)" stroke-width="0.4"/>
+    </g>
+    <!-- Anterior / head labels for sagittal orientation -->
+    <text x="${SCX + 17}" y="${SCY - 28}" font-size="5" font-weight="600"
+          fill="rgba(200,200,210,0.5)">head</text>
+    <text x="${SCX - 17}" y="${SCY + 24}" font-size="5" font-weight="600"
+          fill="rgba(200,200,210,0.5)" text-anchor="end">feet</text>
+    <text x="${SCX - 13}" y="${heartCy}" font-size="5" font-weight="600"
+          fill="rgba(200,200,210,0.45)" text-anchor="end">ant</text>
+    ${tiltCaption}
+    <text x="${SCX}" y="${SCY + 34}" text-anchor="middle" font-size="5.5" font-weight="600"
+          fill="rgba(220,220,230,0.45)">view from right</text>
   `;
 }
 
@@ -1413,27 +1594,39 @@ document.getElementById('slCra').addEventListener('input', () => {
   activePreset = null;
 });
 
-// Display option checkboxes
-['ovLabels', 'ovBoth', 'ovSilhouette'].forEach(id => {
-  document.getElementById(id).addEventListener('change', () => {
-    render();
-    if (id === 'ovLabels') updateLabelToggleBtn();
-  });
+// Display options
+['ovBoth', 'ovSilhouette'].forEach(id => {
+  document.getElementById(id).addEventListener('change', render);
 });
 
-// On-viz quick label toggle — wired to the same ovLabels state so both controls
-// stay in sync.
+// Label-mode segmented toggle (Detailed / Simplified / Hidden)
+document.querySelectorAll('#labelModeToggle .seg-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    setLabelMode(btn.dataset.mode);
+  });
+});
+function setLabelMode(mode) {
+  labelMode = mode;
+  if (mode !== 'off') prevNonOffMode = mode;
+  document.querySelectorAll('#labelModeToggle .seg-btn').forEach(b => {
+    b.classList.toggle('active', b.dataset.mode === mode);
+  });
+  updateLabelToggleBtn();
+  render();
+}
+
+// On-viz quick toggle — flips between current "on" mode and "off"
 function updateLabelToggleBtn() {
-  const on = document.getElementById('ovLabels').checked;
   const btn = document.getElementById('labelToggleBtn');
   const txt = document.getElementById('labelToggleText');
-  btn.classList.toggle('off', !on);
-  txt.textContent = on ? 'Hide labels' : 'Show labels';
+  const isOn = labelMode !== 'off';
+  btn.classList.toggle('off', !isOn);
+  txt.textContent = isOn
+    ? (labelMode === 'simplified' ? 'Hide labels' : 'Hide labels')
+    : 'Show labels';
 }
 document.getElementById('labelToggleBtn').addEventListener('click', () => {
-  const cb = document.getElementById('ovLabels');
-  cb.checked = !cb.checked;
-  cb.dispatchEvent(new Event('change'));
+  setLabelMode(labelMode === 'off' ? prevNonOffMode : 'off');
 });
 updateLabelToggleBtn();
 
