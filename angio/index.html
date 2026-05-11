@@ -328,7 +328,7 @@ body.dark .preset-btn { background: var(--panel-bg-2); }
   position: absolute;
   top: 14px;
   left: 14px;
-  width: 220px;
+  width: 168px;
   background: rgba(15, 22, 38, 0.94);
   border: 1px solid rgba(255, 255, 255, 0.12);
   border-radius: 6px;
@@ -571,6 +571,105 @@ body.dark .label-text.lead { fill: #e8ecf2; }
   .nav-tab { flex-shrink: 0; white-space: nowrap; padding: 0 10px; font-size: 11px; }
   .nav-right { display: none; }
 }
+
+/* ═══ SEO "About" POPOVER — small trigger in the nav that opens a modal-style
+   panel. Content stays in the DOM for indexing but doesn't clutter the canvas. ═══ */
+.seo-popover { display: inline-block; position: relative; }
+.seo-trigger {
+  list-style: none;
+  cursor: pointer;
+  background: rgba(255, 255, 255, 0.1);
+  color: rgba(255, 255, 255, 0.78);
+  border: 1px solid transparent;
+  border-radius: 4px;
+  padding: 5px 10px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  transition: all 0.15s;
+}
+.seo-trigger::-webkit-details-marker { display: none; }
+.seo-trigger:hover {
+  background: rgba(255, 255, 255, 0.2);
+  color: #fff;
+  border-color: rgba(255, 255, 255, 0.22);
+}
+.seo-popover[open] .seo-trigger {
+  background: rgba(253, 204, 77, 0.18);
+  color: #fdcc4d;
+  border-color: rgba(253, 204, 77, 0.42);
+}
+.seo-popover-body { display: none; }
+.seo-popover[open] .seo-popover-body {
+  display: block;
+  position: fixed;
+  top: 54px;
+  right: 12px;
+  width: min(640px, calc(100vw - 24px));
+  max-height: calc(100vh - 70px);
+  overflow-y: auto;
+  background: var(--panel-bg, #fff);
+  color: var(--text, #1a1a2e);
+  border: 1px solid var(--border, #d8dfe8);
+  border-radius: 10px;
+  padding: 24px 28px;
+  z-index: 1000;
+  box-shadow: 0 14px 44px rgba(0, 0, 0, 0.55);
+  font-size: 13.5px;
+  line-height: 1.6;
+  animation: seoPopoverFadeIn 0.18s ease-out;
+}
+@keyframes seoPopoverFadeIn {
+  from { opacity: 0; transform: translateY(-8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.seo-popover-body h2 {
+  font-size: 17px; font-weight: 700; margin: 0 0 10px;
+  color: var(--text, #1a1a2e); letter-spacing: -0.005em;
+}
+.seo-popover-body h3 {
+  font-size: 13.5px; font-weight: 700; margin: 16px 0 6px;
+  color: var(--text, #1a1a2e);
+}
+.seo-popover-body h3:first-of-type { margin-top: 0; }
+.seo-popover-body p { margin: 0 0 9px; color: var(--text-dim, #5a6478); }
+.seo-popover-body ul { padding-left: 20px; margin-bottom: 9px; }
+.seo-popover-body ul li { margin-bottom: 4px; color: var(--text-dim, #5a6478); }
+.seo-popover-body ul ul { margin-top: 4px; padding-left: 20px; }
+.seo-popover-body strong { color: var(--text, #1a1a2e); font-weight: 600; }
+.seo-popover-body .related-tools {
+  display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px; font-size: 12px;
+}
+.seo-popover-body .related-tools a {
+  display: inline-block; padding: 4px 11px;
+  background: var(--panel-bg-2, #f9fafc);
+  border: 1px solid var(--border, #d8dfe8);
+  border-radius: 12px;
+  color: var(--text, #1a1a2e); text-decoration: none; font-weight: 600;
+  transition: all 0.15s;
+}
+.seo-popover-body .related-tools a:hover {
+  border-color: var(--accent, #3b82f6); color: var(--accent, #3b82f6);
+}
+.seo-popover[open]::before {
+  content: '';
+  position: fixed; inset: 0;
+  background: rgba(0, 0, 0, 0.30);
+  z-index: 999;
+  pointer-events: none;
+}
+@media (max-width: 800px) {
+  .seo-trigger { padding: 4px 7px; font-size: 10.5px; }
+  .seo-trigger-text { display: none; }
+  .seo-popover[open] .seo-popover-body {
+    top: 50px; right: 8px; left: 8px; width: auto;
+    max-height: calc(100vh - 64px); padding: 18px 20px;
+  }
+}
+
 </style>
 </head>
 <body class="dark">
@@ -590,6 +689,66 @@ body.dark .label-text.lead { fill: #e8ecf2; }
   </div>
   <div class="nav-right">
     <span class="nav-credit">Dr. Saro Avedikian, MD, MPH</span>
+    <details class="seo-popover" id="seoPopover">
+      <summary class="seo-trigger" title="About this simulator">
+        <span aria-hidden="true">ⓘ</span>
+        <span class="seo-trigger-text">About</span>
+      </summary>
+      <div class="seo-popover-body">
+        <h2>About the Coronary Angiography Views simulator</h2>
+        <p>Coronary angiography is the two-dimensional shadow of a three-dimensional vascular tree. Because every projection compresses depth onto a flat image, no single view shows every segment without foreshortening or overlap. The art of the angiographer is to pick the right combination of <strong>C-arm angles</strong> for each lesion. This free interactive simulator rotates a 3D coronary tree through every standard projection so trainees can build the mental model that experienced operators carry in their heads.</p>
+
+        <h3>C-arm angle conventions</h3>
+        <p>The C-arm position is described by two independent angles, both referenced to the image intensifier (the detector "looking down" at the patient):</p>
+        <ul>
+          <li><strong>LAO / RAO (left/right anterior oblique).</strong> Rotation around the patient's craniocaudal axis. LAO 45° places the detector over the patient's left shoulder; the image looks at the heart from the left-anterior direction. RAO 30° looks from the right-anterior side. AP is 0°. Lateral is LAO 90°.</li>
+          <li><strong>Cranial / Caudal.</strong> Tilt of the detector along the patient's long axis. Cranial angulation tips the detector toward the head, producing a "looking up from below" projection. Caudal does the opposite.</li>
+        </ul>
+
+        <h3>Why each angle exists — the bifurcation problem</h3>
+        <p>The <strong>left main bifurcation</strong> sits in a near-coronal plane: the LAD heads anteriorly and downward, the LCx heads posteriorly. In a pure AP view they overlap. To separate them you need a <strong>caudal</strong> tilt (which "drops" the LAD away from the LCx) and an obliquity that opens the angle between them. That is exactly what the <strong>LAO caudal ("Spider") view</strong> does — it is the bread-and-butter view for the LM bifurcation and the ostia of the LAD and LCx.</p>
+        <p>The <strong>mid-LAD</strong> runs in the anterior interventricular groove with the great cardiac vein and is hidden by the LAD itself in AP. <strong>RAO cranial</strong> (RAO ~30°, CRA ~30°) lifts the mid-LAD off the spine and separates it from the diagonals — the workhorse view for mid-LAD lesions and proximal diagonal disease.</p>
+        <p>The <strong>RCA</strong> sits in the right AV groove and curves around the heart. The <strong>LAO ~45° straight</strong> view profiles the whole vessel from ostium to crux without foreshortening; the <strong>RAO</strong> view shows the AV groove portion in profile and is ideal for the acute marginal branches. The <strong>AP cranial</strong> view opens up the distal RCA bifurcation into PDA and PLV at the crux.</p>
+
+        <h3>Standard left-coronary view set</h3>
+        <ul>
+          <li><strong>AP cranial (0° / CRA 30°)</strong> — mid- and distal-LAD on the cardiac silhouette, diagonals splayed.</li>
+          <li><strong>AP caudal (0° / CAU 30°)</strong> — left main bifurcation, proximal LCx; less optimal than LAO caudal but useful as a confirmatory view.</li>
+          <li><strong>RAO cranial (RAO 30° / CRA 30°)</strong> — mid-LAD, septal vs diagonal separation, distal LAD.</li>
+          <li><strong>RAO caudal (RAO 20° / CAU 20°)</strong> — proximal LAD, proximal LCx, ramus intermedius, obtuse marginals.</li>
+          <li><strong>LAO cranial (LAO 45° / CRA 25°)</strong> — mid-LAD without diagonal overlap.</li>
+          <li><strong>LAO caudal "Spider" (LAO 45° / CAU 30°)</strong> — LM bifurcation, ostia of LAD and LCx, proximal LCx, ramus.</li>
+          <li><strong>Lateral (LAO 90°)</strong> — LM, ostial LAD, proximal-mid LAD profile.</li>
+        </ul>
+
+        <h3>Standard right-coronary view set</h3>
+        <ul>
+          <li><strong>LAO straight (LAO 45°)</strong> — whole RCA from ostium to crux, ideal for PDA origin.</li>
+          <li><strong>LAO cranial (LAO 30° / CRA 25°)</strong> — distal RCA bifurcation, PDA and PLV separated.</li>
+          <li><strong>RAO straight (RAO 30°)</strong> — RCA mid-segment, acute marginal branches in profile.</li>
+          <li><strong>AP cranial (0° / CRA 30°)</strong> — distal RCA bifurcation at the crux when the LAO cranial is suboptimal.</li>
+          <li><strong>Lateral (LAO 90°)</strong> — RCA ostium and proximal RCA, useful in anomalous origins.</li>
+        </ul>
+
+        <h3>How to use this simulator</h3>
+        <p>Drag the LAO/RAO and cranial/caudal sliders to rotate the heart continuously, or click any preset for a canonical view. The view label at the top of the image and the clinical note at the bottom describe what's best seen at that angle and which segments are foreshortened. Toggle Left / Right coronary to switch the visible vessel set; toggle "Show both" to overlay them. The C-arm orientation icon in the corner of the viewer shows the detector position from the foot of the bed for spatial reference.</p>
+        <p>This tool is built for cardiology fellows starting on the cath lab service, interventional fellows refining their view selection, and medical students learning coronary anatomy. It is not a substitute for hands-on cath lab experience; the schematic is intentionally cleaner than a real angiogram so the underlying anatomy is visible without contrast noise.</p>
+
+        <h3>References</h3>
+        <p>The view-set conventions follow <strong>Kern MJ, Bonnet ME, eds. Cardiac Catheterization Handbook (6th ed., Elsevier 2015)</strong>, and Behan MWH, Holm NR et al. "Optimal angiographic views for invasive coronary angiography: a guide for trainees." <em>Br J Cardiol</em> 2016;23(3):103–8. The labelled angiographic frames used as visual references during construction are sourced from a teaching dataset; the SVG schematic is an original interpretation, not a tracing of patient data.</p>
+
+        <h3>Related tools</h3>
+        <div class="related-tools">
+          <a href="/rhc/">RHC Calculator</a>
+          <a href="/pvloop/">PV Loop Simulator</a>
+          <a href="/ekg/">EKG Simulator</a>
+          <a href="/hemodynamics/">Hemodynamic Waveforms</a>
+          <a href="/echocalc/">Echo Calc</a>
+          <a href="/embryology/">Cardiac Embryology</a>
+          <a href="/ap/">Action Potential</a>
+        </div>
+      </div>
+    </details>
     <button id="darkToggle" onclick="toggleDark()">Light Mode</button>
   </div>
 </nav>
@@ -683,7 +842,7 @@ body.dark .label-text.lead { fill: #e8ecf2; }
           <button class="orient-collapse" id="orientCollapse" title="Collapse / expand">−</button>
         </div>
         <div class="orient-body">
-          <svg id="orientSvg" viewBox="0 0 300 240" preserveAspectRatio="xMidYMid meet"></svg>
+          <svg id="orientSvg" viewBox="0 0 300 260" preserveAspectRatio="xMidYMid meet"></svg>
         </div>
         <div class="orient-resize" id="orientResize" title="Drag corner to resize"></div>
       </div>
@@ -700,67 +859,7 @@ body.dark .label-text.lead { fill: #e8ecf2; }
   </main>
 </div>
 
-<!-- ═══ SEO / EDUCATIONAL CONTENT ═══ -->
-<section class="seo-content">
-  <div class="seo-inner">
-    <details class="seo-section">
-      <summary>About the Coronary Angiography Views simulator</summary>
-      <div class="seo-content-body">
-        <p>Coronary angiography is the two-dimensional shadow of a three-dimensional vascular tree. Because every projection compresses depth onto a flat image, no single view shows every segment without foreshortening or overlap. The art of the angiographer is to pick the right combination of <strong>C-arm angles</strong> for each lesion. This free interactive simulator rotates a 3D coronary tree through every standard projection so trainees can build the mental model that experienced operators carry in their heads.</p>
 
-        <h3>C-arm angle conventions</h3>
-        <p>The C-arm position is described by two independent angles, both referenced to the image intensifier (the detector "looking down" at the patient):</p>
-        <ul>
-          <li><strong>LAO / RAO (left/right anterior oblique).</strong> Rotation around the patient's craniocaudal axis. LAO 45° places the detector over the patient's left shoulder; the image looks at the heart from the left-anterior direction. RAO 30° looks from the right-anterior side. AP is 0°. Lateral is LAO 90°.</li>
-          <li><strong>Cranial / Caudal.</strong> Tilt of the detector along the patient's long axis. Cranial angulation tips the detector toward the head, producing a "looking up from below" projection. Caudal does the opposite.</li>
-        </ul>
-
-        <h3>Why each angle exists — the bifurcation problem</h3>
-        <p>The <strong>left main bifurcation</strong> sits in a near-coronal plane: the LAD heads anteriorly and downward, the LCx heads posteriorly. In a pure AP view they overlap. To separate them you need a <strong>caudal</strong> tilt (which "drops" the LAD away from the LCx) and an obliquity that opens the angle between them. That is exactly what the <strong>LAO caudal ("Spider") view</strong> does — it is the bread-and-butter view for the LM bifurcation and the ostia of the LAD and LCx.</p>
-        <p>The <strong>mid-LAD</strong> runs in the anterior interventricular groove with the great cardiac vein and is hidden by the LAD itself in AP. <strong>RAO cranial</strong> (RAO ~30°, CRA ~30°) lifts the mid-LAD off the spine and separates it from the diagonals — the workhorse view for mid-LAD lesions and proximal diagonal disease.</p>
-        <p>The <strong>RCA</strong> sits in the right AV groove and curves around the heart. The <strong>LAO ~45° straight</strong> view profiles the whole vessel from ostium to crux without foreshortening; the <strong>RAO</strong> view shows the AV groove portion in profile and is ideal for the acute marginal branches. The <strong>AP cranial</strong> view opens up the distal RCA bifurcation into PDA and PLV at the crux.</p>
-
-        <h3>Standard left-coronary view set</h3>
-        <ul>
-          <li><strong>AP cranial (0° / CRA 30°)</strong> — mid- and distal-LAD on the cardiac silhouette, diagonals splayed.</li>
-          <li><strong>AP caudal (0° / CAU 30°)</strong> — left main bifurcation, proximal LCx; less optimal than LAO caudal but useful as a confirmatory view.</li>
-          <li><strong>RAO cranial (RAO 30° / CRA 30°)</strong> — mid-LAD, septal vs diagonal separation, distal LAD.</li>
-          <li><strong>RAO caudal (RAO 20° / CAU 20°)</strong> — proximal LAD, proximal LCx, ramus intermedius, obtuse marginals.</li>
-          <li><strong>LAO cranial (LAO 45° / CRA 25°)</strong> — mid-LAD without diagonal overlap.</li>
-          <li><strong>LAO caudal "Spider" (LAO 45° / CAU 30°)</strong> — LM bifurcation, ostia of LAD and LCx, proximal LCx, ramus.</li>
-          <li><strong>Lateral (LAO 90°)</strong> — LM, ostial LAD, proximal-mid LAD profile.</li>
-        </ul>
-
-        <h3>Standard right-coronary view set</h3>
-        <ul>
-          <li><strong>LAO straight (LAO 45°)</strong> — whole RCA from ostium to crux, ideal for PDA origin.</li>
-          <li><strong>LAO cranial (LAO 30° / CRA 25°)</strong> — distal RCA bifurcation, PDA and PLV separated.</li>
-          <li><strong>RAO straight (RAO 30°)</strong> — RCA mid-segment, acute marginal branches in profile.</li>
-          <li><strong>AP cranial (0° / CRA 30°)</strong> — distal RCA bifurcation at the crux when the LAO cranial is suboptimal.</li>
-          <li><strong>Lateral (LAO 90°)</strong> — RCA ostium and proximal RCA, useful in anomalous origins.</li>
-        </ul>
-
-        <h3>How to use this simulator</h3>
-        <p>Drag the LAO/RAO and cranial/caudal sliders to rotate the heart continuously, or click any preset for a canonical view. The view label at the top of the image and the clinical note at the bottom describe what's best seen at that angle and which segments are foreshortened. Toggle Left / Right coronary to switch the visible vessel set; toggle "Show both" to overlay them. The C-arm orientation icon in the corner of the viewer shows the detector position from the foot of the bed for spatial reference.</p>
-        <p>This tool is built for cardiology fellows starting on the cath lab service, interventional fellows refining their view selection, and medical students learning coronary anatomy. It is not a substitute for hands-on cath lab experience; the schematic is intentionally cleaner than a real angiogram so the underlying anatomy is visible without contrast noise.</p>
-
-        <h3>References</h3>
-        <p>The view-set conventions follow <strong>Kern MJ, Bonnet ME, eds. Cardiac Catheterization Handbook (6th ed., Elsevier 2015)</strong>, and Behan MWH, Holm NR et al. "Optimal angiographic views for invasive coronary angiography: a guide for trainees." <em>Br J Cardiol</em> 2016;23(3):103–8. The labelled angiographic frames used as visual references during construction are sourced from a teaching dataset; the SVG schematic is an original interpretation, not a tracing of patient data.</p>
-
-        <h3>Related tools</h3>
-        <div class="related-tools">
-          <a href="/rhc/">RHC Calculator</a>
-          <a href="/pvloop/">PV Loop Simulator</a>
-          <a href="/ekg/">EKG Simulator</a>
-          <a href="/hemodynamics/">Hemodynamic Waveforms</a>
-          <a href="/echocalc/">Echo Calc</a>
-          <a href="/embryology/">Cardiac Embryology</a>
-          <a href="/ap/">Action Potential</a>
-        </div>
-      </div>
-    </details>
-  </div>
-</section>
 
 <script>
 'use strict';
@@ -1426,9 +1525,12 @@ function renderOrientationWidget() {
   const dx1 = dx * Math.cos(laoRad) + dz * Math.sin(laoRad);
   const dz1 = -dx * Math.sin(laoRad) + dz * Math.cos(laoRad);
   dx = dx1; dz = dz1;
-  // Rotate around X by +CRA  (detector tilts toward head)
-  const dy2 = dy * Math.cos(craRad) - dz * Math.sin(craRad);
-  const dz2 = dy * Math.sin(craRad) + dz * Math.cos(craRad);
+  // Rotate around X by +CRA  (detector tilts toward head — +y direction).
+  // Note the sign convention: we're rotating the detector position in patient
+  // frame, which is the INVERSE of the camera-frame rotation used in the main
+  // canvas projection. So dy gets +sin (not -sin) and dz gets -sin (not +sin).
+  const dy2 = dy * Math.cos(craRad) + dz * Math.sin(craRad);
+  const dz2 = -dy * Math.sin(craRad) + dz * Math.cos(craRad);
   dy = dy2; dz = dz2;
 
   const detPos = { x: heart.x + dx * R, y: heart.y + dy * R, z: heart.z + dz * R };
@@ -1620,10 +1722,13 @@ function renderOrientationWidget() {
   // Compass labels in margin (head / feet / R / L) — fixed corners of the
   // patient frame, projected so they're always positioned next to the correct
   // anatomical direction.
-  const lblHead  = proj({ x: 0, y:  1.65, z: 0 });
-  const lblFeet  = proj({ x: 0, y: -1.65, z: 0 });
-  const lblRight = proj({ x: -0.95, y: 0, z: 0 });  // patient's right = -x
-  const lblLeft  = proj({ x:  0.95, y: 0, z: 0 });
+  // Compass labels: pushed OUTSIDE the C-arm radius (R=1.05) so they don't
+  // visually overlap with the C-arm arc or its bulge apex. Patient body
+  // extends to y=±1.4; we put HEAD/FEET at ±1.85 for a 0.45-unit margin.
+  const lblHead  = proj({ x: 0, y:  1.85, z: 0 });
+  const lblFeet  = proj({ x: 0, y: -1.85, z: 0 });
+  const lblRight = proj({ x: -1.30, y: 0, z: 0 });  // outside C-arm radius
+  const lblLeft  = proj({ x:  1.30, y: 0, z: 0 });
   html += `<text x="${lblHead.x.toFixed(1)}" y="${lblHead.y.toFixed(1)}" text-anchor="middle" font-size="9" font-weight="700" fill="rgba(220,220,230,0.55)">HEAD</text>`;
   html += `<text x="${lblFeet.x.toFixed(1)}" y="${lblFeet.y.toFixed(1)}" text-anchor="middle" font-size="9" font-weight="700" fill="rgba(220,220,230,0.55)">FEET</text>`;
   html += `<text x="${lblRight.x.toFixed(1)}" y="${lblRight.y.toFixed(1)}" text-anchor="end" font-size="9" font-weight="700" fill="rgba(220,220,230,0.45)">R</text>`;
@@ -1631,7 +1736,7 @@ function renderOrientationWidget() {
 
   // Angle readout in the corner of the SVG
   const angTxt = formatAngleReadout();
-  html += `<text x="6" y="232" font-size="9" font-weight="700" fill="rgba(253, 204, 77, 0.9)" letter-spacing="0.04em">${angTxt}</text>`;
+  html += `<text x="6" y="252" font-size="9" font-weight="700" fill="rgba(253, 204, 77, 0.9)" letter-spacing="0.04em">${angTxt}</text>`;
 
   svg.innerHTML = html;
 
@@ -2006,6 +2111,21 @@ try {
 applyPreset('ap-left');
 updateSliderReadouts();
 requestAnimationFrame(tick);
+
+// SEO popover — close on outside click + Escape
+(function setupSeoPopover() {
+  const popover = document.getElementById('seoPopover');
+  if (!popover) return;
+  document.addEventListener('click', (e) => {
+    if (!popover.open) return;
+    if (e.target.closest('.seo-popover')) return;
+    popover.removeAttribute('open');
+  });
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && popover.open) popover.removeAttribute('open');
+  });
+})();
+
 </script>
 
 </body>

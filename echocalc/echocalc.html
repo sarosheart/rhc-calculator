@@ -568,6 +568,105 @@ body.dark .seo-content-body h3 { color: #e8ecf2; }
   .nav-tab { flex-shrink: 0; white-space: nowrap; padding: 0 10px; font-size: 11px; }
   .nav-right { display: none; }
 }
+
+/* ═══ SEO "About" POPOVER — small trigger in the nav that opens a modal-style
+   panel. Content stays in the DOM for indexing but doesn't clutter the canvas. ═══ */
+.seo-popover { display: inline-block; position: relative; }
+.seo-trigger {
+  list-style: none;
+  cursor: pointer;
+  background: rgba(255, 255, 255, 0.1);
+  color: rgba(255, 255, 255, 0.78);
+  border: 1px solid transparent;
+  border-radius: 4px;
+  padding: 5px 10px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  transition: all 0.15s;
+}
+.seo-trigger::-webkit-details-marker { display: none; }
+.seo-trigger:hover {
+  background: rgba(255, 255, 255, 0.2);
+  color: #fff;
+  border-color: rgba(255, 255, 255, 0.22);
+}
+.seo-popover[open] .seo-trigger {
+  background: rgba(253, 204, 77, 0.18);
+  color: #fdcc4d;
+  border-color: rgba(253, 204, 77, 0.42);
+}
+.seo-popover-body { display: none; }
+.seo-popover[open] .seo-popover-body {
+  display: block;
+  position: fixed;
+  top: 54px;
+  right: 12px;
+  width: min(640px, calc(100vw - 24px));
+  max-height: calc(100vh - 70px);
+  overflow-y: auto;
+  background: var(--panel-bg, #fff);
+  color: var(--text, #1a1a2e);
+  border: 1px solid var(--border, #d8dfe8);
+  border-radius: 10px;
+  padding: 24px 28px;
+  z-index: 1000;
+  box-shadow: 0 14px 44px rgba(0, 0, 0, 0.55);
+  font-size: 13.5px;
+  line-height: 1.6;
+  animation: seoPopoverFadeIn 0.18s ease-out;
+}
+@keyframes seoPopoverFadeIn {
+  from { opacity: 0; transform: translateY(-8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.seo-popover-body h2 {
+  font-size: 17px; font-weight: 700; margin: 0 0 10px;
+  color: var(--text, #1a1a2e); letter-spacing: -0.005em;
+}
+.seo-popover-body h3 {
+  font-size: 13.5px; font-weight: 700; margin: 16px 0 6px;
+  color: var(--text, #1a1a2e);
+}
+.seo-popover-body h3:first-of-type { margin-top: 0; }
+.seo-popover-body p { margin: 0 0 9px; color: var(--text-dim, #5a6478); }
+.seo-popover-body ul { padding-left: 20px; margin-bottom: 9px; }
+.seo-popover-body ul li { margin-bottom: 4px; color: var(--text-dim, #5a6478); }
+.seo-popover-body ul ul { margin-top: 4px; padding-left: 20px; }
+.seo-popover-body strong { color: var(--text, #1a1a2e); font-weight: 600; }
+.seo-popover-body .related-tools {
+  display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px; font-size: 12px;
+}
+.seo-popover-body .related-tools a {
+  display: inline-block; padding: 4px 11px;
+  background: var(--panel-bg-2, #f9fafc);
+  border: 1px solid var(--border, #d8dfe8);
+  border-radius: 12px;
+  color: var(--text, #1a1a2e); text-decoration: none; font-weight: 600;
+  transition: all 0.15s;
+}
+.seo-popover-body .related-tools a:hover {
+  border-color: var(--accent, #3b82f6); color: var(--accent, #3b82f6);
+}
+.seo-popover[open]::before {
+  content: '';
+  position: fixed; inset: 0;
+  background: rgba(0, 0, 0, 0.30);
+  z-index: 999;
+  pointer-events: none;
+}
+@media (max-width: 800px) {
+  .seo-trigger { padding: 4px 7px; font-size: 10.5px; }
+  .seo-trigger-text { display: none; }
+  .seo-popover[open] .seo-popover-body {
+    top: 50px; right: 8px; left: 8px; width: auto;
+    max-height: calc(100vh - 64px); padding: 18px 20px;
+  }
+}
+
 </style>
 </head>
 <body class="dark">
@@ -587,6 +686,30 @@ body.dark .seo-content-body h3 { color: #e8ecf2; }
   </div>
   <div class="nav-right">
     <span class="nav-credit">Dr. Saro Avedikian, MD, MPH</span>
+    <details class="seo-popover" id="seoPopover">
+      <summary class="seo-trigger" title="About this simulator">
+        <span aria-hidden="true">ⓘ</span>
+        <span class="seo-trigger-text">About</span>
+      </summary>
+      <div class="seo-popover-body">
+        <h2>About the Echo Hemodynamics Calculator</h2>
+        <p>The Echo Hemodynamics Calculator is a free, browser-based teaching and reference tool for echocardiographic assessment of cardiac hemodynamics, valvular heart disease, and diastolic function. It collects the calculations and pattern-recognition exercises a cardiology fellow uses every day on rounds and in the cath lab into a single interactive interface, with animated spectral envelopes, Doppler visualisations, and clinically validated cutoffs from the most current American Society of Echocardiography (ASE) and EACVI guidelines.</p>
+
+          <h3>What the calculator covers</h3>
+          <p>The tool is organised into six clinical groups. <strong>Fundamentals</strong> introduces pulsed-wave (PW), continuous-wave (CW), color, and tissue Doppler modalities — including aliasing, the Nyquist limit, the BART (Blue Away, Red Toward) convention, and how baseline shift extends unidirectional Nyquist for techniques like PISA. <strong>Diastolic Function</strong> implements the 2025 ASE update by Nagueh et al (JASE 2025;38:537–69) with separate algorithms for sinus rhythm (Figure 3) and atrial fibrillation (Figure 8), including LA reservoir strain (LARS), pulmonary vein S/D ratio, and IVRT as supplemental parameters. A dedicated Constrictive vs Restrictive atlas walks through the Mayo respirophasic criteria — ΔE &gt; 25%, hepatic vein expiratory diastolic flow reversal, annulus paradoxus, and septal notch on M-mode.</p>
+
+          <p><strong>Valvular Calculators</strong> covers the workhorses: PISA-derived effective regurgitant orifice area (EROA) and regurgitant volume for mitral regurgitation, the continuity equation for aortic valve area (AVA), and pressure half-time (PHT) for mitral valve area in mitral stenosis (Hatle equation). <strong>Valvular Patterns</strong> presents Normal · Moderate · Severe spectral comparisons for AS, AR, MS, MR, and TR — including the late-peaking "dagger" envelope of severe AS, the steep deceleration slope of severe AR, the prolonged PHT of severe MS, the triangular V-cutoff envelope of severe MR, and the paradoxical low velocity in massive TR. Each atlas links to its matching calculator. <strong>Cardiomyopathies</strong> covers hypertrophic cardiomyopathy with SAM and dynamic LVOT gradient, plus cardiac amyloidosis featuring the pathognomonic apical-sparing strain pattern ("cherry on top") that distinguishes amyloid from HCM. <strong>Hemodynamics</strong> rounds out the calculator with PASP from TR Vmax, Doppler cardiac output (LVOT-VTI method), dP/dt for LV contractility, the Abbas equation for pulmonary vascular resistance, and the Qp/Qs shunt fraction.</p>
+
+          <h3>How to use it</h3>
+          <p>Click any module in the sidebar to open its visualisation. Calculator modules accept inputs via sliders or pickers; the output cells and the canvas update in real time as you adjust values, with severity grading (mild / moderate / severe) shown alongside numeric results. Atlas modules show pre-rendered comparisons and update via picker views. Animation runs for three seconds on each click and then fades — slider adjustments redraw the visualisation without restarting the animation. Every module has a Common Pitfalls section listing the gotchas, exclusions, and special-population considerations for that calculation, so the tool can be used both as a learning aid and a clinical reference.</p>
+
+          <h3>Who it's for</h3>
+          <p>The Echo Hemodynamics Calculator is built for cardiology fellows, internal medicine residents, sonographers, advanced practice providers, and attending cardiologists who want a fast, on-call-friendly companion for echo interpretation. It is not a substitute for a complete echocardiographic examination or for cardiac catheterization when invasive measurements are required — particularly when severe TR makes TR Vmax-based PASP unreliable, when AF or significant AR invalidates pressure half-time-derived MVA, or when low-flow / low-gradient AS necessitates dobutamine stress evaluation. The cutoffs and algorithms shown are based on published guidelines and are intended for educational reference. Always integrate echo findings with the clinical context, history, and other imaging modalities before making management decisions.</p>
+
+          <h3>Source guidelines and references</h3>
+          <p>The 2025 ASE update on LV diastolic function and HFpEF (Nagueh et al, J Am Soc Echocardiogr 2025;38:537–69) is the source for the sinus and AF diastolic algorithms. Valvular regurgitation severity criteria follow Zoghbi 2017 (ASE recommendations for evaluation of native valvular regurgitation). The Abbas PVR equation is from Abbas et al, J Am Coll Cardiol 2003. The Mayo respirophasic criteria for constrictive pericarditis are summarised in Welch et al and the Mayo echo board review materials. Each cutoff is shown alongside the calculation that uses it, so users can trace any number back to the underlying recommendation.</p>
+      </div>
+    </details>
     <button id="darkToggle" onclick="toggleDark()">Light Mode</button>
   </div>
 </nav>
@@ -638,26 +761,7 @@ body.dark .seo-content-body h3 { color: #e8ecf2; }
 
       <!-- ═══ SEO content — collapsed by default, expandable. Content remains in DOM
            for crawlability per Google's documented treatment of <details> elements. ═══ -->
-      <details class="seo-section">
-        <summary>About the Echo Hemodynamics Calculator</summary>
-        <div class="seo-content-body">
-          <p>The Echo Hemodynamics Calculator is a free, browser-based teaching and reference tool for echocardiographic assessment of cardiac hemodynamics, valvular heart disease, and diastolic function. It collects the calculations and pattern-recognition exercises a cardiology fellow uses every day on rounds and in the cath lab into a single interactive interface, with animated spectral envelopes, Doppler visualisations, and clinically validated cutoffs from the most current American Society of Echocardiography (ASE) and EACVI guidelines.</p>
-
-          <h3>What the calculator covers</h3>
-          <p>The tool is organised into six clinical groups. <strong>Fundamentals</strong> introduces pulsed-wave (PW), continuous-wave (CW), color, and tissue Doppler modalities — including aliasing, the Nyquist limit, the BART (Blue Away, Red Toward) convention, and how baseline shift extends unidirectional Nyquist for techniques like PISA. <strong>Diastolic Function</strong> implements the 2025 ASE update by Nagueh et al (JASE 2025;38:537–69) with separate algorithms for sinus rhythm (Figure 3) and atrial fibrillation (Figure 8), including LA reservoir strain (LARS), pulmonary vein S/D ratio, and IVRT as supplemental parameters. A dedicated Constrictive vs Restrictive atlas walks through the Mayo respirophasic criteria — ΔE &gt; 25%, hepatic vein expiratory diastolic flow reversal, annulus paradoxus, and septal notch on M-mode.</p>
-
-          <p><strong>Valvular Calculators</strong> covers the workhorses: PISA-derived effective regurgitant orifice area (EROA) and regurgitant volume for mitral regurgitation, the continuity equation for aortic valve area (AVA), and pressure half-time (PHT) for mitral valve area in mitral stenosis (Hatle equation). <strong>Valvular Patterns</strong> presents Normal · Moderate · Severe spectral comparisons for AS, AR, MS, MR, and TR — including the late-peaking "dagger" envelope of severe AS, the steep deceleration slope of severe AR, the prolonged PHT of severe MS, the triangular V-cutoff envelope of severe MR, and the paradoxical low velocity in massive TR. Each atlas links to its matching calculator. <strong>Cardiomyopathies</strong> covers hypertrophic cardiomyopathy with SAM and dynamic LVOT gradient, plus cardiac amyloidosis featuring the pathognomonic apical-sparing strain pattern ("cherry on top") that distinguishes amyloid from HCM. <strong>Hemodynamics</strong> rounds out the calculator with PASP from TR Vmax, Doppler cardiac output (LVOT-VTI method), dP/dt for LV contractility, the Abbas equation for pulmonary vascular resistance, and the Qp/Qs shunt fraction.</p>
-
-          <h3>How to use it</h3>
-          <p>Click any module in the sidebar to open its visualisation. Calculator modules accept inputs via sliders or pickers; the output cells and the canvas update in real time as you adjust values, with severity grading (mild / moderate / severe) shown alongside numeric results. Atlas modules show pre-rendered comparisons and update via picker views. Animation runs for three seconds on each click and then fades — slider adjustments redraw the visualisation without restarting the animation. Every module has a Common Pitfalls section listing the gotchas, exclusions, and special-population considerations for that calculation, so the tool can be used both as a learning aid and a clinical reference.</p>
-
-          <h3>Who it's for</h3>
-          <p>The Echo Hemodynamics Calculator is built for cardiology fellows, internal medicine residents, sonographers, advanced practice providers, and attending cardiologists who want a fast, on-call-friendly companion for echo interpretation. It is not a substitute for a complete echocardiographic examination or for cardiac catheterization when invasive measurements are required — particularly when severe TR makes TR Vmax-based PASP unreliable, when AF or significant AR invalidates pressure half-time-derived MVA, or when low-flow / low-gradient AS necessitates dobutamine stress evaluation. The cutoffs and algorithms shown are based on published guidelines and are intended for educational reference. Always integrate echo findings with the clinical context, history, and other imaging modalities before making management decisions.</p>
-
-          <h3>Source guidelines and references</h3>
-          <p>The 2025 ASE update on LV diastolic function and HFpEF (Nagueh et al, J Am Soc Echocardiogr 2025;38:537–69) is the source for the sinus and AF diastolic algorithms. Valvular regurgitation severity criteria follow Zoghbi 2017 (ASE recommendations for evaluation of native valvular regurgitation). The Abbas PVR equation is from Abbas et al, J Am Coll Cardiol 2003. The Mayo respirophasic criteria for constrictive pericarditis are summarised in Welch et al and the Mayo echo board review materials. Each cutoff is shown alongside the calculation that uses it, so users can trace any number back to the underlying recommendation.</p>
-        </div>
-      </details>
+      
     </div>
   </main>
 </div>
@@ -5840,6 +5944,21 @@ window.addEventListener('resize', () => { resizeCanvas(); refreshDraw(); });
 resizeCanvas();
 buildSidebar();
 selectModule('pasp');
+
+// SEO popover — close on outside click + Escape
+(function setupSeoPopover() {
+  const popover = document.getElementById('seoPopover');
+  if (!popover) return;
+  document.addEventListener('click', (e) => {
+    if (!popover.open) return;
+    if (e.target.closest('.seo-popover')) return;
+    popover.removeAttribute('open');
+  });
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && popover.open) popover.removeAttribute('open');
+  });
+})();
+
 </script>
 </body>
 </html>
