@@ -2005,6 +2005,7 @@ body {
   // Built once at module load, projected per-frame.
   var ANGIO_TREE = (function() {
     function bez(p0, p1, p2, n) {
+      n = n || 14;
       var out = [];
       for (var i = 0; i <= n; i++) {
         var t = i / n, u = 1 - t;
