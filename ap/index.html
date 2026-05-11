@@ -1834,7 +1834,11 @@ function render(now) {
 
   // Sweep advance
   const isPace = cellType === 'pace';
-  const tMax = computeTMax(params, isPace);
+  // Pace mode reads paceParams (MDP / threshold / phase4Slope); fast-response
+  // modes read params (vRest / vPeak / etc.). Passing the wrong shape gives
+  // NaN tMax, breaks the wrap check, and kills the trace draw loop.
+  const tMaxParams = isPace ? paceParams : params;
+  const tMax = computeTMax(tMaxParams, isPace);
   sweepMs += dt * 0.6; // 0.6 ms AP-time per ms wall (~1.7s sweep)
   if (sweepMs > tMax + 60) sweepMs = 0;
 
