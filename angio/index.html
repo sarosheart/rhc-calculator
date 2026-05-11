@@ -351,6 +351,37 @@ body.dark .preset-btn { background: var(--panel-bg-2); }
 }
 body.dark .view-label { background: rgba(40, 50, 70, 0.85); }
 
+/* Quick label-toggle button (top-right of viz) — instant hide/show without
+   hunting in the Display card. */
+.label-toggle {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  background: rgba(13, 16, 25, 0.78);
+  color: rgba(240, 240, 240, 0.88);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 4px;
+  padding: 5px 10px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  transition: background 0.15s, border-color 0.15s, color 0.15s;
+}
+.label-toggle:hover {
+  background: rgba(40, 50, 70, 0.92);
+  border-color: rgba(120, 160, 220, 0.5);
+  color: #fff;
+}
+body.dark .label-toggle { background: rgba(40, 50, 70, 0.78); }
+body.dark .label-toggle:hover { background: rgba(60, 80, 110, 0.92); }
+.label-toggle .icon { font-size: 13px; line-height: 1; }
+.label-toggle.off { color: rgba(180, 180, 180, 0.6); }
+.label-toggle.off .icon { opacity: 0.5; }
+
 /* Clinical note panel (bottom) */
 .clin-note {
   margin: 12px;
@@ -555,6 +586,9 @@ body.dark .label-text.lead { fill: #e8ecf2; }
       <svg id="angioSvg" viewBox="0 0 800 600" preserveAspectRatio="xMidYMid meet"></svg>
       <svg class="carm-icon" id="carmIcon" viewBox="0 0 100 100"></svg>
       <div class="view-label" id="viewLabel">AP — Anteroposterior</div>
+      <button class="label-toggle" id="labelToggleBtn" title="Hide or show anatomical labels">
+        <span class="icon">⎘</span><span id="labelToggleText">Hide labels</span>
+      </button>
     </div>
 
     <!-- Clinical note for the current view -->
@@ -1381,8 +1415,27 @@ document.getElementById('slCra').addEventListener('input', () => {
 
 // Display option checkboxes
 ['ovLabels', 'ovBoth', 'ovSilhouette'].forEach(id => {
-  document.getElementById(id).addEventListener('change', render);
+  document.getElementById(id).addEventListener('change', () => {
+    render();
+    if (id === 'ovLabels') updateLabelToggleBtn();
+  });
 });
+
+// On-viz quick label toggle — wired to the same ovLabels state so both controls
+// stay in sync.
+function updateLabelToggleBtn() {
+  const on = document.getElementById('ovLabels').checked;
+  const btn = document.getElementById('labelToggleBtn');
+  const txt = document.getElementById('labelToggleText');
+  btn.classList.toggle('off', !on);
+  txt.textContent = on ? 'Hide labels' : 'Show labels';
+}
+document.getElementById('labelToggleBtn').addEventListener('click', () => {
+  const cb = document.getElementById('ovLabels');
+  cb.checked = !cb.checked;
+  cb.dispatchEvent(new Event('change'));
+});
+updateLabelToggleBtn();
 
 // Dark mode
 function toggleDark() {
