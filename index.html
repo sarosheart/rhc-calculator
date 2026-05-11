@@ -55,7 +55,9 @@
     {"@type": "ListItem", "position": 3, "url": "https://cathmath.org/pvloop/", "name": "PV Loop Simulator"},
     {"@type": "ListItem", "position": 4, "url": "https://cathmath.org/ekg/", "name": "12-Lead EKG Simulator"},
     {"@type": "ListItem", "position": 5, "url": "https://cathmath.org/embryology/", "name": "Cardiac Embryology Simulator"},
-    {"@type": "ListItem", "position": 6, "url": "https://cathmath.org/ap/", "name": "Cardiac Action Potential Simulator"}
+    {"@type": "ListItem", "position": 6, "url": "https://cathmath.org/ap/", "name": "Cardiac Action Potential Simulator"},
+    {"@type": "ListItem", "position": 7, "url": "https://cathmath.org/echocalc/", "name": "Echo Hemodynamics Calculator"},
+    {"@type": "ListItem", "position": 8, "url": "https://cathmath.org/angio/", "name": "Coronary Angiography Views Simulator"}
   ]
 }
 </script>
@@ -757,6 +759,23 @@ body {
         </div>
       </div>
     </a>
+
+    <!-- Coronary Angiography Views -->
+    <a class="tool-card" id="cardAngio" href="/angio/">
+      <div class="card-canvas-wrap">
+        <canvas id="canvasAngio"></canvas>
+      </div>
+      <div class="card-info">
+        <div class="card-title">Coronary Angiography Views <span class="card-arrow">&rarr;</span></div>
+        <div class="card-desc">See how the C-arm angle reshapes coronary anatomy on the screen — LAO/RAO and cranial/caudal sweeps with annotated LCA and RCA presets.</div>
+        <div class="card-tags">
+          <span class="card-tag">LAO / RAO</span>
+          <span class="card-tag">Cranial / Caudal</span>
+          <span class="card-tag">LCA + RCA</span>
+          <span class="card-tag">13 Presets</span>
+        </div>
+      </div>
+    </a>
   </div>
 </section>
 
@@ -987,6 +1006,7 @@ body {
       startEmbryoAnimation(loops);
       startApAnimation(loops);
       startEchoAnimation(loops);
+      startAngioAnimation(loops);
     }, instant ? 100 : 600);
   }
 
@@ -1083,6 +1103,7 @@ body {
       embryoSetup = setupCanvas('canvasEmbryo');
       apSetup = setupCanvas('canvasAp');
       echoSetup = setupCanvas('canvasEcho');
+      angioSetup = setupCanvas('canvasAngio');
       // Redraw final frames if animations completed
       if (hemoDone) drawHemoFrame(hemoSetup, 1);
       if (rhcDone) drawRhcFrame(rhcSetup, 1);
@@ -1091,13 +1112,14 @@ body {
       if (embryoDone) drawEmbryoFrame(embryoSetup, 1);
       if (apDone) drawApFrame(apSetup, 1);
       if (echoDone) drawEchoFrame(echoSetup, 1);
+      if (angioDone) drawAngioFrame(angioSetup, 1);
     }, 200);
   });
 
   // Lazy init — canvases may not have dimensions yet
-  var hemoSetup, rhcSetup, pvSetup, ekgSetup, embryoSetup, apSetup, echoSetup;
-  var hemoDone = false, rhcDone = false, pvDone = false, ekgDone = false, embryoDone = false, apDone = false, echoDone = false;
-  var hemoRunning = false, rhcRunning = false, pvRunning = false, ekgRunning = false, embryoRunning = false, apRunning = false, echoRunning = false;
+  var hemoSetup, rhcSetup, pvSetup, ekgSetup, embryoSetup, apSetup, echoSetup, angioSetup;
+  var hemoDone = false, rhcDone = false, pvDone = false, ekgDone = false, embryoDone = false, apDone = false, echoDone = false, angioDone = false;
+  var hemoRunning = false, rhcRunning = false, pvRunning = false, ekgRunning = false, embryoRunning = false, apRunning = false, echoRunning = false, angioRunning = false;
 
   function ensureSetup() {
     if (!hemoSetup) hemoSetup = setupCanvas('canvasHemo');
@@ -1107,6 +1129,7 @@ body {
     if (!embryoSetup) embryoSetup = setupCanvas('canvasEmbryo');
     if (!apSetup) apSetup = setupCanvas('canvasAp');
     if (!echoSetup) echoSetup = setupCanvas('canvasEcho');
+    if (!angioSetup) angioSetup = setupCanvas('canvasAngio');
   }
 
 
@@ -1975,6 +1998,130 @@ body {
 
 
   /* ══════════════════════════════════════
+     ANGIO card animation — coronary tree painted in by contrast,
+     then a subtle C-arm angle sweep tilts the projection.
+     ══════════════════════════════════════ */
+  // LCA tree in normalized [-1..1] heart-relative coords: x→horizontal, y→vertical
+  // Built once at module load, projected per-frame.
+  var ANGIO_TREE = (function() {
+    function bez(p0, p1, p2, n) {
+      var out = [];
+      for (var i = 0; i <= n; i++) {
+        var t = i / n, u = 1 - t;
+        out.push([
+          u*u*p0[0] + 2*u*t*p1[0] + t*t*p2[0],
+          u*u*p0[1] + 2*u*t*p1[1] + t*t*p2[1]
+        ]);
+      }
+      return out;
+    }
+    return [
+      // LM → LAD main (top-left curving down-right)
+      { pts: bez([-0.55,-0.55],[-0.10,-0.30],[0.20,0.55]).concat(bez([0.20,0.55],[0.30,0.75],[0.42,0.90]).slice(1)), w: 2.6 },
+      // LCx (sweeps left-down around AV groove)
+      { pts: bez([-0.45,-0.45],[-0.70,-0.05],[-0.60,0.55]).concat(bez([-0.60,0.55],[-0.50,0.78],[-0.30,0.85]).slice(1)), w: 2.2 },
+      // D1 off LAD
+      { pts: bez([-0.05,0.00],[0.25,-0.05],[0.50,-0.10]), w: 1.5 },
+      // D2 off LAD
+      { pts: bez([0.15,0.40],[0.40,0.35],[0.65,0.30]), w: 1.4 },
+      // Septal off LAD
+      { pts: bez([0.05,0.20],[0.00,0.45],[-0.05,0.70]), w: 1.1 },
+      // OM1 off LCx
+      { pts: bez([-0.65,0.10],[-0.85,0.20],[-0.92,0.45]), w: 1.5 },
+    ];
+  })();
+
+  function drawAngioFrame(s, progress) {
+    var ctx = s.ctx, W = s.w, H = s.h;
+    ctx.clearRect(0, 0, W, H);
+
+    // Subtle C-arm angle sweep — eases through one full cycle across the animation
+    var angle = Math.sin(progress * Math.PI * 1.0) * 0.35;  // ~±20° LAO/RAO feel
+    var cosA = Math.cos(angle), sinA = Math.sin(angle);
+    var cx = W * 0.50, cy = H * 0.52;
+    var scale = Math.min(W, H) * 0.42;
+
+    function project(p) {
+      // Foreshorten x with cosA, drop a touch of perspective via y-skew
+      var x = p[0] * cosA;
+      var y = p[1] + p[0] * sinA * 0.18;
+      return [cx + x * scale, cy + y * scale];
+    }
+
+    // Faint heart silhouette
+    ctx.save();
+    ctx.globalAlpha = 0.05;
+    ctx.fillStyle = '#fff';
+    ctx.beginPath();
+    ctx.ellipse(cx, cy + scale * 0.05, scale * 0.92, scale * 1.05, angle * 0.4, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.restore();
+
+    // Each vessel reveals along its length with a slight stagger
+    ctx.save();
+    ctx.lineCap = 'round';
+    ctx.lineJoin = 'round';
+    ctx.shadowColor = 'rgba(220,50,50,0.35)';
+    ctx.shadowBlur = 6;
+
+    for (var v = 0; v < ANGIO_TREE.length; v++) {
+      var vessel = ANGIO_TREE[v];
+      var stagger = v * 0.07;
+      var local = Math.max(0, Math.min(1, (progress - stagger) / (1 - stagger)));
+      if (local <= 0) continue;
+      var pts = vessel.pts;
+      var endIdx = Math.max(1, Math.floor(local * (pts.length - 1)));
+
+      ctx.strokeStyle = 'rgba(220,60,60,0.88)';
+      ctx.lineWidth = vessel.w;
+      ctx.beginPath();
+      var p0 = project(pts[0]);
+      ctx.moveTo(p0[0], p0[1]);
+      for (var i = 1; i <= endIdx; i++) {
+        var p = project(pts[i]);
+        ctx.lineTo(p[0], p[1]);
+      }
+      ctx.stroke();
+    }
+    ctx.restore();
+
+    // C-arm angle readout
+    if (progress > 0.55) {
+      ctx.font = '500 9px DM Sans, sans-serif';
+      ctx.fillStyle = 'rgba(220,60,60,0.55)';
+      ctx.textAlign = 'right';
+      var deg = Math.round(angle * 180 / Math.PI);
+      var label = (deg < 0 ? Math.abs(deg) + '° RAO' : deg > 0 ? deg + '° LAO' : 'AP');
+      ctx.fillText(label, W - 8, 14);
+    }
+  }
+
+  function startAngioAnimation(loops) {
+    if (angioRunning) return;
+    loops = loops || 1;
+    ensureSetup();
+    if (!angioSetup) return;
+    angioDone = false; angioRunning = true;
+    var dur = 3000, loopIdx = 0;
+    function runLoop() {
+      var t0 = performance.now();
+      function frame() {
+        var p = Math.min((performance.now() - t0) / dur, 1);
+        drawAngioFrame(angioSetup, p);
+        if (p < 1) requestAnimationFrame(frame);
+        else {
+          loopIdx++;
+          if (loopIdx < loops) { setTimeout(runLoop, 200); }
+          else { angioDone = true; angioRunning = false; }
+        }
+      }
+      requestAnimationFrame(frame);
+    }
+    runLoop();
+  }
+
+
+  /* ══════════════════════════════════════
      HOVER REPLAY
      ══════════════════════════════════════ */
   function addHoverReplay(cardId, startFn) {
@@ -2003,6 +2150,7 @@ body {
     addHoverReplay('cardEmbryo', startEmbryoAnimation);
     addHoverReplay('cardAp', startApAnimation);
     addHoverReplay('cardEcho', startEchoAnimation);
+    addHoverReplay('cardAngio', startAngioAnimation);
   });
 
   // Auto-skip animation if already seen on this device within 48 hours
