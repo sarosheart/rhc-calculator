@@ -791,6 +791,9 @@ body.dark .label-text.lead { fill: #e8ecf2; }
       <label style="display:flex;align-items:center;gap:8px;font-size:12px;color:var(--text-dim);cursor:pointer;margin-bottom:6px;">
         <input type="checkbox" id="ovSilhouette" checked> Heart silhouette
       </label>
+      <label style="display:flex;align-items:center;gap:8px;font-size:12px;color:var(--text-dim);cursor:pointer;margin-bottom:6px;">
+        <input type="checkbox" id="ovPlanes"> Anatomic planes (AV / IV)
+      </label>
       <label style="display:flex;align-items:center;gap:8px;font-size:12px;color:var(--text-dim);cursor:pointer;">
         <input type="checkbox" id="ovXray"> X-ray render mode
       </label>
@@ -1544,13 +1547,60 @@ function render() {
         targetY: target.y,
       });
     }
-    // Place labels in two side strips — left strip for vessels on viewer's
-    // left half (sx < CX), right strip for the right half.
-    const leftLabels = labels.filter(L => L.targetX < CX);
-    const rightLabels = labels.filter(L => L.targetX >= CX);
+    // Balanced distribution: regardless of where the cluster sits in the
+    // canvas, force roughly half the labels to each side so neither stack
+    // gets crowded. Within each side, sort by targetY for clean horizontal
+    // leader lines. Assignment: leftmost-X labels → left strip, rightmost-X
+    // labels → right strip. This keeps every label's leader as short as it
+    // can be, while guaranteeing both columns are used.
+    const byX = labels.slice().sort((a, b) => a.targetX - b.targetX);
+    const half = Math.ceil(byX.length / 2);
+    const leftSet = new Set(byX.slice(0, half).map(L => L.key));
+    const leftLabels = labels.filter(L => leftSet.has(L.key));
+    const rightLabels = labels.filter(L => !leftSet.has(L.key));
 
     placeLabels(leftLabels, 'left', parts);
     placeLabels(rightLabels, 'right', parts);
+  }
+
+  // Optional anatomic-plane guides (paper Fig 1). Subtle dashed lines + tiny
+  // italic labels indicating the AV groove and IV septum planes. Default OFF
+  // to avoid adding clutter; user opts in via the Display panel.
+  if (document.getElementById('ovPlanes') && document.getElementById('ovPlanes').checked) {
+    // Plane endpoints in heart coords. AV groove ≈ y=0 horizontal slice
+    // through the heart. IV septum ≈ x=0 vertical slice from base to apex.
+    const planeAV = [
+      project3D({ x: -1.55, y: 0.05, z: 0 }, liveLao, liveCra),
+      project3D({ x:  1.55, y: 0.05, z: 0 }, liveLao, liveCra),
+    ];
+    const planeIV = [
+      project3D({ x: 0, y:  0.95, z: 0.05 }, liveLao, liveCra),
+      project3D({ x: 0, y: -1.15, z: -0.30 }, liveLao, liveCra),
+    ];
+    function toSvg(p) { return { x: CX + p.sx * SCALE, y: CY + p.sy * SCALE }; }
+    const av0 = toSvg(planeAV[0]), av1 = toSvg(planeAV[1]);
+    const iv0 = toSvg(planeIV[0]), iv1 = toSvg(planeIV[1]);
+    // AV plane line
+    parts.push(`<line x1="${av0.x.toFixed(1)}" y1="${av0.y.toFixed(1)}" x2="${av1.x.toFixed(1)}" y2="${av1.y.toFixed(1)}" stroke="rgba(180, 195, 220, 0.32)" stroke-width="0.9" stroke-dasharray="4 4" pointer-events="none"/>`);
+    // IV plane line
+    parts.push(`<line x1="${iv0.x.toFixed(1)}" y1="${iv0.y.toFixed(1)}" x2="${iv1.x.toFixed(1)}" y2="${iv1.y.toFixed(1)}" stroke="rgba(180, 195, 220, 0.32)" stroke-width="0.9" stroke-dasharray="4 4" pointer-events="none"/>`);
+    // Labels — place at whichever endpoint is closer to the canvas edge for that plane.
+    function planeLabel(p0, p1, text) {
+      const e0 = Math.hypot(Math.min(p0.x, SVG_W - p0.x), Math.min(p0.y, SVG_H - p0.y));
+      const e1 = Math.hypot(Math.min(p1.x, SVG_W - p1.x), Math.min(p1.y, SVG_H - p1.y));
+      const p = e0 < e1 ? p0 : p1;
+      const other = e0 < e1 ? p1 : p0;
+      // Offset slightly outside the plane along the line direction
+      const dx = p.x - other.x, dy = p.y - other.y;
+      const len = Math.hypot(dx, dy) || 1;
+      const lx = Math.max(8, Math.min(SVG_W - 8, p.x + (dx / len) * 6));
+      const ly = Math.max(14, Math.min(SVG_H - 6, p.y + (dy / len) * 6));
+      // Right-anchor if the label sits in the right half of the canvas
+      const anch = lx > SVG_W * 0.6 ? 'end' : lx < SVG_W * 0.4 ? 'start' : 'middle';
+      parts.push(`<text x="${lx.toFixed(1)}" y="${ly.toFixed(1)}" text-anchor="${anch}" font-size="9.5" font-style="italic" font-weight="500" fill="rgba(195, 205, 220, 0.55)" letter-spacing="0.04em" pointer-events="none">${text}</text>`);
+    }
+    planeLabel(av0, av1, 'Atrioventricular plane');
+    planeLabel(iv0, iv1, 'Interventricular plane');
   }
 
   svg.innerHTML = parts.join('');
@@ -1575,8 +1625,8 @@ function render() {
 //      the vessel.
 function placeLabels(labels, which, parts) {
   if (labels.length === 0) return;
-  const LABEL_LINE_H = 16;       // vertical pixels per label
-  const HORIZ_GAP = 28;          // pixels between vessel cluster and label column
+  const LABEL_LINE_H = 22;       // vertical pixels per label (bumped from 16)
+  const HORIZ_GAP = 36;          // pixels between vessel cluster and label column
   const SVG_EDGE_PAD = 6;        // min distance from SVG edge
 
   // Sort labels by target Y so leaders are roughly parallel (no crossings)
@@ -1585,13 +1635,13 @@ function placeLabels(labels, which, parts) {
   // Tight bounding box of targets on this side
   const minTX = Math.min(...labels.map(L => L.targetX));
   const maxTX = Math.max(...labels.map(L => L.targetX));
-  const minTY = Math.min(...labels.map(L => L.targetY));
-  const maxTY = Math.max(...labels.map(L => L.targetY));
 
-  // Label column X — close to the vessel cluster, but inside SVG bounds
+  // Label column X — pushed to the canvas margin for that side so the column
+  // stays well clear of the vessel cluster (the leader line bridges the gap).
+  // This is what gives both columns enough room when many labels stack tight.
   const labelX = which === 'left'
-    ? Math.max(SVG_EDGE_PAD, minTX - HORIZ_GAP)
-    : Math.min(SVG_W - SVG_EDGE_PAD, maxTX + HORIZ_GAP);
+    ? Math.max(SVG_EDGE_PAD, Math.min(minTX - HORIZ_GAP, 120))
+    : Math.min(SVG_W - SVG_EDGE_PAD, Math.max(maxTX + HORIZ_GAP, SVG_W - 120));
   const anchor = which === 'left' ? 'end' : 'start';
 
   // Decide label Y positions. Start from each target Y as the "ideal" position,
@@ -2282,7 +2332,7 @@ document.getElementById('slCra').addEventListener('input', () => {
 });
 
 // Display options
-['ovBoth', 'ovSilhouette'].forEach(id => {
+['ovBoth', 'ovSilhouette', 'ovPlanes'].forEach(id => {
   document.getElementById(id).addEventListener('change', render);
 });
 
