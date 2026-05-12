@@ -919,20 +919,22 @@ const COR = {
     label: 'Septal perforators',
     side: 'left',
     width: 'small',
+    // First point is OVERWRITTEN at load time by linkBranches() (parent: LAD_mid, idx: 1).
+    // Keep a sensible fallback here so the file is still valid in isolation.
     points: [
-      { x: -0.78, y: 0.30, z: 0.70 },
-      { x: -0.75, y: 0.15, z: 0.40 },   // septum: medial + posterior to LAD
-      { x: -0.65, y: -0.10, z: 0.10 },
+      { x: -0.85, y:  0.10, z:  0.80 },
+      { x: -0.75, y: -0.05, z:  0.40 },
+      { x: -0.65, y: -0.20, z:  0.10 },
     ],
   },
   Septal2: {
-    label: '',  // unlabeled secondary septal
+    label: '',
     side: 'left',
     width: 'small',
     points: [
-      { x: -0.88, y: 0.05, z: 0.78 },
-      { x: -0.78, y: -0.05, z: 0.45 },
-      { x: -0.65, y: -0.20, z: 0.15 },
+      { x: -0.85, y:  0.10, z:  0.80 },
+      { x: -0.80, y: -0.10, z:  0.45 },
+      { x: -0.70, y: -0.25, z:  0.15 },
     ],
   },
   LCx_prox: {
@@ -1112,6 +1114,44 @@ const COR = {
     ],
   },
 };
+
+// ─── BRANCH ↔ PARENT LINKS ───────────────────────────────────
+// Each side-branch declares its parent vessel + which parent anchor index to
+// attach to (negative = from end). At load time linkBranches() OVERWRITES the
+// branch's first 3D point with a deep copy of the parent's exact anchor. This
+// guarantees every branch starts on its parent — no floating gaps in any
+// projection, no matter how I edit either set of points later.
+const BRANCH_LINKS = {
+  // Left coronary
+  D1:      { parent: 'LAD_prox', idx: -1 },
+  D2:      { parent: 'LAD_mid',  idx: -1 },
+  Septal:  { parent: 'LAD_mid',  idx:  1 },
+  Septal2: { parent: 'LAD_mid',  idx:  1 },
+  OM1:     { parent: 'LCx_prox', idx: -1 },
+  OM2:     { parent: 'LCx_mid',  idx:  1 },
+  // Right coronary
+  SAN:     { parent: 'RCA_prox', idx:  0 },
+  Conus:   { parent: 'RCA_prox', idx:  0 },
+  RV1:     { parent: 'RCA_prox', idx: -1 },
+  RV2:     { parent: 'RCA_mid',  idx:  1 },
+  AM:      { parent: 'RCA_mid',  idx:  1 },
+  PDA:     { parent: 'RCA_dist', idx: -1 },
+  PLV:     { parent: 'RCA_dist', idx: -1 },
+  PDA_S1:  { parent: 'PDA',      idx:  0 },
+  PDA_S2:  { parent: 'PDA',      idx:  1 },
+};
+
+function linkBranches() {
+  for (const [child, link] of Object.entries(BRANCH_LINKS)) {
+    const c = COR[child], p = COR[link.parent];
+    if (!c || !p || !c.points || !p.points) continue;
+    const idx = link.idx < 0 ? p.points.length + link.idx : link.idx;
+    const anchor = p.points[idx];
+    if (!anchor) continue;
+    c.points[0] = { x: anchor.x, y: anchor.y, z: anchor.z };
+  }
+}
+linkBranches();
 
 // Heart silhouette: simplified LV+RV outline in 3D (approximates the cardiac
 // shadow on fluoroscopy). Points form a closed loop. The silhouette transforms
@@ -1597,7 +1637,10 @@ function render() {
       const ly = Math.max(14, Math.min(SVG_H - 6, p.y + (dy / len) * 6));
       // Right-anchor if the label sits in the right half of the canvas
       const anch = lx > SVG_W * 0.6 ? 'end' : lx < SVG_W * 0.4 ? 'start' : 'middle';
-      parts.push(`<text x="${lx.toFixed(1)}" y="${ly.toFixed(1)}" text-anchor="${anch}" font-size="9.5" font-style="italic" font-weight="500" fill="rgba(195, 205, 220, 0.55)" letter-spacing="0.04em" pointer-events="none">${text}</text>`);
+      // paint-order halo so the label is never struck through by a vessel
+      // or by the plane line crossing it. The stroke draws first as a dark
+      // halo, then the fill paints on top.
+      parts.push(`<text x="${lx.toFixed(1)}" y="${ly.toFixed(1)}" text-anchor="${anch}" font-size="9.5" font-style="italic" font-weight="600" letter-spacing="0.04em" pointer-events="none" paint-order="stroke fill" stroke="rgba(13, 16, 25, 0.92)" stroke-width="3.5" stroke-linejoin="round" fill="rgba(210, 220, 235, 0.78)">${text}</text>`);
     }
     planeLabel(av0, av1, 'Atrioventricular plane');
     planeLabel(iv0, iv1, 'Interventricular plane');
