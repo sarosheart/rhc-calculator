@@ -2034,40 +2034,72 @@ function renderOrientationWidget() {
   const angTxt = formatAngleReadout();
   html += `<text x="6" y="252" font-size="9" font-weight="700" fill="rgba(253, 204, 77, 0.9)" letter-spacing="0.04em">${angTxt}</text>`;
 
-  // ─── Directional flash arrow ───
-  // Shown briefly when the user moves a slider. Tells the trainee which way the
-  // C-arm is moving (RAO / LAO / CRA / CAU). Positioned in screen-space anchored
-  // to the detector projection, so the arrow consistently points the right way
-  // regardless of current C-arm pose.
-  if (flashDir) {
-    const cfg = {
-      'lao+': { dx:  34, dy:   0, label: 'LAO', sweep: 1 },
-      'lao-': { dx: -34, dy:   0, label: 'RAO', sweep: 0 },
-      'cra+': { dx:   0, dy: -34, label: 'CRA', sweep: 0 },
-      'cra-': { dx:   0, dy:  34, label: 'CAU', sweep: 1 },
-    }[flashDir];
-    if (cfg) {
-      // Anchor the arrow at the projected detector position; the arrow curves
-      // outward in screen-space toward the labeled direction.
-      const ax = detP.x;
-      const ay = detP.y;
-      const tx = ax + cfg.dx;
-      const ty = ay + cfg.dy;
-      const cx = ax + cfg.dx * 0.55 + (cfg.dy ? 0 : 12 * (cfg.dx > 0 ? -1 : 1));
-      const cy = ay + cfg.dy * 0.55 + (cfg.dx ? 0 : 12 * (cfg.dy > 0 ? -1 : 1));
-      const pathD = `M ${ax.toFixed(1)} ${ay.toFixed(1)} Q ${cx.toFixed(1)} ${cy.toFixed(1)} ${tx.toFixed(1)} ${ty.toFixed(1)}`;
-      // Glow underlay then bright arrow
-      html += `<path d="${pathD}" fill="none" stroke="rgba(253,204,77,0.35)" stroke-width="6" stroke-linecap="round"/>`;
-      html += `<path d="${pathD}" fill="none" stroke="#fdcc4d" stroke-width="2.6" stroke-linecap="round" marker-end="url(#arrHead)">
-        <animate attributeName="stroke-opacity" values="0.4;1;0.4" dur="0.7s" repeatCount="1"/>
-      </path>`;
-      // Label near arrowhead
-      const labelX = tx + (cfg.dx > 0 ? 6 : cfg.dx < 0 ? -6 : 0);
-      const labelY = ty + (cfg.dy > 0 ? 12 : cfg.dy < 0 ? -4 : 4);
-      const anch = cfg.dx > 0 ? 'start' : cfg.dx < 0 ? 'end' : 'middle';
-      html += `<text x="${labelX.toFixed(1)}" y="${labelY.toFixed(1)}" text-anchor="${anch}" font-size="11" font-weight="800" fill="#fdcc4d" letter-spacing="0.05em">${cfg.label}</text>`;
+  // ─── 5 ALWAYS-VISIBLE motion arrows + AP + "Image Receptor" callout ───
+  // Per the Rigatelli atlas Fig 3 reference: a teaching diagram showing all
+  // four C-arm motion directions (RAO upper-left, CRA upper-right, CAU lower-
+  // left, LAO lower-right) plus the AP projection (straight down into the
+  // receptor). The matching arrow brightens to yellow when the user moves a
+  // slider that direction; otherwise all arrows sit at a subtle blue-grey.
+  //
+  // Arrows are placed in FIXED screen-space at the top of the widget viewBox
+  // (around an "AP receptor reference" position) so they always read as
+  // "these are the possible motions" regardless of where the C-arm currently
+  // is. The 700 ms flashDir state drives the highlight.
+
+  // Marker for "active" yellow arrowhead. The default marker `arrHead` is the
+  // yellow head used by flashes; we'll reuse it but also define a faded one.
+  html += `<defs>
+    <marker id="arrHeadFade" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="rgba(200, 215, 235, 0.6)"/>
+    </marker>
+  </defs>`;
+
+  const RX = 150, RY = 38;                    // AP receptor reference center (top-center)
+  const arrowLen = 28;
+  const ARROWS = [
+    // Diagonal layout per the reference figure: RAO upper-left, CRA upper-right,
+    // CAU lower-left, LAO lower-right.
+    { key: 'lao-', label: 'RAO', dx: -arrowLen, dy: -arrowLen * 0.55, curveSign:  1 },
+    { key: 'cra+', label: 'CRA', dx:  arrowLen, dy: -arrowLen * 0.55, curveSign: -1 },
+    { key: 'cra-', label: 'CAU', dx: -arrowLen, dy:  arrowLen * 0.55, curveSign: -1 },
+    { key: 'lao+', label: 'LAO', dx:  arrowLen, dy:  arrowLen * 0.55, curveSign:  1 },
+  ];
+  for (const a of ARROWS) {
+    const isActive = flashDir === a.key;
+    const tx = RX + a.dx;
+    const ty = RY + a.dy;
+    // Curved control point — bows outward (away from the receptor center).
+    const mx = (RX + tx) / 2 + a.dy * 0.20 * a.curveSign;
+    const my = (RY + ty) / 2 - a.dx * 0.20 * a.curveSign;
+    const d = `M ${RX} ${RY} Q ${mx.toFixed(1)} ${my.toFixed(1)} ${tx.toFixed(1)} ${ty.toFixed(1)}`;
+    const stroke = isActive ? '#fdcc4d' : 'rgba(200, 215, 235, 0.55)';
+    const sw = isActive ? 2.4 : 1.6;
+    const marker = isActive ? 'arrHead' : 'arrHeadFade';
+    if (isActive) {
+      // Glow underlay
+      html += `<path d="${d}" fill="none" stroke="rgba(253, 204, 77, 0.30)" stroke-width="6" stroke-linecap="round"/>`;
     }
+    html += `<path d="${d}" fill="none" stroke="${stroke}" stroke-width="${sw}" stroke-linecap="round" marker-end="url(#${marker})">
+      ${isActive ? '<animate attributeName="stroke-opacity" values="0.5;1;0.5" dur="0.7s" repeatCount="1"/>' : ''}
+    </path>`;
+    // Label slightly past the arrowhead
+    const labelX = tx + (a.dx > 0 ? 4 : -4);
+    const labelY = ty + (a.dy > 0 ? 9 : -3);
+    const anch = a.dx > 0 ? 'start' : 'end';
+    const labelFill = isActive ? '#fdcc4d' : 'rgba(220, 230, 245, 0.78)';
+    html += `<text x="${labelX.toFixed(1)}" y="${labelY.toFixed(1)}" text-anchor="${anch}" font-size="10" font-weight="800" letter-spacing="0.06em" paint-order="stroke fill" stroke="rgba(13, 16, 25, 0.85)" stroke-width="2.6" stroke-linejoin="round" fill="${labelFill}">${a.label}</text>`;
   }
+  // AP arrow — straight down into the receptor reference. Labeled "AP".
+  html += `<path d="M ${RX} ${(RY - arrowLen).toFixed(1)} L ${RX} ${(RY - 6).toFixed(1)}" fill="none" stroke="rgba(200, 215, 235, 0.55)" stroke-width="1.8" stroke-linecap="round" marker-end="url(#arrHeadFade)"/>`;
+  html += `<text x="${RX}" y="${(RY - arrowLen - 4).toFixed(1)}" text-anchor="middle" font-size="10" font-weight="800" letter-spacing="0.06em" paint-order="stroke fill" stroke="rgba(13, 16, 25, 0.85)" stroke-width="2.6" stroke-linejoin="round" fill="rgba(220, 230, 245, 0.78)">AP</text>`;
+
+  // "Image Receptor" callout — short leader from a fixed text position to the
+  // current detector projection.
+  const irX = SVG_W ? SVG_W - 12 : 268;       // fall back if SVG_W undefined here
+  const irTextX = 290;
+  const irTextY = 102;
+  html += `<line x1="${(detP.x).toFixed(1)}" y1="${(detP.y).toFixed(1)}" x2="${(irTextX - 4).toFixed(1)}" y2="${irTextY - 4}" stroke="rgba(220, 230, 245, 0.4)" stroke-width="0.8" stroke-dasharray="2 3"/>`;
+  html += `<text x="${irTextX}" y="${irTextY}" text-anchor="end" font-size="9" font-weight="700" letter-spacing="0.04em" paint-order="stroke fill" stroke="rgba(13, 16, 25, 0.85)" stroke-width="2.6" stroke-linejoin="round" fill="rgba(220, 230, 245, 0.78)">Image Receptor</text>`;
 
   svg.innerHTML = html;
 
