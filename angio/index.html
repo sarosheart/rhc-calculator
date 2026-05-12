@@ -742,7 +742,7 @@ body.dark .label-text.lead { fill: #e8ecf2; }
       <div class="card-title">C-arm Angles</div>
       <div class="slider-row">
         <span class="slider-label">LAO / RAO</span>
-        <input type="range" id="slLao" min="-90" max="90" step="1" value="0">
+        <input type="range" id="slLao" min="-120" max="120" step="1" value="0">
         <span class="slider-val" id="slLaoVal">AP</span>
       </div>
       <div class="slider-row">
@@ -757,20 +757,22 @@ body.dark .label-text.lead { fill: #e8ecf2; }
       <div class="card-title">Standard Views</div>
       <div class="preset-grid" id="presetGridLeft" style="display: grid;">
         <button class="preset-btn" data-preset="ap-left">AP <span class="ang">0° / 0°</span></button>
-        <button class="preset-btn" data-preset="ap-cra">AP cranial <span class="ang">0° CRA 30°</span></button>
+        <button class="preset-btn" data-preset="ap-cra">AP cranial <span class="ang">0° CRA 35°</span></button>
         <button class="preset-btn" data-preset="ap-cau">AP caudal <span class="ang">0° CAU 30°</span></button>
-        <button class="preset-btn" data-preset="rao-cra">RAO cranial <span class="ang">RAO 30° CRA 30°</span></button>
-        <button class="preset-btn" data-preset="rao-cau">RAO caudal <span class="ang">RAO 20° CAU 20°</span></button>
-        <button class="preset-btn" data-preset="lao-cra">LAO cranial <span class="ang">LAO 45° CRA 25°</span></button>
+        <button class="preset-btn" data-preset="rao-cra">RAO cranial <span class="ang">RAO 30° CRA 35°</span></button>
+        <button class="preset-btn" data-preset="rao-cau">RAO caudal <span class="ang">RAO 30° CAU 20°</span></button>
+        <button class="preset-btn" data-preset="lao-cra">LAO cranial <span class="ang">LAO 45° CRA 35°</span></button>
         <button class="preset-btn" data-preset="lao-cau">LAO caudal "Spider" <span class="ang">LAO 45° CAU 30°</span></button>
         <button class="preset-btn" data-preset="lateral">Lateral <span class="ang">LAO 90°</span></button>
+        <button class="preset-btn" data-preset="reverse-spider">Reverse Spider <span class="ang">RAO 100° CRA 35°</span></button>
       </div>
       <div class="preset-grid" id="presetGridRight" style="display: none;">
         <button class="preset-btn" data-preset="rca-lao">LAO straight <span class="ang">LAO 45° / 0°</span></button>
-        <button class="preset-btn" data-preset="rca-lao-cra">LAO cranial <span class="ang">LAO 30° CRA 25°</span></button>
+        <button class="preset-btn" data-preset="rca-lao-cra">LAO cranial <span class="ang">LAO 25° CRA 30°</span></button>
         <button class="preset-btn" data-preset="rca-rao">RAO <span class="ang">RAO 30° / 0°</span></button>
-        <button class="preset-btn" data-preset="rca-ap-cra">AP cranial <span class="ang">0° CRA 30°</span></button>
-        <button class="preset-btn" data-preset="rca-lat">Lateral <span class="ang">LAO 90°</span></button>
+        <button class="preset-btn" data-preset="rca-rao-cra">RAO cranial <span class="ang">RAO 30° CRA 35°</span></button>
+        <button class="preset-btn" data-preset="rca-ap-cra">AP cranial <span class="ang">0° CRA 35°</span></button>
+        <button class="preset-btn" data-preset="rca-lat">LL <span class="ang">RAO 80° CAU 10°</span></button>
       </div>
     </div>
 
@@ -1042,6 +1044,28 @@ const COR = {
       { x: 1.35, y: -0.30, z: 0.20 },
     ],
   },
+  RV1: {
+    label: 'RV branch',
+    side: 'right',
+    width: 'small',
+    // Off proximal-mid RCA, courses across the anterior RV free wall toward apex.
+    points: [
+      { x: 0.95, y:  0.40, z:  0.20 },
+      { x: 0.85, y:  0.20, z:  0.55 },
+      { x: 0.65, y: -0.05, z:  0.80 },
+    ],
+  },
+  RV2: {
+    label: 'RV branch',
+    side: 'right',
+    width: 'small',
+    // Off mid-distal RCA, slightly more inferior than RV1.
+    points: [
+      { x: 0.90, y: -0.05, z:  0.10 },
+      { x: 0.75, y: -0.20, z:  0.45 },
+      { x: 0.50, y: -0.40, z:  0.70 },
+    ],
+  },
   SAN: {
     label: 'SA nodal branch',
     side: 'right',
@@ -1060,6 +1084,28 @@ const COR = {
       { x: 0.25, y: 0.80, z: 0.55 },
       { x: 0.10, y: 0.85, z: 0.75 },
       { x: -0.10, y: 0.80, z: 0.85 },
+    ],
+  },
+  PDA_S1: {
+    label: 'Septal (PDA)',
+    side: 'right',
+    width: 'tiny',
+    // Off the proximal PDA, courses into the inferior interventricular septum (toward x=0, +z).
+    points: [
+      { x: 0.42, y: -0.70, z: -0.55 },
+      { x: 0.25, y: -0.75, z: -0.30 },
+      { x: 0.10, y: -0.78, z: -0.05 },
+    ],
+  },
+  PDA_S2: {
+    label: 'Septal (PDA)',
+    side: 'right',
+    width: 'tiny',
+    // Mid PDA septal — more apical.
+    points: [
+      { x: 0.25, y: -0.85, z: -0.45 },
+      { x: 0.10, y: -0.88, z: -0.20 },
+      { x: 0.00, y: -0.90, z:  0.05 },
     ],
   },
 };
@@ -1195,19 +1241,21 @@ function heartPath(laoDeg, craDeg, cx, cy, scale) {
 const PRESETS = {
   // Left coronary
   'ap-left':  { side: 'left',  lao:   0, cra:   0, name: 'AP', desc: 'Initial orientation. Most LCA segments overlap — use angulated views.' },
-  'ap-cra':   { side: 'left',  lao:   0, cra:  30, name: 'AP CRANIAL', desc: '<strong>AP cranial (0° / CRA 30°):</strong> Best for the mid- and distal-LAD on the cardiac silhouette and for separating diagonal branches.' },
-  'ap-cau':   { side: 'left',  lao:   0, cra: -30, name: 'AP CAUDAL', desc: '<strong>AP caudal (0° / CAU 30°):</strong> Useful for the LM bifurcation and proximal LCx. The "Spider" (LAO caudal) view is usually preferred.' },
-  'rao-cra':  { side: 'left',  lao: -30, cra:  30, name: 'RAO CRANIAL', desc: '<strong>RAO cranial (RAO 30° / CRA 30°):</strong> Workhorse view for the mid-LAD. Separates diagonal branches from septals, profiles the distal LAD.' },
-  'rao-cau':  { side: 'left',  lao: -20, cra: -20, name: 'RAO CAUDAL', desc: '<strong>RAO caudal (RAO 20° / CAU 20°):</strong> Proximal LAD, proximal LCx, ramus intermedius, obtuse marginals. Wide overview of the left system.' },
-  'lao-cra':  { side: 'left',  lao:  45, cra:  25, name: 'LAO CRANIAL', desc: '<strong>LAO cranial (LAO 45° / CRA 25°):</strong> Mid-LAD without diagonal overlap. Best for the LAD-D1 bifurcation.' },
-  'lao-cau':  { side: 'left',  lao:  45, cra: -30, name: 'LAO CAUDAL ("SPIDER")', desc: '<strong>LAO caudal "Spider" (LAO 45° / CAU 30°):</strong> The most important LCA view — LM bifurcation, ostia of LAD and LCx, proximal LCx, ramus intermedius.' },
-  'lateral':  { side: 'left',  lao:  90, cra:   0, name: 'LATERAL', desc: '<strong>Lateral (LAO 90°):</strong> Profiles the LM, ostial LAD, and proximal-to-mid LAD. Useful when other LAD views are foreshortened.' },
+  'ap-cra':   { side: 'left',  lao:   0, cra:  35, name: 'AP CRANIAL', desc: '<strong>AP cranial (0° / CRA 35°):</strong> The LAD (especially the mid portion) and its diagonal and septal branches are depicted along their entire course. Useful for stenoses of the LM ostium and distal LCx / posterolateral branch in left dominance.' },
+  'ap-cau':   { side: 'left',  lao:   0, cra: -30, name: 'AP CAUDAL', desc: '<strong>AP caudal (0° / CAU 30°):</strong> Visualises LM and its bifurcation, the LCx, the OMs and their bifurcations; the proximal LAD is also well seen.' },
+  'rao-cra':  { side: 'left',  lao: -30, cra:  35, name: 'RAO CRANIAL', desc: '<strong>RAO cranial (RAO 30° / CRA 35°):</strong> Optimal visualisation of the mid- and distal-LAD and its diagonal branches. The workhorse view for PCI on LAD proximal, mid, distal, and the LAD-diagonal bifurcation.' },
+  'rao-cau':  { side: 'left',  lao: -30, cra: -20, name: 'RAO CAUDAL', desc: '<strong>RAO caudal (RAO 30° / CAU 20°):</strong> Origin and course of the LCx, OM branches, the LM, and the proximal segment of the LAD with its apical segment. Useful for PCI of LCx and its OMs and for stent positioning on LM-proximal LAD (cross-over technique).' },
+  'lao-cra':  { side: 'left',  lao:  45, cra:  35, name: 'LAO CRANIAL', desc: '<strong>LAO cranial (LAO 45° / CRA 35°):</strong> Optimal visualisation of the LM ostium, clear definition of the mid-LAD and separation of the septal and diagonal branches, and evaluation of the mid-distal LCx and DP in left dominance. Helpful for recrossing diagonal branches after LAD stenting.' },
+  'lao-cau':  { side: 'left',  lao:  45, cra: -30, name: 'LAO CAUDAL ("SPIDER")', desc: '<strong>LAO caudal "Spider" (LAO 45° / CAU 30°):</strong> Depicts the LM ostium, LM bifurcation, ostium and proximal portion of LAD, the mid-proximal LCx, and the origin of OM and first Diagonal branches. The most-used view for PCI of LM ostial, shaft and bifurcation.' },
+  'lateral':  { side: 'left',  lao:  90, cra:   0, name: 'LATERAL', desc: '<strong>Lateral (LAO 90°):</strong> The mid- to distal-LAD course is well visualised as well as the middle-distal portion of LCx and Ramus. Adding a cranial or caudal angulation (the so-called "Haldrig view") helps investigate eccentric plaque of the proximal or distal LAD.' },
+  'reverse-spider': { side: 'left',  lao: -100, cra: 35, name: 'REVERSE SPIDER', desc: '<strong>Reverse Spider (RAO 100° / CRA 35°):</strong> Depicts the LM bifurcation from the patient\'s right side, increasing the accuracy of the standard Spider view. Useful for complex single or dual stenting at the LM distal bifurcation, particularly when working from the right side (decreases operator radiation dose).' },
   // Right coronary
-  'rca-lao':       { side: 'right', lao:  45, cra:   0, name: 'RCA LAO STRAIGHT', desc: '<strong>LAO straight (LAO 45°):</strong> Profiles the whole RCA from ostium to crux without foreshortening. The standard first view for the right coronary.' },
-  'rca-lao-cra':   { side: 'right', lao:  30, cra:  25, name: 'RCA LAO CRANIAL', desc: '<strong>LAO cranial (LAO 30° / CRA 25°):</strong> Best for the distal RCA bifurcation — separates the PDA and PLV branches at the crux.' },
-  'rca-rao':       { side: 'right', lao: -30, cra:   0, name: 'RCA RAO', desc: '<strong>RAO (RAO 30°):</strong> Profiles the RCA mid-segment in the AV groove. Best view for acute marginal branches.' },
-  'rca-ap-cra':    { side: 'right', lao:   0, cra:  30, name: 'RCA AP CRANIAL', desc: '<strong>AP cranial (0° / CRA 30°):</strong> Alternative view of the distal RCA bifurcation when the LAO cranial view is suboptimal.' },
-  'rca-lat':       { side: 'right', lao:  90, cra:   0, name: 'RCA LATERAL', desc: '<strong>Lateral (LAO 90°):</strong> Profiles the RCA ostium and proximal segment. Useful when ostial disease or an anomalous origin is suspected.' },
+  'rca-lao':       { side: 'right', lao:  45, cra:   0, name: 'RCA LAO STRAIGHT', desc: '<strong>LAO 45°:</strong> Good depiction of the whole RCA from the ostium to the distal portion, the mid-proximal portion, the arise of the conus artery, RV branches, and the acute marginal arteries. The crux cordis and the DP-PL are foreshortened. Standard first view for the RCA.' },
+  'rca-rao-cra':   { side: 'right', lao: -30, cra:  35, name: 'RCA RAO CRANIAL', desc: '<strong>RAO 30° / CRA 35°:</strong> Visualises the proximal RCA and the bifurcation between the mid-RCA and the acute marginal branch. Useful for PCI on the mid-RCA at the bifurcation with the AM.' },
+  'rca-lao-cra':   { side: 'right', lao:  25, cra:  30, name: 'RCA LAO CRANIAL', desc: '<strong>LAO 25° / CRA 30°:</strong> Depicts optimally the ostium and the proximal portion of the RCA and of the crux cordis and DP/PL. Useful for PCI on the proximal and distal portion of the RCA.' },
+  'rca-rao':       { side: 'right', lao: -30, cra:   0, name: 'RCA RAO', desc: '<strong>RAO 30°:</strong> Optimal visualisation of the middle RCA, right ventricular branches, and the DP for its entire course. Also shows the collateral circulation for LAD when occluded.' },
+  'rca-ap-cra':    { side: 'right', lao:   0, cra:  35, name: 'RCA AP CRANIAL', desc: '<strong>AP cranial (0° / CRA 35°):</strong> Optimal visualisation of the distal portion of RCA, the DP and PL, and the collateral circle for LAD-CX in case of their occlusion. Useful for PCI of the crux cordis and DP/PL bifurcation.' },
+  'rca-lat':       { side: 'right', lao: -80, cra: -10, name: 'RCA LL (RAO 80° CAU 10°)', desc: '<strong>Latero-lateral / RAO 80° CAU 10°:</strong> Optimal for the middle RCA and — in case of its anterior origin — the ostium and proximal RCA. Best evaluation of the marginal branches and the bifurcation between IVP and PL (though considerably shortens these branches).' },
 };
 
 // ═══════════════════════════════════════════════════════════
@@ -1224,6 +1272,8 @@ let animStart = 0;
 const ANIM_MS = 500;
 let labelMode = 'detailed';     // 'detailed' | 'simplified' | 'off'
 let xrayMode = false;           // when true, render as fluoroscopy (dark bg, bright vessels with bloom)
+let flashDir = null;            // 'lao+'|'lao-'|'cra+'|'cra-'|null — direction the C-arm is currently moving (flashed for 700 ms after slider input)
+let flashTimer = null;
 let prevNonOffMode = 'detailed'; // remember the last "on" mode for the on-viz toggle
 
 function easeOutCubic(t) { return 1 - Math.pow(1 - t, 3); }
@@ -1280,6 +1330,10 @@ const LABELS_DETAILED = {
   'PDA':       'PDA',
   'PLV':       'PLV',
   'AM':        'Acute marginal',
+  'RV1':       'RV branch',
+  'RV2':       'RV branch',
+  'PDA_S1':    'PDA septal',
+  'PDA_S2':    'PDA septal',
 };
 const LABELS_SIMPLIFIED = {
   'LM':       'LM',
@@ -1707,8 +1761,12 @@ function renderOrientationWidget() {
       <stop offset="100%" stop-color="${skinBot}"/>
     </linearGradient>
     <linearGradient id="armGrad" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0%" stop-color="#e8edf3"/>
-      <stop offset="100%" stop-color="#8a95a8"/>
+      <stop offset="0%" stop-color="rgba(180, 215, 245, 0.78)"/>
+      <stop offset="100%" stop-color="rgba(95, 155, 215, 0.62)"/>
+    </linearGradient>
+    <linearGradient id="armHighlight" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="rgba(255, 255, 255, 0.55)"/>
+      <stop offset="100%" stop-color="rgba(255, 255, 255, 0)"/>
     </linearGradient>
     <linearGradient id="detGrad" x1="0" y1="0" x2="0" y2="1">
       <stop offset="0%" stop-color="#6eb0f7"/>
@@ -1718,15 +1776,20 @@ function renderOrientationWidget() {
       <stop offset="0%" stop-color="#c8cdd5"/>
       <stop offset="100%" stop-color="#7a8499"/>
     </linearGradient>
+    <marker id="arrHead" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#fdcc4d"/>
+    </marker>
   </defs>`;
   html += `<path d="${tablePath}" fill="url(#tableGrad)" stroke="rgba(180,190,210,0.35)" stroke-width="1"/>`;
 
   // Back-of-body arc segments first (so body covers them)
-  // Draw arc with a slight shadow underneath for depth
+  // Draw arc with a slight shadow underneath for depth, then the translucent blue
+  // body, then a thin inner highlight to give it that "glass loop" feel.
   for (const seg of arcBackSegments) {
     const d = segmentPath(seg);
-    html += `<path d="${d}" fill="none" stroke="rgba(0,0,0,0.3)" stroke-width="9" stroke-linecap="round" stroke-opacity="0.4"/>`;
-    html += `<path d="${d}" fill="none" stroke="url(#armGrad)" stroke-width="6" stroke-linecap="round"/>`;
+    html += `<path d="${d}" fill="none" stroke="rgba(0,0,0,0.35)" stroke-width="11" stroke-linecap="round" stroke-opacity="0.45"/>`;
+    html += `<path d="${d}" fill="none" stroke="url(#armGrad)" stroke-width="9" stroke-linecap="round"/>`;
+    html += `<path d="${d}" fill="none" stroke="rgba(255,255,255,0.55)" stroke-width="1.4" stroke-linecap="round" opacity="0.7"/>`;
   }
 
   // Detector + source, if they're behind the body
@@ -1752,8 +1815,9 @@ function renderOrientationWidget() {
   // Front-of-body arc segments — drawn over the body
   for (const seg of arcFrontSegments) {
     const d = segmentPath(seg);
-    html += `<path d="${d}" fill="none" stroke="rgba(0,0,0,0.35)" stroke-width="9" stroke-linecap="round" stroke-opacity="0.6"/>`;
-    html += `<path d="${d}" fill="none" stroke="url(#armGrad)" stroke-width="6" stroke-linecap="round"/>`;
+    html += `<path d="${d}" fill="none" stroke="rgba(0,0,0,0.40)" stroke-width="11" stroke-linecap="round" stroke-opacity="0.6"/>`;
+    html += `<path d="${d}" fill="none" stroke="url(#armGrad)" stroke-width="9" stroke-linecap="round"/>`;
+    html += `<path d="${d}" fill="none" stroke="rgba(255,255,255,0.65)" stroke-width="1.6" stroke-linecap="round" opacity="0.8"/>`;
   }
 
   // Detector + source, if they're in front of the body
@@ -1778,6 +1842,41 @@ function renderOrientationWidget() {
   // Angle readout in the corner of the SVG
   const angTxt = formatAngleReadout();
   html += `<text x="6" y="252" font-size="9" font-weight="700" fill="rgba(253, 204, 77, 0.9)" letter-spacing="0.04em">${angTxt}</text>`;
+
+  // ─── Directional flash arrow ───
+  // Shown briefly when the user moves a slider. Tells the trainee which way the
+  // C-arm is moving (RAO / LAO / CRA / CAU). Positioned in screen-space anchored
+  // to the detector projection, so the arrow consistently points the right way
+  // regardless of current C-arm pose.
+  if (flashDir) {
+    const cfg = {
+      'lao+': { dx:  34, dy:   0, label: 'LAO', sweep: 1 },
+      'lao-': { dx: -34, dy:   0, label: 'RAO', sweep: 0 },
+      'cra+': { dx:   0, dy: -34, label: 'CRA', sweep: 0 },
+      'cra-': { dx:   0, dy:  34, label: 'CAU', sweep: 1 },
+    }[flashDir];
+    if (cfg) {
+      // Anchor the arrow at the projected detector position; the arrow curves
+      // outward in screen-space toward the labeled direction.
+      const ax = detP.x;
+      const ay = detP.y;
+      const tx = ax + cfg.dx;
+      const ty = ay + cfg.dy;
+      const cx = ax + cfg.dx * 0.55 + (cfg.dy ? 0 : 12 * (cfg.dx > 0 ? -1 : 1));
+      const cy = ay + cfg.dy * 0.55 + (cfg.dx ? 0 : 12 * (cfg.dy > 0 ? -1 : 1));
+      const pathD = `M ${ax.toFixed(1)} ${ay.toFixed(1)} Q ${cx.toFixed(1)} ${cy.toFixed(1)} ${tx.toFixed(1)} ${ty.toFixed(1)}`;
+      // Glow underlay then bright arrow
+      html += `<path d="${pathD}" fill="none" stroke="rgba(253,204,77,0.35)" stroke-width="6" stroke-linecap="round"/>`;
+      html += `<path d="${pathD}" fill="none" stroke="#fdcc4d" stroke-width="2.6" stroke-linecap="round" marker-end="url(#arrHead)">
+        <animate attributeName="stroke-opacity" values="0.4;1;0.4" dur="0.7s" repeatCount="1"/>
+      </path>`;
+      // Label near arrowhead
+      const labelX = tx + (cfg.dx > 0 ? 6 : cfg.dx < 0 ? -6 : 0);
+      const labelY = ty + (cfg.dy > 0 ? 12 : cfg.dy < 0 ? -4 : 4);
+      const anch = cfg.dx > 0 ? 'start' : cfg.dx < 0 ? 'end' : 'middle';
+      html += `<text x="${labelX.toFixed(1)}" y="${labelY.toFixed(1)}" text-anchor="${anch}" font-size="11" font-weight="800" fill="#fdcc4d" letter-spacing="0.05em">${cfg.label}</text>`;
+    }
+  }
 
   svg.innerHTML = html;
 
@@ -2071,10 +2170,24 @@ document.querySelectorAll('.preset-btn').forEach(btn => {
 });
 
 // Bind sliders — direct manipulation cancels any animation
+function triggerFlash(dir) {
+  // Show the directional flash arrow on the orientation widget for ~700 ms.
+  flashDir = dir;
+  if (flashTimer) clearTimeout(flashTimer);
+  flashTimer = setTimeout(() => {
+    flashDir = null;
+    renderOrientationWidget();
+  }, 700);
+}
+
 document.getElementById('slLao').addEventListener('input', () => {
   animating = false;
   tick._from = null;
+  const prev = liveLao;
   liveLao = parseFloat(document.getElementById('slLao').value);
+  if (Math.abs(liveLao - prev) > 0.5) {
+    triggerFlash(liveLao > prev ? 'lao+' : 'lao-');
+  }
   updateSliderReadouts();
   render();
   updateViewLabel();
@@ -2086,7 +2199,11 @@ document.getElementById('slLao').addEventListener('input', () => {
 document.getElementById('slCra').addEventListener('input', () => {
   animating = false;
   tick._from = null;
+  const prev = liveCra;
   liveCra = parseFloat(document.getElementById('slCra').value);
+  if (Math.abs(liveCra - prev) > 0.5) {
+    triggerFlash(liveCra > prev ? 'cra+' : 'cra-');
+  }
   updateSliderReadouts();
   render();
   updateViewLabel();
