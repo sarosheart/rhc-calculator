@@ -1192,11 +1192,15 @@ function vesselPath(points3d, laoDeg, craDeg, cx, cy, scale) {
   }));
 
   // Smooth cubic-bezier curve through the points (Catmull-Rom-style).
-  if (pts.length < 2) return { d: '', pts };
+  if (pts.length < 2) return { d: '', pts, dense: pts };
   if (pts.length === 2) {
-    return { d: `M ${pts[0].x} ${pts[0].y} L ${pts[1].x} ${pts[1].y}`, pts };
+    return { d: `M ${pts[0].x} ${pts[0].y} L ${pts[1].x} ${pts[1].y}`, pts, dense: pts };
   }
   let d = `M ${pts[0].x} ${pts[0].y}`;
+  // We'll also sample DENSE points along each cubic segment for the tapered
+  // 3D-tube renderer ("ribbon").
+  const dense = [{ x: pts[0].x, y: pts[0].y, depth: pts[0].depth }];
+  const SAMPLES_PER_SEG = 10;
   for (let i = 0; i < pts.length - 1; i++) {
     const p0 = pts[i - 1] || pts[i];
     const p1 = pts[i];
@@ -1208,8 +1212,52 @@ function vesselPath(points3d, laoDeg, craDeg, cx, cy, scale) {
     const c2x = p2.x - (p3.x - p1.x) * t;
     const c2y = p2.y - (p3.y - p1.y) * t;
     d += ` C ${c1x} ${c1y}, ${c2x} ${c2y}, ${p2.x} ${p2.y}`;
+    // Sample the cubic between p1 and p2
+    for (let s = 1; s <= SAMPLES_PER_SEG; s++) {
+      const u = s / SAMPLES_PER_SEG;
+      const mu = 1 - u;
+      const bx = mu*mu*mu*p1.x + 3*mu*mu*u*c1x + 3*mu*u*u*c2x + u*u*u*p2.x;
+      const by = mu*mu*mu*p1.y + 3*mu*mu*u*c1y + 3*mu*u*u*c2y + u*u*u*p2.y;
+      const bd = (p1.depth || 0) * (1 - u) + (p2.depth || 0) * u;
+      dense.push({ x: bx, y: by, depth: bd });
+    }
   }
-  return { d, pts };
+  return { d, pts, dense };
+}
+
+// Build a tapered filled-polygon "ribbon" along a dense centerline. Mimics a
+// real contrast-filled coronary: thicker proximally, narrower distally, with
+// a rounded distal end. The result is an SVG path string suitable for fill.
+function buildRibbon(dense, widthProx, widthDist) {
+  if (!dense || dense.length < 2) return '';
+  const N = dense.length;
+  const left = [], right = [];
+  for (let i = 0; i < N; i++) {
+    const p = dense[i];
+    const pm = dense[Math.max(0, i - 1)];
+    const pn = dense[Math.min(N - 1, i + 1)];
+    const tx = pn.x - pm.x;
+    const ty = pn.y - pm.y;
+    const tlen = Math.hypot(tx, ty) || 1;
+    // Perpendicular (90° CCW rotation of the tangent)
+    const nx = -ty / tlen;
+    const ny =  tx / tlen;
+    // Smooth taper along arc length: ~85% at start, narrowing to widthDist/widthProx.
+    const tNorm = i / (N - 1);
+    const w = widthProx + (widthDist - widthProx) * tNorm;
+    const halfW = w / 2;
+    left.push({ x: p.x + nx * halfW, y: p.y + ny * halfW });
+    right.push({ x: p.x - nx * halfW, y: p.y - ny * halfW });
+  }
+  // Build polygon path: forward along left edge, round cap at distal, back along right edge.
+  let d = `M ${left[0].x.toFixed(1)} ${left[0].y.toFixed(1)}`;
+  for (let i = 1; i < N; i++) d += ` L ${left[i].x.toFixed(1)} ${left[i].y.toFixed(1)}`;
+  // Rounded distal cap via short quadratic arc through the centerline endpoint
+  const endP = dense[N - 1];
+  d += ` Q ${endP.x.toFixed(1)} ${endP.y.toFixed(1)} ${right[N - 1].x.toFixed(1)} ${right[N - 1].y.toFixed(1)}`;
+  for (let i = N - 2; i >= 0; i--) d += ` L ${right[i].x.toFixed(1)} ${right[i].y.toFixed(1)}`;
+  d += ' Z';
+  return d;
 }
 
 // Heart silhouette as a closed SVG path.
@@ -1435,11 +1483,32 @@ function render() {
   }
 
   for (const item of projected) {
-    const w = WIDTH_MAP[item.v.width] || WIDTH_MAP.mid;
+    const w_base = WIDTH_MAP[item.v.width] || WIDTH_MAP.mid;
+    // Taper to ~58% of starting thickness at the distal end. Short branches
+    // (tiny width class) taper less so they remain visible.
+    const taperRatio = item.v.width === 'tiny' ? 0.80 : 0.58;
+    const wProx = w_base;
+    const wDist = w_base * taperRatio;
     const col = strokeColor(item.v.side);
     // Depth-cue: posterior vessels slightly more transparent, anterior slightly bolder
     const alpha = 0.55 + 0.45 * Math.min(1, Math.max(0, (item.depth + 1) / 2));
-    parts.push(`<path d="${item.path.d}" fill="none" stroke="${col}" stroke-opacity="${alpha.toFixed(2)}" stroke-width="${w}" stroke-linecap="round" stroke-linejoin="round"/>`);
+    const ribbonD = buildRibbon(item.path.dense, wProx, wDist);
+    if (!ribbonD) continue;
+
+    if (xrayMode) {
+      // X-ray: bright contrast-filled tube. The outer ribbon already gets the
+      // bloom filter via the wrapping <g>. Add a thin central highlight so it
+      // reads as a 3D column instead of a flat ribbon.
+      parts.push(`<path d="${ribbonD}" fill="${col}" fill-opacity="${alpha.toFixed(2)}" stroke="none"/>`);
+      parts.push(`<path d="${item.path.d}" fill="none" stroke="rgba(255,255,255,0.45)" stroke-width="${(wDist * 0.35).toFixed(2)}" stroke-opacity="${(alpha * 0.55).toFixed(2)}" stroke-linecap="round" stroke-linejoin="round"/>`);
+    } else {
+      // Schematic mode: filled ribbon with subtle edge stroke, then a brighter
+      // centerline highlight to suggest a tubular cross-section.
+      const edge = item.v.side === 'left' ? 'rgba(140, 25, 20, 0.55)' : 'rgba(35, 75, 135, 0.55)';
+      const highlight = item.v.side === 'left' ? 'rgba(255, 175, 165, 0.62)' : 'rgba(170, 205, 240, 0.62)';
+      parts.push(`<path d="${ribbonD}" fill="${col}" fill-opacity="${alpha.toFixed(2)}" stroke="${edge}" stroke-width="0.7" stroke-linejoin="round"/>`);
+      parts.push(`<path d="${item.path.d}" fill="none" stroke="${highlight}" stroke-width="${(wDist * 0.30).toFixed(2)}" stroke-opacity="${(alpha * 0.75).toFixed(2)}" stroke-linecap="round" stroke-linejoin="round"/>`);
+    }
   }
 
   if (xrayMode) parts.push(`</g>`);
