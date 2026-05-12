@@ -794,6 +794,9 @@ body.dark .label-text.lead { fill: #e8ecf2; }
       <label style="display:flex;align-items:center;gap:8px;font-size:12px;color:var(--text-dim);cursor:pointer;margin-bottom:6px;">
         <input type="checkbox" id="ovPlanes"> Anatomic planes (AV / IV)
       </label>
+      <label style="display:flex;align-items:center;gap:8px;font-size:12px;color:var(--text-dim);cursor:pointer;margin-bottom:6px;">
+        <input type="checkbox" id="ovChambers"> Chamber labels (LV / RV / LA / RA)
+      </label>
       <label style="display:flex;align-items:center;gap:8px;font-size:12px;color:var(--text-dim);cursor:pointer;">
         <input type="checkbox" id="ovXray"> X-ray render mode
       </label>
@@ -1624,26 +1627,52 @@ function render() {
     parts.push(`<line x1="${av0.x.toFixed(1)}" y1="${av0.y.toFixed(1)}" x2="${av1.x.toFixed(1)}" y2="${av1.y.toFixed(1)}" stroke="rgba(180, 195, 220, 0.32)" stroke-width="0.9" stroke-dasharray="4 4" pointer-events="none"/>`);
     // IV plane line
     parts.push(`<line x1="${iv0.x.toFixed(1)}" y1="${iv0.y.toFixed(1)}" x2="${iv1.x.toFixed(1)}" y2="${iv1.y.toFixed(1)}" stroke="rgba(180, 195, 220, 0.32)" stroke-width="0.9" stroke-dasharray="4 4" pointer-events="none"/>`);
-    // Labels — place at whichever endpoint is closer to the canvas edge for that plane.
+    // Labels — anchored at the MIDPOINT of the plane line with a small
+    // perpendicular offset. This keeps them in the central anatomy region of
+    // the canvas, well away from the left/right side strips where vessel
+    // labels live, so the two label families don't collide. The paint-order
+    // halo handles any vessel that happens to cross beneath.
+    const STRIP_W = 130;            // matches placeLabels() column-X clamp
     function planeLabel(p0, p1, text) {
-      const e0 = Math.hypot(Math.min(p0.x, SVG_W - p0.x), Math.min(p0.y, SVG_H - p0.y));
-      const e1 = Math.hypot(Math.min(p1.x, SVG_W - p1.x), Math.min(p1.y, SVG_H - p1.y));
-      const p = e0 < e1 ? p0 : p1;
-      const other = e0 < e1 ? p1 : p0;
-      // Offset slightly outside the plane along the line direction
-      const dx = p.x - other.x, dy = p.y - other.y;
+      const mx = (p0.x + p1.x) / 2;
+      const my = (p0.y + p1.y) / 2;
+      const dx = p1.x - p0.x, dy = p1.y - p0.y;
       const len = Math.hypot(dx, dy) || 1;
-      const lx = Math.max(8, Math.min(SVG_W - 8, p.x + (dx / len) * 6));
-      const ly = Math.max(14, Math.min(SVG_H - 6, p.y + (dy / len) * 6));
-      // Right-anchor if the label sits in the right half of the canvas
-      const anch = lx > SVG_W * 0.6 ? 'end' : lx < SVG_W * 0.4 ? 'start' : 'middle';
-      // paint-order halo so the label is never struck through by a vessel
-      // or by the plane line crossing it. The stroke draws first as a dark
-      // halo, then the fill paints on top.
-      parts.push(`<text x="${lx.toFixed(1)}" y="${ly.toFixed(1)}" text-anchor="${anch}" font-size="9.5" font-style="italic" font-weight="600" letter-spacing="0.04em" pointer-events="none" paint-order="stroke fill" stroke="rgba(13, 16, 25, 0.92)" stroke-width="3.5" stroke-linejoin="round" fill="rgba(210, 220, 235, 0.78)">${text}</text>`);
+      // Perpendicular unit vector (90° CCW from the line direction)
+      const nx = -dy / len, ny = dx / len;
+      const OFFSET = 12;
+      let lx = mx + nx * OFFSET;
+      let ly = my + ny * OFFSET;
+      // Force the label into the central region (out of either side strip)
+      lx = Math.max(STRIP_W + 8, Math.min(SVG_W - STRIP_W - 8, lx));
+      ly = Math.max(24, Math.min(SVG_H - 14, ly));
+      parts.push(`<text x="${lx.toFixed(1)}" y="${ly.toFixed(1)}" text-anchor="middle" font-size="9.5" font-style="italic" font-weight="600" letter-spacing="0.04em" pointer-events="none" paint-order="stroke fill" stroke="rgba(13, 16, 25, 0.92)" stroke-width="3.5" stroke-linejoin="round" fill="rgba(210, 220, 235, 0.78)">${text}</text>`);
     }
     planeLabel(av0, av1, 'Atrioventricular plane');
     planeLabel(iv0, iv1, 'Interventricular plane');
+  }
+
+  // Optional chamber labels (LV / RV / LA / RA). Centers are in heart coords;
+  // negative x = patient's left (LV, LA), positive x = patient's right (RV, RA);
+  // positive y = cranial (atria sit above the AV groove), negative y = caudal
+  // (ventricles below). Atria sit slightly posterior of the ventricles.
+  if (document.getElementById('ovChambers') && document.getElementById('ovChambers').checked) {
+    const CHAMBERS = [
+      { key: 'LV', center: { x: -0.85, y: -0.45, z:  0.10 } },
+      { key: 'RV', center: { x:  0.95, y: -0.15, z:  0.30 } },
+      { key: 'LA', center: { x: -0.80, y:  0.55, z: -0.25 } },
+      { key: 'RA', center: { x:  0.85, y:  0.65, z:  0.05 } },
+    ];
+    for (const c of CHAMBERS) {
+      const p = project3D(c.center, liveLao, liveCra);
+      const sx = CX + p.sx * SCALE;
+      const sy = CY + p.sy * SCALE;
+      // Clamp inside the canvas so a steep oblique view doesn't push the label off
+      const lx = Math.max(16, Math.min(SVG_W - 16, sx));
+      const ly = Math.max(20, Math.min(SVG_H - 8, sy));
+      // paint-order halo so the letters carve out their own readable backing
+      parts.push(`<text x="${lx.toFixed(1)}" y="${ly.toFixed(1)}" text-anchor="middle" font-size="14" font-weight="800" letter-spacing="0.06em" pointer-events="none" paint-order="stroke fill" stroke="rgba(13, 16, 25, 0.92)" stroke-width="4" stroke-linejoin="round" fill="rgba(220, 230, 245, 0.78)">${c.key}</text>`);
+    }
   }
 
   svg.innerHTML = parts.join('');
@@ -2375,7 +2404,7 @@ document.getElementById('slCra').addEventListener('input', () => {
 });
 
 // Display options
-['ovBoth', 'ovSilhouette', 'ovPlanes'].forEach(id => {
+['ovBoth', 'ovSilhouette', 'ovPlanes', 'ovChambers'].forEach(id => {
   document.getElementById(id).addEventListener('change', render);
 });
 
