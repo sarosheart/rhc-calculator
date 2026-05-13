@@ -164,10 +164,10 @@ const TEMPLATES = {
   'I': {                         // qR with slurred terminal R' (LAFB qR + RBBB)
     waves: [
       { t:  10, amp: -0.05, w: 10 },   // q
-      { t:  38, amp:  0.55, w: 16 },   // R
-      { t:  78, amp: -0.18, w: 14 },   // s (small dip)
-      { t: 120, amp:  0.22, w: 18 },   // R' (terminal slur)
-      { t: 250, amp:  0.18, w: 70 },   // T (upright)
+      { t:  38, amp:  0.50, w: 16 },   // R
+      { t:  78, amp: -0.15, w: 14 },   // s (small dip)
+      { t: 120, amp:  0.20, w: 18 },   // R' (terminal slur)
+      { t: 260, amp:  0.18, w: 65 },   // T (upright)
     ],
   },
   'aVR': {                       // rSR' / mostly negative
@@ -175,57 +175,57 @@ const TEMPLATES = {
       { t:  10, amp: -0.12, w: 10 },
       { t:  50, amp: -0.75, w: 18 },   // deep S
       { t: 110, amp:  0.30, w: 16 },   // R' (terminal positive)
-      { t: 250, amp: -0.18, w: 70 },   // T inverted (normal in aVR)
+      { t: 260, amp: -0.22, w: 70 },   // T inverted
     ],
   },
-  'V1': {                        // rSR' — classic RBBB
+  'V1': {                        // rSR' — classic RBBB, discordant T inversion
     waves: [
       { t:  18, amp:  0.18, w: 12 },   // r
       { t:  55, amp: -0.35, w: 16 },   // S
       { t: 110, amp:  0.70, w: 20 },   // R' (taller secondary)
-      { t: 250, amp: -0.20, w: 70 },   // T inverted (discordant)
+      { t: 270, amp: -0.22, w: 70 },   // T inverted (discordant)
     ],
   },
-  'V4': {                        // Rs with slurred S
+  'V4': {                        // Tall R + HYPERACUTE peaked T (per the source)
     waves: [
-      { t:  20, amp:  0.05, w: 8 },    // small initial r
-      { t:  45, amp:  1.05, w: 18 },   // tall R
-      { t:  95, amp: -0.30, w: 16 },   // S
-      { t: 140, amp:  0.10, w: 16 },   // small terminal slur
-      { t: 250, amp:  0.28, w: 75 },   // T
+      { t:  20, amp:  0.06, w: 8 },    // small initial r
+      { t:  48, amp:  1.20, w: 18 },   // tall R
+      { t:  98, amp: -0.32, w: 16 },   // S
+      { t: 140, amp:  0.12, w: 16 },   // terminal slur (RBBB)
+      { t: 280, amp:  0.70, w: 45 },   // T — hyperacute, peaked, symmetric, narrow
     ],
   },
   // Row 2 leads
   'II': {                        // rS — LAFB
     waves: [
-      { t:  18, amp:  0.30, w: 12 },   // r
-      { t:  65, amp: -1.30, w: 20 },   // S (deep)
-      { t: 120, amp:  0.18, w: 18 },   // small terminal slur
-      { t: 240, amp:  0.18, w: 65 },
+      { t:  18, amp:  0.32, w: 12 },   // r
+      { t:  62, amp: -1.30, w: 20 },   // S (deep)
+      { t: 120, amp:  0.20, w: 18 },   // small terminal slur
+      { t: 250, amp:  0.20, w: 65 },
     ],
   },
   'aVL': {                       // qR — LAFB lateral
     waves: [
       { t:  10, amp: -0.05, w: 10 },
-      { t:  45, amp:  0.85, w: 18 },   // tall R
-      { t: 100, amp:  0.08, w: 16 },
-      { t: 250, amp: -0.12, w: 70 },   // T small/inverted
+      { t:  45, amp:  0.90, w: 18 },   // tall R
+      { t: 100, amp:  0.10, w: 16 },
+      { t: 260, amp: -0.10, w: 65 },   // T small/inverted (discordant in LAFB lateral)
     ],
   },
   'V2': {                        // rSR'
     waves: [
       { t:  20, amp:  0.20, w: 12 },
       { t:  55, amp: -0.45, w: 16 },
-      { t: 110, amp:  1.10, w: 22 },   // tall R'
-      { t: 250, amp: -0.20, w: 75 },
+      { t: 110, amp:  1.15, w: 22 },   // tall R'
+      { t: 275, amp: -0.20, w: 70 },   // T inverted
     ],
   },
-  'V5': {                        // qR with slurred terminal S
+  'V5': {                        // qR with slurred terminal S + HYPERACUTE T (per source)
     waves: [
       { t:  10, amp: -0.06, w: 10 },
-      { t:  35, amp:  0.85, w: 18 },   // R
-      { t:  95, amp: -0.28, w: 24 },   // wide slurred S
-      { t: 240, amp:  0.18, w: 70 },
+      { t:  38, amp:  0.95, w: 18 },   // R
+      { t:  98, amp: -0.30, w: 24 },   // wide slurred S (RBBB)
+      { t: 270, amp:  0.55, w: 50 },   // T hyperacute (peaked, prominent)
     ],
   },
   // Row 3 leads
@@ -234,7 +234,7 @@ const TEMPLATES = {
       { t:  16, amp:  0.14, w: 12 },
       { t:  68, amp: -1.35, w: 22 },   // deep S
       { t: 130, amp:  0.18, w: 18 },
-      { t: 250, amp:  0.10, w: 65 },
+      { t: 260, amp:  0.10, w: 60 },
     ],
   },
   'aVF': {                       // rS — LAFB
@@ -244,21 +244,21 @@ const TEMPLATES = {
       { t: 250, amp:  0.05, w: 65 },
     ],
   },
-  'V3': {                        // Rs / RsR'
+  'V3': {                        // Rs / RsR' + HYPERACUTE T (per source)
     waves: [
       { t:  20, amp:  0.10, w: 10 },
       { t:  55, amp: -0.25, w: 14 },
-      { t:  95, amp:  1.05, w: 22 },   // tall R
+      { t:  95, amp:  1.10, w: 22 },   // tall R
       { t: 140, amp: -0.08, w: 14 },
-      { t: 250, amp:  0.18, w: 75 },
+      { t: 270, amp:  0.55, w: 48 },   // T hyperacute (peaked, prominent)
     ],
   },
   'V6': {                        // qR with slurred terminal S
     waves: [
       { t:  10, amp: -0.05, w: 10 },
-      { t:  35, amp:  0.70, w: 18 },
-      { t:  95, amp: -0.32, w: 24 },   // slurred S (RBBB lateral)
-      { t: 240, amp:  0.12, w: 70 },
+      { t:  35, amp:  0.75, w: 18 },
+      { t:  95, amp: -0.30, w: 24 },   // slurred S (RBBB lateral)
+      { t: 255, amp:  0.20, w: 60 },
     ],
   },
 };
@@ -285,17 +285,18 @@ function mulberry32(seed) {
   };
 }
 
-// ── Build R-peak times within a 2.5 s window with AFib RR variability ──
-function buildBeatTimes(durationMs, seed) {
+// ── Build R-peak times for the entire 10 s recording (4 columns × 2.5 s).
+//    All leads share this same beat schedule, mirroring how a real 12-lead
+//    paper records all leads simultaneously and slices them into time
+//    windows for display.
+function buildBeatTimes(totalMs, seed) {
   const rng = mulberry32(seed);
   const out = [];
-  // Start the first beat ~250 ms into the strip (typical lead block has a
-  // calibration / paper margin before the first QRS).
-  let t = 200 + rng() * 200;
-  while (t < durationMs + 200) {
+  let t = 250 + rng() * 150;
+  while (t < totalMs + 200) {
     out.push(t);
-    // AF: irregular RR — mean 714 ms (= 84 bpm) with ±150 ms uniform jitter
-    const rr = 600 + rng() * 320;
+    // AF: irregular RR — mean 714 ms (= 84 bpm) with realistic jitter
+    const rr = 580 + rng() * 340;
     t += rr;
   }
   return out;
@@ -406,36 +407,42 @@ function render() {
   ctx.lineCap = 'round';
   ctx.lineJoin = 'round';
 
+  // SHARED beat schedule across all 12 leads: one continuous 10 s recording.
+  // Each column shows a different 2.5 s window of that recording. This matches
+  // how a real 12-lead paper printout slices a simultaneously-recorded rhythm.
+  const TOTAL_MS = STRIP_DURATION_MS * 4;
+  const BEAT_SEED = 1729;
+  const allBeats = buildBeatTimes(TOTAL_MS, BEAT_SEED);
+
   for (let r = 0; r < 3; r++) {
     for (let c = 0; c < 4; c++) {
       const lead = LEADS_GRID[r][c];
       const x0 = c * colW;
       const y0 = r * rowH;
-      // Baseline is at row midpoint (slightly above center to leave room for deep S waves)
+      // Baseline at row midpoint (slightly above center to leave room for deep S waves)
       const baselineY = y0 + rowH * 0.42;
-      // Seed per column so AFib R-R pattern is independent across columns
-      // (mimics paper-printout where each column captures a different time window)
-      const seed = (c + 1) * 9_973 + 17;
-      const beats = buildBeatTimes(STRIP_DURATION_MS, seed);
+      // Time window for this column
+      const windowStartMs = c * STRIP_DURATION_MS;
+      // Filter beats to those within (or just outside) this window
+      const beats = allBeats.filter(b => b > windowStartMs - 400 && b < windowStartMs + STRIP_DURATION_MS + 400);
 
-      // Sample the trace at ~ 400 Hz
+      // Sample at ~400 Hz
       const samples = 1000;
       ctx.beginPath();
       for (let i = 0; i < samples; i++) {
-        const tMs = (i / samples) * STRIP_DURATION_MS;
-        const mV = sampleStrip(lead, tMs, beats, seed);
-        const x = x0 + (tMs / 1000) * pxPerSec;
-        // Mild high-frequency artifact (fine tremor) to mimic real paper
-        const tremor = 0.012 * Math.sin(2 * Math.PI * 18 * tMs / 1000 + seed);
+        const tInWindow = (i / samples) * STRIP_DURATION_MS;
+        const tAbs = windowStartMs + tInWindow;
+        const mV = sampleStrip(lead, tAbs, beats, BEAT_SEED);
+        const x = x0 + (tInWindow / 1000) * pxPerSec;
+        // Mild high-frequency artifact
+        const tremor = 0.010 * Math.sin(2 * Math.PI * 18 * tAbs / 1000 + r * 11 + c * 7);
         const yPx = baselineY - (mV + tremor) * yScalePerMv;
-        // Clamp into the strip box so a runaway value can never bleed across rows
         const yClamped = Math.max(y0 + 4, Math.min(y0 + rowH - 4, yPx));
         if (i === 0) ctx.moveTo(x, yClamped); else ctx.lineTo(x, yClamped);
       }
       ctx.stroke();
 
-      // ── Lead label (lower-left of box, italic-ish small font like the
-      //    reference image)
+      // Lead label (lower-left of strip, serif font like real ECG paper)
       ctx.fillStyle = '#111';
       ctx.font = `${14 * dpr}px "Times New Roman", serif`;
       ctx.textAlign = 'left';
