@@ -1,0 +1,814 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ECG Tracer — extract a 12-lead trace from any image | CathMath</title>
+<meta name="robots" content="noindex">
+<style>
+  :root {
+    --bg: #f4f6f9;
+    --panel: #ffffff;
+    --panel-2: #f9fafc;
+    --text: #1a1a2e;
+    --text-dim: #5a6478;
+    --text-muted: #8892a4;
+    --border: #d8dfe8;
+    --accent: #3b82f6;
+    --accent-dim: rgba(59, 130, 246, 0.15);
+    --good: #10b981;
+    --warn: #f59e0b;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { height: 100%; }
+  body {
+    font-family: -apple-system, "Helvetica Neue", Helvetica, Arial, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    font-size: 14px;
+    line-height: 1.5;
+  }
+  .nav {
+    background: #0a1628;
+    color: #fff;
+    height: 42px;
+    display: flex;
+    align-items: center;
+    padding: 0 22px;
+    gap: 22px;
+  }
+  .nav a { color: rgba(255,255,255,0.6); text-decoration: none; font-size: 13px; font-weight: 600; }
+  .nav a.brand { color: #fff; font-size: 16px; font-weight: 800; }
+  .nav a:hover { color: #fff; }
+
+  .container {
+    max-width: 1320px;
+    margin: 0 auto;
+    padding: 20px;
+  }
+  h1 { font-size: 22px; font-weight: 700; letter-spacing: -0.01em; }
+  h2 {
+    font-size: 11px;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.10em;
+    color: var(--text-muted);
+    margin: 0 0 10px;
+  }
+  .intro {
+    font-size: 13px;
+    color: var(--text-dim);
+    margin: 6px 0 18px;
+    max-width: 880px;
+    line-height: 1.6;
+  }
+  .intro strong { color: var(--text); font-weight: 600; }
+
+  /* ─── Privacy banner ─── */
+  .privacy {
+    background: rgba(16, 185, 129, 0.08);
+    border: 1px solid rgba(16, 185, 129, 0.30);
+    border-radius: 8px;
+    padding: 10px 14px;
+    margin-bottom: 18px;
+    font-size: 12.5px;
+    color: var(--text-dim);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .privacy .dot { width: 8px; height: 8px; background: var(--good); border-radius: 50%; flex-shrink: 0; }
+  .privacy strong { color: var(--text); font-weight: 700; }
+
+  /* ─── Drop zone ─── */
+  .drop-zone {
+    border: 2px dashed var(--border);
+    border-radius: 10px;
+    padding: 30px 24px;
+    text-align: center;
+    background: var(--panel);
+    cursor: pointer;
+    transition: border-color 0.2s, background 0.2s;
+    margin-bottom: 18px;
+  }
+  .drop-zone.over { border-color: var(--accent); background: var(--accent-dim); }
+  .drop-zone .label {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text);
+    margin-bottom: 4px;
+  }
+  .drop-zone .hint { font-size: 12px; color: var(--text-muted); }
+  .drop-zone input[type=file] { display: none; }
+
+  /* ─── Sections ─── */
+  .section {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 18px 20px;
+    margin-bottom: 16px;
+  }
+  .section.hidden { display: none; }
+  .section-row {
+    display: flex;
+    gap: 18px;
+    align-items: flex-start;
+  }
+  .section-row > .canvas-wrap { flex: 1 1 auto; min-width: 0; }
+  .section-row > .controls { flex: 0 0 280px; }
+
+  /* ─── Canvas wraps ─── */
+  .canvas-wrap {
+    position: relative;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    overflow: hidden;
+    background: #f0f2f5;
+  }
+  .canvas-wrap canvas { display: block; width: 100%; height: auto; cursor: crosshair; }
+  .canvas-wrap.pink { background: #fff5f5; }
+  .canvas-wrap.pink canvas { cursor: default; }
+
+  /* ─── Controls ─── */
+  .controls .ctrl {
+    margin-bottom: 12px;
+  }
+  .controls .ctrl label {
+    display: block;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text);
+    margin-bottom: 4px;
+  }
+  .controls .ctrl .row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .controls .ctrl input[type=range] { flex: 1; }
+  .controls .ctrl .val {
+    font-family: "SF Mono", Menlo, Consolas, monospace;
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--accent);
+    width: 42px;
+    text-align: right;
+  }
+  .controls .ctrl .hint {
+    font-size: 10.5px;
+    color: var(--text-muted);
+    margin-top: 2px;
+    line-height: 1.4;
+  }
+  .controls button.run {
+    width: 100%;
+    background: var(--accent);
+    color: #fff;
+    border: none;
+    border-radius: 6px;
+    padding: 10px;
+    font-size: 13px;
+    font-weight: 700;
+    cursor: pointer;
+    margin-top: 4px;
+    transition: background 0.2s;
+  }
+  .controls button.run:hover { background: #2563eb; }
+  .controls button.run:disabled { background: var(--text-muted); cursor: not-allowed; }
+
+  /* ─── Status / per-lead counts ─── */
+  .lead-counts {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 6px;
+    font-size: 11.5px;
+    margin-top: 12px;
+  }
+  .lead-counts .cell {
+    background: var(--panel-2);
+    border: 1px solid var(--border);
+    border-radius: 5px;
+    padding: 4px 8px;
+    display: flex;
+    justify-content: space-between;
+  }
+  .lead-counts .cell .lead { font-weight: 700; color: var(--text); }
+  .lead-counts .cell .n { font-family: "SF Mono", Menlo, monospace; color: var(--text-dim); }
+  .lead-counts .cell.warn { background: rgba(245, 158, 11, 0.08); border-color: rgba(245, 158, 11, 0.4); }
+
+  /* ─── Export ─── */
+  .export-row {
+    display: flex;
+    gap: 8px;
+    margin-top: 12px;
+  }
+  .export-row button {
+    flex: 1;
+    background: var(--panel);
+    color: var(--text);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 8px 14px;
+    font-size: 12.5px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .export-row button:hover { border-color: var(--accent); color: var(--accent); }
+  .export-row button:active { background: var(--accent-dim); }
+
+  /* ─── Toast ─── */
+  .toast {
+    position: fixed;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%) translateY(40px);
+    background: #0a1628;
+    color: #fff;
+    padding: 10px 18px;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 600;
+    opacity: 0;
+    transition: opacity 0.2s, transform 0.2s;
+    pointer-events: none;
+    z-index: 1000;
+  }
+  .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+</style>
+</head>
+<body>
+
+<nav class="nav">
+  <a href="/" class="brand">CathMath</a>
+  <a href="/ekg/">EKG Simulator</a>
+  <a href="/intracoronary/">Intracoronary</a>
+  <a href="/angio/">Angio Views</a>
+</nav>
+
+<div class="container">
+  <h1>ECG Tracer</h1>
+  <p class="intro">
+    Load a 12-lead ECG image and extract its trace centerline to JSON, then
+    preview the result on the CathMath pink grid. Useful for digitizing
+    your own clinical ECGs into the simulator's format.
+  </p>
+
+  <div class="privacy">
+    <span class="dot"></span>
+    <span><strong>Local processing only.</strong> Your image is read by JavaScript in this browser tab. It is never uploaded, never sent to a server, never reaches the developer. Refreshing or closing this tab discards it.</span>
+  </div>
+
+  <!-- ─── Drop zone ─── -->
+  <label class="drop-zone" id="drop">
+    <div class="label">Drop a 12-lead ECG image here, or click to choose a file</div>
+    <div class="hint">Standard 4-column × 3-row layout. PNG/JPG.</div>
+    <input type="file" id="file" accept="image/*">
+  </label>
+
+  <!-- ─── Source + extraction controls ─── -->
+  <div class="section hidden" id="extractSection">
+    <h2>1. Align grid + extract</h2>
+    <div class="section-row">
+      <div class="canvas-wrap" id="sourceWrap">
+        <canvas id="source"></canvas>
+      </div>
+      <div class="controls">
+        <div class="ctrl">
+          <label>Dark threshold</label>
+          <div class="row">
+            <input type="range" id="threshold" min="60" max="200" value="140">
+            <span class="val" id="thresholdVal">140</span>
+          </div>
+          <div class="hint">Pixels darker than this are treated as trace. Lower = stricter.</div>
+        </div>
+        <div class="ctrl">
+          <label>Label padding (% of column width)</label>
+          <div class="row">
+            <input type="range" id="labelPad" min="0" max="20" value="13">
+            <span class="val" id="labelPadVal">13</span>
+          </div>
+          <div class="hint">Skip this much from each column start (where the lead label sits).</div>
+        </div>
+        <div class="ctrl">
+          <label>Trace half-height (% of row height)</label>
+          <div class="row">
+            <input type="range" id="yRange" min="20" max="50" value="45">
+            <span class="val" id="yRangeVal">45</span>
+          </div>
+          <div class="hint">Search ±this much above and below each row's center for trace pixels.</div>
+        </div>
+        <div class="ctrl">
+          <label>Smoothing passes</label>
+          <div class="row">
+            <input type="range" id="smooth" min="0" max="5" value="1">
+            <span class="val" id="smoothVal">1</span>
+          </div>
+          <div class="hint">3-tap moving average. Higher = smoother, slightly blunts sharp peaks.</div>
+        </div>
+        <button class="run" id="runExtract">Extract centerlines</button>
+        <div class="hint" style="margin-top:8px;">
+          Drag the four corner dots on the image to align the grid to the ECG paper.
+          Inner cells become the 12 lead boxes.
+        </div>
+      </div>
+    </div>
+    <div class="lead-counts" id="leadCounts"></div>
+  </div>
+
+  <!-- ─── Render on CathMath pink grid ─── -->
+  <div class="section hidden" id="renderSection">
+    <h2>2. Render on CathMath pink grid</h2>
+    <div class="canvas-wrap pink" id="renderWrap">
+      <canvas id="rendered"></canvas>
+    </div>
+    <div class="export-row">
+      <button id="downloadJson">Download JSON</button>
+      <button id="copyJson">Copy JSON to clipboard</button>
+      <button id="downloadPng">Download rendered PNG</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+'use strict';
+
+// ═══════════════════════════════════════════════════════════
+// IN-BROWSER ECG TRACER
+// All image processing happens client-side. The image is never uploaded.
+// ═══════════════════════════════════════════════════════════
+
+const LEADS_LAYOUT = [
+  ['I',   'aVR', 'V1', 'V4'],
+  ['II',  'aVL', 'V2', 'V5'],
+  ['III', 'aVF', 'V3', 'V6'],
+];
+
+const elDrop = document.getElementById('drop');
+const elFile = document.getElementById('file');
+const elSource = document.getElementById('source');
+const elRendered = document.getElementById('rendered');
+const elExtractSec = document.getElementById('extractSection');
+const elRenderSec = document.getElementById('renderSection');
+const elLeadCounts = document.getElementById('leadCounts');
+const elToast = document.getElementById('toast');
+
+let img = null;
+let imgBitmap = null;
+let extractedTraces = null;        // { lead: { box: [...], pts: [[x,y], ...] } }
+
+// Grid corners, in IMAGE (source pixel) coords. Initialized once image loads.
+let grid = null;  // { tl, tr, br, bl }
+let dragging = null;     // 'tl' | 'tr' | 'br' | 'bl' | null
+
+// ── Sliders ──
+const params = {
+  threshold: 140,
+  labelPad: 13,
+  yRange: 45,
+  smooth: 1,
+};
+const sliders = ['threshold', 'labelPad', 'yRange', 'smooth'];
+for (const id of sliders) {
+  const sl = document.getElementById(id);
+  const val = document.getElementById(id + 'Val');
+  sl.addEventListener('input', () => {
+    params[id] = parseInt(sl.value);
+    val.textContent = sl.value;
+  });
+  val.textContent = sl.value;
+}
+
+// ── File loading ──
+elDrop.addEventListener('click', () => elFile.click());
+elDrop.addEventListener('dragover', e => { e.preventDefault(); elDrop.classList.add('over'); });
+elDrop.addEventListener('dragleave', () => elDrop.classList.remove('over'));
+elDrop.addEventListener('drop', e => {
+  e.preventDefault();
+  elDrop.classList.remove('over');
+  if (e.dataTransfer.files.length) loadFile(e.dataTransfer.files[0]);
+});
+elFile.addEventListener('change', e => {
+  if (e.target.files.length) loadFile(e.target.files[0]);
+});
+
+function loadFile(file) {
+  if (!file.type.startsWith('image/')) {
+    showToast('Not an image file.');
+    return;
+  }
+  const reader = new FileReader();
+  reader.onload = (ev) => {
+    const i = new Image();
+    i.onload = () => {
+      img = i;
+      // Initial grid: 4% inset from each edge
+      const insetX = i.width * 0.04;
+      const insetY = i.height * 0.04;
+      grid = {
+        tl: { x: insetX, y: insetY },
+        tr: { x: i.width - insetX, y: insetY },
+        br: { x: i.width - insetX, y: i.height - insetY },
+        bl: { x: insetX, y: i.height - insetY },
+      };
+      elExtractSec.classList.remove('hidden');
+      elRenderSec.classList.add('hidden');
+      extractedTraces = null;
+      sizeSourceCanvas();
+      drawSource();
+    };
+    i.src = ev.target.result;
+  };
+  reader.readAsDataURL(file);
+}
+
+// ── Size the source canvas to fit the image aspect ──
+function sizeSourceCanvas() {
+  const wrap = document.getElementById('sourceWrap');
+  const targetWidth = wrap.parentElement.clientWidth - 280 - 24;
+  const maxWidth = Math.min(targetWidth, 1000);
+  const scale = maxWidth / img.width;
+  elSource.width = img.width;
+  elSource.height = img.height;
+  elSource.style.width = (img.width * scale) + 'px';
+  elSource.style.height = (img.height * scale) + 'px';
+}
+
+// ── Draw image + grid overlay ──
+function drawSource() {
+  if (!img || !grid) return;
+  const ctx = elSource.getContext('2d');
+  ctx.drawImage(img, 0, 0);
+
+  // Grid: bilinear-interpolated 4x3 cells from the 4 corners
+  ctx.strokeStyle = 'rgba(59, 130, 246, 0.7)';
+  ctx.lineWidth = 2;
+  ctx.setLineDash([6, 4]);
+  for (let r = 0; r <= 3; r++) {
+    const t = r / 3;
+    const pL = lerp(grid.tl, grid.bl, t);
+    const pR = lerp(grid.tr, grid.br, t);
+    ctx.beginPath(); ctx.moveTo(pL.x, pL.y); ctx.lineTo(pR.x, pR.y); ctx.stroke();
+  }
+  for (let c = 0; c <= 4; c++) {
+    const t = c / 4;
+    const pT = lerp(grid.tl, grid.tr, t);
+    const pB = lerp(grid.bl, grid.br, t);
+    ctx.beginPath(); ctx.moveTo(pT.x, pT.y); ctx.lineTo(pB.x, pB.y); ctx.stroke();
+  }
+  ctx.setLineDash([]);
+
+  // Corner handles
+  for (const [name, p] of Object.entries(grid)) {
+    ctx.fillStyle = dragging === name ? '#f59e0b' : '#3b82f6';
+    ctx.strokeStyle = '#fff';
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    ctx.arc(p.x, p.y, 14, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.stroke();
+  }
+
+  // If we have extracted traces, overlay them in green
+  if (extractedTraces) {
+    ctx.strokeStyle = 'rgba(16, 185, 129, 0.9)';
+    ctx.lineWidth = 2.5;
+    for (const lead in extractedTraces) {
+      const t = extractedTraces[lead];
+      const pts = t.pts;
+      if (pts.length < 2) continue;
+      ctx.beginPath();
+      ctx.moveTo(pts[0][0] + t.box[0], pts[0][1] + t.box[1]);
+      for (let i = 1; i < pts.length; i++) {
+        ctx.lineTo(pts[i][0] + t.box[0], pts[i][1] + t.box[1]);
+      }
+      ctx.stroke();
+    }
+  }
+}
+
+function lerp(a, b, t) {
+  return { x: a.x + (b.x - a.x) * t, y: a.y + (b.y - a.y) * t };
+}
+
+// ── Mouse drag on corner handles ──
+elSource.addEventListener('mousedown', e => {
+  if (!grid) return;
+  const { x, y } = canvasCoords(e);
+  for (const [name, p] of Object.entries(grid)) {
+    const dx = x - p.x, dy = y - p.y;
+    if (dx*dx + dy*dy < 30 * 30) { dragging = name; drawSource(); return; }
+  }
+});
+window.addEventListener('mousemove', e => {
+  if (!dragging || !grid) return;
+  const { x, y } = canvasCoords(e);
+  grid[dragging] = { x: Math.max(0, Math.min(img.width, x)), y: Math.max(0, Math.min(img.height, y)) };
+  drawSource();
+});
+window.addEventListener('mouseup', () => {
+  if (dragging) { dragging = null; drawSource(); }
+});
+
+function canvasCoords(e) {
+  const r = elSource.getBoundingClientRect();
+  return {
+    x: (e.clientX - r.left) / r.width * elSource.width,
+    y: (e.clientY - r.top) / r.height * elSource.height,
+  };
+}
+
+// ═══════════════════════════════════════════════════════════
+// EXTRACTION (client-side CV)
+// ═══════════════════════════════════════════════════════════
+document.getElementById('runExtract').addEventListener('click', () => {
+  if (!img) return;
+  runExtraction();
+});
+
+function runExtraction() {
+  // Bake the image into an off-screen canvas to read pixels
+  const off = document.createElement('canvas');
+  off.width = img.width;
+  off.height = img.height;
+  const octx = off.getContext('2d');
+  octx.drawImage(img, 0, 0);
+  const imgData = octx.getImageData(0, 0, img.width, img.height).data;
+
+  // Build a grayscale dark-pixel mask: gray = (r+g+b)/3, dark if < threshold
+  const W = img.width, H = img.height;
+  const dark = new Uint8Array(W * H);
+  const t = params.threshold;
+  for (let i = 0, j = 0; i < imgData.length; i += 4, j++) {
+    const g = (imgData[i] + imgData[i+1] + imgData[i+2]) / 3;
+    dark[j] = (g < t) ? 1 : 0;
+  }
+  // 1-pixel dilation to bridge tiny gaps
+  const dil = new Uint8Array(W * H);
+  for (let y = 1; y < H - 1; y++) {
+    for (let x = 1; x < W - 1; x++) {
+      if (dark[y*W + x]) { dil[y*W + x] = 1; continue; }
+      if (dark[(y-1)*W + x] || dark[(y+1)*W + x] ||
+          dark[y*W + x - 1] || dark[y*W + x + 1]) dil[y*W + x] = 1;
+    }
+  }
+
+  // Compute lead boxes from the 4-corner grid
+  const boxes = computeLeadBoxes();
+  extractedTraces = {};
+  for (const [lead, box] of Object.entries(boxes)) {
+    const pts = extractCenterline(dil, W, H, box);
+    // Smooth
+    for (let pass = 0; pass < params.smooth; pass++) {
+      smoothInPlace(pts);
+    }
+    // Store points in BOX-LOCAL coords (relative to box[0..3])
+    extractedTraces[lead] = {
+      box,
+      pts: pts.map(p => [p[0] - box[0], p[1] - box[1]]),
+    };
+  }
+  renderLeadCounts();
+  drawSource();
+  drawRendered();
+  elRenderSec.classList.remove('hidden');
+  showToast('Extraction complete.');
+}
+
+function computeLeadBoxes() {
+  // 4 cols × 3 rows from the bilinear grid corners.
+  // Skip the label padding on the left of each column.
+  const pad = params.labelPad / 100;
+  const boxes = {};
+  for (let r = 0; r < 3; r++) {
+    for (let c = 0; c < 4; c++) {
+      // Column-start fraction (with label padding); column-end fraction
+      const t0 = c / 4 + pad / 4;
+      const t1 = (c + 1) / 4;
+      // For each row pair (r/3, (r+1)/3), interpolate top-left and bottom-right
+      const r0 = r / 3, r1 = (r + 1) / 3;
+      const tl = bilerp(grid, t0, r0);
+      const tr = bilerp(grid, t1, r0);
+      const bl = bilerp(grid, t0, r1);
+      const br = bilerp(grid, t1, r1);
+      const x0 = Math.round(Math.min(tl.x, bl.x));
+      const x1 = Math.round(Math.max(tr.x, br.x));
+      const y0 = Math.round(Math.min(tl.y, tr.y));
+      const y1 = Math.round(Math.max(bl.y, br.y));
+      boxes[LEADS_LAYOUT[r][c]] = [x0, y0, x1, y1];
+    }
+  }
+  return boxes;
+}
+
+function bilerp(g, u, v) {
+  const top = lerp(g.tl, g.tr, u);
+  const bot = lerp(g.bl, g.br, u);
+  return lerp(top, bot, v);
+}
+
+function extractCenterline(mask, W, H, box) {
+  const [x0, y0, x1, y1] = box;
+  const baseline = (y0 + y1) / 2;
+  const yRangeFrac = params.yRange / 100;
+  const yRange = Math.round((y1 - y0) * yRangeFrac);
+  const yLo = Math.max(0, baseline - yRange);
+  const yHi = Math.min(H, baseline + yRange);
+  let prevY = baseline;
+  const pts = [];
+  for (let x = x0; x < x1; x++) {
+    // Find contiguous dark runs in this column; pick the run center
+    // whose center y is closest to prevY.
+    const runs = [];
+    let runStart = -1;
+    for (let y = yLo; y < yHi; y++) {
+      const m = mask[y * W + x];
+      if (m && runStart < 0) runStart = y;
+      else if (!m && runStart >= 0) { runs.push([runStart, y - 1]); runStart = -1; }
+    }
+    if (runStart >= 0) runs.push([runStart, yHi - 1]);
+
+    let yPick = null;
+    if (runs.length > 0) {
+      let best = runs[0];
+      let bestDist = Math.abs((best[0] + best[1]) / 2 - prevY);
+      for (let i = 1; i < runs.length; i++) {
+        const c = (runs[i][0] + runs[i][1]) / 2;
+        const d = Math.abs(c - prevY);
+        if (d < bestDist) { best = runs[i]; bestDist = d; }
+      }
+      yPick = (best[0] + best[1]) / 2;
+    } else {
+      // Search a wider x-neighborhood
+      const cands = [];
+      for (let dx = Math.max(x0, x - 3); dx < Math.min(x1, x + 4); dx++) {
+        for (let y = yLo; y < yHi; y++) if (mask[y * W + dx]) cands.push(y);
+      }
+      if (cands.length) {
+        yPick = cands.reduce((a, b) => Math.abs(a - prevY) < Math.abs(b - prevY) ? a : b);
+      }
+    }
+    if (yPick !== null) {
+      pts.push([x, yPick]);
+      prevY = yPick;
+    }
+  }
+  return pts;
+}
+
+function smoothInPlace(pts) {
+  if (pts.length < 3) return;
+  const ys = pts.map(p => p[1]);
+  for (let i = 1; i < pts.length - 1; i++) {
+    pts[i][1] = (ys[i - 1] + ys[i] + ys[i + 1]) / 3;
+  }
+}
+
+// ═══════════════════════════════════════════════════════════
+// LEAD COUNTS UI
+// ═══════════════════════════════════════════════════════════
+function renderLeadCounts() {
+  if (!extractedTraces) { elLeadCounts.innerHTML = ''; return; }
+  let html = '';
+  for (const row of LEADS_LAYOUT) {
+    for (const lead of row) {
+      const t = extractedTraces[lead];
+      const n = t ? t.pts.length : 0;
+      const expected = t ? (t.box[2] - t.box[0]) : 1;
+      const ratio = expected ? n / expected : 0;
+      const warn = ratio < 0.6 ? ' warn' : '';
+      html += `<div class="cell${warn}"><span class="lead">${lead}</span><span class="n">${n} pts</span></div>`;
+    }
+  }
+  elLeadCounts.innerHTML = html;
+}
+
+// ═══════════════════════════════════════════════════════════
+// RENDER ON CATHMATH PINK GRID
+// ═══════════════════════════════════════════════════════════
+function drawRendered() {
+  if (!extractedTraces) return;
+  // Fix the rendered canvas to a standard ECG aspect (matches paper printout)
+  const cssW = document.getElementById('renderWrap').clientWidth;
+  const dpr = window.devicePixelRatio || 1;
+  const aspect = img.height / img.width;
+  elRendered.width = cssW * dpr;
+  elRendered.height = (cssW * aspect) * dpr;
+  elRendered.style.width = cssW + 'px';
+  elRendered.style.height = (cssW * aspect) + 'px';
+  const ctx = elRendered.getContext('2d');
+  const W = elRendered.width, H = elRendered.height;
+
+  // Pink ECG paper grid
+  // 1 mm minor / 5 mm major, scaled so 4 columns × 62.5 mm = full width
+  const pxPerMm = W / 250;        // 4 columns × 62.5 mm = 250 mm
+  ctx.fillStyle = '#fff5f5';
+  ctx.fillRect(0, 0, W, H);
+  // Minor
+  ctx.strokeStyle = '#fdd';
+  ctx.lineWidth = 0.5 * dpr;
+  ctx.beginPath();
+  for (let x = 0; x < W; x += pxPerMm) {
+    ctx.moveTo(Math.round(x) + 0.5, 0);
+    ctx.lineTo(Math.round(x) + 0.5, H);
+  }
+  for (let y = 0; y < H; y += pxPerMm) {
+    ctx.moveTo(0, Math.round(y) + 0.5);
+    ctx.lineTo(W, Math.round(y) + 0.5);
+  }
+  ctx.stroke();
+  // Major
+  ctx.strokeStyle = '#fbb';
+  ctx.lineWidth = 0.9 * dpr;
+  ctx.beginPath();
+  for (let x = 0; x < W; x += pxPerMm * 5) {
+    ctx.moveTo(Math.round(x) + 0.5, 0);
+    ctx.lineTo(Math.round(x) + 0.5, H);
+  }
+  for (let y = 0; y < H; y += pxPerMm * 5) {
+    ctx.moveTo(0, Math.round(y) + 0.5);
+    ctx.lineTo(W, Math.round(y) + 0.5);
+  }
+  ctx.stroke();
+
+  // Draw each lead's centerline scaled from source coords to canvas coords
+  ctx.strokeStyle = '#111';
+  ctx.lineWidth = 1.5 * dpr;
+  ctx.lineCap = 'round';
+  ctx.lineJoin = 'round';
+  const sx = W / img.width;
+  const sy = H / img.height;
+  for (const lead in extractedTraces) {
+    const t = extractedTraces[lead];
+    const [x0, y0] = t.box;
+    if (t.pts.length < 2) continue;
+    ctx.beginPath();
+    ctx.moveTo((t.pts[0][0] + x0) * sx, (t.pts[0][1] + y0) * sy);
+    for (let i = 1; i < t.pts.length; i++) {
+      ctx.lineTo((t.pts[i][0] + x0) * sx, (t.pts[i][1] + y0) * sy);
+    }
+    ctx.stroke();
+  }
+  // Lead labels (lower-left of each cell)
+  ctx.fillStyle = '#111';
+  ctx.font = `${14 * dpr}px "Times New Roman", serif`;
+  ctx.textBaseline = 'top';
+  const cellW = W / 4, cellH = H / 3;
+  for (let r = 0; r < 3; r++) {
+    for (let c = 0; c < 4; c++) {
+      const lead = LEADS_LAYOUT[r][c];
+      ctx.fillText(lead, c * cellW + 8 * dpr, r * cellH + cellH * 0.62);
+    }
+  }
+}
+
+// ═══════════════════════════════════════════════════════════
+// EXPORT
+// ═══════════════════════════════════════════════════════════
+document.getElementById('downloadJson').addEventListener('click', () => {
+  if (!extractedTraces) return;
+  const blob = new Blob([JSON.stringify(extractedTraces, null, 2)], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'ecg_trace.json';
+  a.click();
+  URL.revokeObjectURL(url);
+});
+document.getElementById('copyJson').addEventListener('click', () => {
+  if (!extractedTraces) return;
+  navigator.clipboard.writeText(JSON.stringify(extractedTraces)).then(
+    () => showToast('JSON copied to clipboard.'),
+    () => showToast('Clipboard write failed.')
+  );
+});
+document.getElementById('downloadPng').addEventListener('click', () => {
+  if (!extractedTraces) return;
+  elRendered.toBlob(blob => {
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'ecg_rendered.png';
+    a.click();
+    URL.revokeObjectURL(url);
+  }, 'image/png');
+});
+
+function showToast(msg) {
+  elToast.textContent = msg;
+  elToast.classList.add('show');
+  setTimeout(() => elToast.classList.remove('show'), 1800);
+}
+
+window.addEventListener('resize', () => {
+  if (img) sizeSourceCanvas();
+  if (extractedTraces) drawRendered();
+  drawSource();
+});
+</script>
+
+</body>
+</html>
