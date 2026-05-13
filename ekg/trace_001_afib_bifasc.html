@@ -1,0 +1,452 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ECG Trace — AFib with Bifascicular Block | CathMath</title>
+<meta name="robots" content="noindex">
+<style>
+  :root {
+    --bg: #f4f6f9;
+    --panel: #fff;
+    --text: #1a1a2e;
+    --text-dim: #5a6478;
+    --border: #d8dfe8;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { height: 100%; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: -apple-system, "Helvetica Neue", Helvetica, Arial, sans-serif;
+    min-height: 100vh;
+    padding: 18px;
+  }
+  .nav {
+    background: #0a1628;
+    color: #fff;
+    height: 42px;
+    display: flex;
+    align-items: center;
+    padding: 0 22px;
+    margin: -18px -18px 18px;
+    gap: 22px;
+  }
+  .nav a { color: rgba(255,255,255,0.6); text-decoration: none; font-size: 13px; font-weight: 600; }
+  .nav a.brand { color: #fff; font-size: 16px; font-weight: 800; }
+  .nav a:hover { color: #fff; }
+  .container { max-width: 1320px; margin: 0 auto; }
+  .header {
+    margin-bottom: 14px;
+  }
+  .header h1 {
+    font-size: 20px;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+  }
+  .header .sub {
+    font-size: 13px;
+    color: var(--text-dim);
+    margin-top: 4px;
+    line-height: 1.5;
+  }
+  .interp-block {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 12px 16px;
+    margin: 14px 0;
+    font-size: 13px;
+    line-height: 1.6;
+    color: var(--text-dim);
+    display: grid;
+    grid-template-columns: 220px 1fr;
+    gap: 8px 28px;
+  }
+  .interp-block .k { font-weight: 700; color: var(--text); letter-spacing: 0.02em; }
+  .interp-block .badge {
+    display: inline-block; padding: 2px 8px; border-radius: 4px;
+    background: rgba(239, 68, 68, 0.1); color: #c62828; font-weight: 700;
+    font-size: 11px; letter-spacing: 0.04em; text-transform: uppercase;
+  }
+  .ekg-paper {
+    width: 100%;
+    aspect-ratio: 2.5 / 1;
+    background: #fff5f5;
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    overflow: hidden;
+    position: relative;
+  }
+  .ekg-paper canvas { display: block; width: 100%; height: 100%; }
+  .footnote {
+    margin-top: 12px;
+    font-size: 11.5px;
+    color: var(--text-dim);
+    line-height: 1.55;
+  }
+</style>
+</head>
+<body>
+
+<nav class="nav">
+  <a href="/" class="brand">CathMath</a>
+  <a href="/ekg/">EKG Simulator</a>
+  <a href="/intracoronary/">Intracoronary</a>
+  <a href="/angio/">Angio Views</a>
+</nav>
+
+<div class="container">
+  <div class="header">
+    <h1>12-Lead ECG — AFib with Bifascicular Block</h1>
+    <div class="sub">
+      Parametric reconstruction in the CathMath EKG Simulator style (25 mm/s, 10 mm/mV, 1 mm minor / 5 mm major grid).
+      Per-lead morphology is hand-encoded from clinical features — not a literal pixel trace.
+    </div>
+  </div>
+
+  <div class="interp-block">
+    <span class="k">Vent. rate</span><span>84 bpm</span>
+    <span class="k">PR interval</span><span>— (no discrete P waves)</span>
+    <span class="k">QRS duration</span><span>164 ms</span>
+    <span class="k">QT / QTc</span><span>428 / 505 ms</span>
+    <span class="k">P-R-T axes</span><span>—, −65°, 75°</span>
+    <span class="k">Rhythm</span><span><span class="badge">Atrial fibrillation</span></span>
+    <span class="k">Conduction</span><span><span class="badge">RBBB</span> &nbsp; <span class="badge">LAFB</span> &nbsp; <span class="badge">Bifascicular block</span></span>
+    <span class="k">Other</span><span>Minimal LVH voltage criteria · Septal infarct, age undetermined</span>
+  </div>
+
+  <div class="ekg-paper">
+    <canvas id="ecg"></canvas>
+  </div>
+
+  <div class="footnote">
+    Reconstructed from a printed ECG showing the above features.
+    Grid, paper background, lead positions, calibration, and grayscale trace match the live CathMath EKG Simulator.
+    QRS templates: I — qR with slurred terminal R′ &nbsp;·&nbsp; II / III / aVF — rS (LAFB axis ≈ −65°) &nbsp;·&nbsp; aVR — rSR′ &nbsp;·&nbsp;
+    aVL — qR (LAFB) &nbsp;·&nbsp; V1 / V2 — rSR′ (classic RBBB) &nbsp;·&nbsp; V3 / V4 — RsR′ with progression
+    &nbsp;·&nbsp; V5 / V6 — qR with terminal slurred S (RBBB lateral pattern).
+    R-R intervals are randomized between ≈ 500 and 900 ms to represent the irregular irregularity of AF, with a fine fibrillatory baseline between QRS complexes.
+  </div>
+</div>
+
+<script>
+'use strict';
+
+// ═══════════════════════════════════════════════════════════
+// PARAMETRIC 12-LEAD ECG TRACE — AFib + RBBB + LAFB
+// ═══════════════════════════════════════════════════════════
+//
+// Layout: 4 columns × 3 rows.
+//   Row 1: I    aVR   V1   V4
+//   Row 2: II   aVL   V2   V5
+//   Row 3: III  aVF   V3   V6
+//
+// Each column shows 2.5 s of trace at 25 mm/s (62.5 mm wide).
+// 10 mm/mV vertical gain.
+//
+// Per-lead morphology is built as a sum of Gaussians (one per wave),
+// matching the qR / rS / rSR' patterns expected for the LAFB +
+// RBBB bifascicular block diagnosis.
+
+const LEADS_GRID = [
+  ['I',   'aVR', 'V1', 'V4'],
+  ['II',  'aVL', 'V2', 'V5'],
+  ['III', 'aVF', 'V3', 'V6'],
+];
+
+// ── PER-LEAD QRS-T TEMPLATES ─────────────────────────────
+// Each wave: { t: ms since QRS-onset, amp: mV peak, w: half-width ms }
+// Sum of Gaussians produces a smooth tracing approximating the
+// classic morphology for each clinical pattern.
+const TEMPLATES = {
+  // Row 1 leads
+  'I': {                         // qR with slurred terminal R' (LAFB qR + RBBB)
+    waves: [
+      { t:  10, amp: -0.05, w: 10 },   // q
+      { t:  38, amp:  0.55, w: 16 },   // R
+      { t:  78, amp: -0.18, w: 14 },   // s (small dip)
+      { t: 120, amp:  0.22, w: 18 },   // R' (terminal slur)
+      { t: 250, amp:  0.18, w: 70 },   // T (upright)
+    ],
+  },
+  'aVR': {                       // rSR' / mostly negative
+    waves: [
+      { t:  10, amp: -0.12, w: 10 },
+      { t:  50, amp: -0.75, w: 18 },   // deep S
+      { t: 110, amp:  0.30, w: 16 },   // R' (terminal positive)
+      { t: 250, amp: -0.18, w: 70 },   // T inverted (normal in aVR)
+    ],
+  },
+  'V1': {                        // rSR' — classic RBBB
+    waves: [
+      { t:  18, amp:  0.18, w: 12 },   // r
+      { t:  55, amp: -0.35, w: 16 },   // S
+      { t: 110, amp:  0.70, w: 20 },   // R' (taller secondary)
+      { t: 250, amp: -0.20, w: 70 },   // T inverted (discordant)
+    ],
+  },
+  'V4': {                        // Rs with slurred S
+    waves: [
+      { t:  20, amp:  0.05, w: 8 },    // small initial r
+      { t:  45, amp:  1.05, w: 18 },   // tall R
+      { t:  95, amp: -0.30, w: 16 },   // S
+      { t: 140, amp:  0.10, w: 16 },   // small terminal slur
+      { t: 250, amp:  0.28, w: 75 },   // T
+    ],
+  },
+  // Row 2 leads
+  'II': {                        // rS — LAFB
+    waves: [
+      { t:  18, amp:  0.30, w: 12 },   // r
+      { t:  65, amp: -1.30, w: 20 },   // S (deep)
+      { t: 120, amp:  0.18, w: 18 },   // small terminal slur
+      { t: 240, amp:  0.18, w: 65 },
+    ],
+  },
+  'aVL': {                       // qR — LAFB lateral
+    waves: [
+      { t:  10, amp: -0.05, w: 10 },
+      { t:  45, amp:  0.85, w: 18 },   // tall R
+      { t: 100, amp:  0.08, w: 16 },
+      { t: 250, amp: -0.12, w: 70 },   // T small/inverted
+    ],
+  },
+  'V2': {                        // rSR'
+    waves: [
+      { t:  20, amp:  0.20, w: 12 },
+      { t:  55, amp: -0.45, w: 16 },
+      { t: 110, amp:  1.10, w: 22 },   // tall R'
+      { t: 250, amp: -0.20, w: 75 },
+    ],
+  },
+  'V5': {                        // qR with slurred terminal S
+    waves: [
+      { t:  10, amp: -0.06, w: 10 },
+      { t:  35, amp:  0.85, w: 18 },   // R
+      { t:  95, amp: -0.28, w: 24 },   // wide slurred S
+      { t: 240, amp:  0.18, w: 70 },
+    ],
+  },
+  // Row 3 leads
+  'III': {                       // rS — LAFB
+    waves: [
+      { t:  16, amp:  0.14, w: 12 },
+      { t:  68, amp: -1.35, w: 22 },   // deep S
+      { t: 130, amp:  0.18, w: 18 },
+      { t: 250, amp:  0.10, w: 65 },
+    ],
+  },
+  'aVF': {                       // rS — LAFB
+    waves: [
+      { t:  18, amp:  0.10, w: 12 },
+      { t:  70, amp: -1.05, w: 22 },
+      { t: 250, amp:  0.05, w: 65 },
+    ],
+  },
+  'V3': {                        // Rs / RsR'
+    waves: [
+      { t:  20, amp:  0.10, w: 10 },
+      { t:  55, amp: -0.25, w: 14 },
+      { t:  95, amp:  1.05, w: 22 },   // tall R
+      { t: 140, amp: -0.08, w: 14 },
+      { t: 250, amp:  0.18, w: 75 },
+    ],
+  },
+  'V6': {                        // qR with slurred terminal S
+    waves: [
+      { t:  10, amp: -0.05, w: 10 },
+      { t:  35, amp:  0.70, w: 18 },
+      { t:  95, amp: -0.32, w: 24 },   // slurred S (RBBB lateral)
+      { t: 240, amp:  0.12, w: 70 },
+    ],
+  },
+};
+
+// ── Evaluate one lead's voltage at time t (ms relative to QRS onset) ──
+function leadVoltage(lead, tMs) {
+  const tpl = TEMPLATES[lead];
+  if (!tpl) return 0;
+  let v = 0;
+  for (const w of tpl.waves) {
+    v += w.amp * Math.exp(-Math.pow((tMs - w.t) / w.w, 2));
+  }
+  return v;
+}
+
+// ── Deterministic pseudo-random noise (mulberry32) so the trace is stable
+//    across re-renders / window resizes ──
+function mulberry32(seed) {
+  return function() {
+    let t = seed += 0x6D2B79F5;
+    t = Math.imul(t ^ (t >>> 15), t | 1);
+    t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+
+// ── Build R-peak times within a 2.5 s window with AFib RR variability ──
+function buildBeatTimes(durationMs, seed) {
+  const rng = mulberry32(seed);
+  const out = [];
+  // Start the first beat ~250 ms into the strip (typical lead block has a
+  // calibration / paper margin before the first QRS).
+  let t = 200 + rng() * 200;
+  while (t < durationMs + 200) {
+    out.push(t);
+    // AF: irregular RR — mean 714 ms (= 84 bpm) with ±150 ms uniform jitter
+    const rr = 600 + rng() * 320;
+    t += rr;
+  }
+  return out;
+}
+
+// ── Fine fibrillatory baseline (≈ 5-9 Hz, low amplitude) ──
+function fibBaseline(tSec, seed) {
+  // Sum of low-amplitude sinusoids with seed-modulated phase
+  const rng = mulberry32(seed * 1009);
+  const phases = [rng() * 6.28, rng() * 6.28, rng() * 6.28, rng() * 6.28];
+  return 0.020 * Math.sin(2 * Math.PI * 5.5 * tSec + phases[0])
+       + 0.014 * Math.sin(2 * Math.PI * 7.8 * tSec + phases[1])
+       + 0.010 * Math.sin(2 * Math.PI * 10.1 * tSec + phases[2])
+       + 0.008 * Math.sin(2 * Math.PI * 3.7 * tSec + phases[3]);
+}
+
+// ── Sample a full strip: voltage at time t for the given lead ──
+function sampleStrip(lead, tMs, beats, seed) {
+  // Sum contributions from any nearby beats (QRS templates span ~400 ms)
+  // Beats are listed by R-peak time; QRS onset is approximated 30 ms earlier.
+  let v = 0;
+  for (const bt of beats) {
+    const rel = tMs - bt + 30;     // shift so wave time t=0 is QRS onset
+    if (rel < -50 || rel > 500) continue;
+    v += leadVoltage(lead, rel);
+  }
+  // Add fibrillation baseline (mostly visible between beats; subtract a fade
+  // through the QRS so the spikes still read cleanly)
+  v += fibBaseline(tMs / 1000, seed);
+  return v;
+}
+
+// ═══════════════════════════════════════════════════════════
+// CANVAS RENDERING
+// ═══════════════════════════════════════════════════════════
+const canvas = document.getElementById('ecg');
+
+function resize() {
+  const rect = canvas.parentElement.getBoundingClientRect();
+  const dpr = window.devicePixelRatio || 1;
+  canvas.width = rect.width * dpr;
+  canvas.height = rect.height * dpr;
+  render();
+}
+window.addEventListener('resize', resize);
+
+function render() {
+  const ctx = canvas.getContext('2d');
+  const W = canvas.width;
+  const H = canvas.height;
+  const dpr = window.devicePixelRatio || 1;
+
+  // Layout
+  const rowH = H / 3;
+  const colW = W / 4;
+  const pxPerMm = colW / 62.5;        // 25 mm/s × 2.5 s = 62.5 mm per column
+  const pxPerSec = pxPerMm * 25;
+  const yScalePerMv = pxPerMm * 10;   // 10 mm/mV
+  const STRIP_DURATION_MS = 2500;
+
+  // ── Grid ──
+  ctx.fillStyle = '#fff5f5';
+  ctx.fillRect(0, 0, W, H);
+
+  // Minor 1 mm
+  ctx.strokeStyle = '#fdd';
+  ctx.lineWidth = 0.5 * dpr;
+  ctx.beginPath();
+  for (let x = 0; x < W; x += pxPerMm) {
+    ctx.moveTo(Math.round(x) + 0.5, 0);
+    ctx.lineTo(Math.round(x) + 0.5, H);
+  }
+  for (let y = 0; y < H; y += pxPerMm) {
+    ctx.moveTo(0, Math.round(y) + 0.5);
+    ctx.lineTo(W, Math.round(y) + 0.5);
+  }
+  ctx.stroke();
+
+  // Major 5 mm
+  ctx.strokeStyle = '#fbb';
+  ctx.lineWidth = 0.9 * dpr;
+  ctx.beginPath();
+  for (let x = 0; x < W; x += pxPerMm * 5) {
+    ctx.moveTo(Math.round(x) + 0.5, 0);
+    ctx.lineTo(Math.round(x) + 0.5, H);
+  }
+  for (let y = 0; y < H; y += pxPerMm * 5) {
+    ctx.moveTo(0, Math.round(y) + 0.5);
+    ctx.lineTo(W, Math.round(y) + 0.5);
+  }
+  ctx.stroke();
+
+  // Thin separators between lead boxes (subtle)
+  ctx.strokeStyle = 'rgba(0,0,0,0.06)';
+  ctx.lineWidth = 1 * dpr;
+  for (let r = 1; r < 3; r++) {
+    const y = r * rowH;
+    ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(W, y); ctx.stroke();
+  }
+  for (let c = 1; c < 4; c++) {
+    const x = c * colW;
+    ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, H); ctx.stroke();
+  }
+
+  // ── Per-lead trace ──
+  ctx.strokeStyle = '#111';
+  ctx.lineWidth = 1.4 * dpr;
+  ctx.lineCap = 'round';
+  ctx.lineJoin = 'round';
+
+  for (let r = 0; r < 3; r++) {
+    for (let c = 0; c < 4; c++) {
+      const lead = LEADS_GRID[r][c];
+      const x0 = c * colW;
+      const y0 = r * rowH;
+      // Baseline is at row midpoint (slightly above center to leave room for deep S waves)
+      const baselineY = y0 + rowH * 0.42;
+      // Seed per column so AFib R-R pattern is independent across columns
+      // (mimics paper-printout where each column captures a different time window)
+      const seed = (c + 1) * 9_973 + 17;
+      const beats = buildBeatTimes(STRIP_DURATION_MS, seed);
+
+      // Sample the trace at ~ 400 Hz
+      const samples = 1000;
+      ctx.beginPath();
+      for (let i = 0; i < samples; i++) {
+        const tMs = (i / samples) * STRIP_DURATION_MS;
+        const mV = sampleStrip(lead, tMs, beats, seed);
+        const x = x0 + (tMs / 1000) * pxPerSec;
+        // Mild high-frequency artifact (fine tremor) to mimic real paper
+        const tremor = 0.012 * Math.sin(2 * Math.PI * 18 * tMs / 1000 + seed);
+        const yPx = baselineY - (mV + tremor) * yScalePerMv;
+        // Clamp into the strip box so a runaway value can never bleed across rows
+        const yClamped = Math.max(y0 + 4, Math.min(y0 + rowH - 4, yPx));
+        if (i === 0) ctx.moveTo(x, yClamped); else ctx.lineTo(x, yClamped);
+      }
+      ctx.stroke();
+
+      // ── Lead label (lower-left of box, italic-ish small font like the
+      //    reference image)
+      ctx.fillStyle = '#111';
+      ctx.font = `${14 * dpr}px "Times New Roman", serif`;
+      ctx.textAlign = 'left';
+      ctx.textBaseline = 'top';
+      ctx.fillText(lead, x0 + 8 * dpr, y0 + rowH * 0.62);
+    }
+  }
+}
+
+resize();
+</script>
+
+</body>
+</html>
