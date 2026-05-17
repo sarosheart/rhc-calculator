@@ -492,6 +492,24 @@ body.dark .float-panel { background: rgba(19,26,38,0.92); box-shadow: 0 2px 8px 
 .float-handle:hover { background: rgba(0,0,0,0.03); }
 body.dark .float-handle:hover { background: rgba(255,255,255,0.04); }
 .float-handle .drag-grip { color: var(--text-muted); font-size: 10px; letter-spacing: -2px; }
+.float-handle .handle-right { display: flex; align-items: center; gap: 8px; }
+.float-collapse {
+  background: none;
+  border: none;
+  padding: 2px 4px;
+  margin: 0;
+  cursor: pointer;
+  color: var(--text-dim);
+  font-size: 11px;
+  line-height: 1;
+  border-radius: 3px;
+  transition: transform 0.15s ease;
+}
+.float-collapse:hover { background: rgba(0,0,0,0.06); color: var(--text); }
+body.dark .float-collapse:hover { background: rgba(255,255,255,0.08); }
+.float-panel.collapsed .float-handle { border-bottom: none; border-radius: 6px; }
+.float-panel.collapsed .float-body { display: none; }
+.float-panel.collapsed .float-collapse { transform: rotate(-90deg); }
 .float-body {
   padding: 8px 10px;
   display: flex;
@@ -1055,7 +1073,10 @@ body.dark .seo-content-body h3 { color: #e8ecf2; }
       <div class="float-panel" id="floatPanel">
         <div class="float-handle" id="floatHandle">
           <span>Display</span>
-          <span class="drag-grip" title="Drag to move">⋮⋮</span>
+          <span class="handle-right">
+            <button type="button" class="float-collapse" id="floatCollapse" title="Collapse" aria-label="Collapse display panel" aria-expanded="true">▾</button>
+            <span class="drag-grip" title="Drag to move">⋮⋮</span>
+          </span>
         </div>
         <div class="float-body">
           <label class="overlay-row"><input type="checkbox" id="ovGhost" checked> Ghost (baseline)</label>
@@ -2256,9 +2277,24 @@ document.querySelectorAll('[data-disease]').forEach(btn => {
 (function setupDrag() {
   const panel = document.getElementById('floatPanel');
   const handle = document.getElementById('floatHandle');
+  const collapseBtn = document.getElementById('floatCollapse');
   let dragging = false, dx = 0, dy = 0;
 
+  // Collapse toggle — clicking the chevron must not start a drag.
+  const COLLAPSE_KEY = 'cathmath_ap_displaypanel_collapsed';
+  function setCollapsed(c) {
+    panel.classList.toggle('collapsed', c);
+    collapseBtn.setAttribute('aria-expanded', c ? 'false' : 'true');
+    collapseBtn.title = c ? 'Expand' : 'Collapse';
+    try { localStorage.setItem(COLLAPSE_KEY, c ? '1' : '0'); } catch(e) {}
+  }
+  try { if (localStorage.getItem(COLLAPSE_KEY) === '1') setCollapsed(true); } catch(e) {}
+  collapseBtn.addEventListener('click', e => { e.stopPropagation(); setCollapsed(!panel.classList.contains('collapsed')); });
+  collapseBtn.addEventListener('mousedown', e => e.stopPropagation());
+  collapseBtn.addEventListener('touchstart', e => e.stopPropagation(), { passive: true });
+
   function start(clientX, clientY, e) {
+    if (e && e.target && e.target.closest && e.target.closest('.float-collapse')) return;
     dragging = true;
     const rect = panel.getBoundingClientRect();
     dx = clientX - rect.left;
