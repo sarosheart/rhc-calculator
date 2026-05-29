@@ -1709,12 +1709,14 @@ function placeLabels(labels, which, parts) {
   const minTX = Math.min(...labels.map(L => L.targetX));
   const maxTX = Math.max(...labels.map(L => L.targetX));
 
-  // Label column X — pushed to the canvas margin for that side so the column
-  // stays well clear of the vessel cluster (the leader line bridges the gap).
-  // This is what gives both columns enough room when many labels stack tight.
+  // Label column X — hug the vessel cluster as tight as possible, only pulling
+  // back to the canvas margin when the cluster sits within text-width of the
+  // edge. The text-width reservation ('Septal perforators' ≈ 130 px @ 11px/600)
+  // guarantees the label string fits horizontally without being clipped.
+  const LABEL_TEXT_W = 135;
   const labelX = which === 'left'
-    ? Math.max(SVG_EDGE_PAD, Math.min(minTX - HORIZ_GAP, 120))
-    : Math.min(SVG_W - SVG_EDGE_PAD, Math.max(maxTX + HORIZ_GAP, SVG_W - 120));
+    ? Math.max(LABEL_TEXT_W + SVG_EDGE_PAD, minTX - HORIZ_GAP)
+    : Math.min(SVG_W - LABEL_TEXT_W - SVG_EDGE_PAD, maxTX + HORIZ_GAP);
   const anchor = which === 'left' ? 'end' : 'start';
 
   // Decide label Y positions. Start from each target Y as the "ideal" position,
@@ -1768,365 +1770,155 @@ function placeLabels(labels, which, parts) {
 }
 
 // ═══════════════════════════════════════════════════════════
-// ORIENTATION WIDGET — 3D-style C-arm + patient illustration
+// ORIENTATION WIDGET — cath-lab dual dial
 // ═══════════════════════════════════════════════════════════
-// Single perspective view (3/4 above, slightly to the right) showing the
-// patient on a table and the C-arm in its current LAO/RAO + CRA/CAU position.
-// Container is draggable (via header) and resizable (corner handle); state
-// persists in localStorage.
+// Two small "globe" indicators side-by-side, exactly like the C-arm position
+// readout on a real cath lab monitor.
 //
-// World coordinates (intuitive anatomical):
-//   +x = patient's LEFT (lateral)
-//   +y = CRANIAL (head up)
-//   +z = ANTERIOR (out of chest)
+//   LEFT DIAL  — Top view  (LAO / RAO):   heart in center, detector dot
+//                rotates around. Patient's RIGHT on viewer's left (radiologic
+//                convention). Markers: A (anterior, top), P (posterior, bottom),
+//                R / L on the sides.
+//   RIGHT DIAL — Side view (CRA / CAU):   sagittal section, looking at the
+//                patient from their right. HEAD at left, FEET at right.
+//                Detector dot tilts toward head (CRA) or feet (CAU).
+//
+// Each dial is one degree of freedom. Container is still draggable, resizable,
+// and collapsible; state persists in localStorage.
 
 function renderOrientationWidget() {
   const svg = document.getElementById('orientSvg');
   if (!svg) return;
 
-  // Camera: 3/4 view from upper-right-foot of bed (gives a clear "teaching poster" perspective)
-  const CAM_AZIMUTH   =  32 * Math.PI / 180;  // rotate world around Y
-  const CAM_ELEVATION = -22 * Math.PI / 180;  // tilt camera down
+  // ViewBox sized for two dials side-by-side. Header carries the numeric
+  // readout already, so the SVG just hosts the dials.
+  const VBW = 300, VBH = 180;
+  svg.setAttribute('viewBox', `0 0 ${VBW} ${VBH}`);
 
-  function proj(p) {
-    let x1 = p.x * Math.cos(CAM_AZIMUTH) + p.z * Math.sin(CAM_AZIMUTH);
-    let y1 = p.y;
-    let z1 = -p.x * Math.sin(CAM_AZIMUTH) + p.z * Math.cos(CAM_AZIMUTH);
-    let x2 = x1;
-    let y2 =  y1 * Math.cos(CAM_ELEVATION) - z1 * Math.sin(CAM_ELEVATION);
-    let z2 =  y1 * Math.sin(CAM_ELEVATION) + z1 * Math.cos(CAM_ELEVATION);
-    // Orthographic project. ViewBox is 300×240; origin slightly above center.
-    return { x: 150 + x2 * 62, y: 130 - y2 * 62, depth: z2 };
-  }
-
-  // ─── Compute C-arm geometry ─────────────────────────────
-  const heart = { x: 0, y: 0.15, z: 0 };
-  const R = 1.05;                    // C-arm radius
-
-  // Detector direction: start at +z (anterior in AP) → rotate LAO around Y →
-  // tilt CRA around X. +LAO swings detector to patient's LEFT (+x).
-  const laoRad = liveLao * Math.PI / 180;
-  const craRad = liveCra * Math.PI / 180;
-  let dx = 0, dy = 0, dz = 1;
-  // Rotate around Y by +LAO  (detector swings to patient's left)
-  const dx1 = dx * Math.cos(laoRad) + dz * Math.sin(laoRad);
-  const dz1 = -dx * Math.sin(laoRad) + dz * Math.cos(laoRad);
-  dx = dx1; dz = dz1;
-  // Rotate around X by +CRA  (detector tilts toward head — +y direction).
-  // Note the sign convention: we're rotating the detector position in patient
-  // frame, which is the INVERSE of the camera-frame rotation used in the main
-  // canvas projection. So dy gets +sin (not -sin) and dz gets -sin (not +sin).
-  const dy2 = dy * Math.cos(craRad) + dz * Math.sin(craRad);
-  const dz2 = -dy * Math.sin(craRad) + dz * Math.cos(craRad);
-  dy = dy2; dz = dz2;
-
-  const detPos = { x: heart.x + dx * R, y: heart.y + dy * R, z: heart.z + dz * R };
-  const srcPos = { x: heart.x - dx * R, y: heart.y - dy * R, z: heart.z - dz * R };
-  const detP = proj(detPos);
-  const srcP = proj(srcPos);
-
-  // C-arm arc: semicircle from detector to source through a "bulge" direction
-  // perpendicular to the det-src axis. Pick the bulge so it points sideways
-  // (lateral) rather than crashing through the patient. We use cross(det, world-up)
-  // when det isn't near-vertical, else cross(det, world-anterior).
-  let upRef = { x: 0, y: 1, z: 0 };
-  const detDotUp = dx * upRef.x + dy * upRef.y + dz * upRef.z;
-  if (Math.abs(detDotUp) > 0.92) upRef = { x: 0, y: 0, z: 1 };
-  let bx = dy * upRef.z - dz * upRef.y;
-  let by = dz * upRef.x - dx * upRef.z;
-  let bz = dx * upRef.y - dy * upRef.x;
-  const bLen = Math.sqrt(bx*bx + by*by + bz*bz) || 1;
-  bx /= bLen; by /= bLen; bz /= bLen;
-
-  // Sample the arc — 22 points for a smooth curve, depth-sorted for occlusion
-  const arcPts = [];
-  for (let i = 0; i <= 22; i++) {
-    const t = i / 22;
-    const ang = t * Math.PI;
-    const c = Math.cos(ang), s = Math.sin(ang);
-    const px = heart.x + (dx * c + bx * s) * R;
-    const py = heart.y + (dy * c + by * s) * R;
-    const pz = heart.z + (dz * c + bz * s) * R;
-    arcPts.push(proj({ x: px, y: py, z: pz }));
-  }
-  const arcPath = 'M ' + arcPts.map(p => `${p.x.toFixed(1)} ${p.y.toFixed(1)}`).join(' L ');
-
-  // ─── Project patient + table anchors ────────────────────
-  const tableCorners = [
-    { x: -1.0, y:  1.7, z: -0.35 },
-    { x:  1.0, y:  1.7, z: -0.35 },
-    { x:  1.0, y: -1.7, z: -0.35 },
-    { x: -1.0, y: -1.7, z: -0.35 },
-  ].map(proj);
-  const tablePath = 'M ' + tableCorners.map(c => `${c.x.toFixed(1)} ${c.y.toFixed(1)}`).join(' L ') + ' Z';
-
-  // Body part anchors (head, torso, hips, legs) — drawn as projected ellipses.
-  // Width depends on the rotated x-axis projection, height on y-axis.
-  const headP  = proj({ x: 0, y:  1.30, z: 0 });
-  const neckP  = proj({ x: 0, y:  0.95, z: 0 });
-  const torsoP = proj({ x: 0, y:  0.15, z: 0 });
-  const hipP   = proj({ x: 0, y: -0.50, z: 0 });
-  const legsP  = proj({ x: 0, y: -1.20, z: 0 });
-  const heartP = proj(heart);
-
-  // Approximate body widths in the projected image. Patient body lies along
-  // the y-axis; its lateral half-width in world is ~0.30, foreshortened by the
-  // camera azimuth. We sample two points across (±x) to find the projected width.
-  function bodyWidth(centerY, halfWidth) {
-    const a = proj({ x: -halfWidth, y: centerY, z: 0 });
-    const b = proj({ x:  halfWidth, y: centerY, z: 0 });
-    return Math.hypot(a.x - b.x, a.y - b.y);
-  }
-  const headW = bodyWidth(1.30, 0.20);
-  const torsoW = bodyWidth(0.15, 0.34);
-  const hipW = bodyWidth(-0.50, 0.30);
-  const legsW = bodyWidth(-1.20, 0.18);
-
-  // ─── Depth sorting ──────────────────────────────────────
-  // Decide whether the arc goes "behind" the patient (lower z than heart) or
-  // "in front of" it. Split the arc accordingly so the back portion renders
-  // first (under the body), then the body, then the front portion (over the body).
-  const heartDepth = proj(heart).depth;
-  const arcFrontSegments = [];
-  const arcBackSegments  = [];
-  let currentSegmentPts = [];
-  let currentSegmentFront = arcPts[0].depth > heartDepth;
-  for (const p of arcPts) {
-    const isFront = p.depth > heartDepth;
-    if (isFront !== currentSegmentFront && currentSegmentPts.length > 0) {
-      // Switch segment — but include the current point to bridge
-      currentSegmentPts.push(p);
-      (currentSegmentFront ? arcFrontSegments : arcBackSegments).push(currentSegmentPts);
-      currentSegmentPts = [p];
-      currentSegmentFront = isFront;
-    } else {
-      currentSegmentPts.push(p);
-    }
-  }
-  if (currentSegmentPts.length > 0) {
-    (currentSegmentFront ? arcFrontSegments : arcBackSegments).push(currentSegmentPts);
-  }
-  function segmentPath(seg) {
-    return 'M ' + seg.map(p => `${p.x.toFixed(1)} ${p.y.toFixed(1)}`).join(' L ');
-  }
-
-  // ─── Detector / source visual cues ──────────────────────
-  // Detector: a "paddle" — larger rectangle, oriented to face the heart.
-  // Source: a smaller "cube" on the opposite end. Both are drawn as 2D
-  // rectangles rotated to face the patient (simpler than full 3D box).
-  const detAng = Math.atan2(heartP.y - detP.y, heartP.x - detP.x) * 180 / Math.PI;
-  const srcAng = Math.atan2(heartP.y - srcP.y, heartP.x - srcP.x) * 180 / Math.PI;
-  const detInFront = detP.depth > heartDepth;
-  const srcInFront = srcP.depth > heartDepth;
-
-  // ─── Build SVG ──────────────────────────────────────────
-  // Layer order (back to front):
-  //   1. Background fill + table
-  //   2. Body shadow under table
-  //   3. Arc BACK segments (behind body)
-  //   4. Body
-  //   5. Heart marker on body
-  //   6. Arc FRONT segments (over body)
-  //   7. Detector + source (drawn in their depth position relative to heart)
-  //   8. Optional labels around the edge
-
-  // Patient skin gradient
-  const skinTop = '#d8b59a', skinBot = '#a37a5a';
-  // Patient body fill paths — use ellipses approximating each body region
+  const angTxt = formatAngleReadout();
 
   let html = '';
-
-  // Background (transparent — let widget bg show through)
-  // Subtle ground shadow
-  const shadowCx = (tableCorners[0].x + tableCorners[2].x) / 2;
-  const shadowCy = tableCorners[2].y + 4;
-  html += `<ellipse cx="${shadowCx.toFixed(1)}" cy="${shadowCy.toFixed(1)}" rx="${(Math.abs(tableCorners[1].x-tableCorners[0].x)/2).toFixed(1)}" ry="6" fill="rgba(0,0,0,0.32)"/>`;
-
-  // Table
   html += `<defs>
-    <linearGradient id="tableGrad" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0%" stop-color="#3a4458"/>
-      <stop offset="100%" stop-color="#212a3a"/>
-    </linearGradient>
-    <linearGradient id="bodyGrad" x1="0" y1="0" x2="1" y2="0.4">
-      <stop offset="0%" stop-color="${skinTop}"/>
-      <stop offset="100%" stop-color="${skinBot}"/>
-    </linearGradient>
-    <linearGradient id="armGrad" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0%" stop-color="rgba(180, 215, 245, 0.78)"/>
-      <stop offset="100%" stop-color="rgba(95, 155, 215, 0.62)"/>
-    </linearGradient>
-    <linearGradient id="armHighlight" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0%" stop-color="rgba(255, 255, 255, 0.55)"/>
-      <stop offset="100%" stop-color="rgba(255, 255, 255, 0)"/>
-    </linearGradient>
-    <linearGradient id="detGrad" x1="0" y1="0" x2="0" y2="1">
+    <radialGradient id="dialBg" cx="50%" cy="40%" r="65%">
+      <stop offset="0%" stop-color="rgba(50, 65, 90, 0.55)"/>
+      <stop offset="100%" stop-color="rgba(18, 25, 40, 0.85)"/>
+    </radialGradient>
+    <linearGradient id="dialDetGrad" x1="0" y1="0" x2="0" y2="1">
       <stop offset="0%" stop-color="#6eb0f7"/>
       <stop offset="100%" stop-color="#3a78c8"/>
     </linearGradient>
-    <linearGradient id="srcGrad" x1="0" y1="0" x2="0" y2="1">
+    <linearGradient id="dialSrcGrad" x1="0" y1="0" x2="0" y2="1">
       <stop offset="0%" stop-color="#c8cdd5"/>
       <stop offset="100%" stop-color="#7a8499"/>
     </linearGradient>
-    <marker id="arrHead" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
-      <path d="M 0 0 L 10 5 L 0 10 z" fill="#fdcc4d"/>
-    </marker>
-  </defs>`;
-  html += `<path d="${tablePath}" fill="url(#tableGrad)" stroke="rgba(180,190,210,0.35)" stroke-width="1"/>`;
-
-  // Back-of-body arc segments first (so body covers them)
-  // Draw arc with a slight shadow underneath for depth, then the translucent blue
-  // body, then a thin inner highlight to give it that "glass loop" feel.
-  for (const seg of arcBackSegments) {
-    const d = segmentPath(seg);
-    html += `<path d="${d}" fill="none" stroke="rgba(0,0,0,0.35)" stroke-width="11" stroke-linecap="round" stroke-opacity="0.45"/>`;
-    html += `<path d="${d}" fill="none" stroke="url(#armGrad)" stroke-width="9" stroke-linecap="round"/>`;
-    html += `<path d="${d}" fill="none" stroke="rgba(255,255,255,0.55)" stroke-width="1.4" stroke-linecap="round" opacity="0.7"/>`;
-  }
-
-  // Detector + source, if they're behind the body
-  if (!detInFront) html += renderDetector(detP, detAng, false);
-  if (!srcInFront) html += renderSource(srcP, srcAng, false);
-
-  // Body — drawn over the back arc
-  // Use rounded ellipses for each region
-  html += `<ellipse cx="${headP.x.toFixed(1)}" cy="${headP.y.toFixed(1)}" rx="${(headW*0.55).toFixed(1)}" ry="${(headW*0.65).toFixed(1)}" fill="url(#bodyGrad)" stroke="rgba(0,0,0,0.25)" stroke-width="0.6"/>`;
-  // Neck (subtle - just a small ellipse blending head and torso)
-  html += `<ellipse cx="${neckP.x.toFixed(1)}" cy="${neckP.y.toFixed(1)}" rx="${(headW*0.4).toFixed(1)}" ry="${(headW*0.25).toFixed(1)}" fill="url(#bodyGrad)" stroke="rgba(0,0,0,0.2)" stroke-width="0.4"/>`;
-  // Torso (rounded rectangle)
-  html += `<ellipse cx="${torsoP.x.toFixed(1)}" cy="${torsoP.y.toFixed(1)}" rx="${(torsoW*0.5).toFixed(1)}" ry="${(torsoW*0.95).toFixed(1)}" fill="url(#bodyGrad)" stroke="rgba(0,0,0,0.25)" stroke-width="0.6"/>`;
-  // Hips
-  html += `<ellipse cx="${hipP.x.toFixed(1)}" cy="${hipP.y.toFixed(1)}" rx="${(hipW*0.55).toFixed(1)}" ry="${(hipW*0.6).toFixed(1)}" fill="url(#bodyGrad)" stroke="rgba(0,0,0,0.25)" stroke-width="0.5"/>`;
-  // Legs
-  html += `<ellipse cx="${legsP.x.toFixed(1)}" cy="${legsP.y.toFixed(1)}" rx="${(legsW*0.6).toFixed(1)}" ry="${(legsW*1.3).toFixed(1)}" fill="url(#bodyGrad)" stroke="rgba(0,0,0,0.22)" stroke-width="0.5"/>`;
-
-  // Heart marker on chest (subtle red bean, anterior-left of torso)
-  const heartMarker = proj({ x: -0.10, y: 0.20, z: 0.18 });
-  html += `<ellipse cx="${heartMarker.x.toFixed(1)}" cy="${heartMarker.y.toFixed(1)}" rx="6" ry="7" fill="rgba(220, 60, 50, 0.72)" stroke="rgba(180,30,30,0.6)" stroke-width="0.6"/>`;
-
-  // Front-of-body arc segments — drawn over the body
-  for (const seg of arcFrontSegments) {
-    const d = segmentPath(seg);
-    html += `<path d="${d}" fill="none" stroke="rgba(0,0,0,0.40)" stroke-width="11" stroke-linecap="round" stroke-opacity="0.6"/>`;
-    html += `<path d="${d}" fill="none" stroke="url(#armGrad)" stroke-width="9" stroke-linecap="round"/>`;
-    html += `<path d="${d}" fill="none" stroke="rgba(255,255,255,0.65)" stroke-width="1.6" stroke-linecap="round" opacity="0.8"/>`;
-  }
-
-  // Detector + source, if they're in front of the body
-  if (detInFront) html += renderDetector(detP, detAng, true);
-  if (srcInFront) html += renderSource(srcP, srcAng, true);
-
-  // Compass labels in margin (head / feet / R / L) — fixed corners of the
-  // patient frame, projected so they're always positioned next to the correct
-  // anatomical direction.
-  // Compass labels: pushed OUTSIDE the C-arm radius (R=1.05) so they don't
-  // visually overlap with the C-arm arc or its bulge apex. Patient body
-  // extends to y=±1.4; we put HEAD/FEET at ±1.85 for a 0.45-unit margin.
-  const lblHead  = proj({ x: 0, y:  1.85, z: 0 });
-  const lblFeet  = proj({ x: 0, y: -1.85, z: 0 });
-  const lblRight = proj({ x: -1.30, y: 0, z: 0 });  // outside C-arm radius
-  const lblLeft  = proj({ x:  1.30, y: 0, z: 0 });
-  html += `<text x="${lblHead.x.toFixed(1)}" y="${lblHead.y.toFixed(1)}" text-anchor="middle" font-size="9" font-weight="700" fill="rgba(220,220,230,0.55)">HEAD</text>`;
-  html += `<text x="${lblFeet.x.toFixed(1)}" y="${lblFeet.y.toFixed(1)}" text-anchor="middle" font-size="9" font-weight="700" fill="rgba(220,220,230,0.55)">FEET</text>`;
-  html += `<text x="${lblRight.x.toFixed(1)}" y="${lblRight.y.toFixed(1)}" text-anchor="end" font-size="9" font-weight="700" fill="rgba(220,220,230,0.45)">R</text>`;
-  html += `<text x="${lblLeft.x.toFixed(1)}" y="${lblLeft.y.toFixed(1)}" text-anchor="start" font-size="9" font-weight="700" fill="rgba(220,220,230,0.45)">L</text>`;
-
-  // Angle readout in the corner of the SVG
-  const angTxt = formatAngleReadout();
-  html += `<text x="6" y="252" font-size="9" font-weight="700" fill="rgba(253, 204, 77, 0.9)" letter-spacing="0.04em">${angTxt}</text>`;
-
-  // ─── 5 ALWAYS-VISIBLE motion arrows + AP + "Image Receptor" callout ───
-  // Per the Rigatelli atlas Fig 3 reference: a teaching diagram showing all
-  // four C-arm motion directions (RAO upper-left, CRA upper-right, CAU lower-
-  // left, LAO lower-right) plus the AP projection (straight down into the
-  // receptor). The matching arrow brightens to yellow when the user moves a
-  // slider that direction; otherwise all arrows sit at a subtle blue-grey.
-  //
-  // Arrows are placed in FIXED screen-space at the top of the widget viewBox
-  // (around an "AP receptor reference" position) so they always read as
-  // "these are the possible motions" regardless of where the C-arm currently
-  // is. The 700 ms flashDir state drives the highlight.
-
-  // Marker for "active" yellow arrowhead. The default marker `arrHead` is the
-  // yellow head used by flashes; we'll reuse it but also define a faded one.
-  html += `<defs>
-    <marker id="arrHeadFade" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
-      <path d="M 0 0 L 10 5 L 0 10 z" fill="rgba(200, 215, 235, 0.6)"/>
-    </marker>
   </defs>`;
 
-  const RX = 150, RY = 38;                    // AP receptor reference center (top-center)
-  const arrowLen = 28;
-  const ARROWS = [
-    // Diagonal layout per the reference figure: RAO upper-left, CRA upper-right,
-    // CAU lower-left, LAO lower-right.
-    { key: 'lao-', label: 'RAO', dx: -arrowLen, dy: -arrowLen * 0.55, curveSign:  1 },
-    { key: 'cra+', label: 'CRA', dx:  arrowLen, dy: -arrowLen * 0.55, curveSign: -1 },
-    { key: 'cra-', label: 'CAU', dx: -arrowLen, dy:  arrowLen * 0.55, curveSign: -1 },
-    { key: 'lao+', label: 'LAO', dx:  arrowLen, dy:  arrowLen * 0.55, curveSign:  1 },
-  ];
-  for (const a of ARROWS) {
-    const isActive = flashDir === a.key;
-    const tx = RX + a.dx;
-    const ty = RY + a.dy;
-    // Curved control point — bows outward (away from the receptor center).
-    const mx = (RX + tx) / 2 + a.dy * 0.20 * a.curveSign;
-    const my = (RY + ty) / 2 - a.dx * 0.20 * a.curveSign;
-    const d = `M ${RX} ${RY} Q ${mx.toFixed(1)} ${my.toFixed(1)} ${tx.toFixed(1)} ${ty.toFixed(1)}`;
-    const stroke = isActive ? '#fdcc4d' : 'rgba(200, 215, 235, 0.55)';
-    const sw = isActive ? 2.4 : 1.6;
-    const marker = isActive ? 'arrHead' : 'arrHeadFade';
-    if (isActive) {
-      // Glow underlay
-      html += `<path d="${d}" fill="none" stroke="rgba(253, 204, 77, 0.30)" stroke-width="6" stroke-linecap="round"/>`;
-    }
-    html += `<path d="${d}" fill="none" stroke="${stroke}" stroke-width="${sw}" stroke-linecap="round" marker-end="url(#${marker})">
-      ${isActive ? '<animate attributeName="stroke-opacity" values="0.5;1;0.5" dur="0.7s" repeatCount="1"/>' : ''}
-    </path>`;
-    // Label slightly past the arrowhead
-    const labelX = tx + (a.dx > 0 ? 4 : -4);
-    const labelY = ty + (a.dy > 0 ? 9 : -3);
-    const anch = a.dx > 0 ? 'start' : 'end';
-    const labelFill = isActive ? '#fdcc4d' : 'rgba(220, 230, 245, 0.78)';
-    html += `<text x="${labelX.toFixed(1)}" y="${labelY.toFixed(1)}" text-anchor="${anch}" font-size="10" font-weight="800" letter-spacing="0.06em" paint-order="stroke fill" stroke="rgba(13, 16, 25, 0.85)" stroke-width="2.6" stroke-linejoin="round" fill="${labelFill}">${a.label}</text>`;
-  }
-  // AP arrow — straight down into the receptor reference. Labeled "AP".
-  html += `<path d="M ${RX} ${(RY - arrowLen).toFixed(1)} L ${RX} ${(RY - 6).toFixed(1)}" fill="none" stroke="rgba(200, 215, 235, 0.55)" stroke-width="1.8" stroke-linecap="round" marker-end="url(#arrHeadFade)"/>`;
-  html += `<text x="${RX}" y="${(RY - arrowLen - 4).toFixed(1)}" text-anchor="middle" font-size="10" font-weight="800" letter-spacing="0.06em" paint-order="stroke fill" stroke="rgba(13, 16, 25, 0.85)" stroke-width="2.6" stroke-linejoin="round" fill="rgba(220, 230, 245, 0.78)">AP</text>`;
+  // Two dials. LEFT = top view (LAO/RAO). RIGHT = side view (CRA/CAU).
+  const dialR    = 52;
+  const dialCY   = 76;
+  const dialLX   = 80;
+  const dialRX   = 220;
 
-  // "Image Receptor" callout — short leader from a fixed text position to the
-  // current detector projection.
-  const irX = SVG_W ? SVG_W - 12 : 268;       // fall back if SVG_W undefined here
-  const irTextX = 290;
-  const irTextY = 102;
-  html += `<line x1="${(detP.x).toFixed(1)}" y1="${(detP.y).toFixed(1)}" x2="${(irTextX - 4).toFixed(1)}" y2="${irTextY - 4}" stroke="rgba(220, 230, 245, 0.4)" stroke-width="0.8" stroke-dasharray="2 3"/>`;
-  html += `<text x="${irTextX}" y="${irTextY}" text-anchor="end" font-size="9" font-weight="700" letter-spacing="0.04em" paint-order="stroke fill" stroke="rgba(13, 16, 25, 0.85)" stroke-width="2.6" stroke-linejoin="round" fill="rgba(220, 230, 245, 0.78)">Image Receptor</text>`;
+  // Top view: looking down on supine patient. Convention used here:
+  //   Top of dial   = anterior (chest)
+  //   Bottom of dial = posterior (back)
+  //   Right of dial  = patient's LEFT  (LAO direction)
+  //   Left of dial   = patient's RIGHT (RAO direction)
+  // angleDeg measured CW from the 12-o'clock anterior axis. +LAO → +angle.
+  html += renderDial({
+    cx: dialLX, cy: dialCY, r: dialR,
+    angleDeg: liveLao,
+    leftLabel: 'R',  rightLabel: 'L',
+    topLabel: 'ant', bottomLabel: 'post',
+    title: 'TOP VIEW',
+    sub: 'LAO / RAO',
+    flashSide: (flashDir === 'lao+') ? 'right'
+              : (flashDir === 'lao-') ? 'left' : null,
+  });
+
+  // Side view: looking at patient from the patient's RIGHT side, head on the
+  // left. +CRA tilts detector toward head → CCW rotation → negative angleDeg.
+  //   Top of dial   = anterior
+  //   Bottom of dial = posterior
+  //   Left of dial   = head (cranial)
+  //   Right of dial  = feet (caudal)
+  html += renderDial({
+    cx: dialRX, cy: dialCY, r: dialR,
+    angleDeg: -liveCra,
+    leftLabel: 'head', rightLabel: 'feet',
+    topLabel: 'ant',   bottomLabel: 'post',
+    title: 'SIDE VIEW',
+    sub: 'CRA / CAU',
+    flashSide: (flashDir === 'cra+') ? 'left'
+              : (flashDir === 'cra-') ? 'right' : null,
+  });
 
   svg.innerHTML = html;
 
-  // Also update the header readout
   const readout = document.getElementById('orientReadout');
   if (readout) readout.textContent = angTxt;
 }
 
-function renderDetector(p, angleDeg, inFront) {
-  // Larger paddle — facing the patient
-  const w = 22, h = 13;
-  const opacity = inFront ? 1.0 : 0.78;
-  return `<g transform="translate(${p.x.toFixed(1)} ${p.y.toFixed(1)}) rotate(${(angleDeg - 90).toFixed(1)})" opacity="${opacity}">
-    <rect x="${-w/2}" y="${-h - 2}" width="${w}" height="3" fill="rgba(70, 100, 140, 0.9)"/>
-    <rect x="${-w/2}" y="${-h + 1}" width="${w}" height="${h - 1}" rx="1.5" fill="url(#detGrad)" stroke="rgba(180,220,255,0.6)" stroke-width="0.6"/>
-  </g>`;
-}
+// One "globe" indicator: heart at center, source/detector dots on opposite
+// sides, rotating around the rim by `angleDeg` (CW positive, measured from
+// 12 o'clock). Labels mark the four cardinal directions.
+function renderDial({ cx, cy, r, angleDeg, leftLabel, rightLabel, topLabel, bottomLabel, title, sub, flashSide }) {
+  const rad = angleDeg * Math.PI / 180;
+  // Detector at (cx + r·sin θ, cy − r·cos θ). Source on the opposite side.
+  const detX = cx + Math.sin(rad) * r;
+  const detY = cy - Math.cos(rad) * r;
+  const srcX = cx - Math.sin(rad) * r;
+  const srcY = cy + Math.cos(rad) * r;
 
-function renderSource(p, angleDeg, inFront) {
-  // Smaller box on the opposite end
-  const w = 13, h = 11;
-  const opacity = inFront ? 1.0 : 0.78;
-  return `<g transform="translate(${p.x.toFixed(1)} ${p.y.toFixed(1)}) rotate(${(angleDeg + 90).toFixed(1)})" opacity="${opacity}">
-    <rect x="${-w/2}" y="${-h/2}" width="${w}" height="${h}" rx="1" fill="url(#srcGrad)" stroke="rgba(220,220,220,0.6)" stroke-width="0.6"/>
-    <circle cx="0" cy="${h/2 - 2}" r="1.5" fill="rgba(40,40,40,0.8)"/>
+  let h = '';
+
+  // Inner fill + dashed rim (the rim is the locus of possible C-arm positions).
+  h += `<circle cx="${cx}" cy="${cy}" r="${r - 1}" fill="url(#dialBg)"/>`;
+  h += `<circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="rgba(180,195,220,0.30)" stroke-width="0.8" stroke-dasharray="3 3"/>`;
+
+  // Crosshairs — very subtle reference lines through the center.
+  h += `<line x1="${cx - r + 3}" y1="${cy}" x2="${cx + r - 3}" y2="${cy}" stroke="rgba(180,195,220,0.10)" stroke-width="0.6"/>`;
+  h += `<line x1="${cx}" y1="${cy - r + 3}" x2="${cx}" y2="${cy + r - 3}" stroke="rgba(180,195,220,0.10)" stroke-width="0.6"/>`;
+
+  // Tick at the 12-o'clock AP reference (zero-angle marker on the rim).
+  h += `<line x1="${cx}" y1="${cy - r - 2}" x2="${cx}" y2="${cy - r + 4}" stroke="rgba(220,230,245,0.45)" stroke-width="1"/>`;
+
+  // Cardinal direction labels (outside the dial — they never overlap the rim).
+  h += `<text x="${cx - r - 6}" y="${cy + 3.5}" text-anchor="end"   font-size="9" font-weight="700" letter-spacing="0.08em" fill="rgba(220,230,245,0.7)">${leftLabel.toUpperCase()}</text>`;
+  h += `<text x="${cx + r + 6}" y="${cy + 3.5}" text-anchor="start" font-size="9" font-weight="700" letter-spacing="0.08em" fill="rgba(220,230,245,0.7)">${rightLabel.toUpperCase()}</text>`;
+  // ant / post sit inside the dial near the top/bottom rim, italic + dim so
+  // they read as orientation hints, not measurements.
+  h += `<text x="${cx}" y="${cy - r + 12}" text-anchor="middle" font-size="7" font-style="italic" fill="rgba(180,195,220,0.55)">${topLabel}</text>`;
+  h += `<text x="${cx}" y="${cy + r - 4}"  text-anchor="middle" font-size="7" font-style="italic" fill="rgba(180,195,220,0.55)">${bottomLabel}</text>`;
+
+  // X-ray beam: faint dashed line through the heart linking source ↔ detector.
+  h += `<line x1="${srcX.toFixed(1)}" y1="${srcY.toFixed(1)}" x2="${detX.toFixed(1)}" y2="${detY.toFixed(1)}" stroke="rgba(253,204,77,0.40)" stroke-width="0.9" stroke-dasharray="2 2"/>`;
+
+  // Heart at center.
+  h += `<ellipse cx="${cx}" cy="${cy}" rx="5" ry="5.5" fill="rgba(220, 60, 50, 0.85)" stroke="rgba(150,20,20,0.7)" stroke-width="0.7"/>`;
+
+  // Source — small grey circle (back of the C-arm, opposite the image receptor).
+  h += `<circle cx="${srcX.toFixed(1)}" cy="${srcY.toFixed(1)}" r="3" fill="url(#dialSrcGrad)" stroke="rgba(220,220,220,0.7)" stroke-width="0.5"/>`;
+
+  // Detector — a "paddle" perpendicular to the beam, glowing yellow when the
+  // user just nudged this axis (animated flash from setFlashDir).
+  const isFlash = !!flashSide;
+  const beamAng = Math.atan2(detY - srcY, detX - srcX) * 180 / Math.PI;
+  const detFill   = isFlash ? '#fdcc4d' : 'url(#dialDetGrad)';
+  const detStroke = isFlash ? 'rgba(253,204,77,0.95)' : 'rgba(180,220,255,0.7)';
+  if (isFlash) {
+    // Soft glow ring around the detector
+    h += `<circle cx="${detX.toFixed(1)}" cy="${detY.toFixed(1)}" r="7" fill="rgba(253,204,77,0.25)"/>`;
+  }
+  h += `<g transform="translate(${detX.toFixed(1)} ${detY.toFixed(1)}) rotate(${(beamAng + 90).toFixed(1)})">
+    <rect x="-9" y="-3" width="18" height="6" rx="1.2" fill="${detFill}" stroke="${detStroke}" stroke-width="0.6"/>
   </g>`;
+
+  // Title / subtitle beneath the dial.
+  h += `<text x="${cx}" y="${cy + r + 22}" text-anchor="middle" font-size="9.5" font-weight="700" letter-spacing="0.08em" fill="rgba(220,230,245,0.78)">${title}</text>`;
+  h += `<text x="${cx}" y="${cy + r + 34}" text-anchor="middle" font-size="8"   font-weight="600" letter-spacing="0.05em" fill="rgba(180,195,220,0.55)">${sub}</text>`;
+
+  return h;
 }
 
 function formatAngleReadout() {
