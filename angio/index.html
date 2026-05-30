@@ -1916,26 +1916,75 @@ function renderOrientationWidget() {
     html += `<path d="${d}" fill="none" stroke="url(#opvArm)" stroke-width="8" stroke-linecap="round" opacity="0.85"/>`;
   }
 
-  // Patient body — silhouette ellipses sized from world y-extent (length) and
-  // z-extent (anterior-posterior height). Slight x contribution adds vertical
-  // bulk so a person isn't paper-thin.
-  function projEllipse(center, halfY, halfZ, halfX = 0) {
-    const c = proj(center);
-    const w = halfY * SCALE * cosA;
-    const h = halfZ * SCALE * cosA + halfX * SCALE * sinA;
-    return { cx: c.x, cy: c.y, rx: w, ry: h };
-  }
-  const parts = [
-    { c: { x: 0, y:  1.30, z:  0.02 }, hy: 0.20, hz: 0.18, hx: 0.18 },   // head
-    { c: { x: 0, y:  0.95, z: -0.05 }, hy: 0.12, hz: 0.10, hx: 0.13 },   // neck
-    { c: { x: 0, y:  0.30, z: -0.04 }, hy: 0.68, hz: 0.20, hx: 0.32 },   // torso
-    { c: { x: 0, y: -0.55, z: -0.08 }, hy: 0.22, hz: 0.16, hx: 0.30 },   // hip
-    { c: { x: 0, y: -1.30, z: -0.10 }, hy: 0.55, hz: 0.13, hx: 0.20 },   // legs
+  // Patient body — supine lateral silhouette traced as a single closed path.
+  // Stations go around the body clockwise in (y, z) world space: anterior
+  // contour from head crown to toes (z > 0 over most of the body), then
+  // posterior contour from heel back up to the crown (z < 0). x = 0 for every
+  // station — the body is depicted as a 2D side profile.
+  const BODY_STATIONS = [
+    // Anterior (top in side view), head → feet
+    { y:  1.55, z:  0.05 },   // crown top
+    { y:  1.45, z:  0.14 },   // forehead bulge
+    { y:  1.36, z:  0.20 },   // nose tip
+    { y:  1.30, z:  0.13 },   // upper lip
+    { y:  1.24, z:  0.13 },   // mouth
+    { y:  1.18, z:  0.10 },   // chin
+    { y:  1.10, z:  0.04 },   // throat (recess under chin)
+    { y:  1.02, z:  0.10 },   // top of sternal notch
+    { y:  0.92, z:  0.16 },   // clavicle / shoulder front
+    { y:  0.70, z:  0.22 },   // pectoral peak
+    { y:  0.40, z:  0.22 },   // lower ribs
+    { y:  0.12, z:  0.16 },   // umbilicus dip
+    { y: -0.10, z:  0.18 },   // mid abdomen
+    { y: -0.32, z:  0.20 },   // ASIS bulge
+    { y: -0.48, z:  0.16 },   // pubis
+    { y: -0.60, z:  0.22 },   // quad bulge (anterior thigh)
+    { y: -0.85, z:  0.20 },   // mid thigh
+    { y: -1.05, z:  0.14 },   // patella
+    { y: -1.20, z:  0.10 },   // upper shin
+    { y: -1.42, z:  0.08 },   // mid shin
+    { y: -1.60, z:  0.07 },   // ankle (anterior)
+    { y: -1.72, z:  0.10 },   // dorsum of foot
+    { y: -1.78, z:  0.04 },   // toe tips
+    // Posterior (bottom in side view), feet → head
+    { y: -1.76, z: -0.04 },   // sole of foot at toes
+    { y: -1.72, z: -0.18 },   // heel (posterior protrusion)
+    { y: -1.55, z: -0.13 },   // Achilles
+    { y: -1.30, z: -0.18 },   // calf bulge (gastrocnemius)
+    { y: -1.05, z: -0.13 },   // back of knee (popliteal)
+    { y: -0.80, z: -0.22 },   // hamstring
+    { y: -0.55, z: -0.24 },   // buttock
+    { y: -0.30, z: -0.22 },   // posterior pelvis
+    { y:  0.00, z: -0.22 },   // lumbar (lower back)
+    { y:  0.35, z: -0.22 },   // mid back
+    { y:  0.70, z: -0.22 },   // upper back
+    { y:  0.92, z: -0.18 },   // trapezius / upper shoulder
+    { y:  1.04, z: -0.14 },   // back of neck
+    { y:  1.18, z: -0.13 },   // occiput
+    { y:  1.40, z: -0.10 },   // back of head
+    { y:  1.52, z: -0.02 },   // crown back
   ];
-  for (const p of parts) {
-    const e = projEllipse(p.c, p.hy, p.hz, p.hx);
-    html += `<ellipse cx="${e.cx.toFixed(1)}" cy="${e.cy.toFixed(1)}" rx="${e.rx.toFixed(1)}" ry="${e.ry.toFixed(1)}" fill="url(#opvBody)" stroke="rgba(0,0,0,0.30)" stroke-width="0.6"/>`;
+  const bodyPts = BODY_STATIONS.map(s => proj({ x: 0, y: s.y, z: s.z }));
+  // Catmull-Rom → cubic-bezier smoothing (tension = 0.5) so the silhouette
+  // reads as a continuous human profile, not a sawtooth polygon.
+  const n = bodyPts.length;
+  let bodyD = `M ${bodyPts[0].x.toFixed(1)} ${bodyPts[0].y.toFixed(1)}`;
+  for (let i = 0; i < n; i++) {
+    const p0 = bodyPts[(i - 1 + n) % n];
+    const p1 = bodyPts[i];
+    const p2 = bodyPts[(i + 1) % n];
+    const p3 = bodyPts[(i + 2) % n];
+    const c1x = p1.x + (p2.x - p0.x) / 6;
+    const c1y = p1.y + (p2.y - p0.y) / 6;
+    const c2x = p2.x - (p3.x - p1.x) / 6;
+    const c2y = p2.y - (p3.y - p1.y) / 6;
+    bodyD += ` C ${c1x.toFixed(1)} ${c1y.toFixed(1)} ${c2x.toFixed(1)} ${c2y.toFixed(1)} ${p2.x.toFixed(1)} ${p2.y.toFixed(1)}`;
   }
+  bodyD += ' Z';
+  html += `<path d="${bodyD}" fill="url(#opvBody)" stroke="rgba(0,0,0,0.35)" stroke-width="0.7" stroke-linejoin="round"/>`;
+  // Small ear hint for character (right ear, since operator views from right).
+  const earP = proj({ x: -0.16, y: 1.30, z: -0.02 });
+  html += `<ellipse cx="${earP.x.toFixed(1)}" cy="${earP.y.toFixed(1)}" rx="2.8" ry="3.4" fill="rgba(120, 80, 60, 0.55)" stroke="rgba(80, 50, 35, 0.4)" stroke-width="0.4"/>`;
 
   // Heart marker — small red bean on anterior chest, slightly to patient's left.
   const heartMarker = proj({ x: -0.10, y: 0.25, z: 0.15 });
