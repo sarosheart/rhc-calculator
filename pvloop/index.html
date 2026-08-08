@@ -1283,9 +1283,47 @@ function edpvr(V, B, V0) {
   return A_EDPVR * (Math.exp(B * (V - V0)) - 1);
 }
 
-function computeLoop(p, triFactor) {
+// Limb-slope fractions are a share of SV; keep them inside a range that still leaves a
+// recognisable ejection and filling phase even when an MCS device stacks on a leaking valve.
+function clampFrac(f) {
+  return Math.max(-0.55, Math.min(0.55, f));
+}
+
+// ---- REGURGITANT LOOP SHAPE ----
+// An incompetent valve abolishes the isovolumic phase on the side it leaks — this is the
+// single most-tested feature of the valvular PV loop, and the reason these lesions must not
+// be drawn with the vertical limbs of a competent-valve loop.
+//
+//   MITRAL REGURGITATION — the mitral orifice is open to the LA from the moment LV pressure
+//   exceeds LA pressure, which happens at the very onset of systole. Blood leaves the LV
+//   before the aortic valve ever opens, so there is NO isovolumic contraction: the limb
+//   slopes up-and-LEFT. Regurgitation continues after the aortic valve shuts, so the
+//   relaxation limb also loses volume (smaller effect — LA pressure is rising by then).
+//
+//   AORTIC REGURGITATION — the aortic orifice is open to the aorta whenever aortic pressure
+//   exceeds LV pressure. That is true throughout relaxation, so there is NO isovolumic
+//   relaxation: the limb slopes down-and-RIGHT. It is still true in early contraction,
+//   until LV pressure climbs past aortic diastolic, so the contraction limb also gains a
+//   little volume (smaller effect — that window is short).
+//
+// Fractions are of stroke volume. Sign convention matches computeLoop: negative = volume
+// falls across the limb, positive = volume rises.
+const REGURG_SHAPES = {
+  mitral_regurg: { ivc: -0.30, ivr: -0.12, lesion: 'MR' },
+  aortic_regurg: { ivc: +0.12, ivr: +0.30, lesion: 'AR' },
+  as_ar:         { ivc: +0.10, ivr: +0.24, lesion: 'AR' },
+  as_mr:         { ivc: -0.24, ivr: -0.10, lesion: 'MR' },
+  ms_mr:         { ivc: -0.26, ivr: -0.10, lesion: 'MR' },
+};
+
+function getRegurgShape() {
+  return (activeDisease && REGURG_SHAPES[activeDisease]) || null;
+}
+
+function computeLoop(p, triFactor, regurgShape) {
   const { Ees, Ea, EDV, B, HR, V0 } = p;
   const tri = triFactor || 0; // 0 = normal rectangular, 1 = fully triangular (Impella)
+  const rg = regurgShape || { ivc: 0, ivr: 0 };
 
   const ESV = (Ees * V0 + Ea * EDV) / (Ees + Ea);
   const ESP = Ees * (ESV - V0);
@@ -1294,7 +1332,6 @@ function computeLoop(p, triFactor) {
   const EF = SV / EDV * 100;
   const CO = SV * HR / 1000;
   const coupling = Ea / Ees;
-  const P_esv_edpvr = edpvr(ESV, B, V0);
 
   const pts = [];
   const N_IVC = 30;
@@ -1303,23 +1340,47 @@ function computeLoop(p, triFactor) {
   const N_FILL = 40;
 
   const P_ao_dia = Math.max(ESP * 0.55, EDP + 5);
-  const P_ivr_bottom = P_esv_edpvr;
 
-  // === TRIANGULARIZATION (MCS Impella effect) ===
-  // tri=0: normal rectangular loop (vertical IVC/IVR)
-  // tri=1: IVC/IVR become diagonal (continuous pump flow across AV)
+  // === LIMB SLOPE: how much volume moves during the two "isovolumic" phases ===
+  // Both limbs are expressed as a SIGNED fraction of SV. Negative = volume falls,
+  // positive = volume rises. Zero on both = the classic rectangular loop.
+  //
+  // Two independent physiologic sources, and they are NOT the same shape:
+  //
+  //   MCS triangularization (tri) — a continuous-flow pump moves blood across the AV
+  //   throughout the cycle, so volume falls during contraction AND rises during
+  //   relaxation. Symmetric, both limbs pulled inward. tri=1 → fully triangular.
+  //
+  //   Valvular regurgitation (rg) — an incompetent valve abolishes the isovolumic
+  //   period on the side it leaks. In MR the mitral valve leaks the instant LV
+  //   pressure exceeds LA pressure, so volume FALLS through both limbs (rg.ivc and
+  //   rg.ivr both negative). In AR the aortic valve leaks whenever aortic pressure
+  //   exceeds LV pressure, so volume RISES through both limbs (both positive).
+  //   This is why a regurgitant loop must never be drawn with vertical limbs.
+  const ivcFrac = clampFrac(-0.25 * tri + (rg.ivc || 0));
+  let   ivrFrac = clampFrac(+0.25 * tri + (rg.ivr || 0));
 
-  // IVC: normally vertical at EDV; with tri, volume drifts toward ESV
+  // Filling has to start at a volume the EDPVR can actually be evaluated at. When the
+  // relaxation limb runs leftward (MR), keep it above V0 so edpvr() stays on its
+  // physiologic branch rather than dropping below the unstressed volume.
+  const minFillV = Math.max(V0 + 1, ESV - 0.45 * SV);
+  if (ESV + ivrFrac * SV < minFillV) ivrFrac = (minFillV - ESV) / SV;
+
+  // Close the loop exactly: the relaxation limb must land ON the EDPVR at the volume
+  // where filling begins, not at ESV — otherwise a sloped limb leaves a visible gap.
+  const P_ivr_bottom = edpvr(ESV + ivrFrac * SV, B, V0);
+
+  // IVC: normally vertical at EDV; sloped when the pump or a leaking valve moves volume
   for (let i = 0; i <= N_IVC; i++) {
     const t = i / N_IVC;
     const tt = t * t * (3 - 2 * t);
     const P = EDP + (P_ao_dia - EDP) * tt;
-    const V = EDV - tri * (EDV - ESV) * 0.25 * t;
+    const V = EDV + ivcFrac * SV * t;
     pts.push({ V, P, phase: 'IVC' });
   }
 
   // EJECTION
-  const ejStartV = EDV - tri * (EDV - ESV) * 0.25;
+  const ejStartV = EDV + ivcFrac * SV;
   for (let i = 1; i <= N_EJ; i++) {
     const t = i / N_EJ;
     const V = ejStartV + (ESV - ejStartV) * t;
@@ -1331,17 +1392,17 @@ function computeLoop(p, triFactor) {
     pts.push({ V, P, phase: 'Ejection' });
   }
 
-  // IVR: normally vertical at ESV; with tri, volume drifts toward EDV
+  // IVR: normally vertical at ESV; sloped when the pump or a leaking valve moves volume
   for (let i = 1; i <= N_IVR; i++) {
     const t = i / N_IVR;
     const tt = t * t * (3 - 2 * t);
     const P = ESP + (P_ivr_bottom - ESP) * tt;
-    const V = ESV + tri * (EDV - ESV) * 0.25 * t;
+    const V = ESV + ivrFrac * SV * t;
     pts.push({ V, P, phase: 'IVR' });
   }
 
   // FILLING
-  const fillStartV = ESV + tri * (EDV - ESV) * 0.25;
+  const fillStartV = ESV + ivrFrac * SV;
   for (let i = 1; i <= N_FILL; i++) {
     const t = i / N_FILL;
     const V = fillStartV + (EDV - fillStartV) * t;
@@ -1359,6 +1420,9 @@ function computeLoop(p, triFactor) {
 
   return {
     pts,
+    // Limb geometry, so the phase labels can tell the truth about what each limb is:
+    // a limb with a non-zero fraction is NOT isovolumic and must not be labelled IVC/IVR.
+    shape: { ivcFrac, ivrFrac, lesion: rg.lesion || null },
     values: {
       SV: Math.round(SV),
       EF: EF.toFixed(1),
@@ -1660,7 +1724,7 @@ function drawAnimDot(pts, progress) {
   ctx.restore();
 }
 
-function drawPhaseLabels(pts) {
+function drawPhaseLabels(pts, shape) {
   if (!document.getElementById('togPhase').checked) return;
 
   const isDark = document.body.classList.contains('dark');
@@ -1672,8 +1736,27 @@ function drawPhaseLabels(pts) {
   ctx.fillStyle = labelColor;
   ctx.textAlign = 'center';
 
+  // A limb only earns the name "isovolumic" when its volume genuinely does not change.
+  // Once a leaking valve or a continuous-flow pump moves blood across it, call it what it
+  // is \u2014 contraction / relaxation \u2014 and point the arrow the way the limb actually runs.
+  const sh = shape || { ivcFrac: 0, ivrFrac: 0 };
+  const SLOPED = 0.02; // fraction of SV below which the limb is effectively vertical
+  const ivcSloped = Math.abs(sh.ivcFrac) > SLOPED;
+  const ivrSloped = Math.abs(sh.ivrFrac) > SLOPED;
+
   const phases = ['IVC', 'Ejection', 'IVR', 'Filling'];
-  const arrows = { 'IVC': '\u2191', 'Ejection': '\u2190', 'IVR': '\u2193', 'Filling': '\u2192' };
+  const text = {
+    IVC: ivcSloped ? 'Contraction' : 'IVC',
+    Ejection: 'Ejection',
+    IVR: ivrSloped ? 'Relaxation' : 'IVR',
+    Filling: 'Filling',
+  };
+  const arrows = {
+    IVC: !ivcSloped ? '\u2191' : (sh.ivcFrac < 0 ? '\u2196' : '\u2197'),
+    Ejection: '\u2190',
+    IVR: !ivrSloped ? '\u2193' : (sh.ivrFrac < 0 ? '\u2199' : '\u2198'),
+    Filling: '\u2192',
+  };
 
   phases.forEach(phase => {
     const phasePts = pts.filter(p => p.phase === phase);
@@ -1682,16 +1765,43 @@ function drawPhaseLabels(pts) {
     let x = vToX(mid.V);
     let y = pToY(mid.P);
 
-    const offsets = { 'IVC': [20, 0], 'Ejection': [0, -14], 'IVR': [-20, 0], 'Filling': [0, 16] };
+    // A sloped limb needs more clearance or the label sits on top of the line.
+    // Filling runs along the EDPVR at the foot of the plot, so its label goes ABOVE the
+    // limb (into the empty middle of the loop) — below it lands on the x-axis tick numbers.
+    const offsets = {
+      IVC: [ivcSloped ? 40 : 20, 0],
+      Ejection: [0, -14],
+      IVR: [ivrSloped ? -42 : -20, 0],
+      Filling: [0, -11],
+    };
     const [ox, oy] = offsets[phase];
     x += ox;
     y += oy;
 
     ctx.globalAlpha = 0.65;
     ctx.fillStyle = labelColor;
-    ctx.fillText(arrows[phase] + ' ' + phase, x, y);
+    ctx.fillText(arrows[phase] + ' ' + text[phase], x, y);
     ctx.globalAlpha = 1;
   });
+
+  // Name the abolished phase explicitly \u2014 "no IVC" is the exam point in MR, "no IVR" in AR.
+  if (sh.lesion) {
+    const noun = sh.lesion === 'MR' ? 'no isovolumic contraction' : 'no isovolumic relaxation';
+    const limb = sh.lesion === 'MR' ? 'IVC' : 'IVR';
+    const limbPts = pts.filter(p => p.phase === limb);
+    if (limbPts.length > 2) {
+      const mid = limbPts[Math.floor(limbPts.length / 2)];
+      ctx.font = 'italic 9px -apple-system, Helvetica, sans-serif';
+      ctx.fillStyle = valveColor;
+      ctx.globalAlpha = 0.85;
+      ctx.textAlign = sh.lesion === 'MR' ? 'left' : 'right';
+      const dx = sh.lesion === 'MR' ? 14 : -14;
+      ctx.fillText(sh.lesion + ' \u2014 ' + noun, vToX(mid.V) + dx, pToY(mid.P) + 14);
+      ctx.globalAlpha = 1;
+      ctx.textAlign = 'center';
+      ctx.font = 'bold 9px -apple-system, Helvetica, sans-serif';
+    }
+  }
 
   // Valve event markers at phase transitions
   ctx.font = 'bold 8px -apple-system, Helvetica, sans-serif';
@@ -1722,7 +1832,8 @@ function drawPhaseLabels(pts) {
     const y2 = pToY(avClose.P);
     drawDiamond(x2, y2, 3, valveColor);
     ctx.textAlign = 'left';
-    ctx.fillText('AV closes', x2 + 10, y2 - 2);
+    // In AR the aortic valve never seals — say so rather than implying a competent closure.
+    ctx.fillText(sh.lesion === 'AR' ? 'AV closes (leaks)' : 'AV closes', x2 + 10, y2 - 2);
   }
 
   if (ivrPts.length > 0 && fillPts.length > 0) {
@@ -1742,7 +1853,8 @@ function drawPhaseLabels(pts) {
     const y4 = pToY(mvClose.P);
     drawDiamond(x4, y4, 3, valveColor);
     ctx.textAlign = 'left';
-    ctx.fillText('MV closes', x4 + 6, y4 - 5);
+    // In MR the mitral valve never seals — this is exactly why the next limb is not isovolumic.
+    ctx.fillText(sh.lesion === 'MR' ? 'MV closes (leaks)' : 'MV closes', x4 + 6, y4 - 5);
   }
 
   ctx.globalAlpha = 1;
@@ -1809,7 +1921,7 @@ function draw() {
   drawGrid();
 
   // Compute current loop (with triangularization for MCS devices)
-  const loop = computeLoop(params, getTriangularFactor());
+  const loop = computeLoop(params, getTriangularFactor(), getRegurgShape());
 
   // Draw ghost if exists
   if (ghostLoop) {
@@ -1831,7 +1943,7 @@ function draw() {
   }
 
   // Phase labels and points
-  drawPhaseLabels(loop.pts);
+  drawPhaseLabels(loop.pts, loop.shape);
   drawESEDPoints(loop);
 
   // Update derived values
@@ -1934,7 +2046,7 @@ function colorCoupling(ratio) {
 
 // ---- SNAPSHOT ----
 function takeSnapshot() {
-  const loop = computeLoop(params, getTriangularFactor());
+  const loop = computeLoop(params, getTriangularFactor(), getRegurgShape());
   ghostLoop = { pts: [...loop.pts] };
   ghostValues = { ...loop.values };
   document.getElementById('btnClearSnap').style.display = '';
@@ -2143,9 +2255,9 @@ const DISEASES = {
   mitral_stenosis:   { name: 'Mitral Stenosis', params: {Ees:2.5, Ea:1.8, EDV:85, B:0.025, HR:80, V0:10},
                        desc: 'Restricted LV filling → ↓EDV. Normal contractility and afterload. Small loop, low SV.', category: 'Inflow obstruction limits preload.' },
   aortic_regurg:     { name: 'Aortic Regurgitation', params: {Ees:1.8, Ea:1.0, EDV:190, B:0.02, HR:75, V0:25},
-                       desc: 'Volume overload → ↑↑EDV, eccentric remodeling (↑V0). ↓Effective Ea (regurgitant flow). Wide loop.', category: 'Combined volume + pressure overload.' },
+                       desc: 'Volume overload → ↑↑EDV, eccentric remodeling (↑V0). ↓Effective Ea (regurgitant flow). Wide loop. <b>No isovolumic relaxation</b> — the aortic valve leaks the moment LV pressure drops below aortic, so volume RISES through relaxation and that limb slopes down-and-right instead of falling vertically.', category: 'Combined volume + pressure overload.' },
   mitral_regurg:     { name: 'Mitral Regurgitation', params: {Ees:2.0, Ea:0.8, EDV:170, B:0.02, HR:85, V0:15},
-                       desc: 'Low-impedance ejection into LA → ↓effective Ea. Volume overload → ↑EDV. High total SV but ↓forward SV.', category: 'Part of SV is regurgitant.' },
+                       desc: 'Low-impedance ejection into LA → ↓effective Ea. Volume overload → ↑EDV. High total SV but ↓forward SV. <b>No isovolumic contraction</b> — the mitral valve leaks as soon as LV pressure exceeds LA pressure, so volume FALLS before the aortic valve opens and that limb slopes up-and-left instead of rising vertically.', category: 'Part of SV is regurgitant.' },
   concentric_lvh:    { name: 'Concentric LVH', params: {Ees:3.5, Ea:2.5, EDV:100, B:0.05, HR:70, V0:5},
                        desc: 'Wall thickening without chamber dilation. ↑Ees (supranormal contractility), ↑B (stiff), ↓cavity size.', category: 'Hypertension, AS response.' },
   eccentric_lvh:     { name: 'Eccentric LVH', params: {Ees:1.5, Ea:1.8, EDV:170, B:0.02, HR:75, V0:25},
@@ -2156,11 +2268,11 @@ const DISEASES = {
                        desc: 'External compression → ↓↓EDV, ↑B, ↑Ea (compensatory). Tachycardic. Very small loop.', category: 'Pericardial effusion with hemodynamic compromise.' },
   // Mixed Valve Disease
   as_ar:             { name: 'AS + AR (Mixed Aortic)', params: {Ees:2.5, Ea:2.5, EDV:170, B:0.035, HR:75, V0:20},
-                       desc: 'Combined pressure + volume overload. Tall AND wide loop. Concentric + eccentric hypertrophy. Highest wall stress.', category: 'Bicuspid AV, calcific degeneration.' },
+                       desc: 'Combined pressure + volume overload. Tall AND wide loop. Concentric + eccentric hypertrophy. Highest wall stress. The AR component abolishes isovolumic relaxation — that limb slopes right.', category: 'Bicuspid AV, calcific degeneration.' },
   as_mr:             { name: 'AS + MR', params: {Ees:2.8, Ea:2.0, EDV:150, B:0.04, HR:80, V0:10},
-                       desc: 'AS pressure overload partially offset by MR "pop-off" into LA. ↑EDV from MR volume overload. Preserved EF.', category: 'Calcific AS + functional MR (common in elderly).' },
+                       desc: 'AS pressure overload partially offset by MR "pop-off" into LA. ↑EDV from MR volume overload. Preserved EF. The MR component abolishes isovolumic contraction — that limb slopes left.', category: 'Calcific AS + functional MR (common in elderly).' },
   ms_mr:             { name: 'MS + MR (Rheumatic)', params: {Ees:2.2, Ea:1.0, EDV:100, B:0.025, HR:90, V0:10},
-                       desc: 'Restricted inflow (MS) + low-impedance regurgitant path (MR). Small loop, low pressures, high EF from MR unloading.', category: 'Rheumatic mitral valve disease.' },
+                       desc: 'Restricted inflow (MS) + low-impedance regurgitant path (MR). Small loop, low pressures, high EF from MR unloading. The MR component abolishes isovolumic contraction — that limb slopes left.', category: 'Rheumatic mitral valve disease.' },
   ms_as:             { name: 'MS + AS (Rheumatic)', params: {Ees:3.0, Ea:3.5, EDV:80, B:0.045, HR:80, V0:5},
                        desc: 'Worst combination: restricted inflow (MS) + outflow obstruction (AS). Tiny high-pressure loop. Very low CO.', category: 'Rheumatic multivalvular disease.' },
 };

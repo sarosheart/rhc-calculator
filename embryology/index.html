@@ -2054,15 +2054,77 @@ function updateMorph(){
 }
 
 // Camera animation
-let camAnim=false,camS=0,camFP,camTP,camFT,camTT;
+//
+// CAM[] authors a viewing DIRECTION and a TARGET per stage — the target is deliberately
+// offset (stages 1-2 shifted left so the tube renders right of the info overlay; 3-10
+// shifted right to frame the S-loop). Those offsets are intentional and are preserved.
+//
+// What CAM[] must NOT be trusted for is the camera DISTANCE. The authored distances
+// (5.5-7.0 with a 45 deg vertical fov) show 5.0-5.9 world units of height, but the heart
+// tube grew to span ~5.6 units and sits up to 0.5 units off the camera target, so the
+// extent that has to be visible reaches 6.6 units. The result was the tube being cut off
+// top and bottom in 8 of 10 stages (114-136% of the frame) — including inside the PIP
+// inset, where the outflow tract ran off the top edge. So the distance is derived from
+// the geometry instead, and only ever pushed OUT from the authored value, never pulled in.
+const CAM_FIT_MARGIN=1.12;
+let camAnim=false,camS=0,camFP,camTP,camFT,camTT,camFit=null,camUserMoved=false;
+
+// Distance at which everything currently visible fits in frame, viewed toward `target`.
+function fitCamDistance(target){
+  const box=new THREE.Box3();
+  scene.traverse(o=>{
+    if(!o.isMesh||!o.visible)return;
+    const m=o.material;
+    if(m&&m.transparent&&m.opacity<=0.02)return; // faded out — don't frame for it
+    if(!o.geometry||!o.geometry.attributes||!o.geometry.attributes.position)return;
+    if(!o.geometry.boundingBox)o.geometry.computeBoundingBox();
+    const bb=o.geometry.boundingBox.clone();bb.applyMatrix4(o.matrixWorld);box.union(bb);
+  });
+  if(box.isEmpty())return null;
+  const size=new THREE.Vector3(),ctr=new THREE.Vector3();
+  box.getSize(size);box.getCenter(ctr);
+  // The target is off-centre on purpose, so the frame has to cover twice that offset too.
+  const needH=size.y+2*Math.abs(ctr.y-target.y);
+  const needW=size.x+2*Math.abs(ctr.x-target.x);
+  const halfFov=Math.tan(THREE.MathUtils.degToRad(camera.fov)/2);
+  const aspect=camera.aspect||1;
+  const dH=(needH*CAM_FIT_MARGIN)/(2*halfFov);
+  const dW=(needW*CAM_FIT_MARGIN)/(2*halfFov*aspect);
+  // Add half the depth so a limb swinging toward the camera doesn't punch through the frame.
+  return Math.max(dH,dW)+size.z*0.5;
+}
+
+// Where the camera should sit for a given stage, at the authored angle and target.
+function camDestFor(fit){
+  const need=fitCamDistance(fit.target);
+  const d=need?Math.max(fit.authored,need):fit.authored;
+  return fit.target.clone().addScaledVector(fit.dir,d);
+}
+
 function animCam(idx){
   const c=CAM[Math.min(idx,CAM.length-1)];
-  camFP=camera.position.clone();camTP=new THREE.Vector3(...c.p);
-  camFT=controls.target.clone();camTT=new THREE.Vector3(...c.t);
+  const target=new THREE.Vector3(...c.t);
+  const offset=new THREE.Vector3(...c.p).sub(target);
+  const authored=offset.length()||1;
+  camFit={target,dir:offset.normalize(),authored};
+  camUserMoved=false; // a stage change is a deliberate re-frame
+  camFP=camera.position.clone();camTP=camDestFor(camFit);
+  camFT=controls.target.clone();camTT=target.clone();
   camS=performance.now();camAnim=true;
 }
-function updateCam(){if(!camAnim)return;const el=performance.now()-camS;let t=Math.min(el/800,1);t=easeInOutCubic(t);
-  camera.position.lerpVectors(camFP,camTP,t);controls.target.lerpVectors(camFT,camTT,t);if(t>=1)camAnim=false;}
+function updateCam(){
+  if(!camAnim){
+    // The camera flight is 800ms but a morph runs up to 1500ms, so the shape the camera was
+    // framed against is not the shape it ends on — stage 2's paired tubes are still a crescent
+    // when the flight starts. Keep easing toward the live fit until the morph settles.
+    if(camFit&&morphing&&!camUserMoved)camera.position.lerp(camDestFor(camFit),0.08);
+    return;
+  }
+  const el=performance.now()-camS;let t=Math.min(el/800,1);t=easeInOutCubic(t);
+  // The tube is still morphing while the camera flies, so keep re-deriving the destination.
+  if(camFit)camTP=camDestFor(camFit);
+  camera.position.lerpVectors(camFP,camTP,t);controls.target.lerpVectors(camFT,camTT,t);if(t>=1)camAnim=false;
+}
 
 // ===== NAVIGATION =====
 function onStateChange(){
@@ -2112,7 +2174,7 @@ document.addEventListener('keydown',e=>{
   else if(e.key==='ArrowDown'){e.preventDefault();if(curStage<STAGES.length-1)goToStage(curStage+1);}
   else if(e.key==='d'||e.key==='D')toggleDefect();
 });
-controls.addEventListener('start',()=>{const h=document.getElementById('rotateHint');if(h.style.opacity!=='0')h.style.opacity='0';});
+controls.addEventListener('start',()=>{camUserMoved=true;const h=document.getElementById('rotateHint');if(h.style.opacity!=='0')h.style.opacity='0';});
 
 // ===== UI =====
 function buildStageList(){
@@ -2274,7 +2336,19 @@ function buildLabels(){
 }
 
 // ===== RESIZE =====
-function onResize(){const w=wrap.clientWidth,h=wrap.clientHeight;if(w===0||h===0)return;camera.aspect=w/h;camera.updateProjectionMatrix();renderer.setSize(w,h);}
+let lastFitW=0,lastFitH=0;
+function onResize(){
+  const w=wrap.clientWidth,h=wrap.clientHeight;if(w===0||h===0)return;
+  camera.aspect=w/h;camera.updateProjectionMatrix();renderer.setSize(w,h);
+  // The canvas changes size dramatically when the cross-section panel opens and the 3D view
+  // drops to the 220x170 PIP. Re-frame on a material size change so the inset isn't cropped,
+  // but leave ordinary small reflows alone so a user's manual zoom survives them.
+  const changed=lastFitW===0||Math.abs(w-lastFitW)/lastFitW>0.15||Math.abs(h-lastFitH)/lastFitH>0.15;
+  if(changed){
+    if(lastFitW!==0&&!camAnim)animCam(curStage);
+    lastFitW=w;lastFitH=h;
+  }
+}
 window.addEventListener('resize',onResize);
 new ResizeObserver(onResize).observe(wrap);
 

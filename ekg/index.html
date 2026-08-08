@@ -44,7 +44,14 @@ body {
   font-size: 14px;
   background: var(--light-bg);
   color: #1a1a2e;
-  overflow: hidden;
+  /* The page MUST scroll. There is no html{overflow} rule, so `overflow: hidden` here
+     propagated to the viewport and froze the whole document: the SEO/About section below
+     the app was unreachable to a reader, and on phones the media query at ~900px makes the
+     stacked panels taller than 100vh, so the bottom of the tracing was clipped with no way
+     to reach it. The app pane keeps its own fixed height via .main-container. */
+  min-height: 100vh;
+  overflow-x: hidden;
+  overflow-y: auto;
 }
 
 /* ===== CSS VARIABLES ===== */
@@ -136,6 +143,7 @@ body.dark .page-controls { background: #101520; }
 .main-container {
   display: flex;
   height: calc(100vh - 80px);
+  overflow: hidden;   /* the constraint belongs here, not on body */
 }
 
 /* ===== LEFT PANEL ===== */
@@ -350,7 +358,7 @@ body.dark .vessel-tab.active { color: #64b5f6; border-bottom-color: #64b5f6; }
 
 /* ===== RESPONSIVE ===== */
 @media (max-width: 900px) {
-  .main-container { flex-direction: column; height: auto; }
+  .main-container { flex-direction: column; height: auto; overflow: visible; }
   .panel-left { width: 100%; min-width: auto; max-height: 40vh; border-right: none; border-bottom: 1px solid var(--border); }
   .panel-right { min-height: 60vh; }
 }

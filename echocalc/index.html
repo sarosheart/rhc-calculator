@@ -789,9 +789,11 @@ function gradeDI(v) {
   return { label: 'mild / normal', klass: 'normal' };
 }
 function gradeMVA(v) {
-  if (v < 1.0) return { label: 'severe MS', klass: 'severe' };
-  if (v <= 1.5) return { label: 'moderate MS', klass: 'moderate' };
-  if (v <= 2.0) return { label: 'mild MS', klass: 'mild' };
+  // 2020 ACC/AHA VHD: severe MS is MVA <= 1.5 cm2 (Stage C/D); <= 1.0 is very severe.
+  // The MS atlas links straight into this calculator, so the two must not disagree.
+  if (v <= 1.0) return { label: 'very severe MS', klass: 'severe' };
+  if (v <= 1.5) return { label: 'severe MS', klass: 'severe' };
+  if (v <= 2.5) return { label: 'progressive MS', klass: 'moderate' };
   return { label: 'normal', klass: 'normal' };
 }
 function gradeDPDT(v) {
@@ -1032,10 +1034,10 @@ const MODULES = {
       { type: 'slider', key: 'vmax', label: 'TR V<sub>max</sub>', unit: 'm/s', min: 1.5, max: 6.0, step: 0.05, default: 2.8, decimals: 2 },
       { type: 'picker', key: 'rap',  label: 'RAP (from IVC)', default: 8,
         options: [
-          { v: 3,  text: '3', help: 'IVC ≤ 2.1 cm, >50% collapse — "low"' },
-          { v: 8,  text: '8', help: 'IVC ≤ 2.1 cm, <50% collapse — "intermediate-low"' },
-          { v: 15, text: '15', help: 'IVC > 2.1 cm, >50% collapse — "intermediate-high"' },
-          { v: 20, text: '20', help: 'IVC > 2.1 cm, <50% collapse — "high"' },
+          { v: 3,  text: '3', help: 'IVC ≤ 2.1 cm with >50% collapse — normal (range 0–5)' },
+          { v: 8,  text: '8', help: 'Discordant/indeterminate: IVC ≤ 2.1 cm with <50% collapse, OR IVC > 2.1 cm with >50% collapse (range 5–10)' },
+          { v: 15, text: '15', help: 'IVC > 2.1 cm with <50% collapse — elevated (range 10–20)' },
+          { v: 20, text: '20', help: 'Plethoric non-collapsing IVC with dilated hepatic veins — beyond the ASE bands, use with caution' },
         ]
       },
     ],
@@ -1053,7 +1055,7 @@ const MODULES = {
       'TR V<sub>max</sub> requires a complete CW envelope — incomplete jets underestimate pressure (the contour ends before the true peak).',
       'Always use multiple windows (apical, RV inflow, parasternal) to find the highest velocity — eccentric jets are easy to miss off-axis.',
       'PASP = mean PA pressure only when there is no RVOT/PV obstruction. With pulmonic stenosis or RVOT obstruction, PASP > PAP.',
-      'The 2015 ASE guidelines collapsed RAP into 3 / 8 / 15 mmHg buckets. Many labs still use a 4-bucket system (3 / 8 / 15 / 20) — same idea, finer granularity.',
+      'ASE assigns RAP from IVC size AND collapse together: ≤ 2.1 cm collapsing &gt; 50% = 3 mmHg; &gt; 2.1 cm collapsing &lt; 50% = 15 mmHg; anything discordant = 8 mmHg. A dilated IVC that still collapses &gt; 50% is a discordant case and scores 8, NOT 15 — reading size alone shifts every estimate up a tier and inflates PASP by 5–7 mmHg.',
     ],
   },
 
@@ -1520,13 +1522,14 @@ const MODULES = {
     title: 'Mitral Stenosis',
     calculatorLink: 'pht',
     purpose: 'Normal vs moderate vs severe mitral stenosis. Mitral inflow CW deceleration slope lengthens as MV area decreases. PHT (Hatle empirical: MVA = 220 / PHT) is the workhorse — but invalid post-PMBC, with significant AR, or in acute conditions.',
-    formula: '<strong>Severe MS</strong>: MVA ≤ 1.0 cm² &nbsp;·&nbsp; PHT ≥ 220 ms &nbsp;·&nbsp; mean gradient ≥ 10 mmHg',
+    formula: '<strong>Severe MS (2020 ACC/AHA, Stage C/D)</strong>: MVA ≤ 1.5 cm² &nbsp;·&nbsp; PHT ≥ 150 ms &nbsp;·&nbsp; mean gradient is supportive, not a severity criterion',
     inputs: [],
     compute: () => [
-      { key: 'n',   label: 'Normal',     value: 'PHT < 90 ms  ·  MVA > 2.5',     unit: '', text: true },
-      { key: 'mi',  label: 'Mild MS',    value: 'PHT 90–150 ms  ·  MVA 1.5–2.5', unit: '', text: true },
-      { key: 'mo',  label: 'Moderate',   value: 'PHT 150–219 ms  ·  MVA 1.0–1.5', unit: '', text: true },
-      { key: 'sev', label: 'Severe MS',  value: 'PHT ≥ 220 ms  ·  MVA ≤ 1.0',    unit: '', text: true },
+      { key: 'n',   label: 'Normal',        value: 'PHT < 90 ms  ·  MVA > 2.5',      unit: '', text: true },
+      { key: 'mi',  label: 'Progressive',   value: 'PHT < 150 ms  ·  MVA > 1.5  (Stage B)', unit: '', text: true },
+      { key: 'sev', label: 'Severe MS',     value: 'PHT ≥ 150 ms  ·  MVA ≤ 1.5  (Stage C/D)', unit: '', text: true },
+      { key: 'vs',  label: 'Very severe',   value: 'PHT ≥ 220 ms  ·  MVA ≤ 1.0  (older sub-tier; 2020 dropped the label)', unit: '', text: true },
+      { key: 'g',   label: 'Mean gradient', value: 'Typically > 5–10 mmHg at normal heart rate — supportive only. The guideline excludes it from the severity criteria because it varies with rate and forward flow.', unit: '', text: true, wide: true },
       { key: 'p',   label: 'Pearl',      value: 'PHT is INVALID in: post-PMBC (≤72 h), significant AR (LV pressure rises faster), acute MS, AF. Cross-check with planimetry (TTE/TEE/3D) when in doubt.', unit: '', text: true, wide: true },
     ],
     draw: drawMSAtlas,
@@ -1567,15 +1570,14 @@ const MODULES = {
     id: 'tr_atlas',
     title: 'Tricuspid Regurgitation',
     calculatorLink: 'pasp',
-    purpose: 'Normal vs moderate vs severe TR. TR V<sub>max</sub> drives PASP estimation (4·V² + RAP). Severe TR adds qualitative clues: dense envelope, low velocity in MASSIVE TR (paradoxical "V cutoff" due to RA–RV equalization), hepatic vein systolic flow reversal.',
-    formula: '<strong>Severe TR</strong>: V<sub>max</sub> often ≥ 3 m/s &nbsp;·&nbsp; vena contracta ≥ 0.7 cm &nbsp;·&nbsp; hepatic vein systolic flow reversal &nbsp;·&nbsp; dense triangular CW envelope',
+    purpose: 'Normal vs moderate vs severe TR, graded the way ASE 2017 Table 14 grades it — vena contracta, PISA radius, EROA, R<sub>vol</sub>, CW envelope density and hepatic vein flow. TR V<sub>max</sub> is NOT on that list: it is the RV–RA systolic gradient and therefore a PASP surrogate, not a severity measure. In torrential TR the RA and RV equalize and V<sub>max</sub> FALLS, so grading by velocity reads the most severe lesions as the mildest.',
+    formula: '<strong>Severe TR (ASE 2017)</strong>: vena contracta ≥ 0.7 cm &nbsp;·&nbsp; EROA ≥ 0.40 cm² &nbsp;·&nbsp; R<sub>vol</sub> ≥ 45 mL &nbsp;·&nbsp; PISA r > 0.9 cm &nbsp;·&nbsp; hepatic vein systolic reversal &nbsp;·&nbsp; dense triangular CW envelope',
     inputs: [],
     compute: () => [
-      { key: 'n',   label: 'Normal',     value: 'trace TR  ·  V_max < 2.5',                   unit: '', text: true },
-      { key: 'mi',  label: 'Mild',       value: 'V_max 2.0–2.5 m/s',                          unit: '', text: true },
-      { key: 'mo',  label: 'Moderate',   value: 'V_max 2.5–3.0 m/s',                          unit: '', text: true },
-      { key: 'sev', label: 'Severe TR',  value: 'dense envelope  ·  hepatic vein S reversal', unit: '', text: true },
-      { key: 'p',   label: 'Pearl',      value: 'In MASSIVE TR, RA and RV pressures equalize early — TR V_max can paradoxically DECREASE and the envelope becomes triangular (V cutoff sign). Don\'t use TR V_max alone for severity.', unit: '', text: true, wide: true },
+      { key: 'mi',  label: 'Mild',       value: 'VC < 0.3 cm  ·  PISA r ≤ 0.5 cm  ·  EROA < 0.20 cm²  ·  R_vol < 30 mL  ·  faint parabolic CWD  ·  systolic-dominant hepatic vein', unit: '', text: true, wide: true },
+      { key: 'mo',  label: 'Moderate',   value: 'VC 0.3–0.69 cm  ·  PISA r 0.6–0.9 cm  ·  EROA 0.20–0.39 cm²  ·  R_vol 30–44 mL  ·  hepatic vein systolic blunting', unit: '', text: true, wide: true },
+      { key: 'sev', label: 'Severe TR',  value: 'VC ≥ 0.7 cm  ·  PISA r > 0.9 cm  ·  EROA ≥ 0.40 cm²  ·  R_vol ≥ 45 mL  ·  dense triangular CWD  ·  hepatic vein SYSTOLIC REVERSAL  ·  tricuspid inflow E > 1.0 m/s', unit: '', text: true, wide: true },
+      { key: 'v',   label: 'TR V_max',   value: 'NOT a severity criterion. 4·V² + RAP estimates RV systolic pressure. In massive/torrential TR the RA and RV equalize, so V_max FALLS — a low velocity with a dense triangular envelope is a red flag, not reassurance.', unit: '', text: true, wide: true },
     ],
     draw: drawTRAtlas,
     pitfalls: [
@@ -1827,8 +1829,11 @@ function drawPASP(p, t) {
 
   lblTitle('IVC behavior', ix + iw / 2, iy + 14);
 
-  const collapseFraction = p.rap === 3 ? 0.7 : p.rap === 8 ? 0.30 : p.rap === 15 ? 0.55 : 0.10;
-  const baseDiam = p.rap >= 15 ? 0.90 : 0.55;
+  // Must agree with the RAP option labels above: 3 = small IVC collapsing >50%,
+  // 8 = the discordant/indeterminate case, 15 = dilated with <50% collapse,
+  // 20 = plethoric with essentially no respiratory change.
+  const collapseFraction = p.rap === 3 ? 0.70 : p.rap === 8 ? 0.30 : p.rap === 15 ? 0.25 : 0.05;
+  const baseDiam = p.rap >= 20 ? 0.95 : p.rap >= 15 ? 0.90 : 0.55;
   // Sniff phase oscillates only while animFade > 0; otherwise rest at neutral
   const sniffPhase = animFade > 0.01
     ? ((Math.sin(t / 700) + 1) / 2) * animFade + 0.5 * (1 - animFade)
@@ -3886,13 +3891,13 @@ function drawMSAtlas(p, t) {
     (a) => drawAtlasEnvelope(a, { dir: 'up', shape: 'mitralInflow', peakV: 0.8, maxV: 2.0, beats: 2, color: 'rgba(120, 200, 130, 0.78)', slowSlope: 0.10, aPeak: 0.5, refLines: [1] }),
     ['PHT < 90 ms', 'MVA > 2.5 cm²', 'fast E decel  ·  prominent A']
   );
-  drawAtlasPanel(L.x1, L.panelY, L.panelW, L.panelH, 'MODERATE', 'moderate',
+  drawAtlasPanel(L.x1, L.panelY, L.panelW, L.panelH, 'PROGRESSIVE', 'moderate',
     (a) => drawAtlasEnvelope(a, { dir: 'up', shape: 'mitralInflow', peakV: 1.4, maxV: 2.0, beats: 2, color: 'rgba(255, 200, 90, 0.78)', slowSlope: 0.55, aPeak: 0.6, refLines: [1] }),
-    ['PHT 150–219 ms', 'MVA 1.0–1.5 cm²', 'prolonged E decel']
+    ['PHT 90–149 ms', 'MVA > 1.5 cm²', 'Stage B  ·  prolonged E decel']
   );
   drawAtlasPanel(L.x2, L.panelY, L.panelW, L.panelH, 'SEVERE MS', 'severe',
     (a) => drawAtlasEnvelope(a, { dir: 'up', shape: 'mitralInflow', peakV: 1.7, maxV: 2.0, beats: 2, color: 'rgba(239, 100, 100, 0.80)', slowSlope: 0.95, aPeak: 0.5, refLines: [1] }),
-    ['PHT ≥ 220 ms', 'MVA ≤ 1.0 cm²', 'flat E decel  ·  often AF']
+    ['PHT ≥ 150 ms', 'MVA ≤ 1.5 cm²', 'Stage C/D  ·  flat E decel']
   );
 }
 
@@ -3923,20 +3928,20 @@ function drawMRAtlas(p, t) {
 // ─────────────────────────────────────────────────────────
 function drawTRAtlas(p, t) {
   ctx.clearRect(0, 0, W, H);
-  lblTitle('Tricuspid Regurgitation — V_max, envelope density, V-cutoff', W / 2, 16);
+  lblTitle('Tricuspid Regurgitation — vena contracta, envelope density, V-cutoff', W / 2, 16);
   const L = valveAtlasLayout();
 
   drawAtlasPanel(L.x0, L.panelY, L.panelW, L.panelH, 'NORMAL', 'normal',
     (a) => drawAtlasEnvelope(a, { shape: 'symmetric', peakV: 2.2, maxV: 6, beats: 3, color: 'rgba(120, 200, 130, 0.50)', refLines: [2, 4] }),
-    ['trace TR  ·  V_max < 2.5', 'narrow VC  ·  faint envelope', 'normal hepatic vein']
+    ['VC < 0.3 cm  ·  EROA < 0.20', 'faint parabolic envelope', 'systolic-dominant hepatic vein']
   );
   drawAtlasPanel(L.x1, L.panelY, L.panelW, L.panelH, 'MODERATE', 'moderate',
     (a) => drawAtlasEnvelope(a, { shape: 'symmetric', peakV: 3.0, maxV: 6, beats: 3, color: 'rgba(255, 200, 90, 0.72)', refLines: [2, 4] }),
-    ['V_max 2.5–3.0 m/s', 'denser envelope', 'PASP elevated']
+    ['VC 0.3–0.69 cm  ·  EROA 0.20–0.39', 'denser envelope', 'hepatic vein systolic blunting']
   );
   drawAtlasPanel(L.x2, L.panelY, L.panelW, L.panelH, 'SEVERE TR', 'severe',
     (a) => drawAtlasEnvelope(a, { shape: 'triangular', peakV: 3.4, maxV: 6, beats: 3, color: 'rgba(239, 100, 100, 0.85)', refLines: [2, 4] }),
-    ['DENSE triangular envelope', 'V-cutoff in massive TR', 'hepatic vein S-wave reversal']
+    ['VC ≥ 0.7 cm  ·  EROA ≥ 0.40', 'DENSE triangular  ·  V-cutoff', 'hepatic vein S-wave REVERSAL']
   );
 }
 
@@ -4283,7 +4288,7 @@ function strainPatternValues(pattern) {
 // 17-segment bull's-eye renderer. Segments laid out per AHA convention:
 //   - Anterior at 12 o'clock, Septal at 9 o'clock, Inferior at 6, Lateral at 3.
 //   - 6 basal segments (outermost ring), 6 mid, 4 apical, 1 apex tip.
-//   - Each segment ring starts at 12 o'clock and goes CLOCKWISE.
+//   - Each segment ring starts at 12 o'clock and goes COUNTER-clockwise (AHA convention).
 //   - Segment 1 (basal anterior) spans 11–1 o'clock (centered at 12 o'clock).
 // NO TEXT inside segments — labels live in the right legend strip.
 function drawBullsEye17(cx, cy, r, segValues) {
@@ -4300,11 +4305,16 @@ function drawBullsEye17(cx, cy, r, segValues) {
 
   for (const ring of rings) {
     for (let s = 0; s < ring.segs; s++) {
-      // Standard: start at 12 o'clock (which is −90° in canvas coords), sweep CW.
-      // rotateDeg shifts the starting boundary so segment 1's center lands AT 12 o'clock.
+      // AHA polar map: segment 1 is centred at 12 o'clock and the numbering runs
+      // COUNTER-clockwise from there — basal 1..6 at 12, 10, 8, 6, 4, 2 o'clock — which is
+      // what puts the septal segments under the SEPTAL label at 9 and the lateral ones under
+      // LATERAL at 3. Canvas angles increase clockwise, so the sweep subtracts s*span.
+      // rotateDeg is subtracted for the same reason: it offsets the ring so segment 1 lands
+      // centred on 12 o'clock, and it has to turn the same way the sweep does.
       const span = (Math.PI * 2) / ring.segs;
-      const a0 = -Math.PI / 2 + (ring.rotateDeg * Math.PI / 180) + s * span;
-      const a1 = a0 + span;
+      const mid  = -Math.PI / 2 - (ring.rotateDeg * Math.PI / 180) - (s + 0.5) * span;
+      const a0 = mid - span / 2;
+      const a1 = mid + span / 2;
       const strain = segValues[ring.startIdx + s];
       ctx.fillStyle = strainColor(strain);
       ctx.beginPath();
