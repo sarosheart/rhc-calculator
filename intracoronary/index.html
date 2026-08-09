@@ -66,7 +66,9 @@ body.dark {
   --navy-deep: #1e2740;
 }
 * { box-sizing: border-box; margin: 0; padding: 0; }
-html, body { height: 100%; }
+/* min-height, not height: a fixed 100% pins the document to the viewport so anything
+   below the app — including the About section — cannot be scrolled to. */
+html, body { min-height: 100%; }
 body {
   font-family: -apple-system, "Helvetica Neue", Helvetica, Arial, sans-serif;
   font-size: 14px;
@@ -746,6 +748,24 @@ body.dark .seo-content-body h3 { color: #e8ecf2; }
            for crawlability per Google's documented treatment of <details> elements. ═══ -->
       
     </div>
+  
+      <details class="seo-section">
+        <summary>About the Intracoronary Physiology & Imaging</summary>
+        <div class="seo-content-body">
+          <h3>Coronary pressure-flow relationship and the Gould curve</h3>
+          <p>Two modules build the underlying physiology. At rest, autoregulation keeps myocardial blood flow nearly constant across a perfusion pressure range of roughly 60 to 140 mmHg. Under maximal hyperemia with adenosine, autoregulation is abolished and flow becomes a near-linear function of distal pressure. The Gould curve module (Gould and Lipscomb, 1974) plots coronary flow reserve against percent diameter stenosis: hyperemic flow holds its ceiling to about 50 percent, resting flow stays defended until roughly 85 to 90 percent, and the two converge near 88 percent, where CFR equals 1. Normal CFR is 2.5 to 3 or higher; below 2.0 is abnormal.</p>
+          <h3>Fractional flow reserve at maximal hyperemia</h3>
+          <p>The FFR module animates aortic (Pa) and distal (Pd) pressure tracings as hyperemia rises from rest to maximal. FFR is Pd divided by Pa at steady-state hyperemia, with the cut-off at 0.80 or below and 0.75 to 0.80 handled as a gray zone. Pitfalls include sub-maximal hyperemia, which overestimates FFR (intravenous adenosine needs 60 to 90 seconds to plateau), pressure-wire drift requiring re-equalization, and side-hole guide catheters that falsely lower Pa.</p>
+          <h3>Non-hyperemic pressure ratios and pullback in serial lesions</h3>
+          <p>An atlas module compares iFR, sampled in the diastolic wave-free period, with dPR and DFR, which use whole-of-diastole, and RFR, the lowest Pd/Pa in any phase of the cardiac cycle. All four use a 0.89 cut-off matched to FFR 0.80, while a resting whole-cycle Pd/Pa at or below 0.92 prompts hyperemic confirmation. A trial view summarizes DEFINE-FLAIR and iFR-SWEDEHEART. A pullback module then shows why a composite FFR across two lesions in one vessel understates each, and how the gradient across each lesion identifies which to treat first.</p>
+          <h3>IVUS anatomy and quantitative measurement</h3>
+          <p>The IVUS anatomy module draws the normal bright-dark-bright three layers, intima over media over adventitia, with a picker for fatty, fibrotic, and calcific plaque. The quantitative module traces the lumen and the external elastic membrane and computes plaque burden as EEM area minus lumen area, divided by EEM area. It uses a minimum lumen area below 6.0 mm² for the left main and below 4.0 mm² elsewhere, and calls a stent under-expanded below 80 percent of the reference lumen.</p>
+          <h3>OCT resolution and plaque morphology</h3>
+          <p>Axial resolution near 10 to 20 µm makes OCT roughly ten times finer than IVUS, enough to measure a fibrous cap and identify a thin-cap fibroatheroma below 65 µm. The trade-off is penetration of 1 to 2 mm against 4 to 8 mm for IVUS, so the module warns against OCT-based plaque burden in large vessels and against OCT for left main guidance. Lipid is signal-poor with diffuse attenuation; calcium is signal-poor with a sharp leading edge.</p>
+          <h3>Who this is for</h3>
+          <p>The material suits fellows learning coronary physiology and intravascular imaging, and anyone reviewing these methods for boards. Each module pairs a formula card with adjustable inputs, computed outputs, and pitfalls from cath lab practice. It is free to use, and every calculation runs in the browser.</p>
+        </div>
+      </details>
   </main>
 </div>
 
@@ -756,9 +776,12 @@ body.dark .seo-content-body h3 { color: #e8ecf2; }
 // SEVERITY GRADERS (return {label, klass})
 // ═══════════════════════════════════════════════════════════
 function gradeFFR(v) {
+  // The gray zone is 0.75-0.80, which is what the FFR formula card on this page states.
+  // This grader used to stretch it to 0.90, so an FFR of 0.86 -- unambiguously negative,
+  // and safe to defer on DEFER and FAME -- was stamped "gray zone, defer with caution".
   if (v <= 0.75) return { label: 'definitely ischemic', klass: 'severe' };
   if (v <= 0.80) return { label: 'ischemic (PCI)', klass: 'severe' };
-  if (v <= 0.90) return { label: 'gray zone — defer with caution', klass: 'moderate' };
+  if (v <= 0.85) return { label: 'negative — defer (near cut-off, use clinical context)', klass: 'normal' };
   return { label: 'not ischemic — defer', klass: 'normal' };
 }
 function gradeIFR(v) {
@@ -830,19 +853,17 @@ const MODULES = {
     id: 'pressure_flow',
     title: 'Pressure–Flow Relationship',
     purpose: 'The coronary pressure–flow relationship has two faces. At rest, autoregulation keeps myocardial flow nearly constant across a wide range of perfusion pressures (~60–140 mmHg). After a maximal hyperemic stimulus (adenosine), autoregulation is abolished and flow becomes a linear function of pressure — and the slope of that line falls in proportion to epicardial stenosis severity. Slide the stenosis to watch the hyperemic line flatten.',
-    formula: '<strong>Rest:</strong> CBF held flat by autoregulation across the plateau range &nbsp;·&nbsp; <strong>Hyperemia:</strong> CBF ≈ k · (P<sub>distal</sub> − P<sub>v</sub>), slope = 1 / resistance &nbsp;·&nbsp; <strong>CFR</strong> = hyperemic CBF / resting CBF',
+    formula: '<strong>Rest:</strong> CBF held flat by autoregulation across the plateau range &nbsp;·&nbsp; <strong>Hyperemia:</strong> CBF ≈ k · (P<sub>distal</sub> − P<sub>zf</sub>), slope = 1 / resistance (P<sub>zf</sub> = zero-flow pressure ≈ 20 mmHg, not venous pressure) &nbsp;·&nbsp; <strong>CFR</strong> = hyperemic CBF / resting CBF',
     inputs: [
       { type: 'slider', key: 'stenosis', label: 'Stenosis (% diameter)', unit: '%', min: 0, max: 90, step: 5, default: 0, decimals: 0 },
     ],
     compute: (p) => {
-      const s = p.stenosis / 100;
-      // Hyperemic flow at Pa = 100 mmHg — relative to maximal (no stenosis) flow.
-      // Empirically falls off non-linearly above ~50% (matches Gould/Lipscomb 1974).
-      const maxHyperemic = 4.0;  // CFR at no stenosis
-      const restingNorm = 1.0;
-      const k = 1 - Math.pow(s, 0.55);  // 1.0 at 0%, ~0.41 at 50%, ~0.10 at 90%
-      const hyperemicNorm = Math.max(0.6, maxHyperemic * k);
-      const cfr = hyperemicNorm / restingNorm;
+      // Uses the SAME gouldFlows() model as the Gould Curve module. These two modules used
+      // to run different stenosis->flow laws and disagreed by 2.6x on the same input (at 50%
+      // stenosis: 1.27 here against 3.30 there). The old law also floored hyperemic flow at
+      // 0.6 against a resting flow fixed at 1.0, so at 90% stenosis this printed "CFR 0.60" —
+      // adenosine reducing flow below rest, which cannot happen.
+      const { rest: restingNorm, hyp: hyperemicNorm, cfr } = gouldFlows(p.stenosis);
       return [
         { key: 'cfr',  label: 'CFR (estimate)',   value: cfr.toFixed(2), unit: '×', severity: gradeCFR(cfr) },
         { key: 'rest', label: 'Resting CBF',      value: '~ 1', unit: 'rel', text: false },
@@ -916,7 +937,7 @@ const MODULES = {
         { key: 'pa',    label: 'P​a (aortic)',    value: Pa.toFixed(0), unit: 'mmHg' },
         { key: 'pd',    label: 'P​d (distal)',    value: Pd.toFixed(0), unit: 'mmHg' },
         { key: 'ratio', label: h === 1 ? 'FFR' : 'Pd / Pa', value: current.toFixed(2), unit: '', severity: h === 1 ? gradeFFR(current) : gradePdPa(current) },
-        { key: 'note',  label: 'Interpretation', value: h < 0.3 ? 'Resting gradient is small — even severe lesions look nearly equipotent without hyperemia.' : h < 0.7 ? 'Sub-maximal hyperemia — gradient widening but not steady-state. Wait for plateau.' : current <= 0.80 ? 'Ischemic FFR — flow-limiting lesion. PCI indicated (FAME).' : current <= 0.90 ? 'Gray zone — consider iFR co-registration or repeat measurement.' : 'Non-ischemic — defer PCI safely (DEFER 15-yr data: hard event rate equivalent to medical therapy).', text: true, wide: true },
+        { key: 'note',  label: 'Interpretation', value: h < 0.3 ? 'Resting gradient is small — even severe lesions look nearly equipotent without hyperemia.' : h < 0.7 ? 'Sub-maximal hyperemia — gradient widening but not steady-state. Wait for plateau.' : current <= 0.75 ? 'Ischemic FFR — flow-limiting lesion. PCI indicated (FAME).' : current <= 0.80 ? 'Gray zone (0.75–0.80) — clinical context guides; consider iFR co-registration or repeat measurement.' : 'Non-ischemic — defer PCI safely (DEFER 15-yr data: hard event rate equivalent to medical therapy).', text: true, wide: true },
       ];
     },
     draw: drawFFRConcept,
@@ -996,8 +1017,14 @@ const MODULES = {
       // Composite (multiplicative-ish underestimate)
       const composite = ffrProxAlone * ffrDistAlone + 0.04 * (1 - ffrProxAlone) * (1 - ffrDistAlone);
       const compositeBounded = Math.max(0.45, composite);
-      const dropProx = (1 - ffrProxAlone) * 100;
-      const dropDist = (1 - ffrDistAlone) * 100;
+      // Gradients as MEASURED on the pullback: they partition the real total drop, so
+      // dropProx + dropDist = (1 - composite) exactly. The isolated-lesion values are kept
+      // separately below, labelled as the post-treatment prediction they actually are.
+      const totalDropPct = (1 - compositeBounded) * 100;
+      const resProx = 1 - ffrProxAlone, resDist = 1 - ffrDistAlone;
+      const resSum = (resProx + resDist) || 1;
+      const dropProx = totalDropPct * (resProx / resSum);
+      const dropDist = totalDropPct * (resDist / resSum);
       let action;
       if (compositeBounded > 0.80) action = 'Composite FFR &gt; 0.80 — defer the vessel. Neither lesion alone meets the ischemic threshold.';
       else if (dropProx > dropDist) action = 'Proximal lesion carries the larger gradient. Treat it first, then re-measure FFR; the distal lesion may no longer require PCI.';
@@ -1005,8 +1032,9 @@ const MODULES = {
       else action = 'Gradients are similar — staged approach with re-measurement between PCIs.';
       return [
         { key: 'comp', label: 'Composite FFR', value: compositeBounded.toFixed(2), unit: '', severity: gradeFFR(compositeBounded) },
-        { key: 'dp',   label: 'ΔP — proximal', value: dropProx.toFixed(0), unit: '%' },
-        { key: 'dd',   label: 'ΔP — distal',   value: dropDist.toFixed(0), unit: '%' },
+        { key: 'dp',   label: 'ΔP — proximal (measured)', value: dropProx.toFixed(0), unit: '% of Pa' },
+        { key: 'dd',   label: 'ΔP — distal (measured)',   value: dropDist.toFixed(0), unit: '% of Pa' },
+        { key: 'pa',   label: 'FFR if the other lesion were treated', value: 'prox ' + ffrProxAlone.toFixed(2) + '  ·  dist ' + ffrDistAlone.toFixed(2), unit: '', text: true, wide: true },
         { key: 'plan', label: 'Pullback strategy', value: action, text: true, wide: true },
       ];
     },
@@ -1056,7 +1084,7 @@ const MODULES = {
         ],
         calcific: [
           { label: 'Echogenicity', value: 'Brightly hyperechoic — BRIGHTER than the adventitia.', text: true, wide: true },
-          { label: 'Acoustic shadow', value: 'Deep — IVUS cannot image structures behind calcium. OCT is similarly limited; both modalities estimate thickness from the leading edge only.', text: true, wide: true },
+          { label: 'Acoustic shadow', value: 'Deep — IVUS cannot image structures behind calcium, so calcium thickness cannot be measured and the EEM behind the plaque is lost. OCT does NOT share this limitation: near-infrared light penetrates calcium, so thickness, arc and length are all directly measurable — which is why the OCT calcium score has a thickness term at all.', text: true, wide: true },
           { label: 'PCI implication', value: 'Heavy calcium (especially &gt; 270° arc, &gt; 5 mm length) raises risk of stent under-expansion. Consider atherectomy or lithotripsy.', text: true, wide: true },
         ],
       };
@@ -1339,12 +1367,12 @@ function drawPressureFlow(p, t) {
   ctx.shadowBlur = 0;
 
   // Hyperemic line (linear): slope decreases with stenosis severity
-  const s = p.stenosis / 100;
-  const slopeFactor = 1 - Math.pow(s, 0.55); // 1.0 at 0%, ~0.41 at 50%, ~0.10 at 90%
-  const maxSlope = 4 / 100; // (CBF=4 at P=100 normalized)
-  const slope = maxSlope * slopeFactor;
-  // CBF = slope * (P - Pzf), Pzf ≈ 20 mmHg
-  const Pzf = 20;
+  // CBF = slope * (P - Pzf). The slope has to be calibrated against that same intercept:
+  // 4/100 assumed the line passed through the origin, so at P = 100 it reached 3.2 rather
+  // than 4 and the caliper on this canvas read a uniform 0.8x of the Outputs cell.
+  const Pzf = 20;   // zero-flow pressure, NOT venous pressure
+  const flows = gouldFlows(p.stenosis);
+  const slope = flows.hyp / (100 - Pzf);
   ctx.strokeStyle = '#4a90d9';
   ctx.lineWidth = 2.2;
   ctx.shadowColor = 'rgba(74,144,217,0.45)';
@@ -1357,8 +1385,8 @@ function drawPressureFlow(p, t) {
 
   // Marker at P=100 (typical coronary perfusion)
   const Phold = 100;
-  const Frest = 1.0;
-  const Fhyp = slope * (Phold - Pzf);
+  const Frest = flows.rest;               // same model as the Outputs cell
+  const Fhyp  = slope * (Phold - Pzf);    // == flows.hyp by construction
   ctx.fillStyle = '#5fc97a';
   ctx.beginPath(); ctx.arc(xOf(Phold), yOf(Frest), 4, 0, Math.PI*2); ctx.fill();
   ctx.fillStyle = '#4a90d9';
@@ -1370,8 +1398,8 @@ function drawPressureFlow(p, t) {
   ctx.setLineDash([3, 3]);
   ctx.beginPath(); ctx.moveTo(xOf(Phold), yOf(Frest)); ctx.lineTo(xOf(Phold), yOf(Math.min(Fmax, Fhyp))); ctx.stroke();
   ctx.setLineDash([]);
-  const cfr = Math.min(Fmax, Fhyp) / Frest;
-  lblCaliper('CFR ' + cfr.toFixed(1), xOf(Phold) + 10, yOf((Frest + Math.min(Fmax, Fhyp)) / 2) + 4, 'left');
+  const cfr = flows.cfr;                  // one number, shown in both places
+  lblCaliper('CFR ' + cfr.toFixed(2), xOf(Phold) + 10, yOf((Frest + Math.min(Fmax, Fhyp)) / 2) + 4, 'left');
 
   // Legend
   ctx.fillStyle = '#5fc97a'; ctx.font = '600 11px DM Sans, system-ui, sans-serif'; ctx.textAlign = 'left';
@@ -1797,9 +1825,22 @@ function drawFFRPullback(p, t) {
   lblTick('Pa', vR0 + 4, PaY + 4, 'left');
   // Pd: drops at lesionProxX by ΔP_prox, then again at lesionDistX by ΔP_dist
   // ΔP / Pa = 1 - FFR_lesion
-  const dPprox = (1 - ffrProxAlone);
-  const dPdist = (1 - ffrDistAlone);
-  const totalDrop = (1 - ffrProxAlone * ffrDistAlone);
+  // The two steps drawn on the pullback are the gradients ACTUALLY measured across each
+  // lesion, so by construction they must sum to the total drop the composite implies:
+  //   1 - FFRcomp = dP_prox + dP_dist
+  // They used to be 1 - FFR_of_that_lesion_ALONE, i.e. what each lesion would drop if the
+  // other did not exist. Those are always larger, never summed to the printed composite
+  // (defaults: 23% + 17% implies Pd/Pa 0.60 against a printed 0.64; at 90/90 it implied
+  // 0.10 against a printed 0.45) — and labelling isolated gradients as pullback steps
+  // inverts this module's own teaching point that serial lesions mask each other.
+  // Split the real total in proportion to each lesion's resistance.
+  const compositeForSteps = Math.max(0.45,
+    ffrProxAlone * ffrDistAlone + 0.04 * (1 - ffrProxAlone) * (1 - ffrDistAlone));
+  const totalDrop = 1 - compositeForSteps;
+  const rProx = 1 - ffrProxAlone, rDist = 1 - ffrDistAlone;
+  const rSum = (rProx + rDist) || 1;
+  const dPprox = totalDrop * (rProx / rSum);
+  const dPdist = totalDrop * (rDist / rSum);
   const maxDropPx = plotH - 24;
   const dropProxPx = dPprox / Math.max(0.5, totalDrop) * maxDropPx * 0.5;
   const dropDistPx = dPdist / Math.max(0.5, totalDrop) * maxDropPx * 0.5;
@@ -2381,7 +2422,6 @@ resizeCanvas();
 buildSidebar();
 selectModule('ffr_concept');
 
-// SEO popover — close on outside click + Escape
 </script>
 </body>
 </html>

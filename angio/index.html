@@ -693,6 +693,74 @@ body.dark .label-text.lead { fill: #e8ecf2; }
   }
 }
 
+
+/* ═══ Static About section (SEO checklist item 10) ═══ */
+.seo-section {
+  max-width: 880px;
+  margin: 16px auto 24px;
+  padding: 0;
+}
+.seo-section summary {
+  list-style: none;
+  cursor: pointer;
+  padding: 10px 16px;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  color: var(--text-muted);
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  border-radius: 8px;
+  border: 1px solid transparent;
+  transition: color 0.15s, background 0.15s, border-color 0.15s;
+  user-select: none;
+}
+.seo-section summary::-webkit-details-marker { display: none; }
+.seo-section summary::before {
+  content: '▸';
+  font-size: 10px;
+  display: inline-block;
+  transition: transform 0.2s;
+}
+.seo-section[open] summary::before { transform: rotate(90deg); }
+.seo-section summary:hover {
+  color: var(--text);
+  background: var(--panel-bg-2);
+  border-color: var(--border);
+}
+.seo-section[open] summary {
+  margin-bottom: 8px;
+}
+.seo-content-body {
+  padding: 24px 28px;
+  background: var(--panel-bg);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  font-size: 14.5px;
+  line-height: 1.65;
+  color: var(--text);
+  animation: seoFadeIn 0.25s ease-out;
+}
+@keyframes seoFadeIn { from { opacity: 0; transform: translateY(-4px); } to { opacity: 1; transform: translateY(0); } }
+.seo-content-body h3 {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--text);
+  margin: 24px 0 10px;
+  letter-spacing: -0.005em;
+}
+.seo-content-body h3:first-child { margin-top: 0; }
+.seo-content-body p {
+  margin: 0 0 14px;
+  color: var(--text-dim);
+}
+.seo-content-body strong {
+  color: var(--text);
+  font-weight: 600;
+}
+body.dark .seo-content-body { background: var(--panel-bg-2); }
+body.dark .seo-content-body p { color: #c4ccda; }
 </style>
 </head>
 <body class="dark">
@@ -830,6 +898,22 @@ body.dark .label-text.lead { fill: #e8ecf2; }
     <div class="clin-note" id="clinNote">
       <strong>AP view (0° / 0°):</strong> Useful for an initial orientation, but most coronary segments overlap. Angulated views are preferred for diagnostic detail.
     </div>
+  
+      <details class="seo-section">
+        <summary>About the Coronary Angiography Views</summary>
+        <div class="seo-content-body">
+          <h3>What this simulator shows</h3>
+          <p>Coronary angiography renders a three-dimensional vessel tree as a two-dimensional shadow, so every projection hides something. A labeled 3D coronary tree is rotated by the two angles the operator sets at the table and redrawn live. The LAO/RAO slider swings the detector around the patient's long axis to 120 degrees either way, past true lateral; the cranial/caudal slider tilts it toward head or feet across 40 degrees each way. The projection follows radiographic convention: the patient's right appears on the viewer's left. Segments running along the beam foreshorten and overlap; segments perpendicular to it lay out at full length.</p>
+          <h3>Left coronary preset views</h3>
+          <p>Nine presets cover the left system: AP; AP cranial 35; AP caudal 30; RAO 30 with cranial 35 or caudal 20; LAO 45 cranial 35; the LAO 45 caudal 30 Spider; LAO 90 lateral; and reverse Spider at RAO 100 cranial 30. Each carries a note naming the segments it profiles. RAO cranial is the workhorse for the mid and distal LAD and its diagonals. RAO caudal shows the circumflex origin and course, the obtuse marginals, the left main, and the proximal LAD. LAO cranial defines the left main ostium and separates septal from diagonal branches. The Spider depicts the left main ostium and bifurcation, the ostial LAD, and the origins of the first diagonal and OM, and is the most-used view for left main PCI. The reverse Spider, credited to Rigatelli et al., Catheter Cardiovasc Interv 2023, images the distal left main bifurcation from the patient's right side; working from that side lowers operator radiation dose.</p>
+          <h3>Right coronary preset views</h3>
+          <p>Six presets cover the right system. LAO 45 straight is the standard first RCA view, showing the vessel from ostium to distal segment with the conus artery, RV branches, and acute marginals; the crux, PDA, and posterolateral branches are foreshortened. LAO 30 with cranial 30 opens the ostium and proximal RCA plus the crux and PDA/PL bifurcation. RAO 30 shows the mid RCA, RV branches, and the PDA along its whole course, plus collaterals to an occluded LAD. RAO 30 with cranial 35 separates the mid RCA from the acute marginal. AP cranial 35 profiles the distal RCA, PDA, and posterolateral branches. RAO 80 with caudal 10 is a problem-solving view for an anteriorly originating RCA ostium, not a routine one.</p>
+          <h3>Orientation widget and display options</h3>
+          <p>A draggable, resizable, collapsible widget draws the C-arm gantry, table, and supine patient from the operator's viewpoint at the patient's right side, head to the screen's left. Labels can be detailed, simplified, or hidden. Overlays add the cardiac silhouette, the atrioventricular and interventricular planes, chamber labels, and both coronary systems at once; an X-ray mode approximates the fluoroscopy monitor.</p>
+          <h3>Intended use</h3>
+          <p>This is a geometry teaching aid for fellows learning to ask for a specific view rather than accept whatever is on the screen, not a substitute for reading real angiograms.</p>
+        </div>
+      </details>
   </main>
 </div>
 
@@ -1817,13 +1901,18 @@ function renderOrientationWidget() {
   // ─── Detector direction (LAO around Y, then CRA around X) ───
   const laoRad = liveLao * Math.PI / 180;
   const craRad = liveCra * Math.PI / 180;
+  // Tilt out of the transverse plane FIRST, then swing. Composing them the other way round
+  // gave d = (sinL, cosL*sinC, cosL*cosC) instead of the DICOM C-arm vector
+  // (sinL*cosC, sinC, cosL*cosC), so the depicted gantry disagreed with the sliders whenever
+  // both angles were non-zero — and at Lateral (LAO 90) the cranial/caudal slider moved the
+  // beam not at all. Verified against the DICOM definition at 10 angle pairs: exact.
   let dx = 0, dy = 0, dz = 1;
-  const dx1 = dx * Math.cos(laoRad) + dz * Math.sin(laoRad);
-  const dz1 = -dx * Math.sin(laoRad) + dz * Math.cos(laoRad);
-  dx = dx1; dz = dz1;
   const dy2 = dy * Math.cos(craRad) + dz * Math.sin(craRad);
   const dz2 = -dy * Math.sin(craRad) + dz * Math.cos(craRad);
   dy = dy2; dz = dz2;
+  const dx1 = dx * Math.cos(laoRad) + dz * Math.sin(laoRad);
+  const dz1 = -dx * Math.sin(laoRad) + dz * Math.cos(laoRad);
+  dx = dx1; dz = dz1;
 
   // ─── C-arm arc (semicircle from detector through bulge to source) ───
   const heart = { x: 0, y: 0, z: 0 };
@@ -2426,7 +2515,6 @@ applyPreset('ap-left');
 updateSliderReadouts();
 requestAnimationFrame(tick);
 
-// SEO popover — close on outside click + Escape
 </script>
 
 </body>

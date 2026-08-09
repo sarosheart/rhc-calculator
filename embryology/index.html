@@ -932,7 +932,17 @@ for(let i=0;i<16;i++){
 }
 // Cell convergence targets (positions along crescent_pre)
 const cellTargets=[];
-{const cc=makeCurve(CP.crescent_pre);for(let i=0;i<16;i++)cellTargets.push(cc.getPointAt(i/15));}
+{
+  const cc=makeCurve(CP.crescent_pre);
+  // 0-7 FHF: populate the WHOLE crescent, not half of it.
+  for(let i=0;i<8;i++)cellTargets.push(cc.getPointAt(i/7));
+  // 8-15 SHF: a dorsomedial arc sitting behind and inside the crescent (pulled toward the
+  // midline in x, displaced dorsally in -z), which is where the second heart field actually is.
+  for(let i=0;i<8;i++){
+    const q=cc.getPointAt(i/7);
+    cellTargets.push(new THREE.Vector3(q.x*0.52, q.y-0.55, q.z-0.62));
+  }
+}
 let convergeT=0,convergeStart=0,tubeFadeT=1,tubeFadeStart=0;
 
 // mode: 0=hidden, 1=migrating, 2=converging
@@ -2294,8 +2304,8 @@ function buildLabels(){
   if(curStage===0){
     if(curSub===0){setLabel(new THREE.Vector3(0,-1.5,0),'Primitive Streak','small');}
     if(curSub>=4){
-      setLabel(new THREE.Vector3(-2.2,-0.1,0.1),'FHF','fhf seg');setLabel(new THREE.Vector3(-2.2,-0.5,0.1),'(LV, atria)','small');
-      setLabel(new THREE.Vector3(2.2,-0.1,-0.1),'SHF','shf seg');setLabel(new THREE.Vector3(2.2,-0.5,-0.1),'(RV, OFT)','small');
+      setLabel(new THREE.Vector3(0,2.75,0.1),'FHF','fhf seg');setLabel(new THREE.Vector3(0,2.35,0.1),'(LV, atria)','small');
+      setLabel(new THREE.Vector3(0,1.55,-0.65),'SHF','shf seg');setLabel(new THREE.Vector3(0,1.15,-0.65),'(RV, OFT)','small');
     }
   }
   if(curStage===1){
@@ -2358,7 +2368,22 @@ function animate(time){requestAnimationFrame(animate);controls.update();renderSc
 // ===== INIT =====
 onResize();needsRebuild=true;updateUI();updateCrossSection();animate(0);
 
-// SEO popover — close on outside click + Escape
 </script>
+
+      <details class="seo-section">
+        <summary>About the Cardiac Embryology Simulator</summary>
+        <div class="seo-content-body">
+          <h3>The ten stages and 43 substeps</h3>
+          <p>Ten stages and 43 substeps run from the cardiac crescent at days 15 to 18 to neonatal circulation. The early stages animate in 3D: progenitors ingress through the primitive streak, converge into the cardiogenic plate, and resolve into the <strong>first heart field</strong> (Nkx2.5, Tbx5), giving left ventricle and part of the atria, and the <strong>second heart field</strong> (Islet-1, FGF8), giving right ventricle, outflow tract, and atria. Paired endocardial tubes then fuse into one tube segmented cranial to caudal as truncus arteriosus, bulbus cordis, primitive ventricle, primitive atrium, and sinus venosus; peristalsis begins at day 21 to 22.</p>
+          <h3>Cardiac looping and the endocardial cushions</h3>
+          <p>Dextral looping is the first left-right asymmetry, driven by Nodal, Lefty-2, and Pitx2c, carrying the tube through a C-loop into a rotatable S-loop. The mirror-image L-loop is the defect state: congenitally corrected transposition, a systemic morphologic right ventricle, and AV block near 2 percent per year. A cross-section panel, added from stage 4, shows superior and inferior atrioventricular canal cushions growing by endothelial-to-mesenchymal transformation and fusing into right and left orifices. Cushion tissue contributes to primum septum, inlet ventricular septum, septal tricuspid leaflet and anterior mitral leaflet; failed fusion gives complete atrioventricular septal defect, left axis deviation, and the 40 to 50 percent trisomy 21 association.</p>
+          <h3>Atrial, ventricular, and outflow tract septation</h3>
+          <p>Atrial septation animates septum primum descending, foramen secundum perforating before foramen primum closes, and septum secundum leaving the <strong>foramen ovale</strong> under a one-way flap that fuses in roughly 75 percent of people and stays patent in about 25 percent. Secundum atrial septal defect adds rSR' in V1 and fixed split S2. Ventricular septation converges muscular septum, inlet cushion tissue, and conotruncal ridges on one point, which is why perimembranous defects account for about 80 percent. Outflow tract septation follows cardiac neural crest from rhombomeres 6 to 8 through pharyngeal arches 3, 4, and 6, spiraling the ridges 180 degrees into the aorticopulmonary septum. Its defects are tetralogy of Fallot, with 22q11.2 deletion in about 15 percent; D-transposition, a failure to spiral; and truncus arteriosus, 22q11.2 in about 35 percent.</p>
+          <h3>Arch remodeling, valve delamination, and fetal circulation</h3>
+          <p>The arch module regresses arches 1, 2, and 5, keeps 3, 4, and 6, and loses the right dorsal aorta; the left fourth becomes the aortic arch and the distal left sixth the ductus arteriosus. Coarctation, interrupted aortic arch, and vascular ring are the defect options. A longitudinal right ventricular section shows septal and posterior leaflets delaminating from compact myocardium as chordae and papillary muscles differentiate; Ebstein anomaly is the arrested state. The final stage draws the ductus venosus, foramen ovale, and ductus arteriosus, then closes them as pulmonary vascular resistance falls and systemic resistance rises at birth.</p>
+          <h3>How the tool is used</h3>
+          <p>Every substep carries a short description, each stage a set of board pearls, and a "What Goes Wrong" toggle overlays the lesion that arises when that step fails, where one exists. It runs in the browser and is free.</p>
+        </div>
+      </details>
 </body>
 </html>

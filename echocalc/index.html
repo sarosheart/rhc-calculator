@@ -66,7 +66,9 @@ body.dark {
   --navy-deep: #1e2740;
 }
 * { box-sizing: border-box; margin: 0; padding: 0; }
-html, body { height: 100%; }
+/* min-height, not height: a fixed 100% pins the document to the viewport so anything
+   below the app — including the About section — cannot be scrolled to. */
+html, body { min-height: 100%; }
 body {
   font-family: -apple-system, "Helvetica Neue", Helvetica, Arial, sans-serif;
   font-size: 14px;
@@ -746,6 +748,24 @@ body.dark .seo-content-body h3 { color: #e8ecf2; }
            for crawlability per Google's documented treatment of <details> elements. ═══ -->
       
     </div>
+  
+      <details class="seo-section">
+        <summary>About the Echo Hemodynamics Calculator</summary>
+        <div class="seo-content-body">
+          <h3>The Doppler equations the calculator solves</h3>
+          <p>Twenty-three modules build from the physics. One compares pulsed-wave, continuous-wave, color and tissue Doppler, and why PW aliases above Nyquist. The simplified Bernoulli equation, &Delta;P = 4&middot;V&sup2;, turns a peak velocity into a gradient; the velocity-time integral gives the stroke distance behind stroke volume. From those: Doppler cardiac output; the continuity equation for aortic valve area, with the dimensionless index; PISA for EROA and regurgitant volume; the Hatle pressure half-time, MVA = 220 / PHT; PASP as 4&middot;(TR Vmax)&sup2; plus IVC-derived right atrial pressure; dP/dt from the MR jet; the Abbas equation for pulmonary vascular resistance; and Qp/Qs from paired RVOT and LVOT stroke volumes.</p>
+          <h3>Diastolic function and left atrial pressure</h3>
+          <p>Two algorithms follow the 2025 ASE update (Nagueh, JASE 2025). In sinus rhythm the tool scores three main parameters, reduced e&prime;, elevated E/e&prime;, and TR velocity &ge; 2.8 m/s, then falls back on supplemental parameters when one or two are abnormal: left atrial reservoir strain, pulmonary vein S/D, LAVi and IVRT. Reservoir strain &le; 18% is the main addition over 2016. A second covers atrial fibrillation, where cutoffs differ: mitral E &ge; 100 cm/s, septal E/e&prime; &gt; 11, TR &gt; 2.8 m/s, deceleration time &le; 160 ms.</p>
+          <h3>Constrictive pericarditis versus restrictive cardiomyopathy</h3>
+          <p>Both give small ventricles, high filling pressures and biatrial enlargement, so the module shows only the discriminators: respirophasic mitral inflow variation above 25%, annulus paradoxus with medial e&prime; &ge; 8 cm/s, expiratory hepatic vein diastolic flow reversal, and a septal notch on M-mode.</p>
+          <h3>Valve lesion atlases</h3>
+          <p>Seven atlases pair three severity panels each: aortic, mitral and pulmonary stenosis and regurgitation, plus tricuspid regurgitation. AR and PR grading begins at mild, since trace regurgitation there is physiologic. Severe AS is Vmax &ge; 4.0 m/s, mean gradient &ge; 40 mmHg, AVA &le; 1.0 cm&sup2;, though a late-peaking dagger contour argues severe at borderline velocity. Severe mitral stenosis is MVA &le; 1.5 cm&sup2; with PHT &ge; 150 ms per 2020 ACC/AHA staging. Tricuspid regurgitation is graded by vena contracta &ge; 0.7 cm, EROA &ge; 0.40 cm&sup2; and regurgitant volume &ge; 45 mL, not by TR Vmax, the RV-to-RA gradient, which falls once torrential TR equalizes the chambers, so velocity grading reads the worst lesions as mildest.</p>
+          <h3>Strain, hypertrophic cardiomyopathy and amyloidosis</h3>
+          <p>The strain module covers speckle tracking, the AHA 17-segment bull's-eye and its regional patterns: apical sparing in amyloidosis, reduced basal septal strain in hypertrophic cardiomyopathy, globally reduced strain in dilated cardiomyopathy, and LAD, RCA and LCx infarct territories. Normal global longitudinal strain is at or below &minus;18%. HCM and amyloidosis get their own modules; obstructive HCM is a peak LVOT gradient &ge; 30 mmHg at rest or with provocation.</p>
+          <h3>Pitfalls attached to each module</h3>
+          <p>Every module lists how its number fails. Pressure half-time is invalid for about 72 hours after balloon mitral valvuloplasty, and significant aortic regurgitation falsely shortens it. LVOT diameter is squared, so a 1 mm error shifts stroke volume ~10%. Right atrial pressure comes from IVC size and collapse together, never size alone: 3 mmHg small and collapsing, 15 mmHg dilated and non-collapsing, 8 mmHg when discordant.</p>
+        </div>
+      </details>
   </main>
 </div>
 
@@ -767,15 +787,22 @@ function gradeCI(v) {
   if (v <= 4.0) return { label: 'normal', klass: 'normal' };
   return { label: 'high output', klass: 'mild' };
 }
-function gradeEROA(v) {
-  if (v < 0.20) return { label: 'mild MR', klass: 'mild' };
-  if (v < 0.40) return { label: 'moderate MR', klass: 'moderate' };
-  return { label: 'severe MR', klass: 'severe' };
+const PISA_BANDS = {
+  mr: { eroa: [0.20, 0.40], rvol: [30, 60], label: 'MR' },
+  ar: { eroa: [0.10, 0.30], rvol: [30, 60], label: 'AR' },
+  tr: { eroa: [0.20, 0.40], rvol: [30, 45], label: 'TR' },
+};
+function gradeEROA(v, lesion) {
+  const b = PISA_BANDS[lesion || 'mr'] || PISA_BANDS.mr;
+  if (v < b.eroa[0]) return { label: 'mild ' + b.label, klass: 'mild' };
+  if (v < b.eroa[1]) return { label: 'moderate ' + b.label, klass: 'moderate' };
+  return { label: 'severe ' + b.label, klass: 'severe' };
 }
-function gradeRvol(v) {
-  if (v < 30) return { label: 'mild MR', klass: 'mild' };
-  if (v < 60) return { label: 'moderate MR', klass: 'moderate' };
-  return { label: 'severe MR', klass: 'severe' };
+function gradeRvol(v, lesion) {
+  const b = PISA_BANDS[lesion || 'mr'] || PISA_BANDS.mr;
+  if (v < b.rvol[0]) return { label: 'mild ' + b.label, klass: 'mild' };
+  if (v < b.rvol[1]) return { label: 'moderate ' + b.label, klass: 'moderate' };
+  return { label: 'severe ' + b.label, klass: 'severe' };
 }
 function gradeAVA(v) {
   if (v < 0.6) return { label: 'critical AS', klass: 'severe' };
@@ -1054,7 +1081,7 @@ const MODULES = {
     pitfalls: [
       'TR V<sub>max</sub> requires a complete CW envelope — incomplete jets underestimate pressure (the contour ends before the true peak).',
       'Always use multiple windows (apical, RV inflow, parasternal) to find the highest velocity — eccentric jets are easy to miss off-axis.',
-      'PASP = mean PA pressure only when there is no RVOT/PV obstruction. With pulmonic stenosis or RVOT obstruction, PASP > PAP.',
+      'The TR jet gives RV SYSTOLIC pressure (RVSP), not mean PA pressure. RVSP equals PASP only when there is no RVOT or pulmonic obstruction — with pulmonic stenosis or RVOT obstruction RVSP &gt; PASP, and the RVOT/PV gradient must be subtracted to get the true PASP.',
       'ASE assigns RAP from IVC size AND collapse together: ≤ 2.1 cm collapsing &gt; 50% = 3 mmHg; &gt; 2.1 cm collapsing &lt; 50% = 15 mmHg; anything discordant = 8 mmHg. A dilated IVC that still collapses &gt; 50% is a discordant case and scores 8, NOT 15 — reading size alone shifts every estimate up a tier and inflates PASP by 5–7 mmHg.',
     ],
   },
@@ -1095,23 +1122,31 @@ const MODULES = {
   // ─────────────────────────────────────────────────────────
   pisa: {
     id: 'pisa',
-    title: 'PISA → EROA / R<sub>vol</sub> (MR)',
-    purpose: 'Quantify mitral regurgitation severity from the proximal isovelocity surface area. Lower the color baseline toward the jet so the aliasing radius is large and measurable, then apply the hemisphere model.',
-    formula: 'Q = 2π·r<sup>2</sup>·V<sub>alias</sub> &nbsp;·&nbsp; EROA = Q / V<sub>peak</sub> &nbsp;·&nbsp; R<sub>vol</sub> = EROA · VTI<sub>MR</sub>',
+    title: 'PISA → EROA / R<sub>vol</sub>',
+    purpose: 'Quantify regurgitant severity from the proximal isovelocity surface area. Lower the color baseline toward the jet so the aliasing radius is large and measurable, then apply the hemisphere model. The same engine works for MR, AR and TR — pick the lesion, because the severity cut-offs differ.',
+    formula: 'Q = 2π·r<sup>2</sup>·V<sub>alias</sub> &nbsp;·&nbsp; EROA = Q / V<sub>peak</sub> &nbsp;·&nbsp; R<sub>vol</sub> = EROA · VTI<sub>jet</sub>',
     inputs: [
+      { type: 'picker', key: 'lesion', label: 'Lesion', default: 'mr',
+        options: [
+          { v: 'mr', text: 'MR', help: 'Severe: EROA ≥ 0.40 cm², R_vol ≥ 60 mL' },
+          { v: 'ar', text: 'AR', help: 'Severe: EROA ≥ 0.30 cm², R_vol ≥ 60 mL' },
+          { v: 'tr', text: 'TR', help: 'Severe: EROA ≥ 0.40 cm², R_vol ≥ 45 mL' },
+        ],
+      },
       { type: 'slider', key: 'r',     label: 'PISA radius',       unit: 'cm',   min: 0.30, max: 1.40, step: 0.01, default: 0.90, decimals: 2 },
       { type: 'slider', key: 'vn',    label: 'Aliasing velocity', unit: 'cm/s', min: 20,   max: 60,   step: 1,    default: 40,   decimals: 0 },
-      { type: 'slider', key: 'vpeak', label: 'MR peak V',         unit: 'm/s',  min: 3.5,  max: 7.0,  step: 0.05, default: 5.0,  decimals: 2 },
-      { type: 'slider', key: 'vti',   label: 'MR jet VTI',        unit: 'cm',   min: 80,   max: 200,  step: 1,    default: 130,  decimals: 0 },
+      { type: 'slider', key: 'vpeak', label: 'Jet peak V',        unit: 'm/s',  min: 2.0,  max: 7.0,  step: 0.05, default: 5.0,  decimals: 2 },
+      { type: 'slider', key: 'vti',   label: 'Jet VTI',           unit: 'cm',   min: 40,   max: 200,  step: 1,    default: 130,  decimals: 0 },
     ],
     compute: (p) => {
+      const lesion = p.lesion || 'mr';
       const flow = 2 * Math.PI * p.r * p.r * p.vn;     // mL/s (cm² × cm/s = cm³/s)
       const eroa = flow / (p.vpeak * 100);             // cm² (vpeak m/s → cm/s ×100)
       const rvol = eroa * p.vti;                       // mL/beat
       return [
         { key: 'flow', label: 'Regurgitant flow', value: flow.toFixed(0), unit: 'mL/s' },
-        { key: 'eroa', label: 'EROA',             value: eroa.toFixed(2), unit: 'cm²', severity: gradeEROA(eroa) },
-        { key: 'rvol', label: 'Regurgitant vol',  value: rvol.toFixed(0), unit: 'mL/beat', severity: gradeRvol(rvol) },
+        { key: 'eroa', label: 'EROA',             value: eroa.toFixed(2), unit: 'cm²', severity: gradeEROA(eroa, lesion) },
+        { key: 'rvol', label: 'Regurgitant vol',  value: rvol.toFixed(0), unit: 'mL/beat', severity: gradeRvol(rvol, lesion) },
       ];
     },
     draw: drawPISA,
@@ -1222,7 +1257,7 @@ const MODULES = {
     },
     draw: drawPVR,
     pitfalls: [
-      'Abbas 2003 was derived in patients with PVR < 8 WU and TR/RVOT ratios < 0.275 — results above that range are unreliable. For high PVR, Abbas 2013 uses a different equation: PVR = TR·10 / (RVOT VTI/RVOT diameter).',
+      'Abbas 2003 was derived in patients with PVR &lt; 8 WU and TR/RVOT ratios &lt; 0.275 — results above that range are unreliable. When TRV/VTI<sub>RVOT</sub> &gt; 0.275 (PVR likely &gt; 6 WU) use Abbas 2013 instead: PVR (WU) = 5.19 × (TR V<sub>max</sub>² / RVOT VTI) − 0.4.',
       'Anything that lowers RVOT VTI (low CO, severe RV dysfunction, beta-blockade) inflates apparent PVR. Always interpret in clinical context.',
       'PVR ≥ 3 WU is abnormal. Use as a screen — NOT as a substitute for RHC PVR when management decisions hinge on the number (PAH-targeted therapy, transplant candidacy, congenital surgical planning).',
       'Confirm the CW signal you\'re measuring is truly TR — RVOT obstruction, MR contamination, or eccentric jets all mimic the envelope shape.',
@@ -1412,8 +1447,8 @@ const MODULES = {
       { type: 'picker', key: 'view', label: 'View', default: 'mitral',
         options: [
           { v: 'mitral',   text: 'Mitral inflow', help: 'Respirophasic E variation — the headline feature (Mayo criteria)' },
-          { v: 'tdi',      text: 'TDI e′',         help: 'Annulus paradoxus — medial e′ paradoxically preserved or ↑ in constrictive' },
-          { v: 'hepatic',  text: 'Hepatic vein',   help: 'Expiratory diastolic flow reversal in constrictive (ventricular interdependence)' },
+          { v: 'tdi',      text: 'TDI e′',         help: 'Annulus reversus — medial e′ ≥ lateral e′ in constrictive; medial e′ is also preserved or increased (annulus paradoxus)' },
+          { v: 'hepatic',  text: 'Hepatic vein',   help: 'Diastolic flow reversal in both — EXPIRATORY in constrictive, INSPIRATORY in restrictive' },
           { v: 'mmode',    text: 'Septal M-mode',  help: 'Septal notch + respirophasic shift in constrictive' },
           { v: 'summary',  text: 'Summary table',  help: 'Side-by-side feature comparison at a glance' },
         ]
@@ -1434,14 +1469,14 @@ const MODULES = {
           { key: 'rme',  label: 'RCM — medial e′',       value: '< 7 cm/s',       unit: '' },
           { key: 'cle',  label: 'CP — lateral e′',       value: 'often reduced',  unit: '' },
           { key: 'rle',  label: 'RCM — lateral e′',      value: '< 8 cm/s',       unit: '' },
-          { key: 'pearl',label: 'Pearl',                 value: 'Annulus paradoxus — diseased pericardium tethers lateral wall, recoils through medial annulus', unit: '', text: true, wide: true},
+          { key: 'pearl',label: 'Pearl',                 value: 'Annulus REVERSUS — the diseased pericardium tethers the lateral wall, so recoil happens through the medial annulus and medial e′ ≥ lateral e′, reversing the normal pattern. Distinct from annulus PARADOXUS, which is the inverted E/e′-to-filling-pressure relationship: in constriction e′ is preserved or increased despite a high left atrial pressure, so E/e′ underestimates it.', unit: '', text: true, wide: true},
         ],
         hepatic: [
           { key: 'cs',   label: 'CP — expiration',        value: '↑ diastolic flow reversal', unit: '' },
           { key: 'ci',   label: 'CP — inspiration',       value: 'normal forward S/D',        unit: '' },
-          { key: 'rs',   label: 'RCM — expiration',       value: 'normal',                    unit: '' },
-          { key: 'ri',   label: 'RCM — inspiration',      value: '↑ atrial reversal (AR)',    unit: '' },
-          { key: 'pearl',label: 'Pearl',                  value: 'Expiratory diastolic reversal = ventricular interdependence signature', unit: '', text: true, wide: true},
+          { key: 'rs',   label: 'RCM — expiration',       value: 'relatively less reversal',  unit: '' },
+          { key: 'ri',   label: 'RCM — inspiration',      value: '↑ DIASTOLIC flow reversal', unit: '' },
+          { key: 'pearl',label: 'Pearl',                  value: 'The respiratory PHASE is the discriminator, not the presence of reversal. CP reverses on EXPIRATION (ventricular interdependence — the fixed pericardium cannot accept the inspiratory increase in RV filling, so reversal is deferred to expiration). RCM reverses on INSPIRATION, because the stiff, failing RV cannot accept the extra venous return the moment it arrives.', unit: '', text: true, wide: true},
         ],
         mmode: [
           { key: 'cn',   label: 'CP — septum',            value: 'notch + respirophasic shift', unit: '' },
@@ -1451,7 +1486,7 @@ const MODULES = {
         summary: [
           { key: 'm',    label: 'Mitral inflow',          value: 'CP: ΔE > 25%, E/A > 1   ·   RCM: ΔE < 10%, E/A > 2, DT < 150',  unit: '' },
           { key: 't',    label: 'TDI medial e′',          value: 'CP: ≥ 8 cm/s (paradoxus)   ·   RCM: < 7 cm/s (globally reduced)', unit: '' },
-          { key: 'h',    label: 'Hepatic vein',           value: 'CP: expiratory diastolic reversal   ·   RCM: normal-ish, may have ↑ AR', unit: '' },
+          { key: 'h',    label: 'Hepatic vein',           value: 'CP: EXPIRATORY diastolic reversal   ·   RCM: INSPIRATORY diastolic reversal', unit: '' },
           { key: 's',    label: 'Septal M-mode',          value: 'CP: notch + respirophasic shift   ·   RCM: smooth/normal',     unit: '' },
           { key: 'l',    label: 'LA strain / size',       value: 'CP: relatively preserved   ·   RCM: severely reduced reservoir, biatrial enlargement', unit: '' },
         ],
@@ -1461,10 +1496,10 @@ const MODULES = {
     draw: drawCvR,
     pitfalls: [
       'Both CP and RCM cause elevated filling pressures, small/normal ventricular size, biatrial enlargement, and IVC plethora. The differentiator is RESPIRATORY VARIATION and PERICARDIAL signs.',
-      'Annulus paradoxus is the single highest-yield feature: in CP the medial e′ is paradoxically preserved (≥ 8 cm/s) or even increased, while in RCM e′ is globally reduced (< 7 cm/s).',
+      'The two annulus signs are the highest-yield features and they are not the same thing. Annulus PARADOXUS: medial e′ is preserved (≥ 8 cm/s) or increased despite elevated filling pressures, so E/e′ moves the wrong way. Annulus REVERSUS: medial e′ ≥ lateral e′. In RCM neither applies — e′ is globally reduced (&lt; 7 cm/s) and the lateral still exceeds the medial.',
       'Cardiac amyloidosis is the prototypical RCM and frequently has e′ < 5 cm/s with marked LA strain reduction. If e′ &lt; 5 + thick walls + low-voltage ECG, suspect amyloid.',
       'Effusive-constrictive pericarditis can have a circumferential effusion superimposed on visceral/parietal thickening — drainage of the effusion does NOT relieve constriction.',
-      'The classic Mayo respirophasic criteria (ΔE > 25%, hepatic vein expiratory diastolic reversal, annulus paradoxus) have ~90% sensitivity and specificity for CP when ALL three are present. Any 2 of 3 is suggestive.',
+      'The classic Mayo respirophasic criteria (ΔE &gt; 25%, hepatic vein expiratory diastolic reversal, medial e′ preserved — annulus paradoxus) have ~90% sensitivity and specificity for CP when ALL three are present. Any 2 of 3 is suggestive.',
     ],
   },
 
@@ -3265,7 +3300,7 @@ function drawCvRHepaticView() {
   const L = cvrLayout();
 
   drawCvRPanelFrame(L.xL, L.panelY, L.panelW, L.panelH, 'CONSTRICTIVE — expiratory diastolic reversal', '#fdcc4d');
-  drawCvRPanelFrame(L.xR, L.panelY, L.panelW, L.panelH, 'RESTRICTIVE — relatively normal pattern',      '#ef9b9b');
+  drawCvRPanelFrame(L.xR, L.panelY, L.panelW, L.panelH, 'RESTRICTIVE — inspiratory diastolic reversal', '#ef9b9b');
 
   // CONVENTION (subcostal hepatic vein view, probe on body surface):
   //   Hepatic flow toward HEART = away from probe = BELOW baseline (forward S, D)
@@ -3297,8 +3332,12 @@ function drawCvRHepaticView() {
       const dPeak = isExp ? (isConstrictive ? 0.18 : 0.30) : (isConstrictive ? 0.35 : 0.30);
       // Atrial reversal (small) — ABOVE baseline, end of beat
       const arPeak = 0.12;
-      // CP expiratory diastolic reversal — ABOVE baseline, prominent only in CP during expiration
-      const cpRev  = isExp && isConstrictive ? 0.34 : 0.0;
+      // Diastolic reversal — ABOVE baseline. BOTH conditions reverse; the respiratory phase
+      // is what separates them. CP reverses on EXPIRATION (ventricular interdependence),
+      // RCM on INSPIRATION (the stiff RV cannot accept the inspiratory venous return). The
+      // panel used to draw reversal only for CP, which taught RCM as a normal tracing and
+      // threw away the discriminating finding.
+      const cpRev  = isConstrictive ? (isExp ? 0.34 : 0.0) : (isExp ? 0.06 : 0.26);
 
       ctx.fillStyle = color;
       // S wave (forward, BELOW)
@@ -3493,8 +3532,8 @@ function drawCvRSummaryView() {
 
   const rows = [
     ['Mitral inflow',         'ΔE > 25%, E/A > 1, normal/short DT',                        'ΔE < 10%, E/A > 2, DT < 150 ms'],
-    ['TDI medial e′',         '≥ 8 cm/s — annulus paradoxus',                              '< 7 cm/s — globally reduced'],
-    ['Hepatic vein flow',     'expiratory diastolic flow reversal',                         'normal-ish; may have prominent AR'],
+    ['TDI medial e′',         '≥ 8 cm/s — paradoxus; ≥ lateral — reversus',                '< 7 cm/s — globally reduced'],
+    ['Hepatic vein flow',     'EXPIRATORY diastolic reversal',                              'INSPIRATORY diastolic reversal'],
     ['Septal M-mode',         'septal notch + respirophasic shift',                         'smooth normal motion'],
     ['LA size / strain',      'biatrial enlargement; strain often preserved',               'biatrial enlargement; reservoir strain markedly ↓'],
   ];
@@ -3560,8 +3599,8 @@ function drawCvR(p, t) {
   // Title varies by view
   const titles = {
     mitral: 'Mitral inflow PW — respirophasic E variation',
-    tdi: 'Tissue Doppler — annulus paradoxus',
-    hepatic: 'Hepatic vein PW — diastolic flow reversal',
+    tdi: 'Tissue Doppler — annulus reversus (medial e′ ≥ lateral)',
+    hepatic: 'Hepatic vein PW — expiratory (CP) vs inspiratory (RCM) diastolic reversal',
     mmode: 'Septal M-mode — notch + respirophasic shift',
     summary: 'Constrictive vs Restrictive — feature comparison',
   };
@@ -4849,8 +4888,8 @@ function drawStrainPrimer(p, t) {
 // wall thickness, biatrial enlargement, and granular sparkling pattern.
 function drawAmyloidWallView(area, opts) {
   drawPlaxSchematic(area, {
-    septumMm: opts.wallMm,
-    postMm:   opts.wallMm,             // concentric — both walls thickened equally
+    septumMm: opts.septumMm,
+    postMm:   opts.postMm,             // asymmetric in HCM, concentric in amyloid
     samPresent: false,
     sparkle: !!opts.sparkle,
     laEnlarged: opts.atriaSize === 'large',
@@ -4869,16 +4908,16 @@ function drawAmyloidAtlas(p, t) {
 
   if (p.view === 'walls' || !p.view) {
     drawAtlasPanel(L.x0, L.panelY, L.panelW, L.panelH, 'NORMAL', 'normal',
-      (a) => drawAmyloidWallView(a, { wallMm: 9, atriaSize: 'small', sparkle: false }),
+      (a) => drawAmyloidWallView(a, { septumMm: 9, postMm: 9, atriaSize: 'small', sparkle: false }),
       ['walls < 12 mm', 'normal atrial size', 'smooth myocardium']
     );
     drawAtlasPanel(L.x1, L.panelY, L.panelW, L.panelH, 'HCM', 'moderate',
-      (a) => drawAmyloidWallView(a, { wallMm: 18, atriaSize: 'small', sparkle: false }),
-      ['septum ≥ 15 mm (asymmetric)', 'LA enlarged; RA usually normal', 'smooth myocardium']
+      (a) => drawAmyloidWallView(a, { septumMm: 18, postMm: 9, atriaSize: 'large', sparkle: false }),
+      ['septum ≥ 15 mm, ASYMMETRIC (septum ≫ posterior)', 'LA enlarged; RA usually normal', 'smooth myocardium']
     );
     drawAtlasPanel(L.x2, L.panelY, L.panelW, L.panelH, 'AMYLOID', 'severe',
-      (a) => drawAmyloidWallView(a, { wallMm: 16, atriaSize: 'large', sparkle: true }),
-      ['walls ≥ 12 mm (concentric)', 'BIATRIAL enlargement', 'GRANULAR "sparkling"  ·  low-voltage ECG']
+      (a) => drawAmyloidWallView(a, { septumMm: 16, postMm: 16, atriaSize: 'large', sparkle: true }),
+      ['walls ≥ 12 mm, CONCENTRIC (septum = posterior)', 'LA enlarged (RA too on the 4-chamber view)', 'GRANULAR "sparkling"  ·  low-voltage ECG']
     );
   } else if (p.view === 'inflow') {
     drawAtlasPanel(L.x0, L.panelY, L.panelW, L.panelH, 'NORMAL', 'normal',
@@ -5969,7 +6008,6 @@ resizeCanvas();
 buildSidebar();
 selectModule('pasp');
 
-// SEO popover — close on outside click + Escape
 </script>
 </body>
 </html>

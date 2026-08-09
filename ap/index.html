@@ -1105,6 +1105,22 @@ body.dark .seo-content-body h3 { color: #e8ecf2; }
       </div>
       <canvas id="ecgCanvas"></canvas>
     </div>
+  
+      <details class="seo-section">
+        <summary>About the Cardiac Action Potential Simulator</summary>
+        <div class="seo-content-body">
+          <h3>What the simulator draws</h3>
+          <p>The simulator plots one cardiac action potential on a voltage-versus-time axis and redraws it as parameters change. A ghost trace of the selected cell's untreated baseline sits behind the live curve, so every drug effect reads as a difference rather than an absolute. Phase shading labels each phase with its dominant current, from I_Na in phase 0 through I_Ca-L, I_Kr and I_K1, with I_f and I_Ca-T in pacemaker phase 4; the brief phase 1 notch is tinted but not labeled. Refractory period shading is on by default; a threshold line is optional. A measurement strip reports action potential duration, ERP, phase 0 dV/dt, and estimated QRS and QT; in pacemaker mode, heart rate, cycle length, APD, phase 4 slope, and maximum diastolic potential.</p>
+          <h3>The four cell types</h3>
+          <p>Four baselines are modeled. The ventricular myocyte rests near -85 mV with a phase 2 plateau of about 180 ms. The atrial myocyte rests near -80 mV with a shorter plateau and an action potential duration near 200 ms, part of why Class IC sodium blockade works well in atrial fibrillation. The Purkinje fiber rests near -90 mV and carries the longest action potential in the conduction system. The nodal cell has no stable resting potential: it drifts from a maximum diastolic potential of -65 mV up to a threshold of -40 mV, and its phase 0 is calcium-dependent.</p>
+          <h3>Antiarrhythmic drugs by Vaughan-Williams class</h3>
+          <p>Twenty-two agents can be switched on alone or combined: Class IA (quinidine, procainamide, disopyramide), Class IB (lidocaine, mexiletine, phenytoin), Class IC (flecainide, propafenone), Class II beta-blockers, Class III potassium blockers (amiodarone, sotalol, dofetilide, ibutilide, dronedarone), Class IV non-dihydropyridine calcium channel blockers, and adenosine, digoxin and magnesium. Each carries a short mechanism note, including use-dependent block for lidocaine, the CAST caution for flecainide, and inpatient initiation for sotalol and dofetilide. Agents with no meaningful nodal effect are disabled while the pacemaker cell is displayed.</p>
+          <h3>Disease substrates and triggered activity</h3>
+          <p>Four substrates, long QT, short QT, Brugada and ischemia, sit underneath any drug, so agents stack on a diseased baseline instead of replacing it. Adding sotalol to the long QT substrate carries the tool's QT estimate to 722 ms. The ischemia substrate sets resting potential to -65 mV, the depolarized state in which Class IB agents preferentially bind. Overlays add triggered activity: an early afterdepolarization during phase 3, whose amplitude grows as the action potential lengthens, and a delayed afterdepolarization in diastole after full repolarization.</p>
+          <h3>Clinical scenarios and the surface ECG correlate</h3>
+          <p>Eight one-click scenarios set cell type, drug and substrate together: lidocaine for VT, amiodarone for AF, flecainide pill-in-pocket, metoprolol for sinus tachycardia, adenosine for SVT, verapamil for AVNRT, plus two warning cases, sotalol driving torsades and quinidine syncope. Below the trace, a surface ECG panel redraws a single beat from the same parameters. In fast-response modes, QRS width tracks phase 0 upstroke velocity and QT tracks action potential duration; in pacemaker mode the strip holds a normal ventricular complex and only the cycle length changes.</p>
+        </div>
+      </details>
   </main>
 </div>
 
@@ -1641,7 +1657,7 @@ function drawErpShading(p, isPace) {
   const margin = { l: 56, r: 18, t: 24, b: 28 };
   const plotW = W - margin.l - margin.r;
   const plotH = H - margin.t - margin.b;
-  const tMax = 600;
+  const tMax = computeTMax(p, isPace);   // must match the axis and the trace
   const apd = ventAPDuration(p);
   const erp = apd * p.erpFraction;
   const x1 = margin.l + plotW * Math.min(20 / tMax, 1);
@@ -1673,7 +1689,7 @@ function drawPhaseRegions(p, isPace) {
   const margin = { l: 56, r: 18, t: 24, b: 28 };
   const plotW = W - margin.l - margin.r;
   const plotH = H - margin.t - margin.b;
-  const tMax = isPace ? Math.max(800, pacemakerCycleLen(p) + 100) : 600;
+  const tMax = computeTMax(p, isPace);   // must match the axis and the trace
   const px = t => margin.l + plotW * (t / tMax);
 
   const regions = [];
@@ -2401,7 +2417,6 @@ paceParams = calcParams('pace');
 requestAnimationFrame(render);
 
 
-// SEO popover — close on outside click + Escape
 </script>
 
 </body>

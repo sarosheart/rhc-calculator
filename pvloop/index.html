@@ -867,6 +867,74 @@
     .nav-tab { flex-shrink: 0; white-space: nowrap; padding: 0 10px; font-size: 11px; }
     .nav-right { display: none; }
   }
+
+/* ═══ Static About section (SEO checklist item 10) ═══ */
+.seo-section {
+  max-width: 880px;
+  margin: 16px auto 24px;
+  padding: 0;
+}
+.seo-section summary {
+  list-style: none;
+  cursor: pointer;
+  padding: 10px 16px;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  color: var(--text-muted);
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  border-radius: 8px;
+  border: 1px solid transparent;
+  transition: color 0.15s, background 0.15s, border-color 0.15s;
+  user-select: none;
+}
+.seo-section summary::-webkit-details-marker { display: none; }
+.seo-section summary::before {
+  content: '▸';
+  font-size: 10px;
+  display: inline-block;
+  transition: transform 0.2s;
+}
+.seo-section[open] summary::before { transform: rotate(90deg); }
+.seo-section summary:hover {
+  color: var(--text);
+  background: var(--panel-bg-2);
+  border-color: var(--border);
+}
+.seo-section[open] summary {
+  margin-bottom: 8px;
+}
+.seo-content-body {
+  padding: 24px 28px;
+  background: var(--panel-bg);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  font-size: 14.5px;
+  line-height: 1.65;
+  color: var(--text);
+  animation: seoFadeIn 0.25s ease-out;
+}
+@keyframes seoFadeIn { from { opacity: 0; transform: translateY(-4px); } to { opacity: 1; transform: translateY(0); } }
+.seo-content-body h3 {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--text);
+  margin: 24px 0 10px;
+  letter-spacing: -0.005em;
+}
+.seo-content-body h3:first-child { margin-top: 0; }
+.seo-content-body p {
+  margin: 0 0 14px;
+  color: var(--text-dim);
+}
+.seo-content-body strong {
+  color: var(--text);
+  font-weight: 600;
+}
+body.dark .seo-content-body { background: var(--panel-bg-2); }
+body.dark .seo-content-body p { color: #c4ccda; }
 </style>
 </head>
 <body class="dark">
@@ -1230,7 +1298,12 @@
 // ============================================================
 
 // ---- CONSTANTS ----
-const A_EDPVR = 0.03; // EDPVR scaling constant (mmHg)
+// EDPVR scaling constant. At the previous 0.03 every LVEDP the tool printed was 5-20x too
+// low — baseline 0.5 mmHg against a normal 8-12, decompensated HFrEF 1.3 against 20-25, and
+// tamponade 2.0 on a preset whose own text claims diastolic equalisation near 20. EDP is a
+// headline index in the overlay and the ED point is drawn at that pressure, so the whole
+// diastolic half of the loop sat on the floor. 0.54 puts the baseline at 9.0 mmHg.
+const A_EDPVR = 0.54; // EDPVR scaling constant (mmHg)
 
 // ---- STATE ----
 let params = {
@@ -2240,17 +2313,17 @@ function initDrugButtons() {
 const DISEASES = {
   hfref:             { name: 'HFrEF', params: {Ees:1.0, Ea:2.2, EDV:180, B:0.025, HR:85, V0:30},
                        desc: 'Reduced ejection fraction HF. ↓↓Contractility (Ees), ↑afterload, dilated LV. EF <40%.', category: 'Heart failure with reduced systolic function.' },
-  hfpef:             { name: 'HFpEF', params: {Ees:3.2, Ea:2.2, EDV:110, B:0.06, HR:75, V0:10},
+  hfpef:             { name: 'HFpEF', params: {Ees:3.2, Ea:2.2, EDV:110, B:0.0364, HR:75, V0:10},
                        desc: 'Preserved EF but ↑diastolic stiffness (B). Normal Ees, ↑Ea, ↑EDP. Small stiff ventricle.', category: 'Diastolic dysfunction, impaired relaxation.' },
   dcm:               { name: 'Dilated Cardiomyopathy', params: {Ees:0.8, Ea:2.0, EDV:220, B:0.02, HR:90, V0:40},
                        desc: 'Severely dilated LV with ↓↓contractility. ↑↑EDV, ↑V0 (rightward shift). Very low EF.', category: 'End-stage dilated cardiomyopathy.' },
-  cardiogenic_shock: { name: 'Cardiogenic Shock', params: {Ees:0.6, Ea:2.5, EDV:200, B:0.03, HR:110, V0:35},
+  cardiogenic_shock: { name: 'Cardiogenic Shock', params: {Ees:0.6, Ea:2.5, EDV:200, B:0.024, HR:110, V0:35},
                        desc: '↓↓↓Contractility with ↑afterload (compensatory vasoconstriction). Tachycardic. EF <20%, ↓CO.', category: 'SCAI Stage C/D shock.' },
   septic_shock:      { name: 'Septic Shock (warm)', params: {Ees:1.2, Ea:0.6, EDV:150, B:0.02, HR:110, V0:15},
                        desc: 'Distributive: ↓↓SVR (low Ea), mild myocardial depression, ↑HR. High-output, low-pressure state.', category: 'Vasodilatory/distributive shock.' },
   hypovolemic_shock: { name: 'Hypovolemic Shock', params: {Ees:2.8, Ea:2.5, EDV:70, B:0.025, HR:120, V0:10},
                        desc: '↓↓Preload (low EDV), compensatory ↑HR and vasoconstriction (↑Ea). Small loop, low SV.', category: 'Hemorrhage, dehydration.' },
-  aortic_stenosis:   { name: 'Aortic Stenosis', params: {Ees:3.0, Ea:3.5, EDV:120, B:0.045, HR:70, V0:5},
+  aortic_stenosis:   { name: 'Aortic Stenosis', params: {Ees:3.0, Ea:3.5, EDV:120, B:0.0307, HR:70, V0:5},
                        desc: 'Fixed obstruction → ↑↑afterload (Ea). Compensatory concentric LVH (↑Ees, ↑B). ↑↑ESP, ↓SV.', category: 'Pressure overload → concentric hypertrophy.' },
   mitral_stenosis:   { name: 'Mitral Stenosis', params: {Ees:2.5, Ea:1.8, EDV:85, B:0.025, HR:80, V0:10},
                        desc: 'Restricted LV filling → ↓EDV. Normal contractility and afterload. Small loop, low SV.', category: 'Inflow obstruction limits preload.' },
@@ -2258,18 +2331,18 @@ const DISEASES = {
                        desc: 'Volume overload → ↑↑EDV, eccentric remodeling (↑V0). ↓Effective Ea (regurgitant flow). Wide loop. <b>No isovolumic relaxation</b> — the aortic valve leaks the moment LV pressure drops below aortic, so volume RISES through relaxation and that limb slopes down-and-right instead of falling vertically.', category: 'Combined volume + pressure overload.' },
   mitral_regurg:     { name: 'Mitral Regurgitation', params: {Ees:2.0, Ea:0.8, EDV:170, B:0.02, HR:85, V0:15},
                        desc: 'Low-impedance ejection into LA → ↓effective Ea. Volume overload → ↑EDV. High total SV but ↓forward SV. <b>No isovolumic contraction</b> — the mitral valve leaks as soon as LV pressure exceeds LA pressure, so volume FALLS before the aortic valve opens and that limb slopes up-and-left instead of rising vertically.', category: 'Part of SV is regurgitant.' },
-  concentric_lvh:    { name: 'Concentric LVH', params: {Ees:3.5, Ea:2.5, EDV:100, B:0.05, HR:70, V0:5},
+  concentric_lvh:    { name: 'Concentric LVH', params: {Ees:3.5, Ea:2.5, EDV:100, B:0.036, HR:70, V0:5},
                        desc: 'Wall thickening without chamber dilation. ↑Ees (supranormal contractility), ↑B (stiff), ↓cavity size.', category: 'Hypertension, AS response.' },
   eccentric_lvh:     { name: 'Eccentric LVH', params: {Ees:1.5, Ea:1.8, EDV:170, B:0.02, HR:75, V0:25},
                        desc: 'Chamber dilation with wall thinning. ↑EDV, ↑V0 (rightward shift). ↓Ees, relatively compliant (↓B).', category: 'Volume overload response (AR, MR).' },
-  constriction:      { name: 'Constrictive Pericarditis', params: {Ees:2.5, Ea:1.8, EDV:100, B:0.065, HR:85, V0:10},
+  constriction:      { name: 'Constrictive Pericarditis', params: {Ees:2.5, Ea:1.8, EDV:100, B:0.0415, HR:85, V0:10},
                        desc: 'Rigid pericardium limits filling → ↑↑B (steep EDPVR), ↓EDV. Normal systolic function. ↑EDP.', category: 'Dip-and-plateau physiology.' },
-  tamponade:         { name: 'Cardiac Tamponade', params: {Ees:2.5, Ea:2.2, EDV:80, B:0.06, HR:110, V0:10},
+  tamponade:         { name: 'Cardiac Tamponade', params: {Ees:2.5, Ea:2.2, EDV:80, B:0.052, HR:110, V0:10},
                        desc: 'External compression → ↓↓EDV, ↑B, ↑Ea (compensatory). Tachycardic. Very small loop.', category: 'Pericardial effusion with hemodynamic compromise.' },
   // Mixed Valve Disease
-  as_ar:             { name: 'AS + AR (Mixed Aortic)', params: {Ees:2.5, Ea:2.5, EDV:170, B:0.035, HR:75, V0:20},
+  as_ar:             { name: 'AS + AR (Mixed Aortic)', params: {Ees:2.5, Ea:2.5, EDV:170, B:0.025, HR:75, V0:20},
                        desc: 'Combined pressure + volume overload. Tall AND wide loop. Concentric + eccentric hypertrophy. Highest wall stress. The AR component abolishes isovolumic relaxation — that limb slopes right.', category: 'Bicuspid AV, calcific degeneration.' },
-  as_mr:             { name: 'AS + MR', params: {Ees:2.8, Ea:2.0, EDV:150, B:0.04, HR:80, V0:10},
+  as_mr:             { name: 'AS + MR', params: {Ees:2.8, Ea:2.0, EDV:150, B:0.026, HR:80, V0:10},
                        desc: 'AS pressure overload partially offset by MR "pop-off" into LA. ↑EDV from MR volume overload. Preserved EF. The MR component abolishes isovolumic contraction — that limb slopes left.', category: 'Calcific AS + functional MR (common in elderly).' },
   ms_mr:             { name: 'MS + MR (Rheumatic)', params: {Ees:2.2, Ea:1.0, EDV:100, B:0.025, HR:90, V0:10},
                        desc: 'Restricted inflow (MS) + low-impedance regurgitant path (MR). Small loop, low pressures, high EF from MR unloading. The MR component abolishes isovolumic contraction — that limb slopes left.', category: 'Rheumatic mitral valve disease.' },
@@ -2613,7 +2686,7 @@ function changeIdxSize(delta) {
   let size = parseInt(overlay.dataset.size) + delta;
   size = Math.max(1, Math.min(2, size));
   overlay.dataset.size = size;
-  localStorage.setItem('pvloop_idx_size', size);
+  try { localStorage.setItem('pvloop_idx_size', size); } catch(e) {}
 }
 
 // ---- CLINICAL EXAMPLES ----
@@ -2701,14 +2774,18 @@ function toggleDark() {
   document.getElementById('darkToggle').textContent = isDark ? 'Light Mode' : 'Dark Mode';
   if (isDark) document.getElementById('darkToggle').classList.add('active');
   else document.getElementById('darkToggle').classList.remove('active');
-  localStorage.setItem('cathmath_dark', isDark ? '1' : '0');
+  try { localStorage.setItem('cathmath_dark', isDark ? '1' : '0'); } catch(e) {}
   requestDraw();
 }
 
 // ---- INIT ----
 function init() {
   // Restore dark mode — default to dark if no preference saved
-  const darkPref = localStorage.getItem('cathmath_dark');
+  // Safari in private mode throws on localStorage access. This is module-level bootstrap
+  // code, so an unguarded read took the whole tool down — pvloop was the only page on the
+  // site without the try/catch the others already use.
+  let darkPref = null;
+  try { darkPref = localStorage.getItem('cathmath_dark'); } catch(e) {}
   if (darkPref === '0') {
     document.body.classList.remove('dark');
     document.getElementById('darkToggle').textContent = 'Dark Mode';
@@ -2721,7 +2798,8 @@ function init() {
   }
 
   // Restore indices size
-  const savedSize = localStorage.getItem('pvloop_idx_size');
+  let savedSize = null;
+  try { savedSize = localStorage.getItem('pvloop_idx_size'); } catch(e) {}
   if (savedSize !== null) {
     document.getElementById('indicesOverlay').dataset.size = savedSize;
   }
@@ -2800,5 +2878,23 @@ function onCanvasHover(e) {
 
 document.addEventListener('DOMContentLoaded', init);
 </script>
+
+      <details class="seo-section">
+        <summary>About the Pressure-Volume Loop Simulator</summary>
+        <div class="seo-content-body">
+          <h3>The elastance model behind the loop</h3>
+          <p>This simulator draws a left ventricular pressure-volume loop from the time-varying elastance model of Suga and Sagawa. Three reference lines frame it: the ESPVR, a straight line of slope Ees through the unstressed volume V0; the EDPVR, an exponential curve whose steepness is set by the chamber stiffness constant B; and the arterial elastance line Ea, drawn from end-diastolic volume on the volume axis to the end-systolic point. Six sliders set Ees, Ea, EDV, B, heart rate and V0; end-systole falls where the ESPVR and Ea line intersect.</p>
+          <h3>Hemodynamic readouts and ventriculo-arterial coupling</h3>
+          <p>Each change updates stroke volume, ejection fraction, cardiac output, end-systolic and end-diastolic pressure, stroke work as the area enclosed by the loop, and the Ea/Ees coupling ratio. Readouts are flagged against the tool's bands: ejection fraction normal from 55 to 70 percent, cardiac output from 4.0 to 8.0 L/min, and coupling normal from 0.5 to 1.3 and borderline up to 1.5. Moving one slider at a time separates preload, afterload and contractility.</p>
+          <h3>Drugs and interventions</h3>
+          <p>Fifteen agents are grouped as inotropes (dobutamine, milrinone, isoproterenol, low- and high-dose dopamine), vasopressors (phenylephrine, norepinephrine), vasodilators (nitroprusside, nitroglycerin, phentolamine, an ACE inhibitor and a dihydropyridine calcium channel blocker), metoprolol as a negative inotrope, and volume as fluids or diuretics. Each acts by shifting Ees, Ea, EDV or B, so phenylephrine moves the Ea line alone while nitroglycerin, mainly a venodilator, pulls preload down. Agents stack additively.</p>
+          <h3>Disease states</h3>
+          <p>Eighteen presets set all six parameters at once; drugs then stack on top. Heart failure covers HFrEF, HFpEF and dilated cardiomyopathy; shock, cardiogenic shock at SCAI stage C/D, warm septic shock and hypovolemic shock; remodeling, concentric and eccentric LVH; pericardial disease, constrictive pericarditis and tamponade. Valve disease includes aortic and mitral stenosis and regurgitation plus mixed lesions AS+AR, AS+MR, MS+MR and MS+AS. Regurgitant loops lose their vertical limbs: mitral regurgitation abolishes isovolumic contraction, aortic regurgitation abolishes isovolumic relaxation, and each tilts the opposite limb slightly.</p>
+          <h3>Mechanical circulatory support</h3>
+          <p>Five configurations layer onto any disease and drug combination. The intra-aortic balloon pump unloads modestly by counterpulsation, adding about 0.5 L/min. Impella CP and Impella 5.0 are transvalvular axial pumps that unload the ventricle directly, lower LVEDP and progressively triangularize the loop; with the 5.0 the aortic valve may not open. VA-ECMO raises afterload and distends the left ventricle despite full systemic support, which is why LV venting is considered. ECPELLA adds an Impella to ECMO, unloading while perfusing.</p>
+          <h3>Comparing loops and worked cases</h3>
+          <p>A ghost loop is stored automatically before the first drug, disease or device is chosen, so each new loop is drawn against its own baseline; snapshots can also be taken manually. Toggles hide the ESPVR, EDPVR and Ea lines, the phase labels and the animated tracing. The phase-label toggle also carries markers for mitral and aortic valve opening and closing, and renames any limb no longer isovolumic. Three worked examples load full scenarios, one of them cardiogenic shock supported with an Impella CP and dobutamine.</p>
+        </div>
+      </details>
 </body>
 </html>

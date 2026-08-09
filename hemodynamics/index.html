@@ -37,7 +37,10 @@
 <style>
 /* ===== RESET & BASE ===== */
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-html, body { height: 100%; overflow: hidden; }
+/* The document MUST scroll or the About section below the app is unreachable. The app
+   pane keeps its own fixed height and its inner panes already clip themselves, so the
+   no-scroll constraint does not belong on html/body. */
+html, body { min-height: 100%; }
 body {
   font-family: -apple-system, "Helvetica Neue", Helvetica, Arial, sans-serif;
   font-size: 14px;
@@ -374,6 +377,74 @@ input[type="range"]::-webkit-slider-thumb {
   .nav-tab { flex-shrink: 0; white-space: nowrap; padding: 0 10px; font-size: 11px; }
   .nav-right { display: none; }
 }
+
+/* ═══ Static About section (SEO checklist item 10) ═══ */
+.seo-section {
+  max-width: 880px;
+  margin: 16px auto 24px;
+  padding: 0;
+}
+.seo-section summary {
+  list-style: none;
+  cursor: pointer;
+  padding: 10px 16px;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  color: var(--text-muted);
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  border-radius: 8px;
+  border: 1px solid transparent;
+  transition: color 0.15s, background 0.15s, border-color 0.15s;
+  user-select: none;
+}
+.seo-section summary::-webkit-details-marker { display: none; }
+.seo-section summary::before {
+  content: '▸';
+  font-size: 10px;
+  display: inline-block;
+  transition: transform 0.2s;
+}
+.seo-section[open] summary::before { transform: rotate(90deg); }
+.seo-section summary:hover {
+  color: var(--text);
+  background: var(--panel-bg-2);
+  border-color: var(--border);
+}
+.seo-section[open] summary {
+  margin-bottom: 8px;
+}
+.seo-content-body {
+  padding: 24px 28px;
+  background: var(--panel-bg);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  font-size: 14.5px;
+  line-height: 1.65;
+  color: var(--text);
+  animation: seoFadeIn 0.25s ease-out;
+}
+@keyframes seoFadeIn { from { opacity: 0; transform: translateY(-4px); } to { opacity: 1; transform: translateY(0); } }
+.seo-content-body h3 {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--text);
+  margin: 24px 0 10px;
+  letter-spacing: -0.005em;
+}
+.seo-content-body h3:first-child { margin-top: 0; }
+.seo-content-body p {
+  margin: 0 0 14px;
+  color: var(--text-dim);
+}
+.seo-content-body strong {
+  color: var(--text);
+  font-weight: 600;
+}
+body.dark .seo-content-body { background: var(--panel-bg-2); }
+body.dark .seo-content-body p { color: #c4ccda; }
 </style>
 </head>
 <body>
@@ -1954,6 +2025,7 @@ function buildEquationsPanel() {
           <div class="mc-row">
             <label>SEP (sec)</label><input type="number" id="eqGorSEP" value="0.32" step="0.01" oninput="calcGorlin()">
             <label>Mean ΔP</label><input type="number" id="eqGorGrad" value="45" step="1" oninput="calcGorlin()">
+            <label>Peak-to-peak ΔP</label><input type="number" id="eqGorPeak" value="70" step="1" oninput="calcGorlin()">
           </div>
           <div class="mc-result" id="eqGorlinResult">AVA = —</div>
         </div>
@@ -2112,13 +2184,16 @@ function calcGorlin() {
   const co = (parseFloat(document.getElementById('eqGorCO').value) || 0) * 1000; // mL/min
   const hr = parseFloat(document.getElementById('eqGorHR').value) || 0;
   const sep = parseFloat(document.getElementById('eqGorSEP').value) || 0;
-  const grad = parseFloat(document.getElementById('eqGorGrad').value) || 0;
+  const grad = parseFloat(document.getElementById('eqGorGrad').value) || 0;   // MEAN — Gorlin
+  const peak = parseFloat(document.getElementById('eqGorPeak').value) || 0;   // PEAK-TO-PEAK — Hakki
   if (hr <= 0 || sep <= 0 || grad <= 0) { document.getElementById('eqGorlinResult').innerHTML = 'AVA = —'; return; }
   const ava = co / (44.3 * hr * sep * Math.sqrt(grad));
-  const hakki = (co / 1000) / Math.sqrt(grad);
+  // Hakki is CO / sqrt(peak-to-peak gradient). It used to be handed the mean, which is why
+  // this card and the AS lesson's calculator printed different areas for the same patient.
+  const hakki = peak > 0 ? (co / 1000) / Math.sqrt(peak) : null;
   let cls = ava < 1.0 ? 'eq-alert' : ava < 1.5 ? 'eq-warn' : 'eq-norm';
   document.getElementById('eqGorlinResult').innerHTML =
-    `AVA = <strong class="${cls}">${ava.toFixed(2)}</strong> cm² &nbsp;|&nbsp; Hakki = <strong>${hakki.toFixed(2)}</strong> cm²`;
+    `AVA = <strong class="${cls}">${ava.toFixed(2)}</strong> cm² (Gorlin, mean ΔP) &nbsp;|&nbsp; Hakki = <strong>${hakki !== null ? hakki.toFixed(2) : '—'}</strong> cm² (peak-to-peak ΔP)`;
 }
 
 function calcResistance() {
@@ -3062,5 +3137,21 @@ setTimeout(() => document.getElementById('resizeHandle').classList.add('pulse'),
 setTimeout(() => document.getElementById('resizeHandle').classList.remove('pulse'), 4000);
 
 </script>
+
+      <details class="seo-section">
+        <summary>About the Hemodynamic Waveform Simulator</summary>
+        <div class="seo-content-body">
+          <h3>What the simulator draws</h3>
+          <p>The simulator animates invasive pressure tracings on a scrolling cath lab canvas, with an ECG strip above them on the same time base for referencing wave timing to the P wave and QRS. Six tracings are modelled — right atrial, right ventricular, pulmonary artery, pulmonary capillary wedge, left ventricular and aortic — and each lesson turns on the relevant ones. Wave labels (a, c, v, x, y) toggle on and off, heart rate runs from 40 to 140 bpm, sweep speed is 25 or 50 mm/s, and Compare Normal ghosts the normal tracing behind the abnormal one. Twelve lessons sit in four groups: valvular, myopathic, pericardial and other.</p>
+          <h3>Valvular lessons</h3>
+          <p>Aortic stenosis shades the systolic LV-to-aortic gradient and teaches the parvus et tardus upstroke and the late systolic peak; severe disease is a mean gradient of 40 mmHg or more or a valve area of 1.0 cm² or less, plus a note on low-flow, low-gradient AS. Mitral stenosis shades the diastolic PCWP-to-LV gradient and covers the prominent a wave and slow y descent; 1.5 cm² or less is severe, 1.0 cm² or less very severe, and the mean gradient is rate-dependent rather than a severity criterion. Mitral regurgitation has an acute versus chronic toggle showing how left atrial compliance sets V wave height, and stresses that giant V waves are neither sensitive nor specific for severe MR. Aortic regurgitation covers wide pulse pressure, diastolic equalization and the AR index, (AoDBP − LVEDP) / AoSBP, below 25% marking significant regurgitation after TAVR. Tricuspid regurgitation shows the giant CV wave, loss of the x descent and ventricularization of the RA tracing.</p>
+          <h3>HOCM, constriction, restriction and tamponade</h3>
+          <p>HOCM reproduces the spike-and-dome aortic contour of dynamic LVOT obstruction, with a PVC trigger for the Brockenbrough-Braunwald-Morrow sign — pulse pressure falls after the extrasystole instead of rising as in fixed AS — and a provocation slider from Valsalva to phenylephrine; 30 mmHg at rest defines obstruction, 50 mmHg rest or provoked the septal reduction threshold. The three pericardial lessons share a respiration toggle: constriction shows dip-and-plateau filling, ventricular discordance and a systolic area index above 1.1; restrictive cardiomyopathy shows concordance, LVEDP exceeding RVEDP by more than 5 mmHg and PASP above 55; tamponade shows a blunted y descent with pulsus paradoxus.</p>
+          <h3>Pulmonary hypertension</h3>
+          <p>Pre-capillary, isolated post-capillary and combined profiles each recompute mean PA pressure, transpulmonary gradient, diastolic pressure gradient, PVR, the pulmonary artery pulsatility index and PA compliance from the tracing. Values are read against the 2022 ESC/ERS definitions: mPAP above 20 mmHg, with a wedge of 15 mmHg or less and PVR above 2 Wood units defining pre-capillary disease.</p>
+          <h3>The equations lesson</h3>
+          <p>The twelfth lesson collects the bedside math with worked mini-calculators: Fick cardiac output, Qp/Qs using the Flamm mixed venous estimate, the Gorlin valve area equation and the Hakki shortcut, systemic and pulmonary vascular resistance, the AR index, the systolic area index, PAPi and the diastolic pressure gradient. Tracings are generated from a parameter model, not recorded from a patient.</p>
+        </div>
+      </details>
 </body>
 </html>

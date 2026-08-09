@@ -1373,14 +1373,56 @@ function generateBeat(lead, hr, vessel, phase, opts) {
   const sp = spKey ? SPECIAL_PATTERNS[spKey] : null;
 
   // Use LBBB params if Sgarbossa pattern active
-  const params = (sp && sp.lbbb && !opts.useNormal) ? (LBBB_PARAMS[lead] || NORMAL[lead]) : NORMAL[lead];
+  let params = (sp && sp.lbbb && !opts.useNormal) ? (LBBB_PARAMS[lead] || NORMAL[lead]) : NORMAL[lead];
   if (!params) return [];
 
-  // QT correction (simplified Bazett)
+  // ── ABSOLUTE-DURATION TIMING ────────────────────────────────────────────────
+  // The NORMAL template expresses every centre and width as a fraction of the beat, so P, PR
+  // and QRS all scaled with RR: at HR 140 the QRS rendered 17 ms and the PR 48 ms. Depolarisation
+  // is a conduction time and does not shorten with rate the way repolarisation does — only QT is
+  // rate-dependent, and that is already handled by Bazett below.
+  //
+  // Treat the template as milliseconds on a 1000 ms beat, re-time it to physiologic durations
+  // once, then convert to a fraction of the LIVE beat. TIMING_MS is what the tuned constants
+  // below are expressed in; MS_TO_FRAC carries them onto whatever beat is currently drawn.
+  const TEMPLATE_MS = 1000;
+  const MS_TO_FRAC  = 1 / (rr * 1000);
+  const P_WIDEN   = 1.18;   // P duration -> ~90-100 ms
+  const QRS_WIDEN = 2.30;   // QRS duration -> ~90-100 ms
+  // PR shortens with sympathetic tone, and at high rates a fixed 160 ms plus a Bazett QT no
+  // longer fits inside the beat. Compress toward a 100 ms floor only when it has to.
+  const qtMsEarly = 0.40 * Math.sqrt(rr) * 1000;
+  const beatMsNow = rr * 1000;
+  const needMs    = 100 + 160 + qtMsEarly;
+  const PR_MS     = needMs > beatMsNow ? Math.max(100, 160 - (needMs - beatMsNow)) : 160;
+  const tmplQOnset = params.Q[1] * TEMPLATE_MS - params.Q[2] * TEMPLATE_MS * 1.5;
+  const tmplPOnset = params.P[1] * TEMPLATE_MS - params.P[2] * TEMPLATE_MS * 2.0;
+  const qOnsetMs   = tmplPOnset + PR_MS;
+  // Re-time one [amp, centre, width] triple. QRS components widen about the QRS onset so the
+  // PR interval stays fixed; P widens about its own centre.
+  const reTime = (c, kind) => {
+    if (!c) return c;
+    const cMs = c[1] * TEMPLATE_MS, wMs = c[2] * TEMPLATE_MS;
+    if (kind === 'qrs') return [c[0], (qOnsetMs + (cMs - tmplQOnset) * QRS_WIDEN) * MS_TO_FRAC, wMs * QRS_WIDEN * MS_TO_FRAC];
+    if (kind === 'p')   return [c[0], cMs * MS_TO_FRAC, wMs * P_WIDEN * MS_TO_FRAC];
+    return [c[0], cMs * MS_TO_FRAC, wMs * MS_TO_FRAC];
+  };
+  params = Object.assign({}, params, {
+    P:    reTime(params.P,    'p'),
+    Pneg: reTime(params.Pneg, 'p'),
+    Q:    reTime(params.Q,    'qrs'),
+    R:    reTime(params.R,    'qrs'),
+    S:    reTime(params.S,    'qrs'),
+    R2:   reTime(params.R2,   'qrs'),
+    T:    reTime(params.T,    't'),
+  });
+
+  // QT correction (simplified Bazett) — anchored to the re-timed R wave so the ST segment
+  // stays attached to the QRS instead of to a fixed 0.195.
   const qtBase = 0.40;
   const qtCorrected = qtBase * Math.sqrt(rr);
   const qtFraction = qtCorrected / rr;
-  const tCenter = 0.195 + qtFraction * 0.55;
+  const tCenter = params.R[1] + qtFraction * 0.55;
 
   // Key timing landmarks (as fraction of beat)
   const qrsStart = params.Q[1] - params.Q[2] * 1.5;
@@ -1451,16 +1493,23 @@ function generateBeat(lead, hr, vessel, phase, opts) {
       if (tMultiplier !== 1) {
         const tVal = tWave(t, tCenter, params.T[2], params.T[0]);
         if (Math.abs(tVal) > 0.005) {
-          let addition;
-          if (phaseTMult < 0) {
-            // Inversion: target net T = tVal × phaseTMult
-            // addition = tVal × (phaseTMult - 1) to cancel original + invert
-            addition = tVal * (phaseTMult - 1);
+          // Net T multiplier, then REPLACE the T rather than add a scaled copy of it.
+          // The old branch keyed only on the phase multiplier's sign and ignored the vessel's,
+          // so a lead whose tMult is negative (aVL at -1.2 = intended reciprocal T inversion)
+          // never inverted while the phase was positive — and in the chronic phase, with a
+          // positive phase multiplier, it came out TALLER than normal.
+          let netMult;
+          if (tMultiplier < 0) {
+            // The vessel asks for inversion. Magnitude tracks the phase, sign stays negative.
+            netMult = tMultiplier * Math.abs(phaseTMult);
+          } else if (phaseTMult < 0) {
+            // The phase asks for inversion (evolving / subacute T-wave inversion).
+            netMult = phaseTMult;
           } else {
-            // Amplification: boost T by vessel multiplier
-            addition = tVal * tMultiplier * (phaseTMult - 1) * 0.5;
+            // Both positive: amplification, damped so hyperacute T waves stay on the page.
+            netMult = 1 + (tMultiplier * phaseTMult - 1) * 0.5;
           }
-          data[i] += addition;
+          data[i] += tVal * (netMult - 1);
         }
       }
       if (qAdd !== 0) {

@@ -601,7 +601,7 @@
     <h1>RHC Hemodynamic Calculator</h1>
   </div>
   <div class="header-btns">
-    <button onclick="loadExample()">Load Example</button>
+    <button onclick="loadExample()">Load RHC Example</button>
     <button onclick="clearAll()">Clear All</button>
   </div>
 </div>
@@ -1040,6 +1040,11 @@
   <div class="section" id="shuntInputSection" style="display:none;">
     <div class="section-head">Shunt Oximetry Run</div>
     <div class="section-body">
+
+      <div style="margin-bottom:8px;">
+        <button onclick="loadShuntExample()">Load Shunt Example</button>
+        <span class="hint" style="margin-left:8px;">ASD with PH — a different patient from the RHC example</span>
+      </div>
 
       <div class="info-box" style="font-size:11px; margin-bottom:8px;">
         <b>Workflow:</b> On routine RHC, draw <b>1 SVC + 1 PA</b> sample. If PA sat is ≥ 8% higher than SVC → significant L→R shunt suspected → perform full oximetry run below to localize the shunt level and quantify Qp/Qs.
@@ -1699,8 +1704,24 @@ function handleVo2Source() {
   }
 }
 
+// Re-derives the VO2 field for whichever source computes it. calc() calls this on every
+// keystroke, which is what keeps the estimate honest when an upstream input changes.
 function calcLaFarge() {
   const src = document.getElementById('vo2source').value;
+
+  // "Estimated (125 mL/min/m2)" used to be written once, from handleVo2Source(), and then
+  // never again -- so correcting BSA after choosing it left the old VO2 in the field while
+  // the hint still read "VO2 = 125 x BSA". Fick CO, CI, SV, SVI, PVR, SVR and CPO all
+  // inherited that stale number silently. Recompute it here, on every calc().
+  if (src === 'estimated') {
+    const bsaEst = v('bsa');
+    document.getElementById('vo2').value = (bsaEst !== null && bsaEst > 0)
+      ? (125 * bsaEst).toFixed(1) : '';
+    document.getElementById('vo2_per_m2').textContent = (bsaEst !== null && bsaEst > 0)
+      ? '(125 mL/min/m² assumed)' : '';
+    return;
+  }
+
   if (src !== 'lafarge') return;
 
   const age = v('age');
@@ -1789,19 +1810,15 @@ function calc() {
     fickCO = vo2 / (avo2 * 10);
   }
   if (fickCO !== null && bsa !== null && bsa > 0) fickCI = fickCO / bsa;
-  if (fickCO !== null && hr !== null && hr > 0) sv = (fickCO * 1000) / hr;
-  if (sv !== null && bsa !== null && bsa > 0) svi = sv / bsa;
+  // NB: sv / svi are deliberately NOT derived here. They belong to whichever CO the user
+  // selected, and that choice is not known until the TD block below has run.
 
   setText('r_fick_co', fmt(fickCO));
   setText('r_fick_ci', fmt(fickCI));
-  setText('r_sv', fmt(sv, 1));
-  setText('r_svi', fmt(svi, 1));
 
   // Fick flags
   flagValue('f_fick_co', fickCO, 4, 8, 'L/min');
   flagValue('f_fick_ci', fickCI, 2.5, 4.0, 'CI');
-  flagValue('f_sv', sv, 60, 100, 'SV');
-  flagValue('f_svi', svi, 33, 47, 'SVI');
 
   // --- TD ---
   let tdCI = null;
@@ -1828,6 +1845,19 @@ function calc() {
   const coLabel = useFick ? '(using Fick CO)' : '(using TD CO)';
   setText('derivedLabel', coLabel);
   setText('derivedLabel2', coLabel);
+
+  // Stroke volume follows the SELECTED cardiac output, like every other derived value.
+  // It used to be hard-wired to fickCO, so a TD study printed a Fick-derived SV/SVI -- and
+  // RVSWI, which is built on SVI -- under a heading that read "using TD CO". With a 35%
+  // Fick-TD discordance that is enough to flip the RVSWI flag between Normal and LOW. It
+  // also meant a pure TD study with no oximetry showed "—" for SV, SVI and RVSWI even
+  // though CO, HR and BSA were all present.
+  if (co !== null && hr !== null && hr > 0) sv = (co * 1000) / hr;
+  if (sv !== null && bsa !== null && bsa > 0) svi = sv / bsa;
+  setText('r_sv', fmt(sv, 1));
+  setText('r_svi', fmt(svi, 1));
+  flagValue('f_sv', sv, 60, 100, 'SV');
+  flagValue('f_svi', svi, 33, 47, 'SVI');
 
   // --- Pulmonary hemodynamics ---
   let tpg = null, dpg = null, pvr = null, pvrDyn = null, pvri = null;
@@ -1933,12 +1963,19 @@ function calc() {
     // LVEDP vs PCWP discordance
     const lvedpPcwpEl = document.getElementById('lvedpPcwpCheck');
     if (lv_edp !== null && pcwp_mean !== null) {
+      // The two directions have OPPOSITE causes and must not share one message. Mitral
+      // stenosis and a stiff LA raise mean PCWP ABOVE LVEDP (that is what a transmitral
+      // diastolic gradient means), so listing them under LVEDP > PCWP was backwards — and
+      // the direction that actually signals MS was never flagged at all.
       const diff = lv_edp - pcwp_mean;
       if (diff > 5) {
-        lvedpPcwpEl.innerHTML = `<div class="warning-box">LVEDP–PCWP discordance: LVEDP ${lv_edp} − PCWP ${pcwp_mean} = ${diff} mmHg (> 5). Consider stiff LA, mitral stenosis, or non-compliant LV.</div>`;
+        lvedpPcwpEl.innerHTML = `<div class="warning-box">LVEDP–PCWP discordance: LVEDP ${lv_edp} − PCWP ${pcwp_mean} = +${diff} mmHg (> 5). LVEDP exceeds mean wedge — consider a non-compliant LV (LVEDP is measured after atrial kick, mean PCWP averages the whole cycle), aortic regurgitation with premature mitral valve closure, or an under-wedged / damped PCWP.</div>`;
+        lvedpPcwpEl.style.display = 'block';
+      } else if (diff < -5) {
+        lvedpPcwpEl.innerHTML = `<div class="warning-box">LVEDP–PCWP discordance: PCWP ${pcwp_mean} − LVEDP ${lv_edp} = ${-diff} mmHg (> 5). Mean wedge exceeds LVEDP — consider mitral stenosis (diastolic transmitral gradient), a stiff LA or large v waves (significant MR), pulmonary vein obstruction, or an over-wedged / damped tracing.</div>`;
         lvedpPcwpEl.style.display = 'block';
       } else {
-        lvedpPcwpEl.innerHTML = `<div class="info-box">LVEDP–PCWP concordant (difference ${diff} mmHg ≤ 5).</div>`;
+        lvedpPcwpEl.innerHTML = `<div class="info-box">LVEDP–PCWP concordant (difference ${diff} mmHg, within ±5).</div>`;
         lvedpPcwpEl.style.display = 'block';
       }
     } else {
@@ -2784,11 +2821,20 @@ function buildCopyText(bsa, hb, hr, o2k, useDissolved,
   t += '\nFICK CARDIAC OUTPUT CALCULATION\n';
   if (hb !== null) t += `Hb (CBC): ${n(hb,1)} g/dL\n`;
   t += `O₂ binding constant: ${o2k} mL O₂/g Hb\n`;
+  if (useDissolved) t += `Dissolved O₂ included (CaO₂ and CvO₂ each carry + 0.0031 × PO₂)\n`;
   if (cao2 !== null) t += `CaO₂: ${n(cao2)} mL O₂/dL\n`;
   if (cvo2 !== null) t += `CvO₂: ${n(cvo2)} mL O₂/dL\n`;
   if (avo2 !== null) t += `a-vO₂ difference: ${n(avo2)} mL O₂/dL\n`;
   t += '\n';
-  if (fickCO !== null) t += `Fick CO = ${n(vo2,1)} / (${n(hb,1)} × ${n(o2k * 10, 1)} × (${n(sao2_pct !== null ? sao2_pct/100 : null, 3)} - ${n(svo2_pct !== null ? svo2_pct/100 : null, 3)})) = ${n(fickCO)} L/min\n`;
+  // The report used to re-implement the Fick expression from Hb and the saturations alone.
+  // With "Include dissolved O₂" checked the panel divides by an a-vO₂ that carries the two
+  // 0.0031 × PO₂ terms, so the printed formula did not evaluate to the printed CO and
+  // contradicted the a-vO₂ line three rows above it. Derive from the a-vO₂ actually used.
+  if (fickCO !== null) {
+    t += useDissolved
+      ? `Fick CO = VO₂ / (a-vO₂ × 10) = ${n(vo2,1)} / (${n(avo2)} × 10) = ${n(fickCO)} L/min\n`
+      : `Fick CO = ${n(vo2,1)} / (${n(hb,1)} × ${n(o2k * 10, 1)} × (${n(sao2_pct !== null ? sao2_pct/100 : null, 3)} - ${n(svo2_pct !== null ? svo2_pct/100 : null, 3)})) = ${n(fickCO)} L/min\n`;
+  }
   if (fickCI !== null) t += `Fick CI = ${n(fickCO)} / ${n(bsa)} = ${n(fickCI)} L/min/m²\n`;
 
   if (td_co !== null) {
@@ -2989,7 +3035,45 @@ function loadExample() {
   document.getElementById('td3').value = '1.45';
   calcTD();
 
-  // Shunt oximetry example (ASD with PH — Hanna & Glancy, Ch. III)
+  // The shunt oximetry run is a DIFFERENT patient and is no longer loaded here — see
+  // loadShuntExample(). Loading both left one dataset describing two people: this case's
+  // PA saturation is 53.6% (SvO2 field) while the ASD run's PA main sat is 84%, so the same
+  // form computed pulmonary blood flow as both 2.44 and 10.89 L/min depending on the tab.
+  ['svc_high','svc_low','ivc_sat','ra_high_sat','ra_mid_sat','ra_low_sat',
+   'rv_mid_sat','rvot_sat','pa_main_sat','pa_left_sat','pa_right_sat'].forEach(id => {
+    const el = document.getElementById(id); if (el) el.value = '';
+  });
+  document.getElementById('fio2').value = '21';
+
+  // Gorlin valve area example (low-flow low-gradient severe AS, severe MS)
+  document.getElementById('ava_gradient').value = '25';
+  document.getElementById('ava_ejtime').value = '0.32';
+  calcSEP();
+  document.getElementById('mva_gradient').value = '10';
+  document.getElementById('mva_filltime').value = '0.45';
+  calcDFP();
+
+  calc();
+}
+
+// ===================== SHUNT EXAMPLE =====================
+// A separate patient from loadExample(): ASD with pulmonary hypertension (Hanna & Glancy,
+// Ch. III). It has to set the systemic and mixed-venous saturations itself, because in a
+// left-to-right shunt the PA saturation IS the post-shunt value — so SvO2 is set to the PA
+// main sat of 84%. That makes the RHC tab's Fick flow and the Shunts tab's Qp the same
+// number for the same patient, which is the whole point.
+function loadShuntExample() {
+  document.getElementById('age').value = '34';
+  document.getElementById('sex').value = 'female';
+  document.getElementById('bsa').value = '1.68';
+  document.getElementById('hb').value = '14.3';
+  document.getElementById('hr').value = '82';
+  document.getElementById('vo2source').value = 'lafarge';
+  handleVo2Source();
+
+  document.getElementById('sao2').value = '92.8';
+  document.getElementById('svo2').value = '84';   // = PA main sat: post-shunt pulmonary artery
+
   document.getElementById('svc_high').value = '70';
   document.getElementById('svc_low').value = '83';
   document.getElementById('ivc_sat').value = '74';
@@ -3005,14 +3089,7 @@ function loadExample() {
   handlePvO2Source();
   document.getElementById('fio2').value = '21';
 
-  // Gorlin valve area example (low-flow low-gradient severe AS, severe MS)
-  document.getElementById('ava_gradient').value = '25';
-  document.getElementById('ava_ejtime').value = '0.32';
-  calcSEP();
-  document.getElementById('mva_gradient').value = '10';
-  document.getElementById('mva_filltime').value = '0.45';
-  calcDFP();
-
+  switchTab('shunt');
   calc();
 }
 
@@ -3049,6 +3126,7 @@ function toggleDark() {
   btn.textContent = isDark ? 'Light Mode' : 'Dark Mode';
   try { localStorage.setItem('cathmath_dark', isDark ? '1' : '0'); } catch(e) {}
   handleVo2Source();
+  calc();   // handleVo2Source can rewrite the VO2 field; recompute so nothing goes stale
 }
 // Default to dark mode (unless explicitly set to light)
 try {
@@ -3222,7 +3300,9 @@ function buildRhcInterpretation(ci, fickCI, tdCI, useFick, ra_mean, pcwp_mean, p
     if (pcwp_mean !== null) {
       const diff = lv_edp - pcwp_mean;
       if (diff > 5) {
-        bullets.push({type:'warn', text:`LVEDP\u2013PCWP discordance: ${lv_edp} \u2212 ${pcwp_mean} = ${diff} mmHg (> 5). Consider stiff LA, mitral stenosis, or non-compliant LV.`});
+        bullets.push({type:'warn', text:`LVEDP\u2013PCWP discordance: LVEDP ${lv_edp} \u2212 PCWP ${pcwp_mean} = +${diff} mmHg. LVEDP above mean wedge \u2014 non-compliant LV, AR with premature MV closure, or an under-wedged PCWP.`});
+      } else if (diff < -5) {
+        bullets.push({type:'warn', text:`LVEDP\u2013PCWP discordance: PCWP ${pcwp_mean} \u2212 LVEDP ${lv_edp} = ${-diff} mmHg. Mean wedge above LVEDP \u2014 mitral stenosis, stiff LA / large v waves (MR), pulmonary vein obstruction, or an over-wedged tracing.`});
       }
     }
   }
