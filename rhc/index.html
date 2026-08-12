@@ -1176,7 +1176,7 @@
         <span class="result-label">a-vO₂ diff</span>
         <span class="result-value" id="r_avo2">—</span>
         <span class="result-unit">mL O₂/dL</span>
-        <span class="result-range">normal: 3.5–5.0</span>
+        <span class="result-range">normal: 3.5–5.5</span>
       </div>
     </div>
   </div>
@@ -1250,7 +1250,7 @@
         <span class="result-label">DPG</span>
         <span class="result-value" id="r_dpg">—</span>
         <span class="result-unit">mmHg</span>
-        <span class="result-range">normal: ≤ 7; &gt;7 → pre-cap component</span>
+        <span class="result-range">dPAP − PCWP; not used in the 2022 classification</span>
       </div>
       <div class="result-row">
         <span class="result-label">PVR</span>
@@ -1402,7 +1402,7 @@
         </table>
       </div>
 
-      <div class="pearl-box" style="font-size:11px; margin-top:4px;">
+      <div class="info-box" style="font-size:11px; margin-top:4px;">
         <b>Gorlin is flow-dependent.</b> Low CO → falsely small valve area. Tachycardia → major effect on MVA (short DFP), minimal on AVA. Use Fick CO for Gorlin.
       </div>
 
@@ -1722,7 +1722,15 @@ function calcLaFarge() {
     return;
   }
 
-  if (src !== 'lafarge') return;
+  if (src !== 'lafarge') {
+    // Measured / manual: show the index of whatever VO2 the user actually entered rather than
+    // leaving a stale LaFarge index on screen.
+    const bsaAny = v('bsa'), vo2Any = v('vo2');
+    document.getElementById('vo2_per_m2').textContent =
+      (vo2Any !== null && bsaAny !== null && bsaAny > 0)
+        ? `(${(vo2Any / bsaAny).toFixed(1)} mL/min/m²)` : '';
+    return;
+  }
 
   const age = v('age');
   const hr = v('hr');
@@ -1792,11 +1800,13 @@ function calc() {
   let cao2 = null, cvo2 = null, avo2 = null;
   if (hb !== null && sao2 !== null) {
     cao2 = hb * o2k * sao2;
-    if (useDissolved && pao2 !== null) cao2 += 0.0031 * pao2;
+    // Both sides or neither: adding 0.0031 x PaO2 without the matching PvO2 term inflates the
+    // a-vO2 difference and drives the Fick CO down for no physiologic reason.
+    if (useDissolved && pao2 !== null && pvo2 !== null) cao2 += 0.0031 * pao2;
   }
   if (hb !== null && svo2 !== null) {
     cvo2 = hb * o2k * svo2;
-    if (useDissolved && pvo2 !== null) cvo2 += 0.0031 * pvo2;
+    if (useDissolved && pao2 !== null && pvo2 !== null) cvo2 += 0.0031 * pvo2;
   }
   if (cao2 !== null && cvo2 !== null) avo2 = cao2 - cvo2;
 
@@ -1883,7 +1893,7 @@ function calc() {
       if (pcwp_mean <= 15 && pvr > 2) phType = 'Pre-capillary PH';
       else if (pcwp_mean > 15 && pvr <= 2) phType = 'Isolated post-capillary PH (IpcPH)';
       else if (pcwp_mean > 15 && pvr > 2) phType = 'Combined pre & post-capillary PH (CpcPH)';
-      else phType = 'Elevated mPAP with normal PCWP and PVR — exercise PH or borderline';
+      else phType = 'Unclassified PH (2022 ESC/ERS): mPAP > 20 with PAWP ≤ 15 and PVR ≤ 2 — consider a high-output state (anemia, thyrotoxicosis, liver disease, systemic shunt) or borderline/technical values. Exercise PH is a separate entity defined by an mPAP/CO slope > 3 mmHg/L/min and cannot be diagnosed from resting values';
       phDiv.innerHTML = `<div class="warning-box"><b>PH Classification (2022 ESC/ERS):</b> ${phType}</div>`;
     } else {
       phDiv.innerHTML = `<div class="info-box">mPAP ≤ 20 — no pulmonary hypertension by hemodynamic criteria.</div>`;
@@ -2260,7 +2270,8 @@ function calcShunt() {
   const vo2 = v('vo2');
   const o2k = parseFloat(document.getElementById('o2const').value);
   const sao2_pct = v('sao2');
-  const sao2 = sao2_pct !== null ? sao2_pct / 100 : null;
+  // Same >100% guard calc() applies — an impossible saturation must not silently drive Qp/Qs.
+  const sao2 = (sao2_pct !== null && sao2_pct <= 100) ? sao2_pct / 100 : null;
   const pa_mean = v('pa_mean');
   const pcwp_mean = v('pcwp_mean');
   const ao_mean = v('ao_mean');
@@ -2387,7 +2398,7 @@ function calcShunt() {
   const pvo2SrcEl = document.getElementById('pvo2_source');
   const pvo2SrcText = pvo2SrcEl.options[pvo2SrcEl.selectedIndex].text;
   if (pvo2_src === 'assume_sa') {
-    pvo2_pct = sao2_pct;
+    pvo2_pct = (sao2_pct !== null && sao2_pct <= 100) ? sao2_pct : null;
     pvo2_label = 'Assumed = SaO₂';
   } else if (pvo2_src === 'assume_98') {
     pvo2_pct = 98;
@@ -2670,6 +2681,29 @@ function buildQualityChecks(hb, sao2, svo2, avo2, fickCO, td_co, vo2, ra_mean, p
   const el = document.getElementById('qualityChecks');
   const checks = [];
 
+  // LaFarge validity domain. It was derived by LaFarge & Miettinen in patients aged 3-40, and
+  // the equation is the DEFAULT VO2 source here, so an adult study silently extrapolates.
+  const lfAge = v('age');
+  if (document.getElementById('vo2source').value === 'lafarge' && lfAge !== null) {
+    if (lfAge > 40) checks.push({type:'warn', msg:`LaFarge was derived in patients aged 3–40 y; at age ${lfAge.toFixed(0)} the estimate is extrapolated. Prefer a measured VO₂ (metabolic cart) when cardiac output drives management.`});
+    else if (lfAge < 3) checks.push({type:'error', msg:`LaFarge is not valid below age 3 (entered ${lfAge.toFixed(0)}). Use a measured VO₂.`});
+  }
+
+  // Systole + diastole cannot exceed the minute. A SEP + DFP above 60 sec/min means an ejection
+  // or filling time was entered in the wrong units (ms instead of sec/beat is the usual slip),
+  // and Gorlin will happily return a confident "critical" valve area from it.
+  const sepQ = v('ava_sep'), dfpQ = v('mva_dfp');
+  if (sepQ !== null && sepQ > 60) checks.push({type:'error', msg:`SEP ${sepQ.toFixed(1)} sec/min exceeds 60 — impossible. Ejection time is entered per BEAT in seconds (e.g. 0.32), not milliseconds. Gorlin AVA is invalid.`});
+  if (dfpQ !== null && dfpQ > 60) checks.push({type:'error', msg:`DFP ${dfpQ.toFixed(1)} sec/min exceeds 60 — impossible. Filling time is entered per BEAT in seconds (e.g. 0.32), not milliseconds. Gorlin MVA is invalid.`});
+  if (sepQ !== null && dfpQ !== null && sepQ + dfpQ > 60) checks.push({type:'error', msg:`SEP + DFP = ${(sepQ+dfpQ).toFixed(1)} sec/min. Systole and diastole together cannot exceed 60 sec/min — check the ejection and filling times against the cycle length (60/HR).`});
+
+  // The RHC tab treats the PA saturation as mixed venous. That is only true without a
+  // left-to-right shunt: with one, VO2 / (CaO2 - CpaO2) is Qp, not systemic cardiac output.
+  const svcQ = v('svc_high'), paQ = v('pa_main_sat');
+  if (svcQ !== null && paQ !== null && (paQ - svcQ) >= 8) {
+    checks.push({type:'error', msg:`SVC ${svcQ.toFixed(1)}% → PA ${paQ.toFixed(1)}% is a ${(paQ-svcQ).toFixed(1)}% step-up (≥ 8%). With a left-to-right shunt the PA saturation is NOT mixed venous — the Fick value above is pulmonary blood flow (Qp), not systemic output. Use the Shunts tab and a Flamm mixed venous.`});
+  }
+
   // Decimal entry detection (Bug 1)
   if (sao2_pct !== null && sao2_pct < 20) {
     checks.push({type:'error', msg:`SaO₂ entered as ${sao2_pct} — did you enter as a decimal (e.g. 0.97) instead of percentage (97)?`});
@@ -2850,8 +2884,10 @@ function buildCopyText(bsa, hb, hr, o2k, useDissolved,
   if (dpg !== null) t += `DPG = ${n(pa_dia,0)} - ${n(pcwp_mean,0)} = ${n(dpg,0)} mmHg\n`;
   if (pvr !== null) t += `PVR = ${n(tpg,0)} / ${useFick ? n(fickCO) : n(td_co)} = ${n(pvr)} Wood units\n`;
   if (pvrDyn !== null) t += `    = ${n(pvrDyn,0)} dyn·s·cm⁻⁵\n`;
+  if (pvri !== null) t += `PVRI = ${n(tpg,0)} / ${useFick ? n(fickCI) : n(tdCI)} = ${n(pvri)} WU·m²\n`;
   if (svr !== null) t += `SVR = (${n(ao_mean,0)} - ${n(ra_mean,0)}) / ${useFick ? n(fickCO) : n(td_co)} = ${n(svr)} Wood units\n`;
   if (svrDyn !== null) t += `    = ${n(svrDyn,0)} dyn·s·cm⁻⁵\n`;
+  if (svri !== null) t += `SVRI = (${n(ao_mean,0)} - ${n(ra_mean,0)}) / ${useFick ? n(fickCI) : n(tdCI)} = ${n(svri)} WU·m²\n`;
   if (papi !== null) t += `PAPi = (${n(pa_sys,0)} - ${n(pa_dia,0)}) / ${n(ra_mean,0)} = ${n(papi)}\n`;
   if (rvswi !== null) t += `RVSWI = (${n(pa_mean,0)} - ${n(ra_mean,0)}) × ${n(svi,1)} × 0.0136 = ${n(rvswi)} g·m/m²/beat\n`;
   if (cpo !== null) t += `CPO = ${n(ao_mean,0)} × ${useFick ? n(fickCO) : n(td_co)} / 451 = ${n(cpo)} W\n`;
@@ -3049,8 +3085,8 @@ function loadExample() {
   document.getElementById('ava_gradient').value = '25';
   document.getElementById('ava_ejtime').value = '0.32';
   calcSEP();
-  document.getElementById('mva_gradient').value = '10';
-  document.getElementById('mva_filltime').value = '0.45';
+  document.getElementById('mva_gradient').value = '4';   // must be consistent with PCWP 15 / LVEDP 18
+  document.getElementById('mva_filltime').value = '0.27';  // 0.32 + 0.27 fits inside the 0.682 s cycle at HR 88
   calcDFP();
 
   calc();
@@ -3371,16 +3407,22 @@ function buildShuntInterpretation(svc_ref, pa_sat, ra_mean_sat, rv_mean_sat, qpq
   // 3. Shunt direction and magnitude
   if (qpqs !== null) {
     let dir = '', mag = '', qpqs_type = 'info';
-    if (qpqs > 1.0) {
-      // L→R
-      mag = qpqs >= 2.0 ? 'large' : qpqs >= 1.5 ? 'moderate' : 'small';
-      dir = `Net left-to-right shunt: Qp/Qs ${n(qpqs,2)} (${mag}).`;
-      qpqs_type = qpqs >= 2.0 ? 'error' : qpqs >= 1.5 ? 'warn' : 'info';
-    } else if (qpqs < 0.95) {
-      dir = `Net right-to-left shunt: Qp/Qs ${n(qpqs,2)}. Check for R\u2192L shunt lesion or Eisenmenger physiology.`;
+    // One Qp/Qs scale across the site (matches the badge, the on-screen table, Echo Calc and
+    // the hemodynamics equations card): < 1.0 R->L, 1.0-1.5 not significant, 1.5-2.0 significant,
+    // >= 2.0 large. The old form called 1.0-1.5 a "small left-to-right shunt" while the table
+    // beside it called the same ratio not significant.
+    if (qpqs >= 2.0) {
+      dir = `Net left-to-right shunt: Qp/Qs ${n(qpqs,2)} (large \u2014 at or above the usual surgical threshold).`;
       qpqs_type = 'error';
+    } else if (qpqs >= 1.5) {
+      dir = `Net left-to-right shunt: Qp/Qs ${n(qpqs,2)} (significant).`;
+      qpqs_type = 'warn';
+    } else if (qpqs >= 1.0) {
+      dir = `No significant net shunt: Qp/Qs ${n(qpqs,2)} (< 1.5).`;
+      qpqs_type = 'info';
     } else {
-      dir = `No significant net shunt: Qp/Qs ${n(qpqs,2)}.`;
+      dir = `Net right-to-left shunt: Qp/Qs ${n(qpqs,2)}. Check for an R\u2192L shunt lesion or Eisenmenger physiology.`;
+      qpqs_type = 'error';
     }
     bullets.push({type: qpqs_type, text: dir});
   }

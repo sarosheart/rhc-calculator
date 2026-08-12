@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>iASD Doppler &mdash; Echo Estimate of Peak LA Pressure</title>
+<style>
+  @page { size: letter; margin: 0.35in 0.4in 0.5in 0.4in; }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+    font-size: 8.1pt;
+    line-height: 1.25;
+    color: #1a1a1a;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  .page-title {
+    text-align: center;
+    font-size: 13pt;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    margin-bottom: 2px;
+    color: #0d2240;
+  }
+  .subtitle {
+    text-align: center;
+    font-size: 7.6pt;
+    color: #555;
+    margin-bottom: 6px;
+    font-style: italic;
+  }
+
+  .cols { display: flex; gap: 10px; }
+  .col { flex: 1; }
+
+  .section {
+    border: 1px solid #b0c4de;
+    border-radius: 4px;
+    margin-bottom: 5px;
+    overflow: hidden;
+  }
+  .section-head {
+    background: #0d2240;
+    color: #fff;
+    font-size: 7.9pt;
+    font-weight: 700;
+    padding: 2.5px 6px;
+    letter-spacing: 0.4px;
+    text-transform: uppercase;
+  }
+  .section-body { padding: 3px 7px; }
+
+  .formula-box {
+    background: #f0f4fa;
+    border: 1.5px solid #4a7ab5;
+    border-radius: 4px;
+    text-align: center;
+    padding: 5px 4px;
+    margin: 3px 0;
+    font-size: 9.8pt;
+    font-weight: 600;
+    color: #0d2240;
+  }
+  .formula-box.small { font-size: 8.7pt; }
+
+  .def-grid {
+    display: grid;
+    grid-template-columns: 80px 1fr;
+    gap: 1px 6px;
+    font-size: 7.7pt;
+    margin: 3px 0;
+  }
+  .def-grid .lbl { font-weight: 700; color: #0d2240; }
+
+  ul.compact { padding-left: 13px; margin: 2px 0; }
+  ul.compact li { margin-bottom: 1px; }
+  ol.compact { padding-left: 16px; margin: 2px 0; }
+  ol.compact li { margin-bottom: 1px; }
+
+  .pearl-box {
+    background: #fffde7;
+    border-left: 3px solid #f9a825;
+    padding: 3px 6px;
+    margin: 2px 0;
+    font-size: 7.6pt;
+  }
+  .pearl-box b { color: #b71c1c; }
+
+  .pitfall-box {
+    background: #fbe9e7;
+    border-left: 3px solid #c62828;
+    padding: 3px 6px;
+    margin: 2px 0;
+    font-size: 7.6pt;
+  }
+  .pitfall-box b { color: #b71c1c; }
+
+  .anchor-box {
+    background: #e8f5e9;
+    border: 1.5px solid #4caf50;
+    border-radius: 4px;
+    padding: 5px 7px;
+    margin: 4px 0;
+    font-size: 8pt;
+  }
+  .anchor-box .anchor-title {
+    font-weight: 700;
+    color: #2e7d32;
+    margin-bottom: 2px;
+  }
+
+  .step-row {
+    display: grid;
+    grid-template-columns: 22px 1fr;
+    gap: 2px 6px;
+    margin: 3px 0;
+    font-size: 7.9pt;
+  }
+  .step-row .step-num {
+    background: #0d2240;
+    color: #fff;
+    border-radius: 50%;
+    width: 17px;
+    height: 17px;
+    text-align: center;
+    line-height: 17px;
+    font-size: 7.5pt;
+    font-weight: 700;
+  }
+
+  .answer-box {
+    background: #e8f5e9;
+    border: 2px solid #2e7d32;
+    border-radius: 5px;
+    padding: 5px 8px;
+    margin: 4px 0;
+    font-size: 9.2pt;
+    text-align: center;
+    color: #1b5e20;
+    font-weight: 700;
+  }
+  .answer-box .ans-lbl { font-size: 7.5pt; color: #2e7d32; font-weight: 600; display: block; margin-bottom: 2px; letter-spacing: 0.3px; }
+
+  .image-frame {
+    border: 1px solid #b0c4de;
+    border-radius: 3px;
+    padding: 2px;
+    background: #000;
+    text-align: center;
+    margin: 3px 0;
+  }
+  .image-frame img { max-width: 100%; max-height: 200px; display: block; margin: 0 auto; }
+  .image-caption { font-size: 7pt; color: #555; font-style: italic; text-align: center; margin-top: 2px; }
+
+  .calc-line {
+    background: #f0f4fa;
+    border-left: 3px solid #4a7ab5;
+    padding: 3px 7px;
+    margin: 2px 0;
+    font-family: "SF Mono", Menlo, Consolas, monospace;
+    font-size: 8pt;
+    color: #0d2240;
+  }
+
+  table.criteria {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 7.6pt;
+    margin: 2px 0;
+  }
+  table.criteria th {
+    background: #dce6f0;
+    font-weight: 700;
+    text-align: left;
+    padding: 2px 5px;
+    border: 1px solid #b0c4de;
+  }
+  table.criteria td {
+    padding: 2px 5px;
+    border: 1px solid #d0d8e0;
+  }
+  table.criteria tr.elev td { background: #fbe9e7; font-weight: 600; }
+
+  .footer {
+    text-align: center;
+    font-size: 6.5pt;
+    color: #999;
+    margin-top: 6px;
+    padding-top: 3px;
+    border-top: 1px solid #e0e0e0;
+  }
+
+  .highlight { font-weight: 700; color: #b71c1c; }
+  .blue { color: #0d47a1; font-weight: 600; }
+</style>
+</head>
+<body>
+
+<div class="page-title">iASD Doppler &mdash; Echo Estimate of Peak LA Pressure</div>
+<div class="subtitle">Iatrogenic atrial septal defect after transseptal puncture (MitraClip, PFA, LAAO, etc.)</div>
+
+<div class="cols">
+
+<!-- ==================== LEFT COLUMN ==================== -->
+<div class="col">
+
+  <!-- PRINCIPLE -->
+  <div class="section">
+    <div class="section-head">Principle</div>
+    <div class="section-body">
+      After transseptal access, the residual iASD shunts <b>LA &rarr; RA</b> when LAP &gt; RAP.
+      Apply the simplified <b>Bernoulli equation</b> to the peak shunt velocity to recover the instantaneous
+      LA&ndash;RA pressure gradient, then add a measured/estimated RAP.
+      <div class="formula-box">
+        LAP<sub>peak</sub> &nbsp;=&nbsp; RAP &nbsp;+&nbsp; 4 &times; V<sub>peak</sub>&sup2;
+      </div>
+      <div class="formula-box small">
+        &Delta;P<sub>LA&ndash;RA</sub> = 4V&sup2; &nbsp;(mmHg, with V in m/s)
+      </div>
+      <div class="def-grid">
+        <span class="lbl">V<sub>peak</sub></span><span>Peak L&rarr;R shunt velocity across the iASD by PW or CW Doppler (m/s)</span>
+        <span class="lbl">RAP</span><span>Estimated RA pressure (IVC method, ASE 2010): 3 / 8 / 15 mmHg</span>
+        <span class="lbl">LAP<sub>peak</sub></span><span>Peak left atrial pressure during the cardiac cycle (mmHg)</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- PROTOCOL -->
+  <div class="section">
+    <div class="section-head">Acquisition Protocol</div>
+    <div class="section-body">
+      <div class="step-row"><div class="step-num">1</div><div><b>Locate the iASD.</b> Subcostal or low parasternal short-axis at the AV groove gives the most parallel alignment to the L&rarr;R jet. TEE bicaval (90&deg;) is the gold standard.</div></div>
+      <div class="step-row"><div class="step-num">2</div><div><b>Color Doppler</b> on the septum &mdash; identify the jet direction. Narrow the sector and lower Nyquist (~40&ndash;60 cm/s) to confirm continuous L&rarr;R flow.</div></div>
+      <div class="step-row"><div class="step-num">3</div><div><b>Align the cursor</b> with the jet (angle &lt; 20&deg;). Drop a PW sample on the RA side of the defect; switch to CW if velocities exceed PW Nyquist.</div></div>
+      <div class="step-row"><div class="step-num">4</div><div><b>Set scale</b> so the peak fits in the display &mdash; if the trace clips, <span class="highlight">extend the scale</span> (do not estimate an aliased peak).</div></div>
+      <div class="step-row"><div class="step-num">5</div><div><b>Trace</b> the peak L&rarr;R velocity. Use the highest reproducible peak across &ge; 3 beats (or 5 in AF).</div></div>
+      <div class="step-row"><div class="step-num">6</div><div><b>Estimate RAP</b> from the IVC: collapsible &amp; &le;2.1 cm = 3 mmHg; intermediate = 8; plethoric &gt;2.1 cm with &lt;50% collapse = 15.</div></div>
+    </div>
+  </div>
+
+  <!-- ASSUMPTIONS -->
+  <div class="section">
+    <div class="section-head">Assumptions &amp; When It Holds</div>
+    <div class="section-body">
+      <ul class="compact">
+        <li><b>Restrictive defect.</b> Small, post-transseptal puncture iASD &mdash; flow accelerates across a narrow orifice, so peak gradient reflects the LA&ndash;RA pressure difference. Large/non-restrictive ASDs equalize pressures and Bernoulli underestimates.</li>
+        <li><b>Continuous L&rarr;R flow</b> with a clear systolic-dominant peak. Bidirectional flow suggests near-equal pressures or RAP &gt; LAP transiently.</li>
+        <li><b>Good Doppler alignment.</b> Off-axis sampling underestimates V; LAP estimate falls quadratically with V.</li>
+        <li><b>Simultaneous RAP.</b> Validated cohorts used invasive RA mean; bedside echo uses ASE IVC class.</li>
+        <li>Validated against direct LA pressure in patients with post-MitraClip iASDs &mdash; r &asymp; 0.90 with invasive measurement.</li>
+      </ul>
+    </div>
+  </div>
+
+</div>
+
+<!-- ==================== RIGHT COLUMN ==================== -->
+<div class="col">
+
+  <!-- WORKED EXAMPLE -->
+  <div class="section">
+    <div class="section-head">Worked Example</div>
+    <div class="section-body">
+      Post-transseptal iASD, parasternal short-axis with PW sample on the RA side of the defect. Scale extended to <b>2.0 m/s</b> after the initial sweep aliased at 1.0 m/s.
+      <div class="image-frame">
+        <img src="iasd_example.png" alt="PW Doppler of iASD with peak L&rarr;R velocity ~1.5 m/s">
+      </div>
+      <div class="image-caption">Continuous L&rarr;R systolic-dominant flow. Peak velocity above baseline &asymp; 1.5 m/s.</div>
+
+      <div style="margin-top:5px;"><b>Inputs</b></div>
+      <div class="def-grid">
+        <span class="lbl">V<sub>peak</sub></span><span>1.5 m/s (peak L&rarr;R, scale uncapped)</span>
+        <span class="lbl">RAP</span><span>5 mmHg (IVC small &amp; collapsible)</span>
+      </div>
+
+      <div style="margin-top:4px;"><b>Calculation</b></div>
+      <div class="calc-line">&Delta;P = 4 &times; V&sup2; = 4 &times; (1.5)&sup2; = 4 &times; 2.25 = <b>9 mmHg</b></div>
+      <div class="calc-line">LAP<sub>peak</sub> = RAP + &Delta;P = 5 + 9 = <b>14 mmHg</b></div>
+
+      <div class="answer-box">
+        <span class="ans-lbl">ESTIMATED PEAK LA PRESSURE</span>
+        14 mmHg
+      </div>
+    </div>
+  </div>
+
+  <!-- INTERPRETATION -->
+  <div class="section">
+    <div class="section-head">Interpretation</div>
+    <div class="section-body">
+      <table class="criteria">
+        <tr><th>LAP<sub>peak</sub></th><th>Clinical correlate</th></tr>
+        <tr><td>&le; 12 mmHg</td><td>Normal LA pressure</td></tr>
+        <tr><td>13&ndash;18 mmHg</td><td>Mild elevation &mdash; reassess loading, MR</td></tr>
+        <tr class="elev"><td>19&ndash;25 mmHg</td><td>Moderate &mdash; congestion likely; diurese</td></tr>
+        <tr class="elev"><td>&gt; 25 mmHg</td><td>Severe &mdash; pulmonary edema risk</td></tr>
+      </table>
+      <div style="font-size:7.5pt; margin-top:3px; padding:3px 5px; background:#f0f4fa; border-left:3px solid #4a7ab5;">
+        <b>Quick V<sub>peak</sub> &rarr; LAP<sub>peak</sub>:</b> &nbsp; V &gt; 1.6 m/s &rarr; LAP<sub>peak</sub> &gt; 15 mmHg &nbsp;&middot;&nbsp; <span class="highlight">V &gt; 1.9 m/s &rarr; LAP<sub>peak</sub> &gt; 20 mmHg</span>
+      </div>
+      <div class="pearl-box" style="margin-top:5px;">
+        <b>Tip:</b> Combine with mitral inflow E (here 1.07 m/s, E/A 1.58, DecT 297 ms &mdash; consistent with normal-to-mildly-elevated filling pressure) for a coherent diastology read. The iASD gives you the <i>quantitative anchor</i> the rest of the algorithm lacks.
+      </div>
+    </div>
+  </div>
+
+  <!-- PEARLS / PITFALLS -->
+  <div class="section">
+    <div class="section-head">Pearls &amp; Pitfalls</div>
+    <div class="section-body">
+      <div class="pitfall-box">
+        <b>Aliased trace = unusable peak.</b> If the spectral envelope is clipped at the Nyquist limit, extend the scale (or shift baseline). Reading velocity off a clipped trace systematically underestimates LAP. <i>Page-2 trace in the source PDF illustrates this exact failure.</i>
+      </div>
+      <div class="pitfall-box">
+        <b>Off-axis underestimates.</b> Cosine-&theta; error is squared by Bernoulli &mdash; a 20&deg; off-axis cursor on a 1.5 m/s jet drops the LAP estimate by ~1 mmHg; 30&deg; drops by ~2 mmHg.
+      </div>
+      <div class="pearl-box">
+        <b>Highest peak wins.</b> L&rarr;R gradient peaks in late systole / early diastole at the LA v-wave &mdash; that instant is what the formula recovers. Bidirectional jet = near-equal LAP/RAP or transient RAP &gt; LAP (severe TR, RV failure); flag result as uncertain.
+      </div>
+    </div>
+  </div>
+
+  <!-- REFERENCE -->
+  <div class="section">
+    <div class="section-head">Reference</div>
+    <div class="section-body" style="font-size:6.8pt; color:#555;">
+      <i>Echo estimate of peak LAP in iatrogenic ASDs</i> (vs. invasive LAP). Bernoulli: Hatle &amp; Angelsen 1985. RAP: Rudski, ASE 2010.
+    </div>
+  </div>
+
+</div>
+</div>
+
+</body>
+</html>

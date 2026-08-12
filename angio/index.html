@@ -926,8 +926,9 @@ body.dark .seo-content-body p { color: #c4ccda; }
 // 3D CORONARY ANATOMY MODEL
 // ═══════════════════════════════════════════════════════════
 // Heart-relative coordinates:
-//   +x = patient's LEFT  (in image space, +x goes to viewer's right in AP)
-//   -x = patient's RIGHT
+//   +x = patient's RIGHT  (the LCA sits at NEGATIVE x — see COR below; the projection
+//        negates x so patient-right renders on the viewer's LEFT, per radiology convention)
+//   -x = patient's LEFT
 //   +y = CRANIAL (up)
 //   -y = CAUDAL (down)
 //   +z = ANTERIOR (out of chest, toward viewer in AP)
@@ -1082,9 +1083,14 @@ const COR = {
     side: 'right',
     width: 'major',
     points: [
+      // The proximal RCA runs ANTERIORLY in the right AV groove, so z increases away from the
+      // ostium. It was coded drifting posteriorly (z 0.55 -> 0.30), which made the tool
+      // foreshorten it MOST in exactly the LAO views its own preset annotations recommend for
+      // it — best-seen came out as RAO 30 (0.98) with LAO 30 at 0.77. With an anterior course
+      // LAO 30 is the optimum (0.98) and RAO 30 falls to 0.81, which is the real behaviour.
       { x:  0.10, y: 0.85, z: 0.55 },   // ostium (right coronary cusp)
-      { x:  0.40, y: 0.70, z: 0.50 },
-      { x:  0.70, y: 0.40, z: 0.30 },
+      { x:  0.40, y: 0.70, z: 0.65 },
+      { x:  0.70, y: 0.40, z: 0.72 },
     ],
   },
   RCA_mid: {
@@ -1284,7 +1290,7 @@ function project3D(p, laoDeg, craDeg) {
 
   // Rotation around Y-axis. +LAO rotates the heart so we see its right side
   // foreshortened and its left side enlarged. Image-space convention: a point
-  // at heart +x (patient left) is on the LEFT of an AP image (because the
+  // at heart +x (patient RIGHT) is on the LEFT of an AP image (because the
   // image intensifier sees a mirror — but radiology convention flips this so
   // patient-left appears on viewer-right). We will adopt the standard
   // convention: in AP view, patient's RIGHT is on the viewer's LEFT.
@@ -1493,6 +1499,12 @@ function vesselsForCurrentState() {
 //     RCA + PDA for the right) — useful when teaching beginners or when the
 //     full label cloud is visually busy at extreme angles.
 const LABELS_DETAILED = {
+  // Every drawn segment needs an entry or it can never be identified in detailed mode.
+  'LCx_dist':  'Distal LCx',
+  'OM2':       'Second obtuse marginal (OM2)',
+  'SAN':       'SA nodal branch',
+  'Conus':     'Conus branch',
+  'Septal2':   'Second septal perforator',
   'LM':        'Left Main',
   'LAD_prox':  'Proximal LAD',
   'LAD_mid':   'Mid LAD',
@@ -2143,9 +2155,12 @@ function renderOrientationWidget() {
 function formatAngleReadout() {
   const lao = Math.round(liveLao);
   const cra = Math.round(liveCra);
+  // Sign-aware, like formatViewName below: |LAO| > 87 used to read 'LAT' either way, so an
+  // RAO 90-100 problem-solving view was labelled a left lateral.
   const lr =
     Math.abs(lao) < 3 ? 'AP'
-    : Math.abs(lao) > 87 ? 'LAT'
+    : lao > 87 ? 'LAT'
+    : lao < -87 ? `RAO ${-lao}°`
     : lao > 0 ? `LAO ${lao}°`
     : `RAO ${-lao}°`;
   const cc =
@@ -2287,7 +2302,10 @@ function deriveViewName(lao, cra) {
   const craAbs = Math.abs(cra);
   let lr;
   if (laoAbs < 5) lr = 'AP';
-  else if (laoAbs > 85) lr = 'LATERAL';
+  // Sign matters: |LAO| > 85 was labelled LATERAL either way, so an RAO 90-100 view read
+  // 'LATERAL' and the Reverse Spider (RAO) read 'LATERAL / CRA 30'.
+  else if (lao > 85) lr = 'LATERAL';
+  else if (lao < -85) lr = `RAO ${Math.round(laoAbs)}°`;
   else if (lao > 0) lr = `LAO ${Math.round(laoAbs)}°`;
   else lr = `RAO ${Math.round(laoAbs)}°`;
   let cc;

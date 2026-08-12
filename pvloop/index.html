@@ -1420,18 +1420,19 @@ function computeLoop(p, triFactor, regurgShape) {
   //
   // Two independent physiologic sources, and they are NOT the same shape:
   //
-  //   MCS triangularization (tri) — a continuous-flow pump moves blood across the AV
-  //   throughout the cycle, so volume falls during contraction AND rises during
-  //   relaxation. Symmetric, both limbs pulled inward. tri=1 → fully triangular.
-  //
-  //   Valvular regurgitation (rg) — an incompetent valve abolishes the isovolumic
+    //   Valvular regurgitation (rg) — an incompetent valve abolishes the isovolumic
   //   period on the side it leaks. In MR the mitral valve leaks the instant LV
   //   pressure exceeds LA pressure, so volume FALLS through both limbs (rg.ivc and
   //   rg.ivr both negative). In AR the aortic valve leaks whenever aortic pressure
   //   exceeds LV pressure, so volume RISES through both limbs (both positive).
   //   This is why a regurgitant loop must never be drawn with vertical limbs.
+  //   MCS triangularization (tri) — a continuous-flow pump moves blood out of the LV in EVERY
+  //   phase, including relaxation, so BOTH limbs lose volume. The relaxation term used to be
+  //   +0.25*tri, which drew LV volume RISING during isovolumic relaxation: impossible with the
+  //   mitral valve shut and the pump running, and it put the loop's leftmost point at the wrong
+  //   corner. Both terms are now negative for the pump.
   const ivcFrac = clampFrac(-0.25 * tri + (rg.ivc || 0));
-  let   ivrFrac = clampFrac(+0.25 * tri + (rg.ivr || 0));
+  let   ivrFrac = clampFrac(-0.25 * tri + (rg.ivr || 0));
 
   // Filling has to start at a volume the EDPVR can actually be evaluated at. When the
   // relaxation limb runs leftward (MR), keep it above V0 so edpvr() stays on its
@@ -2159,21 +2160,21 @@ function resetToBaseline() {
 const BASELINE = { Ees: 2.5, Ea: 1.8, EDV: 125, B: 0.025, HR: 70, V0: 10 };
 
 const DRUGS = {
-  dobutamine:    { name: 'Dobutamine',     Ees: +1.0, Ea: 0,    EDV: 0,   B: 0,      mech: 'β1 agonist — increases contractility' },
-  milrinone:     { name: 'Milrinone',       Ees: +0.8, Ea: -0.6, EDV: 0,   B: 0,      mech: 'PDE3 inhibitor — inodilator (↑contractility + ↓afterload)' },
-  isoproterenol: { name: 'Isoproterenol',   Ees: +1.2, Ea: -0.5, EDV: 0,   B: -0.005, mech: 'β1+β2 agonist — inotropy + vasodilation + lusitropy' },
-  dopamine_low:  { name: 'Dopamine (low)',  Ees: +0.5, Ea: 0,    EDV: 0,   B: 0,      mech: 'Low-dose β1 effect — mild inotropy' },
-  dopamine_high: { name: 'Dopamine (high)', Ees: +0.5, Ea: +0.8, EDV: 0,   B: 0,      mech: 'High-dose β1 + α1 — inotropy + vasoconstriction' },
-  phenylephrine: { name: 'Phenylephrine',   Ees: 0,    Ea: +1.0, EDV: 0,   B: 0,      mech: 'Pure α1 agonist — increases afterload only' },
-  norepinephrine:{ name: 'Norepinephrine',  Ees: +0.3, Ea: +1.2, EDV: 0,   B: 0,      mech: 'α1 + mild β1 — predominant vasoconstriction' },
-  nitroprusside: { name: 'Nitroprusside',   Ees: 0,    Ea: -1.0, EDV: -10, B: 0,      mech: 'Arterio + venodilator — ↓afterload + ↓preload' },
-  ntg:           { name: 'Nitroglycerin',   Ees: 0,    Ea: -0.4, EDV: -20, B: 0,      mech: 'Primarily venodilator — ↓↓preload, mild ↓afterload' },
-  phentolamine:  { name: 'Phentolamine',    Ees: 0,    Ea: -0.8, EDV: 0,   B: 0,      mech: 'α1 blocker — pure afterload reduction' },
-  acei:          { name: 'ACE Inhibitor',   Ees: 0,    Ea: -0.6, EDV: -10, B: 0,      mech: 'Arterio + venodilation — balanced ↓afterload + ↓preload' },
-  ccb:           { name: 'CCB (DHP)',       Ees: 0,    Ea: -0.5, EDV: 0,   B: 0,      mech: 'Dihydropyridine — arterial vasodilation ↓afterload' },
-  metoprolol:    { name: 'Metoprolol',      Ees: -0.5, Ea: 0,    EDV: 0,   B: 0,      mech: 'β-blocker — ↓contractility, ↓heart rate' },
-  fluids:        { name: 'IV Fluids',       Ees: 0,    Ea: 0,    EDV: +20, B: 0,      mech: 'Volume expansion — ↑preload (Frank-Starling)' },
-  diuretics:     { name: 'Diuretics',       Ees: 0,    Ea: 0,    EDV: -20, B: 0,      mech: 'Volume removal — ↓preload' },
+  dobutamine:    { name: 'Dobutamine',     Ees: +1.0, Ea: 0,    EDV: 0,   B: 0, HR: +10,      mech: 'β1 agonist — increases contractility' },
+  milrinone:     { name: 'Milrinone',       Ees: +0.8, Ea: -0.6, EDV: 0,   B: 0, HR: +5,      mech: 'PDE3 inhibitor — inodilator (↑contractility + ↓afterload)' },
+  isoproterenol: { name: 'Isoproterenol',   Ees: +1.2, Ea: -0.5, EDV: 0,   B: -0.005, HR: +25, mech: 'β1+β2 agonist — inotropy + vasodilation + lusitropy' },
+  dopamine_low:  { name: 'Dopamine (low)',  Ees: +0.5, Ea: 0,    EDV: 0,   B: 0, HR: +5,      mech: 'Low-dose β1 effect — mild inotropy' },
+  dopamine_high: { name: 'Dopamine (high)', Ees: +0.5, Ea: +0.8, EDV: 0,   B: 0, HR: +10,      mech: 'High-dose β1 + α1 — inotropy + vasoconstriction' },
+  phenylephrine: { name: 'Phenylephrine',   Ees: 0,    Ea: +1.0, EDV: 0,   B: 0, HR: -5,      mech: 'Pure α1 agonist — increases afterload only' },
+  norepinephrine:{ name: 'Norepinephrine',  Ees: +0.3, Ea: +1.2, EDV: 0,   B: 0, HR: 0,      mech: 'α1 + mild β1 — predominant vasoconstriction' },
+  nitroprusside: { name: 'Nitroprusside',   Ees: 0,    Ea: -1.0, EDV: -10, B: 0, HR: +8,      mech: 'Arterio + venodilator — ↓afterload + ↓preload' },
+  ntg:           { name: 'Nitroglycerin',   Ees: 0,    Ea: -0.4, EDV: -20, B: 0, HR: +5,      mech: 'Primarily venodilator — ↓↓preload, mild ↓afterload' },
+  phentolamine:  { name: 'Phentolamine',    Ees: 0,    Ea: -0.8, EDV: 0,   B: 0, HR: +10,      mech: 'α1 blocker — pure afterload reduction' },
+  acei:          { name: 'ACE Inhibitor',   Ees: 0,    Ea: -0.6, EDV: -10, B: 0, HR: 0,      mech: 'Arterio + venodilation — balanced ↓afterload + ↓preload' },
+  ccb:           { name: 'CCB (DHP)',       Ees: 0,    Ea: -0.5, EDV: 0,   B: 0, HR: +5,      mech: 'Dihydropyridine — arterial vasodilation ↓afterload' },
+  metoprolol:    { name: 'Metoprolol',      Ees: -0.5, Ea: 0,    EDV: 0,   B: 0, HR: -15,      mech: 'β-blocker — ↓contractility, ↓heart rate' },
+  fluids:        { name: 'IV Fluids',       Ees: 0,    Ea: 0,    EDV: +20, B: 0, HR: 0,      mech: 'Volume expansion — ↑preload (Frank-Starling)' },
+  diuretics:     { name: 'Diuretics',       Ees: 0,    Ea: 0,    EDV: -20, B: 0, HR: 0,      mech: 'Volume removal — ↓preload' },
 };
 
 let activeDrugs = new Set();
@@ -2533,6 +2534,7 @@ function calcFullParams() {
     if (d.Ea) result.Ea += d.Ea;
     if (d.EDV) result.EDV += d.EDV;
     if (d.B) result.B += d.B;
+    if (d.HR) result.HR += d.HR;   // the mech strings advertise rate effects; CO depends on HR
   });
 
   // Add MCS deltas
@@ -2551,6 +2553,7 @@ function calcFullParams() {
   result.Ea = Math.max(0.3, Math.min(6.0, result.Ea));
   result.EDV = Math.max(60, Math.min(250, result.EDV));
   result.B = Math.max(0.005, Math.min(0.10, result.B));
+  result.HR = Math.max(35, Math.min(180, result.HR));
   result.HR = Math.max(40, Math.min(150, result.HR));
   result.V0 = Math.max(0, Math.min(50, result.V0));
 

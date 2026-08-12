@@ -1186,7 +1186,7 @@ const MODULES = {
         calcium: [
           { label: 'Signature', value: 'Signal-poor with SHARP leading edge and well-defined inner border. Pathognomonic of calcium on OCT.', text: true, wide: true },
           { label: 'Measurement', value: 'Unlike IVUS, OCT can image THROUGH calcium when it is not too thick — calcium thickness, arc, and length all directly measurable.', text: true, wide: true },
-          { label: 'PCI plan', value: 'Calcium score &gt; 2 (thickness &gt; 0.5 mm, arc &gt; 180°, length &gt; 5 mm) predicts stent under-expansion; consider atherectomy or IVL.', text: true, wide: true },
+          { label: 'PCI plan', value: 'OCT calcium score (Fujino 2018): arc &gt; 180° = 2 points, thickness &gt; 0.5 mm = 1, length &gt; 5 mm = 1. A score of 4 — all three present — predicts stent under-expansion; 0–3 expands well. Plan atherectomy or IVL at a score of 4.', text: true, wide: true },
         ],
       };
       return views[p.view] || views.normal;
@@ -1560,7 +1560,20 @@ function drawFFRConcept(p, t) {
   ctx.stroke();
   ctx.shadowBlur = 0;
 
-  // Pd tracing: scales by current ratio. The ratio sharpens from resting to maximal hyperemia gradually across beats.
+  // Pd tracing. Pd used to be drawn as Pa * ratio, which makes the Pa-Pd gap proportional to Pa
+  // and therefore WIDEST AT THE SYSTOLIC PEAK — backwards from a real pressure-wire tracing.
+  // The gradient across a stenosis is driven by flow, and coronary flow is predominantly
+  // diastolic, so the two tracings nearly touch in systole and separate in diastole. That is the
+  // whole basis of the wave-free period iFR samples, which this module teaches two panels later.
+  //
+  // So: weight the gradient by cardiac phase (light in systole, heavy in diastole) and normalise
+  // by the mean weight, which keeps the CYCLE-MEAN Pd/Pa exactly equal to `ratio` — the caliper
+  // and the printed FFR still reproduce.
+  const phaseWeight = u => (u < 0.42 ? 0.30 : 1.40);   // systole vs diastole
+  let meanPa = 0, meanW = 0;
+  for (let i = 0; i <= 60; i++) { const u = i / 60; meanPa += paPress(u); meanW += phaseWeight(u); }
+  meanPa /= 61; meanW /= 61;
+
   ctx.strokeStyle = '#4a90d9';
   ctx.lineWidth = 1.8;
   ctx.shadowColor = 'rgba(74,144,217,0.45)';
@@ -1570,10 +1583,11 @@ function drawFFRConcept(p, t) {
     // First half of strip is resting; second half is current hyperemia state
     const beatFrac = b / Math.max(1, beats - 1);
     const ratio = restingPdPa + (current - restingPdPa) * Math.min(1, beatFrac * 1.6);
+    const dropMean = meanPa * (1 - ratio);
     for (let i = 0; i <= 60; i++) {
       const u = i / 60;
       const Pa = paPress(u);
-      const Pd = Pa * ratio;
+      const Pd = Math.max(0, Pa - dropMean * phaseWeight(u) / meanW);
       const x = m.l + b * beatW + u * beatW;
       const y = yOf(Pd);
       if (b === 0 && i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
@@ -1688,7 +1702,7 @@ function drawNHPRCompare(p, t) {
       { name: 'DEFINE-FLAIR', mode: 'iFR vs FFR', n: 2492, endpt: 'Non-inferior MACE at 1y', year: '2017' },
       { name: 'iFR-SWEDEHEART', mode: 'iFR vs FFR', n: 2037, endpt: 'Non-inferior MACE at 12mo', year: '2017' },
       { name: 'VALIDATE-RFR',  mode: 'RFR vs FFR', n: 651,  endpt: 'RFR ≤ 0.89 matched FFR ≤ 0.80', year: '2018' },
-      { name: 'FAME',          mode: 'FFR vs angio', n: 1005, endpt: 'MACE 13% vs 18% at 2y', year: '2009' },
+      { name: 'FAME',          mode: 'FFR vs angio', n: 1005, endpt: 'MACE 13.2% vs 18.3% at 1y', year: '2009' },
     ];
     const rowH = (H - 60) / trials.length;
     for (let i = 0; i < trials.length; i++) {
@@ -1984,11 +1998,12 @@ function drawIVUSNormal(p, t) {
 
   // Title + scale bar
   lblTitle('IVUS cross-section — ' + (p.view === 'normal' ? 'normal' : p.view === 'fatty' ? 'fatty / soft plaque' : p.view === 'fibrotic' ? 'fibrotic plaque' : 'calcific plaque'), cx, 24);
-  // 1 mm scale bar
+  // This atlas panel has no absolute calibration — R is a drawing radius, not a measured vessel —
+  // so labelling a fifth of it "1 mm" was a made-up scale. Say what is true instead.
   const sb = R / 5;
   ctx.strokeStyle = '#dde2ec'; ctx.lineWidth = 2;
   ctx.beginPath(); ctx.moveTo(20, H - 16); ctx.lineTo(20 + sb, H - 16); ctx.stroke();
-  lblTick('1 mm', 20, H - 22, 'left');
+  lblTick('not to scale', 20, H - 22, 'left');
   // Modality marker
   ctx.fillStyle = '#4a90d9'; ctx.font = '700 11px DM Sans, system-ui, sans-serif'; ctx.textAlign = 'right';
   ctx.fillText('IVUS', W - 14, H - 14);
@@ -2068,9 +2083,12 @@ function drawIVUSQuantitative(p, t) {
   ctx.font = '600 13px DM Sans, system-ui, sans-serif';
   ctx.fillText(pb.toFixed(0) + ' %', lx + 10, 158);
 
-  // 1 mm scale
+  // 1 mm scale. The radii are drawn as sizePx * sqrt(area / 22), so at EEM = 22 mm2 the radius
+  // is sizePx and represents sqrt(22/pi) = 2.646 mm. One millimetre is therefore
+  // sizePx / 2.646 = sqrt(pi/22) * sizePx = 0.378 * sizePx, not sizePx/5 (0.200), which drew the
+  // bar at 53% of its stated length.
   ctx.strokeStyle = '#dde2ec'; ctx.lineWidth = 2;
-  ctx.beginPath(); ctx.moveTo(20, H - 16); ctx.lineTo(20 + sizePx / 5, H - 16); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(20, H - 16); ctx.lineTo(20 + sizePx * Math.sqrt(Math.PI / 22), H - 16); ctx.stroke();
   lblTick('1 mm', 20, H - 22, 'left');
   ctx.fillStyle = '#4a90d9'; ctx.font = '700 11px DM Sans, system-ui, sans-serif'; ctx.textAlign = 'right';
   ctx.fillText('IVUS', lx - 16, H - 14);

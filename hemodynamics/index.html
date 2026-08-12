@@ -661,7 +661,7 @@ function generateRA(beat, p) {
 function generateRV(beat, p) {
   const uEnd = p.upEnd || 0.05;
   const peakT = 0.08;               // Brief peak (more triangular than LV)
-  const ejectEnd = 0.22;            // End of ejection
+  const ejectEnd = 0.315;           // End of RV ejection — must precede the pulmonic notch
   const descEnd = p.descEnd || 0.30; // End of rapid descent
   const diaEnd = p.diaEnd || 0.88;
   if (beat < uEnd) {
@@ -696,8 +696,10 @@ function generateRV(beat, p) {
 
 function generatePA(beat, p) {
   const uEnd = p.upEnd || 0.08;
-  const nStart = p.notchStart || 0.16;
-  const nEnd = p.notchEnd || 0.24;
+  // P2 FOLLOWS A2. The aortic notch is at 0.30; a normal A2-P2 split is 30-50 ms, which at
+  // HR 72 is about 0.04-0.06 of the cycle.
+  const nStart = p.notchStart || 0.345;
+  const nEnd = p.notchEnd || 0.405;
   if (beat < uEnd) {
     return p.PADP + (beat / uEnd) * (p.PASP - p.PADP);
   } else if (beat < nStart) {
@@ -728,31 +730,38 @@ function generatePCWP(beat, p) {
 }
 
 function generateLV(beat, p) {
-  const uEnd = p.upEnd || 0.05;    // End of isovolumic contraction
-  const peakT = 0.09;               // Brief systolic peak
+  // Without LVOT or valvular obstruction the LV and central aortic tracings are essentially
+  // superimposed through ejection. This used to drive LV straight from LVEDP to PEAK systolic
+  // pressure during isovolumic contraction and then hold a plateau — so LV peaked the instant
+  // the aortic valve opened, 58 ms before the aortic peak, opening an 18.8 mmHg separation on
+  // the NORMAL lesson. Isovolumic contraction now ends at aortic-valve-opening pressure, LV
+  // peaks mid-ejection at the same instant generateAo does, and it falls with the aorta.
+  const uEnd = p.upEnd || 0.05;     // End of isovolumic contraction — aortic valve opens
+  const peakT = p.peakTime || 0.12; // Mid-ejection peak, matching generateAo's peakTime
   const ejectEnd = 0.27;            // End of ejection phase
   const ivrEnd = 0.34;              // End of isovolumic relaxation
   const rapidFillEnd = 0.44;        // End of rapid early filling
   const diastasisEnd = 0.82;        // End of diastasis (slow fill)
   // Pre-systolic a wave
   const aWave = (p.aAmp || 3) * gauss(beat, 0.92, 0.03);
-  const ejectDrop = p.LVSP * 0.06;  // ~6% decline during ejection
+  const ejectDrop = p.LVSP * 0.15;  // decline from peak to aortic valve closure
+  // LV pressure when the aortic valve opens — i.e. aortic diastolic. Mirrors generateAo's own
+  // 0.85 fraction so the two curves meet rather than crossing.
+  const avOpen = p.avOpen != null ? p.avOpen : p.LVEDP + 0.85 * (p.LVSP - p.LVEDP);
 
   if (beat < uEnd) {
-    // Isovolumic contraction — rapid upstroke
+    // Isovolumic contraction — rises to valve-opening pressure, NOT to peak systolic
     const t = beat / uEnd;
     const rate = p.upRate || 1;
-    return p.LVEDP + Math.pow(t, 1 / rate) * (p.LVSP - p.LVEDP);
+    return p.LVEDP + Math.pow(t, 1 / rate) * (avOpen - p.LVEDP);
   } else if (beat < peakT) {
-    // Rounded peak — brief at max pressure
+    // Early ejection — LV continues to rise with the aorta to the mid-ejection peak
     const t = (beat - uEnd) / (peakT - uEnd);
-    // Smooth rounded peak using cosine
-    return p.LVSP - ejectDrop * 0.15 * (1 - Math.cos(t * Math.PI)) / 2;
+    return avOpen + t * (p.LVSP - avOpen);
   } else if (beat < ejectEnd) {
-    // Ejection phase — gradual decline as blood exits
+    // Ejection phase — falls with aortic pressure toward valve closure
     const t = (beat - peakT) / (ejectEnd - peakT);
-    const startP = p.LVSP - ejectDrop * 0.15;
-    return startP - t * (ejectDrop * 0.85);
+    return p.LVSP - t * ejectDrop;
   } else if (beat < ivrEnd) {
     // Isovolumic relaxation — rapid curved descent
     const t = (beat - ejectEnd) / (ivrEnd - ejectEnd);
@@ -896,7 +905,7 @@ function generateECG(beat, p) {
 // ════════════════════════════════════════════════════════════════════
 
 const NORMAL_PARAMS = {
-  ra: { mean: 4, aAmp: 3, aCenter: 0.08, aWidth: 0.05, cAmp: 0.5, cCenter: 0.14, cWidth: 0.025, xDepth: 2.5, xCenter: 0.22, xWidth: 0.055, vAmp: 2.5, vCenter: 0.44, vWidth: 0.07, yDepth: 2, yCenter: 0.60, yWidth: 0.055 },
+  ra: { mean: 4, aAmp: 3, aCenter: 0.976, aWidth: 0.05, cAmp: 0.5, cCenter: 0.14, cWidth: 0.025, xDepth: 2.5, xCenter: 0.22, xWidth: 0.055, vAmp: 2.5, vCenter: 0.44, vWidth: 0.07, yDepth: 2, yCenter: 0.60, yWidth: 0.055 },
   rv: { RVSP: 25, RVEDP: 4, platDrop: 2, diaRise: 1.5 },
   pa: { PASP: 25, PADP: 10, decayRate: 2.0, notchAmp: 2 },
   pcwp: { mean: 9, aAmp: 4, aWidth: 0.05, vAmp: 5, vWidth: 0.07, xDepth: 2.5, xWidth: 0.06, yDepth: 3, yWidth: 0.06, timeDelay: 0.06 },
@@ -944,9 +953,9 @@ const AR_MOD_LV =    { LVSP: 150, LVEDP: 16, aAmp: 4, upRate: 1, diaMin: 3 };
 const AR_SEV_LV =    { LVSP: 170, LVEDP: 22, aAmp: 5, upRate: 1, diaMin: 4 };
 
 // TR severity presets (RA with CV waves)
-const TR_MILD_RA =   { mean: 6, aAmp: 3.5, aCenter: 0.06, aWidth: 0.035, cAmp: 0.8, cCenter: 0.12, cWidth: 0.02, xDepth: 1.5, xCenter: 0.18, vAmp: 5, vCenter: 0.35, vWidth: 0.07, yDepth: 3, yCenter: 0.55 };
-const TR_MOD_RA =    { mean: 10, aAmp: 3, aCenter: 0.06, aWidth: 0.035, cAmp: 2, cCenter: 0.12, cWidth: 0.03, xDepth: 0.5, xCenter: 0.18, vAmp: 10, vCenter: 0.30, vWidth: 0.10, yDepth: 4, yCenter: 0.55 };
-const TR_SEV_RA =    { mean: 16, aAmp: 2, aCenter: 0.06, aWidth: 0.035, cAmp: 4, cCenter: 0.14, cWidth: 0.04, xDepth: 0, xCenter: 0.18, vAmp: 16, vCenter: 0.25, vWidth: 0.12, yDepth: 5, yCenter: 0.52 };
+const TR_MILD_RA =   { mean: 6, aAmp: 3.5, aCenter: 0.956, aWidth: 0.035, cAmp: 0.8, cCenter: 0.12, cWidth: 0.02, xDepth: 1.5, xCenter: 0.18, vAmp: 5, vCenter: 0.35, vWidth: 0.07, yDepth: 3, yCenter: 0.55 };
+const TR_MOD_RA =    { mean: 10, aAmp: 3, aCenter: 0.956, aWidth: 0.035, cAmp: 2, cCenter: 0.12, cWidth: 0.03, xDepth: 0.5, xCenter: 0.18, vAmp: 10, vCenter: 0.30, vWidth: 0.10, yDepth: 4, yCenter: 0.55 };
+const TR_SEV_RA =    { mean: 16, aAmp: 2, aCenter: 0.956, aWidth: 0.035, cAmp: 4, cCenter: 0.14, cWidth: 0.04, xDepth: 0, xCenter: 0.18, vAmp: 16, vCenter: 0.25, vWidth: 0.12, yDepth: 5, yCenter: 0.52 };
 
 // HOCM severity presets
 const HOCM_MILD_AO = { SBP: 115, DBP: 75, dipDepth: 0.15 };
@@ -1141,7 +1150,7 @@ function generateVent_DipPlateau(beat, p) {
 
 // CP parameters
 const CP_PARAMS = {
-  ra: { mean: 20, aAmp: 4, aCenter: 0.08, aWidth: 0.04, cAmp: 1.2, cCenter: 0.14, cWidth: 0.02,
+  ra: { mean: 20, aAmp: 4, aCenter: 0.976, aWidth: 0.04, cAmp: 1.2, cCenter: 0.14, cWidth: 0.02,
         xDepth: 6, xCenter: 0.22, xWidth: 0.045,
         vAmp: 3, vCenter: 0.44, vWidth: 0.06,
         yDepth: 7, yCenter: 0.58, yWidth: 0.04 },
@@ -1152,7 +1161,7 @@ const CP_PARAMS = {
 
 // RCM parameters
 const RCM_PARAMS = {
-  ra: { mean: 18, aAmp: 5, aCenter: 0.08, aWidth: 0.045, cAmp: 0.5, cCenter: 0.14, cWidth: 0.02,
+  ra: { mean: 18, aAmp: 5, aCenter: 0.976, aWidth: 0.045, cAmp: 0.5, cCenter: 0.14, cWidth: 0.02,
         xDepth: 3, xCenter: 0.22, xWidth: 0.045,
         vAmp: 3, vCenter: 0.44, vWidth: 0.06,
         yDepth: 4, yCenter: 0.58, yWidth: 0.05 },
@@ -1163,7 +1172,7 @@ const RCM_PARAMS = {
 
 // Tamponade parameters
 const TAMP_PARAMS = {
-  ra: { mean: 18, aAmp: 3, aCenter: 0.08, aWidth: 0.04, cAmp: 0.5, cCenter: 0.14, cWidth: 0.02,
+  ra: { mean: 18, aAmp: 3, aCenter: 0.976, aWidth: 0.04, cAmp: 0.5, cCenter: 0.14, cWidth: 0.02,
         xDepth: 5, xCenter: 0.22, xWidth: 0.04,
         vAmp: 2, vCenter: 0.44, vWidth: 0.06,
         yDepth: 0.5, yCenter: 0.58, yWidth: 0.04 },
@@ -1177,30 +1186,30 @@ const TAMP_PARAMS = {
 let phType = 'pre'; // 'pre', 'post', 'combined'
 
 const PH_PRE = {
-  pa: { PASP: 65, PADP: 30, upEnd: 0.07, notchStart: 0.15, notchEnd: 0.22, notchAmp: 3, decayRate: 1.8 },
+  pa: { PASP: 65, PADP: 30, upEnd: 0.07, notchStart: 0.34, notchEnd: 0.40, notchAmp: 3, decayRate: 1.8 },
   rv: { RVSP: 65, RVEDP: 8, upEnd: 0.06 },
   pcwp: { mean: 12, aAmp: 5, vAmp: 6, xDepth: 3, yDepth: 4, timeDelay: 0.06 },
-  ra: { mean: 8, aAmp: 3.5, aCenter: 0.06, aWidth: 0.04, cAmp: 0.8, cCenter: 0.13, cWidth: 0.02,
+  ra: { mean: 8, aAmp: 3.5, aCenter: 0.956, aWidth: 0.04, cAmp: 0.8, cCenter: 0.13, cWidth: 0.02,
         xDepth: 2, xCenter: 0.18, xWidth: 0.045,
         vAmp: 2.5, vCenter: 0.40, vWidth: 0.06,
         yDepth: 2, yCenter: 0.55, yWidth: 0.04 },
 };
 
 const PH_POST = {
-  pa: { PASP: 50, PADP: 25, upEnd: 0.08, notchStart: 0.16, notchEnd: 0.23, notchAmp: 2.5, decayRate: 2.0 },
+  pa: { PASP: 50, PADP: 25, upEnd: 0.08, notchStart: 0.345, notchEnd: 0.41, notchAmp: 2.5, decayRate: 2.0 },
   rv: { RVSP: 50, RVEDP: 12, upEnd: 0.06 },
-  pcwp: { mean: 22, aAmp: 7, vAmp: 8, xDepth: 2, yDepth: 3, timeDelay: 0.06 },
-  ra: { mean: 10, aAmp: 4, aCenter: 0.06, aWidth: 0.04, cAmp: 0.8, cCenter: 0.13, cWidth: 0.02,
+  pcwp: { mean: 24,   /* PVR must land <= 2 WU for ISOLATED post-capillary */ aAmp: 7, vAmp: 8, xDepth: 2, yDepth: 3, timeDelay: 0.06 },
+  ra: { mean: 10, aAmp: 4, aCenter: 0.956, aWidth: 0.04, cAmp: 0.8, cCenter: 0.13, cWidth: 0.02,
         xDepth: 2, xCenter: 0.18, xWidth: 0.045,
         vAmp: 3, vCenter: 0.40, vWidth: 0.06,
         yDepth: 2.5, yCenter: 0.55, yWidth: 0.04 },
 };
 
 const PH_COMBINED = {
-  pa: { PASP: 70, PADP: 35, upEnd: 0.07, notchStart: 0.15, notchEnd: 0.22, notchAmp: 3.5, decayRate: 1.6 },
+  pa: { PASP: 70, PADP: 35, upEnd: 0.07, notchStart: 0.34, notchEnd: 0.40, notchAmp: 3.5, decayRate: 1.6 },
   rv: { RVSP: 70, RVEDP: 14, upEnd: 0.06 },
   pcwp: { mean: 22, aAmp: 7, vAmp: 8, xDepth: 2, yDepth: 3, timeDelay: 0.06 },
-  ra: { mean: 12, aAmp: 4.5, aCenter: 0.06, aWidth: 0.04, cAmp: 0.8, cCenter: 0.13, cWidth: 0.02,
+  ra: { mean: 12, aAmp: 4.5, aCenter: 0.956, aWidth: 0.04, cAmp: 0.8, cCenter: 0.13, cWidth: 0.02,
         xDepth: 2, xCenter: 0.18, xWidth: 0.045,
         vAmp: 3, vCenter: 0.40, vWidth: 0.06,
         yDepth: 2, yCenter: 0.55, yWidth: 0.04 },
@@ -1656,7 +1665,10 @@ const LESSONS = {
     traces: function() {
       const p = CP_PARAMS;
       return [
-        { id: 'ra', label: 'RA', color: 'var(--clr-ra)', gen: (b) => generateRA(b, p.ra) },
+        // Kussmaul: RA mean fails to fall — and here rises — with inspiration. Without this the
+        // pearl printed below the trace describes a sign the trace never shows. applyRespMod
+        // already carries the sign convention (negative amplitude = rises on inspiration).
+        { id: 'ra', label: 'RA', color: 'var(--clr-ra)', gen: (b) => generateRA(b, { ...p.ra, mean: applyRespMod(p.ra.mean, -3) }) },
         { id: 'rv', label: 'RV', color: 'var(--clr-rv)', gen: (b) => generateVent_DipPlateau(b, { ...p.rv, SP: applyRespMod(p.rv.SP, p.respRV) }) },
         { id: 'lv', label: 'LV', color: 'var(--clr-lv)', gen: (b) => generateVent_DipPlateau(b, { ...p.lv, SP: applyRespMod(p.lv.SP, p.respLV) }) },
       ];
@@ -2172,10 +2184,11 @@ function calcQpQs() {
   if (den <= 0) { document.getElementById('eqQpQsResult').innerHTML = 'Qp/Qs = —'; return; }
   const ratio = (saO2 - svO2) / den;
   let interp, cls;
-  if (ratio > 1.5) { interp = 'Significant L→R shunt'; cls = 'eq-alert'; }
-  else if (ratio > 1.1) { interp = 'Small L→R shunt'; cls = 'eq-warn'; }
-  else if (ratio >= 0.9) { interp = 'No significant shunt'; cls = 'eq-norm'; }
-  else { interp = 'R→L shunt'; cls = 'eq-alert'; }
+  // Same bands as the RHC calculator and Echo Calc — one Qp/Qs scale across the site.
+  if (ratio < 1.0)       { interp = 'R→L shunt'; cls = 'eq-alert'; }
+  else if (ratio < 1.5)  { interp = 'No significant shunt'; cls = 'eq-norm'; }
+  else if (ratio < 2.0)  { interp = 'Significant L→R shunt'; cls = 'eq-warn'; }
+  else                   { interp = 'Large L→R shunt — surgical threshold'; cls = 'eq-alert'; }
   document.getElementById('eqQpQsResult').innerHTML =
     `Qp/Qs = <strong>${ratio.toFixed(2)}</strong> &nbsp;<span class="${cls}" style="font-size:11px">${interp}</span>`;
 }
@@ -2243,15 +2256,18 @@ function getGorlinCalcHTML() {
 }
 
 function calcGorlinAVA() {
-  const co = parseFloat(document.getElementById('calcCO')?.value) || 5;
-  const hr = parseFloat(document.getElementById('calcHR')?.value) || 72;
-  const sep = parseFloat(document.getElementById('calcSEP')?.value) || 0.32;
-  const grad = parseFloat(document.getElementById('calcGrad')?.value) || 40;
-  const peak = parseFloat(document.getElementById('calcPeak')?.value) || 70;
-
+  // Read the fields as entered. `|| default` silently substituted a hidden value for a blank
+  // or zero input and still printed a confident valve area from numbers the user never gave.
+  const num = id => { const v = parseFloat(document.getElementById(id)?.value); return Number.isFinite(v) ? v : null; };
+  const co = num('calcCO'), hr = num('calcHR'), sep = num('calcSEP'), grad = num('calcGrad'), peak = num('calcPeak');
+  const el0 = document.getElementById('gorlinResult');
+  if (co === null || hr === null || sep === null || grad === null || co <= 0 || hr <= 0 || sep <= 0 || grad <= 0) {
+    if (el0) el0.innerHTML = 'Gorlin AVA = — <span class="hint">enter CO, HR, SEP and mean gradient</span>';
+    return;
+  }
   const coMl = co * 1000;
   const gorlin = coMl / (44.3 * hr * sep * Math.sqrt(grad));
-  const hakki = co / Math.sqrt(peak);
+  const hakki = (peak !== null && peak > 0) ? co / Math.sqrt(peak) : null;
 
   let sev = '', cls = '';
   if (gorlin < 0.6) { sev = 'Critical'; cls = 'sev-crit'; }
@@ -2260,7 +2276,8 @@ function calcGorlinAVA() {
   else { sev = 'Mild'; cls = 'sev-mild'; }
 
   const el = document.getElementById('gorlinResult');
-  if (el) el.innerHTML = `Gorlin AVA = <span class="val">${gorlin.toFixed(2)} cm²</span> <span class="sev ${cls}">${sev}</span> &nbsp;|&nbsp; Hakki AVA = <span class="val">${hakki.toFixed(2)} cm²</span>`;
+  if (el) el.innerHTML = `Gorlin AVA = <span class="val">${gorlin.toFixed(2)} cm²</span> <span class="sev ${cls}">${sev}</span>`
+    + (hakki !== null ? ` &nbsp;|&nbsp; Hakki AVA = <span class="val">${hakki.toFixed(2)} cm²</span>` : '');
 }
 
 function getGorlinMVACalcHTML() {
@@ -2276,11 +2293,15 @@ function getGorlinMVACalcHTML() {
 }
 
 function calcGorlinMVA() {
-  const co = parseFloat(document.getElementById('calcMCO')?.value) || 5;
-  const hr = parseFloat(document.getElementById('calcMHR')?.value) || 72;
-  const dfp = parseFloat(document.getElementById('calcDFP')?.value) || 0.42;
-  const grad = parseFloat(document.getElementById('calcMGrad')?.value) || 12;
-
+  // Read as entered — see calcGorlinAVA; hidden defaults printed a valve area from numbers
+  // the user never supplied.
+  const num = id => { const v = parseFloat(document.getElementById(id)?.value); return Number.isFinite(v) ? v : null; };
+  const co = num('calcMCO'), hr = num('calcMHR'), dfp = num('calcDFP'), grad = num('calcMGrad');
+  const elM0 = document.getElementById('gorlinMVAResult');
+  if (co === null || hr === null || dfp === null || grad === null || co <= 0 || hr <= 0 || dfp <= 0 || grad <= 0) {
+    if (elM0) elM0.innerHTML = 'Gorlin MVA = — <span class="hint">enter CO, HR, DFP and mean gradient</span>';
+    return;
+  }
   const coMl = co * 1000;
   const mva = coMl / (37.7 * hr * dfp * Math.sqrt(grad));
 
@@ -2511,9 +2532,21 @@ function toggleMode() {
   isDark = !isDark;
   document.body.classList.toggle('light', !isDark);
   document.getElementById('modeToggle').textContent = isDark ? 'Light Mode' : 'Dark Mode';
+  // Share the site-wide theme key so the choice survives navigating between tools.
+  try { localStorage.setItem('cathmath_dark', isDark ? '1' : '0'); } catch (e) {}
   rebuildTraceToggles();
   redrawNeeded = true;
 }
+
+// Adopt the site-wide theme on load, before the first paint.
+try {
+  if (localStorage.getItem('cathmath_dark') === '0') {
+    isDark = false;
+    document.body.classList.add('light');
+    const _mt = document.getElementById('modeToggle');
+    if (_mt) _mt.textContent = 'Dark Mode';
+  }
+} catch (e) {}
 
 // ════════════════════════════════════════════════════════════════════
 // CANVAS SIZING

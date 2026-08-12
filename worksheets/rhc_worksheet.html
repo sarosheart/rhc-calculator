@@ -1,0 +1,497 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Right Heart Catheterization — Hemodynamic Calculations</title>
+<style>
+  @page { size: letter; margin: 0.4in 0.45in 0.35in 0.45in; }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+    font-size: 8.5pt;
+    line-height: 1.3;
+    color: #1a1a1a;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+  .page-title {
+    text-align: center;
+    font-size: 15pt;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    margin-bottom: 2px;
+    color: #0d2240;
+  }
+  .subtitle {
+    text-align: center;
+    font-size: 8pt;
+    color: #555;
+    margin-bottom: 8px;
+    font-style: italic;
+  }
+  .cols { display: flex; gap: 12px; }
+  .col { flex: 1; }
+  .section {
+    border: 1px solid #b0c4de;
+    border-radius: 5px;
+    margin-bottom: 6px;
+    overflow: hidden;
+  }
+  .section-head {
+    background: #0d2240;
+    color: #fff;
+    font-size: 8.5pt;
+    font-weight: 700;
+    padding: 3px 7px;
+    letter-spacing: 0.4px;
+    text-transform: uppercase;
+  }
+  .section-body { padding: 5px 7px; }
+
+  .formula-box {
+    background: #f0f4fa;
+    border: 1.5px solid #4a7ab5;
+    border-radius: 5px;
+    text-align: center;
+    padding: 6px 4px;
+    margin: 4px 0;
+    font-size: 11pt;
+    font-weight: 600;
+    color: #0d2240;
+  }
+  .formula-sm {
+    background: #f0f4fa;
+    border: 1px solid #8faec9;
+    border-radius: 4px;
+    text-align: center;
+    padding: 4px 4px;
+    margin: 3px 0;
+    font-size: 9.5pt;
+    font-weight: 600;
+    color: #0d2240;
+  }
+  .formula-box .frac, .formula-sm .frac { display: inline-block; text-align: center; vertical-align: middle; }
+  .formula-box .frac-num, .formula-sm .frac-num { display: block; border-bottom: 1.5px solid #0d2240; padding-bottom: 1px; }
+  .formula-box .frac-den, .formula-sm .frac-den { display: block; padding-top: 1px; }
+
+  table.vals {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 8pt;
+    margin: 3px 0;
+  }
+  table.vals th {
+    background: #dce6f0;
+    font-weight: 700;
+    text-align: left;
+    padding: 2.5px 5px;
+    border: 1px solid #b0c4de;
+  }
+  table.vals td {
+    padding: 2.5px 5px;
+    border: 1px solid #d0d8e0;
+  }
+  table.vals tr.severe td { background: #fbe9e7; font-weight: 600; }
+  table.vals tr.highlight-row td { background: #fff8e1; }
+
+  .def-grid {
+    display: grid;
+    grid-template-columns: 48px 1fr;
+    gap: 1px 5px;
+    font-size: 8pt;
+    margin: 3px 0;
+  }
+  .def-grid .lbl { font-weight: 700; color: #0d2240; }
+
+  .sub-head {
+    font-weight: 700;
+    font-size: 8.5pt;
+    color: #0d2240;
+    margin: 4px 0 2px 0;
+    border-bottom: 1px solid #dce6f0;
+    padding-bottom: 1px;
+  }
+
+  ul.compact { padding-left: 14px; margin: 2px 0; }
+  ul.compact li { margin-bottom: 1px; }
+
+  .pearl-box {
+    background: #fffde7;
+    border-left: 3px solid #f9a825;
+    padding: 4px 7px;
+    margin: 4px 0;
+    font-size: 8pt;
+  }
+  .warn-box {
+    background: #fce4ec;
+    border-left: 3px solid #c62828;
+    padding: 4px 7px;
+    margin: 4px 0;
+    font-size: 8pt;
+  }
+
+  .anchor-box {
+    background: #e8f5e9;
+    border: 1.5px solid #4caf50;
+    border-radius: 5px;
+    padding: 5px 7px;
+    margin-top: 4px;
+    font-size: 8pt;
+  }
+  .anchor-box .anchor-title { font-weight: 700; color: #2e7d32; margin-bottom: 2px; font-size: 8.5pt; }
+  .anchor-box ul { padding-left: 14px; margin: 0; }
+  .anchor-box li { margin-bottom: 1px; }
+
+  .co-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 7.8pt;
+    margin: 3px 0;
+  }
+  .co-table th {
+    background: #dce6f0;
+    font-weight: 700;
+    text-align: left;
+    padding: 2.5px 5px;
+    border: 1px solid #b0c4de;
+  }
+  .co-table td {
+    padding: 2.5px 5px;
+    border: 1px solid #d0d8e0;
+    vertical-align: top;
+  }
+  .co-table .prefer { background: #e8f5e9; }
+
+  .highlight { font-weight: 700; color: #b71c1c; }
+  .blue { color: #0d47a1; font-weight: 600; }
+  .small-note { font-size: 7.5pt; color: #666; font-style: italic; }
+  .footer {
+    text-align: center;
+    font-size: 7pt;
+    color: #bbb;
+    margin-top: 4px;
+  }
+
+  .inline-form {
+    font-size: 8.5pt;
+    font-weight: 600;
+    color: #0d2240;
+    margin: 2px 0;
+  }
+
+  .worked {
+    font-size: 8pt;
+    margin: 2px 0;
+    line-height: 1.4;
+  }
+  .worked b { color: #0d2240; }
+  .worked .result { font-weight: 700; color: #b71c1c; }
+</style>
+</head>
+<body>
+
+<div class="page-title">Right Heart Catheterization &mdash; Hemodynamic Calculations</div>
+<div class="subtitle">Comprehensive reference for Fick cardiac output, vascular resistance, PAPi, and derived hemodynamics</div>
+
+<div class="cols">
+
+<!-- ==================== LEFT COLUMN ==================== -->
+<div class="col">
+
+  <!-- NORMAL VALUES -->
+  <div class="section">
+    <div class="section-head">Normal Hemodynamic Values</div>
+    <div class="section-body">
+      <table class="vals">
+        <tr><th>Chamber</th><th>Systolic / Diastolic</th><th>Mean</th></tr>
+        <tr><td><b>RA</b></td><td>a: 2&ndash;10 &nbsp; v: 2&ndash;10</td><td>0&ndash;8</td></tr>
+        <tr><td><b>RV</b></td><td>15&ndash;30 / 0&ndash;8 (EDP)</td><td>&mdash;</td></tr>
+        <tr><td><b>PA</b></td><td>15&ndash;30 / 4&ndash;12</td><td>9&ndash;18</td></tr>
+        <tr><td><b>PCWP</b></td><td>a: 3&ndash;15 &nbsp; v: 3&ndash;15</td><td>4&ndash;12</td></tr>
+        <tr><td><b>Aorta</b></td><td>100&ndash;140 / 60&ndash;90</td><td>70&ndash;105</td></tr>
+      </table>
+      <table class="vals" style="margin-top:3px;">
+        <tr><th>Parameter</th><th>Normal Range</th></tr>
+        <tr><td>Cardiac Output (CO)</td><td>4&ndash;8 L/min</td></tr>
+        <tr><td>Cardiac Index (CI)</td><td>2.5&ndash;4.0 L/min/m&sup2;</td></tr>
+        <tr><td>Stroke Volume (SV)</td><td>60&ndash;100 mL/beat</td></tr>
+        <tr><td>Stroke Volume Index (SVI)</td><td>33&ndash;47 mL/beat/m&sup2;</td></tr>
+        <tr><td>SVR</td><td>10&ndash;20 WU &nbsp;(800&ndash;1600 dyn&middot;s&middot;cm&#8315;&#8309;)</td></tr>
+        <tr><td>PVR</td><td>&lt; 2 WU &nbsp;(&lt; 160 dyn&middot;s&middot;cm&#8315;&#8309;)</td></tr>
+      </table>
+      <div class="small-note" style="margin-top:2px;">All pressures in mmHg. WU = Wood units. Conversion: WU &times; 80 = dyn&middot;s&middot;cm&#8315;&#8309;</div>
+    </div>
+  </div>
+
+  <!-- FICK CO -->
+  <div class="section">
+    <div class="section-head">Fick Cardiac Output</div>
+    <div class="section-body">
+      <div class="formula-box">
+        CO (L/min) =
+        <span class="frac">
+          <span class="frac-num">VO&#8322; (mL/min)</span>
+          <span class="frac-den">Hb &times; 13.6 &times; (SaO&#8322; &minus; SvO&#8322;)</span>
+        </span>
+      </div>
+      <div class="def-grid">
+        <span class="lbl">VO&#8322;</span><span>Oxygen consumption (mL/min) &mdash; measured or estimated (LaFarge)</span>
+        <span class="lbl">Hb</span><span><b>CBC hemoglobin</b> (g/dL) &mdash; single value, NOT co-oximetry</span>
+        <span class="lbl">13.6</span><span>= 1.36 (mL O&#8322;/g Hb) &times; 10 (dL &rarr; L conversion)</span>
+        <span class="lbl">SaO&#8322;</span><span>Arterial oxygen saturation (Ao sat, decimal form)</span>
+        <span class="lbl">SvO&#8322;</span><span>Mixed venous oxygen saturation (PA sat, decimal form)</span>
+      </div>
+
+      <div class="sub-head">Expanded O&#8322; Content Form</div>
+      <div style="font-size:8pt; margin: 2px 0;">
+        CaO&#8322; = Hb &times; 1.36 &times; SaO&#8322; &nbsp; <span class="small-note">(mL O&#8322;/dL &mdash; arterial O&#8322; content)</span><br>
+        CvO&#8322; = Hb &times; 1.36 &times; SvO&#8322; &nbsp; <span class="small-note">(mL O&#8322;/dL &mdash; venous O&#8322; content)</span><br>
+        <span class="blue">CO = VO&#8322; &divide; [(CaO&#8322; &minus; CvO&#8322;) &times; 10]</span>
+      </div>
+
+      <div class="warn-box">
+        <b>Always use CBC Hemoglobin.</b> Co-oximetry Hb may vary between AO and PA samples due to measurement artifact &mdash; but Hb concentration is physiologically identical throughout the circulation (it is the same blood). Using different Hb values for arterial and venous content introduces artificial error. Always use the single CBC value.
+      </div>
+
+      <div class="sub-head">VO&#8322; Estimation Methods</div>
+      <div style="font-size:8pt;">
+        <b>LaFarge equation</b> (cath lab software): accounts for age, sex, HR &mdash; preferred estimate<br>
+        <b>Flat assumption:</b> 125 mL/min/m&sup2; or 3 mL/kg/min &mdash; less accurate, common fallback<br>
+        <span class="small-note">Gold standard = measured VO&#8322; via metabolic cart &mdash; rarely available in practice</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- CI, SV, SVI -->
+  <div class="section">
+    <div class="section-head">Cardiac Index &amp; Stroke Volume</div>
+    <div class="section-body">
+      <div class="inline-form">CI (L/min/m&sup2;) = CO &divide; BSA</div>
+      <div class="inline-form">SV (mL/beat) = (CO &times; 1000) &divide; HR</div>
+      <div class="inline-form">SVI (mL/beat/m&sup2;) = SV &divide; BSA</div>
+      <div class="pearl-box" style="margin-top:3px;">
+        <b>CI &lt; 2.2 L/min/m&sup2;:</b> hemodynamically significant low cardiac output<br>
+        <b>SVI &lt; 35 mL/beat/m&sup2;:</b> reduced &mdash; important threshold in low-flow AS assessment
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- ==================== RIGHT COLUMN ==================== -->
+<div class="col">
+
+  <!-- VASCULAR RESISTANCE -->
+  <div class="section">
+    <div class="section-head">Vascular Resistance &amp; Pressure Gradients</div>
+    <div class="section-body">
+      <div class="sub-head">Pulmonary Gradients</div>
+      <div class="inline-form">TPG = mPAP &minus; PCWP <span style="font-weight:400; font-size:7.5pt;">&nbsp;(transpulmonary gradient, mmHg)</span></div>
+      <div class="inline-form">DPG = dPAP &minus; PCWP <span style="font-weight:400; font-size:7.5pt;">&nbsp;(diastolic pulmonary gradient, mmHg)</span></div>
+
+      <div class="sub-head">Pulmonary Vascular Resistance (PVR)</div>
+      <div class="formula-sm">
+        PVR (Wood units) =
+        <span class="frac">
+          <span class="frac-num">mPAP &minus; PCWP</span>
+          <span class="frac-den">CO</span>
+        </span>
+        &nbsp; &nbsp; <span style="font-size:7.5pt; font-weight:400;">dyn&middot;s&middot;cm&#8315;&#8309; = WU &times; 80</span>
+      </div>
+      <table class="vals">
+        <tr><th>PVR</th><th>Interpretation</th></tr>
+        <tr><td>&lt; 2 WU</td><td>Normal</td></tr>
+        <tr><td>2&ndash;3 WU</td><td>Borderline / mildly elevated</td></tr>
+        <tr><td>3&ndash;5 WU</td><td>Moderately elevated</td></tr>
+        <tr class="severe"><td>&gt; 5 WU</td><td>Severely elevated</td></tr>
+      </table>
+
+      <div class="sub-head">Systemic Vascular Resistance (SVR)</div>
+      <div class="formula-sm">
+        SVR (Wood units) =
+        <span class="frac">
+          <span class="frac-num">MAP &minus; mRAP</span>
+          <span class="frac-den">CO</span>
+        </span>
+        &nbsp; &nbsp; <span style="font-size:7.5pt; font-weight:400;">dyn&middot;s&middot;cm&#8315;&#8309; = WU &times; 80</span>
+      </div>
+      <table class="vals">
+        <tr><th>SVR</th><th>Interpretation</th></tr>
+        <tr><td>10&ndash;20 WU (800&ndash;1600)</td><td>Normal</td></tr>
+        <tr><td>&gt; 20 WU (&gt; 1600)</td><td>Elevated (vasoconstriction, cardiogenic shock)</td></tr>
+        <tr><td>&lt; 10 WU (&lt; 800)</td><td>Low (sepsis, vasodilatory shock, cirrhosis)</td></tr>
+      </table>
+    </div>
+  </div>
+
+  <!-- PAPi -->
+  <div class="section">
+    <div class="section-head">PAPi &mdash; Pulmonary Artery Pulsatility Index</div>
+    <div class="section-body">
+      <div class="formula-sm">
+        PAPi =
+        <span class="frac">
+          <span class="frac-num">sPAP &minus; dPAP</span>
+          <span class="frac-den">mRAP</span>
+        </span>
+        &nbsp; = &nbsp;
+        <span class="frac">
+          <span class="frac-num">PA pulse pressure</span>
+          <span class="frac-den">mean RA pressure</span>
+        </span>
+      </div>
+      <table class="vals">
+        <tr><th>Context</th><th>PAPi Cutoff</th><th>Interpretation</th></tr>
+        <tr><td>General</td><td>&gt; 1.0</td><td>Adequate RV function</td></tr>
+        <tr class="severe"><td>Acute RV MI</td><td>&lt; 0.9</td><td>Predicts RV failure / need for MCS</td></tr>
+        <tr class="severe"><td>Pre-LVAD</td><td>&lt; 1.85</td><td>Predicts RV failure post-implant</td></tr>
+        <tr class="highlight-row"><td>Cardiogenic shock</td><td>&lt; 1.0</td><td>RV dysfunction contributing to shock</td></tr>
+      </table>
+      <div class="pearl-box">
+        <b>Pearl:</b> PAPi integrates RV contractility (PA pulse pressure) with RV preload (RAP). A low PAPi means poor RV output relative to its filling pressure. Most useful in acute settings: RV MI, pre-LVAD assessment, and cardiogenic shock.
+      </div>
+    </div>
+  </div>
+
+  <!-- PH CLASSIFICATION -->
+  <div class="section">
+    <div class="section-head">Pulmonary Hypertension &mdash; Hemodynamic Classification (2022 ESC/ERS)</div>
+    <div class="section-body">
+      <table class="vals">
+        <tr><th>Type</th><th>mPAP</th><th>PCWP</th><th>PVR</th></tr>
+        <tr><td><b>Pre-capillary PH</b></td><td>&gt; 20</td><td>&le; 15</td><td>&gt; 2 WU</td></tr>
+        <tr><td><b>Isolated post-capillary (IpcPH)</b></td><td>&gt; 20</td><td>&gt; 15</td><td>&le; 2 WU</td></tr>
+        <tr><td><b>Combined pre &amp; post (CpcPH)</b></td><td>&gt; 20</td><td>&gt; 15</td><td>&gt; 2 WU</td></tr>
+      </table>
+      <div class="small-note">2022 update: PH threshold lowered from &gt; 25 to &gt; 20 mmHg. PVR threshold lowered from &gt; 3 to &gt; 2 WU. A DPG &gt; 7 mmHg also suggests a pre-capillary component.</div>
+    </div>
+  </div>
+
+</div>
+</div>
+
+<!-- ==================== FULL WIDTH BOTTOM SECTIONS ==================== -->
+
+<!-- FICK vs TD -->
+<div class="section" style="margin-top:4px;">
+  <div class="section-head">Fick vs Thermodilution &mdash; Which CO Method to Use?</div>
+  <div class="section-body">
+    <div class="cols">
+      <div class="col">
+        <table class="co-table">
+          <tr><th style="width:18%"></th><th style="width:41%">Thermodilution (TD)</th><th style="width:41%">Fick (Assumed or Measured VO&#8322;)</th></tr>
+          <tr>
+            <td><b>Pros</b></td>
+            <td>Easy, reproducible, less operator-dependent</td>
+            <td class="prefer">Physiologically grounded; preferred in low CO, valvular disease, intracardiac shunts</td>
+          </tr>
+          <tr>
+            <td><b>Cons</b></td>
+            <td>Inaccurate in: severe TR, low output states, intracardiac shunts</td>
+            <td>VO&#8322; often estimated (not measured) &rarr; propagation error in CO and all derived values</td>
+          </tr>
+          <tr>
+            <td><b>Best for</b></td>
+            <td>Routine hemodynamic screening</td>
+            <td class="prefer">Gorlin valve areas, PVR/SVR calculations, structural heart assessment</td>
+          </tr>
+        </table>
+      </div>
+      <div class="col" style="flex: 0.6;">
+        <div class="pearl-box">
+          <b>Practical Rule:</b> If TD and Fick CO differ meaningfully, <b>use Fick for Gorlin and derived hemodynamics</b> &mdash; especially in AS, MS, or low output.<br><br>
+          <b>Always document in your report:</b><br>
+          &bull; Which CO method was used<br>
+          &bull; Whether VO&#8322; was measured or estimated
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- WORKED EXAMPLE -->
+<div class="section" style="margin-top:4px;">
+  <div class="section-head">Worked Example &mdash; Complete Hemodynamic Calculation</div>
+  <div class="section-body">
+    <div class="cols">
+      <div class="col">
+        <div class="sub-head">Input Data</div>
+        <div class="worked">
+          Age: 65 &nbsp;|&nbsp; Sex: M &nbsp;|&nbsp; HR: 88 bpm &nbsp;|&nbsp; BSA: 1.51 m&sup2; &nbsp;|&nbsp; Hb<sub>CBC</sub>: 14.3 g/dL<br>
+          SaO&#8322;: 92.8% &nbsp;|&nbsp; SvO&#8322; (PA sat): 53.6%<br>
+          RA: 13/22/16 (a/v/mean) &nbsp;|&nbsp; RV: 41/6/12 &nbsp;|&nbsp; PA: 47/22 mean 32<br>
+          PCWP: 18/17/15 (a/v/mean) &nbsp;|&nbsp; AO: 121/77 mean 96
+        </div>
+        <div class="sub-head" style="margin-top:4px;">VO&#8322; by LaFarge</div>
+        <div class="worked">
+          VO&#8322; index = 138.1 &minus; (11.49 &times; ln 65) + (0.378 &times; 88) = <span class="result">123.4 mL/min/m&sup2;</span><br>
+          VO&#8322; = 123.4 &times; 1.51 = <span class="result">186.3 mL/min</span>
+        </div>
+      </div>
+      <div class="col">
+        <div class="sub-head">Step-by-Step Calculations</div>
+        <div class="worked">
+          <b>a-vO&#8322;</b> = 14.3 &times; 1.36 &times; (0.928 &minus; 0.536) = <span class="result">7.62 mL O&#8322;/dL</span> (wide &rarr; low output)<br>
+          <b>Fick CO</b> = 186.3 &divide; [14.3 &times; 13.6 &times; (0.928 &minus; 0.536)] = 186.3 &divide; 76.2 = <span class="result">2.44 L/min</span><br>
+          <b>CI</b> = 2.44 &divide; 1.51 = <span class="result">1.62 L/min/m&sup2;</span><br>
+          <b>SV</b> = (2.44 &times; 1000) &divide; 88 = <span class="result">27.7 mL/beat</span> &nbsp;&nbsp;
+          <b>SVI</b> = 27.7 &divide; 1.51 = <span class="result">18.3 mL/beat/m&sup2;</span><br>
+          <b>TPG</b> = 32 &minus; 15 = <span class="result">17 mmHg</span> &nbsp;&nbsp;
+          <b>DPG</b> = 22 &minus; 15 = <span class="result">7 mmHg</span><br>
+          <b>PVR</b> = 17 &divide; 2.44 = <span class="result">6.97 WU</span> (557 dyn&middot;s&middot;cm&#8315;&#8309;)<br>
+          <b>SVR</b> = (96 &minus; 16) &divide; 2.44 = <span class="result">32.8 WU</span> (2623 dyn&middot;s&middot;cm&#8315;&#8309;)<br>
+          <b>PAPi</b> = (47 &minus; 22) &divide; 16 = <span class="result">1.56</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- PEARLS & PITFALLS -->
+<div class="section" style="margin-top:4px;">
+  <div class="section-head">Pearls &amp; Common Pitfalls</div>
+  <div class="section-body">
+    <div class="cols">
+      <div class="col">
+        <ul class="compact">
+          <li><b>Low CO &rarr; wide a-vO&#8322; difference</b> &mdash; normal a-vO&#8322; is 3.5&ndash;5.0 mL O&#8322;/dL; values &gt; 5.5 suggest inadequate cardiac output</li>
+          <li><b>Estimated VO&#8322; error</b> &mdash; &plusmn;25% is common; even small VO&#8322; errors produce large CO errors. Use LaFarge over flat 125 mL/min/m&sup2;</li>
+          <li><b>PCWP &ne; LVEDP</b> &mdash; PCWP may overestimate (large V-wave, overdamped waveform) or underestimate (mitral stenosis) the true LVEDP</li>
+          <li><b>Prominent V-waves in PCWP</b> &mdash; always use mean PCWP for calculations, not the peak; a large V-wave suggests significant MR</li>
+        </ul>
+      </div>
+      <div class="col">
+        <ul class="compact">
+          <li><b>Atrial fibrillation</b> &mdash; hemodynamics vary beat-to-beat; average &ge; 5&ndash;10 consecutive cycles for reliable values</li>
+          <li><b>TD in severe TR</b> &mdash; thermodilution underestimates CO because the cold saline indicator recirculates; use Fick in this setting</li>
+          <li><b>PAPi caveats</b> &mdash; unreliable when RAP is very low (&lt; 3 mmHg); small denominator creates artificially high PAPi</li>
+          <li><b>Safe documentation language:</b> <i>"Hemodynamics calculated using Fick CO with LaFarge estimated VO&#8322;. Findings interpreted in the context of flow conditions."</i></li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- MEMORY ANCHORS -->
+<div class="anchor-box" style="margin-top:4px;">
+  <div class="anchor-title">One-Line Memory Anchors</div>
+  <div class="cols">
+    <div class="col">
+      <ul>
+        <li><b>Fick CO = VO&#8322; &divide; [Hb &times; 13.6 &times; (SaO&#8322; &minus; SvO&#8322;)]</b></li>
+        <li><b>PVR = (mPAP &minus; PCWP) &divide; CO</b> &nbsp;|&nbsp; <b>SVR = (MAP &minus; RAP) &divide; CO</b></li>
+      </ul>
+    </div>
+    <div class="col">
+      <ul>
+        <li><b>PAPi = PA pulse pressure &divide; mean RAP</b></li>
+        <li>Use <b>CBC Hb</b> (not co-ox) &nbsp;|&nbsp; Use <b>Fick &gt; TD</b> for valve areas &nbsp;|&nbsp; <b>WU &times; 80</b> = dyn&middot;s&middot;cm&#8315;&#8309;</li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+<div class="footer">RHC Hemodynamic Calculations Reference</div>
+
+</body>
+</html>

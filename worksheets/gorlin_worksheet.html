@@ -1,0 +1,392 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Gorlin Formula — Cath Lab Worksheet</title>
+<style>
+  @page { size: letter; margin: 0.35in 0.4in 0.3in 0.4in; }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+    font-size: 8.2pt;
+    line-height: 1.28;
+    color: #1a1a1a;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  .page-title {
+    text-align: center;
+    font-size: 13pt;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    margin-bottom: 2px;
+    color: #0d2240;
+  }
+  .subtitle {
+    text-align: center;
+    font-size: 7.5pt;
+    color: #555;
+    margin-bottom: 6px;
+    font-style: italic;
+  }
+
+  .cols {
+    display: flex;
+    gap: 10px;
+  }
+  .col { flex: 1; }
+
+  .section {
+    border: 1px solid #b0c4de;
+    border-radius: 4px;
+    margin-bottom: 5px;
+    overflow: hidden;
+  }
+  .section-head {
+    background: #0d2240;
+    color: #fff;
+    font-size: 7.8pt;
+    font-weight: 700;
+    padding: 2.5px 6px;
+    letter-spacing: 0.4px;
+    text-transform: uppercase;
+  }
+  .section-body {
+    padding: 4px 6px;
+  }
+
+  .formula-box {
+    background: #f0f4fa;
+    border: 1.5px solid #4a7ab5;
+    border-radius: 4px;
+    text-align: center;
+    padding: 5px 4px;
+    margin: 3px 0;
+    font-size: 9.5pt;
+    font-weight: 600;
+    color: #0d2240;
+  }
+  .formula-box .frac { display: inline-block; text-align: center; vertical-align: middle; }
+  .formula-box .frac-num { display: block; border-bottom: 1.5px solid #0d2240; padding-bottom: 1px; }
+  .formula-box .frac-den { display: block; padding-top: 1px; }
+  .formula-box .eq-lhs { font-size: 10pt; }
+
+  table.severity {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 2px 0;
+    font-size: 7.6pt;
+  }
+  table.severity th {
+    background: #dce6f0;
+    font-weight: 700;
+    text-align: left;
+    padding: 1.5px 4px;
+    border: 1px solid #b0c4de;
+  }
+  table.severity td {
+    padding: 1.5px 4px;
+    border: 1px solid #d0d8e0;
+  }
+  table.severity tr.severe td { background: #fbe9e7; font-weight: 600; }
+  table.severity tr.vsevere td { background: #f5c6c2; font-weight: 700; }
+
+  .def-grid {
+    display: grid;
+    grid-template-columns: 52px 1fr;
+    gap: 0px 4px;
+    font-size: 7.6pt;
+    margin: 2px 0;
+  }
+  .def-grid .lbl { font-weight: 700; color: #0d2240; }
+
+  .sub-head {
+    font-weight: 700;
+    font-size: 7.8pt;
+    color: #0d2240;
+    margin: 3px 0 1px 0;
+    border-bottom: 1px solid #dce6f0;
+    padding-bottom: 1px;
+  }
+
+  ul.compact { padding-left: 12px; margin: 1px 0; }
+  ul.compact li { margin-bottom: 0.5px; }
+
+  .pearl-box {
+    background: #fffde7;
+    border-left: 3px solid #f9a825;
+    padding: 3px 5px;
+    margin: 3px 0;
+    font-size: 7.6pt;
+  }
+
+  .anchor-box {
+    background: #e8f5e9;
+    border: 1.5px solid #4caf50;
+    border-radius: 4px;
+    padding: 4px 6px;
+    margin-top: 4px;
+    font-size: 7.8pt;
+  }
+  .anchor-box .anchor-title {
+    font-weight: 700;
+    color: #2e7d32;
+    margin-bottom: 2px;
+  }
+  .anchor-box ul { padding-left: 12px; margin: 0; }
+  .anchor-box li { margin-bottom: 1px; }
+
+  .co-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 7.4pt;
+    margin: 2px 0;
+  }
+  .co-table th {
+    background: #dce6f0;
+    font-weight: 700;
+    text-align: left;
+    padding: 2px 4px;
+    border: 1px solid #b0c4de;
+  }
+  .co-table td {
+    padding: 2px 4px;
+    border: 1px solid #d0d8e0;
+    vertical-align: top;
+  }
+  .co-table .prefer { background: #e8f5e9; }
+
+  .checkmark { color: #2e7d32; font-weight: 700; }
+  .xmark { color: #c62828; font-weight: 700; }
+
+  .footer {
+    text-align: center;
+    font-size: 6.5pt;
+    color: #999;
+    margin-top: 3px;
+    padding-top: 2px;
+    border-top: 1px solid #e0e0e0;
+  }
+
+  .highlight { font-weight: 700; color: #b71c1c; }
+  .blue { color: #0d47a1; font-weight: 600; }
+  .small-note { font-size: 7pt; color: #666; font-style: italic; }
+</style>
+</head>
+<body>
+
+<div class="page-title">Gorlin Formula &mdash; Cath Lab Quick Reference</div>
+<div class="subtitle">Valve Area = Flow &divide; (Flow Period &times; &radic;Gradient) &nbsp;|&nbsp; Practical worksheet for AVA &amp; MVA calculation</div>
+
+<div class="cols">
+
+<!-- ==================== LEFT COLUMN ==================== -->
+<div class="col">
+
+  <!-- AVA SECTION -->
+  <div class="section">
+    <div class="section-head">Aortic Valve Area (AVA)</div>
+    <div class="section-body">
+      <div class="formula-box">
+        <span class="eq-lhs">AVA (cm&sup2;) = </span>
+        <span class="frac">
+          <span class="frac-num">CO &times; 1000</span>
+          <span class="frac-den">44.3 &times; SEP &times; &radic;&Delta;P</span>
+        </span>
+      </div>
+      <div class="def-grid">
+        <span class="lbl">CO</span><span>Cardiac output (L/min)</span>
+        <span class="lbl">SEP</span><span>Systolic ejection period (sec/min)</span>
+        <span class="lbl">&Delta;P</span><span>Mean transaortic gradient (mmHg)</span>
+        <span class="lbl">44.3</span><span>Gorlin constant (empirical)</span>
+      </div>
+      <table class="severity">
+        <tr><th>Severity</th><th>AVA (cm&sup2;)</th></tr>
+        <tr><td>Normal</td><td>&gt; 2.0</td></tr>
+        <tr><td>Mild AS</td><td>1.5 &ndash; 2.0</td></tr>
+        <tr><td>Moderate AS</td><td>1.0 &ndash; 1.5</td></tr>
+        <tr class="severe"><td>Severe AS</td><td>&lt; 1.0</td></tr>
+        <tr class="vsevere"><td>Very Severe / Critical</td><td>&le; 0.6</td></tr>
+      </table>
+    </div>
+  </div>
+
+  <!-- MVA SECTION -->
+  <div class="section">
+    <div class="section-head">Mitral Valve Area (MVA)</div>
+    <div class="section-body">
+      <div class="formula-box">
+        <span class="eq-lhs">MVA (cm&sup2;) = </span>
+        <span class="frac">
+          <span class="frac-num">CO &times; 1000</span>
+          <span class="frac-den">37.7 &times; DFP &times; &radic;&Delta;P</span>
+        </span>
+      </div>
+      <div class="def-grid">
+        <span class="lbl">CO</span><span>Cardiac output (L/min)</span>
+        <span class="lbl">DFP</span><span>Diastolic filling period (sec/min)</span>
+        <span class="lbl">&Delta;P</span><span>Mean transmitral gradient (mmHg)</span>
+        <span class="lbl">37.7</span><span>Gorlin constant for AV valves</span>
+      </div>
+      <table class="severity">
+        <tr><th>Severity</th><th>MVA (cm&sup2;)</th></tr>
+        <tr><td>Normal</td><td>4 &ndash; 6</td></tr>
+        <tr><td>Mild MS</td><td>&gt; 1.5</td></tr>
+        <tr><td>Moderate MS</td><td>1.0 &ndash; 1.5</td></tr>
+        <tr class="severe"><td>Severe MS</td><td>&lt; 1.0</td></tr>
+      </table>
+    </div>
+  </div>
+
+  <!-- SEP & DFP -->
+  <div class="section">
+    <div class="section-head">Determining SEP &amp; DFP</div>
+    <div class="section-body">
+      <div style="margin-bottom:2px;">
+        <span class="blue">Cycle length (sec/beat) = 60 &divide; HR</span>
+      </div>
+
+      <div class="sub-head">SEP &mdash; Systolic Ejection Period (Aortic)</div>
+      <ul class="compact">
+        <li><b>From tracing:</b> AV opens (LV &gt; Ao) to dicrotic notch (AV closes)</li>
+        <li><b>SEP (sec/min)</b> = ejection time/beat &times; HR</li>
+        <li><b>Typical:</b> ~0.30&ndash;0.35 sec/beat &rarr; <b>20&ndash;25 sec/min</b></li>
+        <li>Prolonged in: severe AS, low EF, bradycardia</li>
+      </ul>
+
+      <div class="sub-head">DFP &mdash; Diastolic Filling Period (Mitral)</div>
+      <ul class="compact">
+        <li><b>From tracing:</b> MV opens (LA/PCWP &gt; LV) to MV closes (LV &gt; LA)</li>
+        <li><b>DFP (sec/min)</b> = filling time/beat &times; HR</li>
+        <li><b>Typical:</b> ~0.40&ndash;0.50 sec/beat &rarr; <b>30&ndash;40 sec/min</b></li>
+        <li class="highlight">Shortened dramatically in tachycardia</li>
+        <li>In AFib: varies beat-to-beat &rarr; average multiple cycles</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- MEMORY ANCHORS -->
+  <div class="anchor-box">
+    <div class="anchor-title">Memory Anchors</div>
+    <ul>
+      <li><b>AVA = flow &divide; (time &times; &radic;gradient)</b></li>
+      <li><b>AS hates low flow</b> &mdash; low CO &rarr; falsely small AVA</li>
+      <li><b>MS hates tachycardia</b> &mdash; short DFP &rarr; overestimates severity</li>
+      <li><b>Fick &gt; TD for valve area</b> when accuracy matters</li>
+    </ul>
+  </div>
+
+</div>
+
+<!-- ==================== RIGHT COLUMN ==================== -->
+<div class="col">
+
+  <!-- CO SECTION -->
+  <div class="section">
+    <div class="section-head">Cardiac Output: Fick vs Thermodilution</div>
+    <div class="section-body">
+      <table class="co-table">
+        <tr><th style="width:22%"></th><th style="width:39%">Thermodilution</th><th style="width:39%">Fick</th></tr>
+        <tr>
+          <td><b>Pros</b></td>
+          <td>Easy, reproducible, less operator-dependent</td>
+          <td class="prefer">Physiologically grounded; preferred in low CO, valvular disease, structural heart</td>
+        </tr>
+        <tr>
+          <td><b>Cons</b></td>
+          <td>Inaccurate in severe TR, low output, shunts</td>
+          <td>VO&#8322; often estimated &rarr; propagation error</td>
+        </tr>
+        <tr>
+          <td><b>Gorlin literature</b></td>
+          <td>Commonly reported in modern labs</td>
+          <td class="prefer">Original Gorlin studies used direct Fick; guidelines favor Fick for valve areas</td>
+        </tr>
+      </table>
+      <div class="pearl-box">
+        <b>Pearl:</b> If TD &amp; Fick differ meaningfully, <b>use Fick for Gorlin</b> &mdash; especially in AS or MS.<br>
+        Always document: CO method used + whether VO&#8322; was measured or assumed.
+      </div>
+    </div>
+  </div>
+
+  <!-- PITFALLS -->
+  <div class="section">
+    <div class="section-head">Common Pitfalls &amp; Interpretation</div>
+    <div class="section-body">
+      <table class="co-table">
+        <tr><th style="width:28%">Pitfall</th><th>Effect &amp; What to Do</th></tr>
+        <tr>
+          <td><b>Low cardiac output</b></td>
+          <td><span class="highlight">Falsely small valve area.</span> Consider dobutamine stress if low-flow low-gradient AS suspected.</td>
+        </tr>
+        <tr>
+          <td><b>Tachycardia</b></td>
+          <td>Minimal effect on <b>AVA</b>. <span class="highlight">Major effect on the MITRAL GRADIENT</span> &mdash; a short DFP raises the mean gradient sharply. Gorlin MVA is theoretically DFP-invariant (DFP sits in the denominator and also drives the gradient), so the practical risk is measurement error, not bias: DFP is short, so a small timing error moves the answer a lot.</td>
+        </tr>
+        <tr>
+          <td><b>Atrial fibrillation</b></td>
+          <td>DFP varies beat-to-beat. <b>Average &ge; 5&ndash;10 consecutive cycles.</b></td>
+        </tr>
+        <tr>
+          <td><b>Echo&ndash;Cath discordance</b></td>
+          <td>Often due to: different CO methods, SEP/DFP assumptions, or pressure recovery (echo &lt; cath area).</td>
+        </tr>
+        <tr>
+          <td><b>PCWP for LA pressure</b></td>
+          <td>PCWP may overestimate true LA pressure (V-wave, overdamping). Consider direct LA measurement if available.</td>
+        </tr>
+        <tr>
+          <td><b>Estimated VO&#8322;</b></td>
+          <td>125 mL/min/m&sup2; assumption may be &plusmn;25% off. Small VO&#8322; error &rarr; large AVA error. Measure when possible.</td>
+        </tr>
+      </table>
+    </div>
+  </div>
+
+  <!-- WORKED EXAMPLE -->
+  <div class="section">
+    <div class="section-head">Worked Example &mdash; AVA</div>
+    <div class="section-body" style="font-size:7.6pt;">
+      <b>Given:</b> CO = 4.2 L/min &nbsp;|&nbsp; HR = 72 bpm &nbsp;|&nbsp; Ejection time = 0.32 sec/beat &nbsp;|&nbsp; Mean gradient = 45 mmHg
+      <div style="margin: 2px 0;">
+        <b>Step 1:</b> SEP = 0.32 &times; 72 = <b>23.0 sec/min</b><br>
+        <b>Step 2:</b> &radic;45 = <b>6.71</b><br>
+        <b>Step 3:</b> AVA = (4.2 &times; 1000) &divide; (44.3 &times; 23.0 &times; 6.71) = 4200 &divide; 6836 = <b>0.61 cm&sup2;</b> &rarr; <span class="highlight">Severe AS</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- WORKED EXAMPLE MVA -->
+  <div class="section">
+    <div class="section-head">Worked Example &mdash; MVA</div>
+    <div class="section-body" style="font-size:7.6pt;">
+      <b>Given:</b> CO = 4.8 L/min &nbsp;|&nbsp; HR = 80 bpm &nbsp;|&nbsp; Filling time = 0.42 sec/beat &nbsp;|&nbsp; Mean gradient = 12 mmHg
+      <div style="margin: 2px 0;">
+        <b>Step 1:</b> DFP = 0.42 &times; 80 = <b>33.6 sec/min</b><br>
+        <b>Step 2:</b> &radic;12 = <b>3.46</b><br>
+        <b>Step 3:</b> MVA = (4.8 &times; 1000) &divide; (37.7 &times; 33.6 &times; 3.46) = 4800 &divide; 4383 = <b>1.10 cm&sup2;</b> &rarr; <span class="highlight">Moderate MS</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- DOCUMENTATION LANGUAGE -->
+  <div class="section">
+    <div class="section-head">Safe Report Documentation Language</div>
+    <div class="section-body" style="font-size:7.4pt;">
+      <ul class="compact">
+        <li>"Valve area calculated using Gorlin equation with <b>Fick / thermodilution</b> cardiac output"</li>
+        <li>"SEP/DFP measured from simultaneous LV-Ao / LV-LA tracings" <span class="small-note">(or: "estimated based on HR")</span></li>
+        <li>"Findings interpreted in the context of flow conditions"</li>
+      </ul>
+    </div>
+  </div>
+
+</div>
+</div>
+
+<div class="footer">Gorlin Formula Cath Lab Reference</div>
+
+</body>
+</html>

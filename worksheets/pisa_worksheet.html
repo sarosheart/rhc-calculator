@@ -1,0 +1,1184 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>PISA Method &mdash; MR Quantification Worksheet</title>
+<style>
+  @page { size: letter; margin: 0.35in 0.4in 0.5in 0.4in; }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+    font-size: 8.2pt;
+    line-height: 1.28;
+    color: #1a1a1a;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  .page-title {
+    text-align: center;
+    font-size: 13pt;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    margin-bottom: 2px;
+    color: #0d2240;
+  }
+  .subtitle {
+    text-align: center;
+    font-size: 7.5pt;
+    color: #555;
+    margin-bottom: 6px;
+    font-style: italic;
+  }
+
+  .cols { display: flex; gap: 10px; }
+  .col { flex: 1; }
+
+  .section {
+    border: 1px solid #b0c4de;
+    border-radius: 4px;
+    margin-bottom: 5px;
+    overflow: hidden;
+  }
+  .section-head {
+    background: #0d2240;
+    color: #fff;
+    font-size: 7.8pt;
+    font-weight: 700;
+    padding: 2.5px 6px;
+    letter-spacing: 0.4px;
+    text-transform: uppercase;
+  }
+  .section-body { padding: 4px 6px; }
+
+  .formula-box {
+    background: #f0f4fa;
+    border: 1.5px solid #4a7ab5;
+    border-radius: 4px;
+    text-align: center;
+    padding: 5px 4px;
+    margin: 3px 0;
+    font-size: 9.5pt;
+    font-weight: 600;
+    color: #0d2240;
+  }
+  .formula-box .frac { display: inline-block; text-align: center; vertical-align: middle; }
+  .formula-box .frac-num { display: block; border-bottom: 1.5px solid #0d2240; padding-bottom: 1px; }
+  .formula-box .frac-den { display: block; padding-top: 1px; }
+  .formula-box .eq-lhs { font-size: 10pt; }
+  .formula-box.small { font-size: 8.6pt; }
+  .formula-box.small .eq-lhs { font-size: 9pt; }
+
+  table.severity {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 2px 0;
+    font-size: 7.6pt;
+  }
+  table.severity th {
+    background: #dce6f0;
+    font-weight: 700;
+    text-align: left;
+    padding: 1.5px 4px;
+    border: 1px solid #b0c4de;
+  }
+  table.severity td {
+    padding: 1.5px 4px;
+    border: 1px solid #d0d8e0;
+  }
+  table.severity tr.severe td { background: #fbe9e7; font-weight: 600; }
+  table.severity tr.vsevere td { background: #f5c6c2; font-weight: 700; }
+
+  .def-grid {
+    display: grid;
+    grid-template-columns: 70px 1fr;
+    gap: 0px 4px;
+    font-size: 7.6pt;
+    margin: 2px 0;
+  }
+  .def-grid .lbl { font-weight: 700; color: #0d2240; }
+
+  .sub-head {
+    font-weight: 700;
+    font-size: 7.8pt;
+    color: #0d2240;
+    margin: 3px 0 1px 0;
+    border-bottom: 1px solid #dce6f0;
+    padding-bottom: 1px;
+  }
+
+  ul.compact { padding-left: 12px; margin: 1px 0; }
+  ul.compact li { margin-bottom: 0.5px; }
+  ol.compact { padding-left: 14px; margin: 1px 0; }
+  ol.compact li { margin-bottom: 0.5px; }
+
+  .pearl-box {
+    background: #fffde7;
+    border-left: 3px solid #f9a825;
+    padding: 3px 5px;
+    margin: 3px 0;
+    font-size: 7.6pt;
+  }
+
+  .anchor-box {
+    background: #e8f5e9;
+    border: 1.5px solid #4caf50;
+    border-radius: 4px;
+    padding: 4px 6px;
+    margin-top: 4px;
+    font-size: 7.8pt;
+  }
+  .anchor-box .anchor-title {
+    font-weight: 700;
+    color: #2e7d32;
+    margin-bottom: 2px;
+  }
+  .anchor-box ul { padding-left: 12px; margin: 0; }
+  .anchor-box li { margin-bottom: 1px; }
+
+  .co-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 7.4pt;
+    margin: 2px 0;
+  }
+  .co-table th {
+    background: #dce6f0;
+    font-weight: 700;
+    text-align: left;
+    padding: 2px 4px;
+    border: 1px solid #b0c4de;
+  }
+  .co-table td {
+    padding: 2px 4px;
+    border: 1px solid #d0d8e0;
+    vertical-align: top;
+  }
+  .co-table .prefer { background: #e8f5e9; }
+
+  .footer {
+    text-align: center;
+    font-size: 6.5pt;
+    color: #999;
+    margin-top: 3px;
+    padding-top: 2px;
+    border-top: 1px solid #e0e0e0;
+  }
+
+  .highlight { font-weight: 700; color: #b71c1c; }
+  .blue { color: #0d47a1; font-weight: 600; }
+  .small-note { font-size: 7pt; color: #666; font-style: italic; }
+
+  /* ===== Page 2 styles ===== */
+  .page-break { page-break-before: always; }
+
+  .case-card {
+    border: 1.5px solid #4a7ab5;
+    border-radius: 5px;
+    margin-bottom: 6px;
+    overflow: hidden;
+  }
+  .case-head {
+    background: linear-gradient(90deg, #0d2240 0%, #1a3a6b 100%);
+    color: #fff;
+    padding: 3px 8px;
+    font-size: 8.6pt;
+    font-weight: 700;
+    letter-spacing: 0.3px;
+  }
+  .case-head .case-num {
+    background: #ffeb3b;
+    color: #0d2240;
+    padding: 1px 6px;
+    border-radius: 3px;
+    margin-right: 6px;
+    font-size: 8pt;
+  }
+  .case-body { padding: 5px 7px; font-size: 7.8pt; }
+
+  .echo-data {
+    background: #f0f4fa;
+    border-left: 3px solid #0d47a1;
+    padding: 3px 6px;
+    margin: 3px 0;
+    font-size: 7.6pt;
+  }
+  .echo-data .lbl-row { display: grid; grid-template-columns: 90px 80px 90px 1fr; gap: 2px 6px; }
+  .echo-data b { color: #0d2240; }
+
+  .step-row {
+    display: grid;
+    grid-template-columns: 22px 1fr;
+    gap: 2px 4px;
+    margin: 2px 0;
+    font-size: 7.7pt;
+  }
+  .step-row .step-num {
+    background: #0d2240;
+    color: #fff;
+    border-radius: 50%;
+    width: 16px;
+    height: 16px;
+    text-align: center;
+    line-height: 16px;
+    font-size: 7.5pt;
+    font-weight: 700;
+  }
+
+  .answer-box {
+    background: #e8f5e9;
+    border: 1.5px solid #4caf50;
+    border-radius: 4px;
+    padding: 3px 6px;
+    margin: 3px 0;
+    font-size: 7.8pt;
+  }
+  .answer-box.severe { background: #fbe9e7; border-color: #c62828; }
+  .answer-box.mild { background: #e3f2fd; border-color: #1976d2; }
+  .answer-box .ans-title { font-weight: 700; color: #0d2240; }
+
+  .lesson-box {
+    background: #fffde7;
+    border-left: 4px solid #f9a825;
+    padding: 3px 7px;
+    margin: 3px 0 0 0;
+    font-size: 7.7pt;
+  }
+  .lesson-box b { color: #b71c1c; }
+
+  .anatomy-svg { display: block; margin: 0 auto; max-width: 100%; }
+  .anatomy-caption { text-align: center; font-size: 7.2pt; color: #555; margin-top: 2px; font-style: italic; }
+
+  .key-grid {
+    display: grid;
+    grid-template-columns: 90px 1fr 110px;
+    gap: 2px 4px;
+    font-size: 7.6pt;
+    margin: 2px 0;
+  }
+  .key-grid .lbl { font-weight: 700; color: #0d2240; }
+  .key-grid .role { color: #b71c1c; font-style: italic; }
+
+  .recipe-box {
+    background: #e8eaf6;
+    border: 2px solid #3f51b5;
+    border-radius: 5px;
+    padding: 5px 8px;
+    margin: 4px 0;
+  }
+  .recipe-title {
+    font-weight: 700;
+    color: #1a237e;
+    font-size: 9pt;
+    text-align: center;
+    margin-bottom: 3px;
+    letter-spacing: 0.4px;
+  }
+  .recipe-box ol { padding-left: 18px; margin: 2px 0; font-size: 8pt; }
+  .recipe-box ol li { margin-bottom: 2px; }
+</style>
+</head>
+<body>
+
+<div class="page-title">PISA Method &mdash; MR Quantification Worksheet</div>
+<div class="subtitle">Proximal Isovelocity Surface Area &nbsp;|&nbsp; Bedside protocol, equations, severity, &amp; pitfalls</div>
+
+<div class="cols">
+
+<!-- ==================== LEFT COLUMN ==================== -->
+<div class="col">
+
+  <!-- PRINCIPLE -->
+  <div class="section">
+    <div class="section-head">Principle</div>
+    <div class="section-body">
+      Blood converges toward the regurgitant orifice through concentric <b>hemispheric shells of equal velocity</b>. Color Doppler aliasing makes one such shell visible. By <b>conservation of flow</b>, flow at the PISA shell equals flow through the orifice.
+      <div class="formula-box">
+        2&pi;r&sup2; &times; V<sub>aliasing</sub> &nbsp;=&nbsp; EROA &times; V<sub>peak MR</sub>
+      </div>
+      <div class="formula-box">
+        <span class="eq-lhs">EROA (cm&sup2;) =</span>
+        <span class="frac">
+          <span class="frac-num">2&pi; &times; r&sup2; &times; V<sub>a</sub></span>
+          <span class="frac-den">V<sub>peak MR</sub></span>
+        </span>
+      </div>
+      <div class="formula-box small">
+        RegVol (mL) = EROA &times; VTI<sub>MR jet</sub>
+      </div>
+      <div class="def-grid">
+        <span class="lbl">r</span><span>PISA radius at first aliasing shell (cm)</span>
+        <span class="lbl">V<sub>a</sub></span><span>Aliasing velocity (cm/s) &mdash; baseline-shifted</span>
+        <span class="lbl">V<sub>peak MR</sub></span><span>Peak MR jet velocity by CW (cm/s)</span>
+        <span class="lbl">VTI<sub>MR</sub></span><span>VTI of MR jet by CW (cm)</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- PROTOCOL -->
+  <div class="section">
+    <div class="section-head">Bedside Protocol</div>
+    <div class="section-body">
+      <ol class="compact">
+        <li><b>Zoom apical 4-chamber</b> centered on the mitral valve.</li>
+        <li><b>Shift color baseline</b> in the direction of the regurgitant jet to lower V<sub>a</sub> &rarr; produces a clean hemisphere on the LV side. Target <b>V<sub>a</sub> &asymp; 30&ndash;40 cm/s</b>.</li>
+        <li><b>Measure r</b> at <b>mid-systole</b>: orifice (vena contracta neck) to the first blue/red color reversal.</li>
+        <li><b>CW Doppler</b> through the MR jet &rarr; record <b>V<sub>peak MR</sub></b> (typ. 4&ndash;6 m/s) and trace <b>VTI<sub>MR</sub></b>.</li>
+        <li><b>Compute</b> EROA, then RegVol = EROA &times; VTI<sub>MR</sub>.</li>
+      </ol>
+      <div class="pearl-box">
+        <b>Bedside shortcut:</b> When V<sub>a</sub> = 40 cm/s and V<sub>peak</sub> = 5 m/s &rarr; <b>EROA &asymp; r&sup2; / 2</b>.<br>
+        e.g., r = 1.0 cm &rarr; EROA &asymp; 0.5 cm&sup2; &rarr; severe.
+      </div>
+    </div>
+  </div>
+
+  <!-- SEVERITY -->
+  <div class="section">
+    <div class="section-head">Severity Cutoffs (ASE 2017)</div>
+    <div class="section-body">
+      <div class="sub-head">ASE 2017 &mdash; Primary (degenerative) MR &mdash; full 4-grade system</div>
+      <table class="severity">
+        <tr><th>Grade</th><th>EROA (cm&sup2;)</th><th>RegVol (mL)</th><th>RegFraction</th></tr>
+        <tr><td>I &mdash; Mild</td><td>&lt; 0.20</td><td>&lt; 30</td><td>&lt; 30%</td></tr>
+        <tr><td>II &mdash; Moderate</td><td>0.20&ndash;0.29</td><td>30&ndash;44</td><td>30&ndash;39%</td></tr>
+        <tr><td>III &mdash; Mod-Severe</td><td>0.30&ndash;0.39</td><td>45&ndash;59</td><td>40&ndash;49%</td></tr>
+        <tr class="severe"><td>IV &mdash; Severe</td><td>&ge; 0.40</td><td>&ge; 60</td><td>&ge; 50%</td></tr>
+      </table>
+      <div class="sub-head">Secondary (functional) MR</div>
+      <table class="severity">
+        <tr><th>Grade</th><th>EROA (cm&sup2;)</th><th>RegVol (mL)</th></tr>
+        <tr><td>Non-severe</td><td>&lt; 0.40</td><td>&lt; 60</td></tr>
+        <tr class="severe"><td>Severe</td><td>&ge; 0.40 &nbsp;<span class="small-note">(COAPT: &ge; 0.30)</span></td><td>&ge; 60 &nbsp;<span class="small-note">(MITRA-FR: &ge; 30)</span></td></tr>
+      </table>
+      <div class="pearl-box">
+        <b>Why secondary MR thresholds are lower:</b> sick LV makes even smaller orifices prognostically heavy. COAPT used EROA &gt; 0.30 cm&sup2;; MITRA-FR used &gt; 0.20 cm&sup2;. Also: PISA tends to <b>underestimate</b> in secondary MR (elliptical orifice).
+      </div>
+    </div>
+  </div>
+
+  <!-- MEMORY ANCHORS -->
+  <div class="anchor-box">
+    <div class="anchor-title">Memory Anchors</div>
+    <ul>
+      <li><b>EROA = 2&pi;r&sup2;V<sub>a</sub> &divide; V<sub>peak</sub></b> &mdash; flow in = flow out</li>
+      <li><b>r is squared</b> &mdash; 10% radius error &rarr; 20% EROA error</li>
+      <li><b>r&sup2;/2 rule</b>: V<sub>a</sub> = 40, V<sub>peak</sub> = 500 &rarr; EROA &asymp; r&sup2;/2</li>
+      <li><b>Functional MR &rarr; PISA UNDERestimates</b> (crescent/elliptical orifice violates the hemisphere) &mdash; cross-check with 3D VCA</li>
+      <li><b>Always cross-check</b> with VC, PV flow, RegFraction</li>
+    </ul>
+  </div>
+
+</div>
+
+<!-- ==================== RIGHT COLUMN ==================== -->
+<div class="col">
+
+  <!-- PITFALLS -->
+  <div class="section">
+    <div class="section-head">Common Pitfalls &amp; Interpretation</div>
+    <div class="section-body">
+      <table class="co-table">
+        <tr><th style="width:30%">Pitfall</th><th>Effect &amp; Fix</th></tr>
+        <tr>
+          <td><b>Eccentric / wall-hugging jet</b></td>
+          <td><span class="highlight">Hemisphere assumption fails.</span> Use 3D vena contracta area or volumetric methods.</td>
+        </tr>
+        <tr>
+          <td><b>Non-circular orifice (functional MR)</b></td>
+          <td>Crescent-shaped slit &rarr; PISA <span class="highlight">underestimates</span> EROA. Confirm with 3D VCA / planimetry.</td>
+        </tr>
+        <tr>
+          <td><b>Single-frame (mid-systole)</b></td>
+          <td>If MR is early/late systolic, instantaneous EROA &times; VTI <span class="highlight">overstates</span> volumetric burden.</td>
+        </tr>
+        <tr>
+          <td><b>r squared</b></td>
+          <td>Small calliper error &rarr; large EROA error. Use highest zoom; freeze on clearest hemisphere.</td>
+        </tr>
+        <tr>
+          <td><b>Funnel-shaped orifice</b></td>
+          <td>Apply <b>angle correction</b> &alpha;/180&deg; (more common in TR with leaflet tenting).</td>
+        </tr>
+        <tr>
+          <td><b>Multiple jets</b></td>
+          <td>PISA assumes one orifice. Either sum jets (rough) or move to 3D / volumetric.</td>
+        </tr>
+        <tr>
+          <td><b>Severe MR with high LAP</b></td>
+          <td>Low LV&ndash;LA gradient &rarr; low V<sub>peak</sub> &rarr; <span class="highlight">falsely high</span> EROA. Cross-check carefully.</td>
+        </tr>
+        <tr>
+          <td><b>Wrong baseline shift</b></td>
+          <td>V<sub>a</sub> too high &rarr; tiny PISA, hard to measure. V<sub>a</sub> too low &rarr; oversized hemisphere, geometry distorts. Stay <b>30&ndash;40 cm/s</b>.</td>
+        </tr>
+      </table>
+    </div>
+  </div>
+
+  <!-- WORKED EXAMPLE -->
+  <div class="section">
+    <div class="section-head">Worked Example</div>
+    <div class="section-body" style="font-size:7.6pt;">
+      <b>Given:</b> r = 0.9 cm &nbsp;|&nbsp; V<sub>a</sub> = 40 cm/s &nbsp;|&nbsp; V<sub>peak MR</sub> = 500 cm/s (5 m/s) &nbsp;|&nbsp; VTI<sub>MR</sub> = 150 cm
+      <div style="margin: 2px 0;">
+        <b>Step 1 &mdash; PISA flow:</b> 2&pi;(0.9)&sup2; &times; 40 = 6.28 &times; 0.81 &times; 40 = <b>203 mL/s</b><br>
+        <b>Step 2 &mdash; EROA:</b> 203 &divide; 500 = <b>0.41 cm&sup2;</b> &rarr; <span class="highlight">Severe</span><br>
+        <b>Step 3 &mdash; RegVol:</b> 0.41 &times; 150 = <b>61 mL</b> &rarr; <span class="highlight">Severe</span><br>
+        <b>Quick check (r&sup2;/2):</b> 0.81 &divide; 2 = 0.40 cm&sup2; &check;
+      </div>
+    </div>
+  </div>
+
+  <!-- WHEN TO TRUST -->
+  <div class="section">
+    <div class="section-head">When to Trust PISA &mdash; and When Not</div>
+    <div class="section-body">
+      <table class="co-table">
+        <tr><th style="width:50%" class="prefer">Trust PISA when&hellip;</th><th>Be skeptical when&hellip;</th></tr>
+        <tr>
+          <td class="prefer">Central, single jet &mdash; primary MR (e.g., flail, prolapse)</td>
+          <td>Eccentric / Coand&#259; jet hugging atrial wall</td>
+        </tr>
+        <tr>
+          <td class="prefer">Clean hemispheric shell at V<sub>a</sub> 30&ndash;40 cm/s</td>
+          <td>Crescent orifice (functional MR with tethering)</td>
+        </tr>
+        <tr>
+          <td class="prefer">Holosystolic flow envelope on CW</td>
+          <td>Late-systolic MR (MVP) &mdash; PISA overstates RegVol</td>
+        </tr>
+        <tr>
+          <td class="prefer">Findings concordant with VC width &amp; PV flow</td>
+          <td>EROA &amp; RegVol disagree, or discordant with VC / RegFraction</td>
+        </tr>
+      </table>
+    </div>
+  </div>
+
+  <!-- CROSS CHECKS -->
+  <div class="section">
+    <div class="section-head">Cross-Checks Before Calling Severity</div>
+    <div class="section-body">
+      <ul class="compact">
+        <li><b>Vena contracta width</b> &ge; 0.7 cm (biplane) supports severe</li>
+        <li><b>3D vena contracta area</b> &ge; 0.4 cm&sup2; supports severe (best for functional MR)</li>
+        <li><b>Pulmonary vein flow</b> &mdash; systolic blunting/reversal supports severe</li>
+        <li><b>LA size / LV volumes</b> &mdash; chronic severe MR enlarges both</li>
+        <li><b>Quantitative volumetrics</b>: SV<sub>MV inflow</sub> &minus; SV<sub>LVOT</sub> = RegVol</li>
+        <li><b>RegFraction</b> = RegVol &divide; total LV SV (&ge; 50% = severe)</li>
+        <li><b>CW jet density &amp; contour</b> &mdash; dense, triangular, early-peaking favors severe</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- DOCUMENTATION -->
+  <div class="section">
+    <div class="section-head">Report Documentation Language</div>
+    <div class="section-body" style="font-size:7.4pt;">
+      <ul class="compact">
+        <li>"PISA radius measured at mid-systole with V<sub>a</sub> = ___ cm/s; EROA = ___ cm&sup2;, RegVol = ___ mL"</li>
+        <li>"Findings concordant with vena contracta width and pulmonary vein flow pattern"</li>
+        <li>"PISA limited by [eccentric jet / non-circular orifice / late-systolic profile]; severity integrated from multiple parameters"</li>
+      </ul>
+    </div>
+  </div>
+
+</div>
+</div>
+
+<div class="footer">PISA Method &mdash; MR Quantification Reference</div>
+
+<!-- ============================================================== -->
+<!-- ====================== PAGE 2 ================================ -->
+<!-- ============================================================== -->
+<div class="page-break"></div>
+
+<div class="page-title">PISA &mdash; Reading the Echo Data</div>
+<div class="subtitle">Where each number lives on the screen &nbsp;|&nbsp; The same trace gives you V<sub>peak</sub> AND VTI &mdash; they are NOT the same thing</div>
+
+<div class="cols">
+
+<!-- ===== LEFT: CW Doppler anatomy ===== -->
+<div class="col">
+  <div class="section">
+    <div class="section-head">Anatomy of the CW Doppler Envelope</div>
+    <div class="section-body">
+      <svg class="anatomy-svg" viewBox="0 0 360 200" xmlns="http://www.w3.org/2000/svg">
+        <rect width="360" height="200" fill="#0a0a0a"/>
+        <line x1="20" y1="80" x2="320" y2="80" stroke="#222" stroke-width="0.5" stroke-dasharray="2,2"/>
+        <line x1="20" y1="120" x2="320" y2="120" stroke="#222" stroke-width="0.5" stroke-dasharray="2,2"/>
+        <line x1="20" y1="160" x2="320" y2="160" stroke="#222" stroke-width="0.5" stroke-dasharray="2,2"/>
+        <text x="328" y="44" fill="#bbb" font-size="9">0</text>
+        <text x="328" y="84" fill="#888" font-size="9">-1.5</text>
+        <text x="328" y="124" fill="#888" font-size="9">-3</text>
+        <text x="328" y="170" fill="#bbb" font-size="9">-5</text>
+        <text x="328" y="180" fill="#888" font-size="8">m/s</text>
+        <path d="M 90 40 Q 160 290 230 40 Z" fill="#5a5a3a" fill-opacity="0.5"/>
+        <path d="M 90 40 Q 160 290 230 40" fill="none" stroke="#ffeb3b" stroke-width="2.5"/>
+        <line x1="20" y1="40" x2="320" y2="40" stroke="#fff" stroke-width="1"/>
+        <text x="22" y="36" fill="#fff" font-size="8">baseline (0)</text>
+        <line x1="160" y1="40" x2="160" y2="172" stroke="#4caf50" stroke-width="0.7" stroke-dasharray="3,2"/>
+        <circle cx="160" cy="172" r="3" fill="#4caf50"/>
+        <line x1="160" y1="172" x2="245" y2="172" stroke="#4caf50" stroke-width="1"/>
+        <text x="250" y="175" fill="#4caf50" font-size="10" font-weight="700">V_peak</text>
+        <text x="250" y="186" fill="#4caf50" font-size="8.5">deepest point</text>
+        <text x="135" y="100" fill="#fff" font-size="14" font-weight="700">VTI</text>
+        <text x="115" y="115" fill="#ddd" font-size="8.5">(area under curve)</text>
+        <line x1="90" y1="22" x2="230" y2="22" stroke="#03a9f4" stroke-width="1"/>
+        <polygon points="90,22 96,18 96,26" fill="#03a9f4"/>
+        <polygon points="230,22 224,18 224,26" fill="#03a9f4"/>
+        <text x="120" y="14" fill="#03a9f4" font-size="9.5" font-weight="600">duration of MR</text>
+      </svg>
+      <div class="anatomy-caption">Same trace, two measurements: V_peak (a point) and VTI (an area)</div>
+
+      <div class="key-grid" style="margin-top: 4px;">
+        <span class="lbl">V_peak</span><span>Deepest point of the parabola</span><span class="role">denominator (EROA)</span>
+        <span class="lbl">VTI</span><span>Area enclosed by the trace</span><span class="role">multiplier (RegVol)</span>
+      </div>
+      <div class="pearl-box">
+        <b>Why VTI has units of cm (not cm/s):</b> velocity (cm/s) &times; time (s) = distance (cm). VTI is the <b>distance a column of regurgitant blood travels per beat</b> &mdash; "stroke distance" of the leak. Multiply by area (EROA) and you get volume per beat.
+      </div>
+      <div class="anchor-box">
+        <div class="anchor-title">Never forget</div>
+        <ul>
+          <li><b>V_peak</b> = a single y-coordinate (the tip)</li>
+          <li><b>VTI</b> = the whole shaded blob (the area)</li>
+          <li>For severe MR: V_peak typ. 4&ndash;6 m/s, VTI typ. 100&ndash;180 cm</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== RIGHT: Color PISA anatomy ===== -->
+<div class="col">
+  <div class="section">
+    <div class="section-head">Anatomy of the Color PISA Image</div>
+    <div class="section-body">
+      <svg class="anatomy-svg" viewBox="0 0 360 200" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <marker id="arrFlow" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto">
+            <polygon points="0,0 6,3 0,6" fill="#fff"/>
+          </marker>
+        </defs>
+        <rect width="360" height="200" fill="#0a0a0a"/>
+        <path d="M 20 30 Q 30 100 20 170 L 200 170 L 200 30 Z" fill="#1a1a1a" stroke="#666"/>
+        <text x="60" y="50" fill="#bbb" font-size="11" font-weight="700">LV</text>
+        <path d="M 200 70 L 340 90 L 340 110 L 200 130 Z" fill="#1a1a1a" stroke="#666"/>
+        <text x="290" y="105" fill="#bbb" font-size="11" font-weight="700">LA</text>
+        <line x1="200" y1="70" x2="200" y2="95" stroke="#ddd" stroke-width="2.5"/>
+        <line x1="200" y1="105" x2="200" y2="130" stroke="#ddd" stroke-width="2.5"/>
+        <text x="180" y="64" fill="#ccc" font-size="8.5">MV leaflets</text>
+        <path d="M 200,40 A 60,60 0 0 0 200,160" fill="#d32f2f" fill-opacity="0.25" stroke="#d32f2f" stroke-width="0.5" stroke-opacity="0.4"/>
+        <path d="M 200,55 A 45,45 0 0 0 200,145" fill="#ff9800" fill-opacity="0.35" stroke="none"/>
+        <path d="M 200,70 A 30,30 0 0 0 200,130" fill="#0288d1" fill-opacity="0.45" stroke="#ffeb3b" stroke-width="2.5"/>
+        <path d="M 200,85 A 15,15 0 0 0 200,115" fill="#0d47a1" fill-opacity="0.7" stroke="none"/>
+        <line x1="200" y1="100" x2="170" y2="100" stroke="#fff" stroke-width="1.8" stroke-dasharray="3,2"/>
+        <line x1="170" y1="94" x2="170" y2="106" stroke="#fff" stroke-width="1.8"/>
+        <line x1="200" y1="94" x2="200" y2="106" stroke="#fff" stroke-width="1.8"/>
+        <text x="178" y="92" fill="#fff" font-size="11" font-weight="700">r</text>
+        <line x1="170" y1="100" x2="120" y2="60" stroke="#ffeb3b" stroke-width="1"/>
+        <text x="40" y="58" fill="#ffeb3b" font-size="10" font-weight="700">aliasing line = V_a</text>
+        <text x="50" y="70" fill="#ffeb3b" font-size="8.5">(set by baseline shift, ~40 cm/s)</text>
+        <line x1="190" y1="100" x2="225" y2="100" stroke="#fff" stroke-width="2" marker-end="url(#arrFlow)"/>
+        <text x="206" y="155" fill="#bbb" font-size="8" font-style="italic">flow direction (regurgitant)</text>
+      </svg>
+      <div class="anatomy-caption">Hemispheric color shells converging on the regurgitant orifice</div>
+
+      <div class="key-grid" style="margin-top: 4px;">
+        <span class="lbl">r</span><span>Orifice to first aliasing line (cm)</span><span class="role">numerator (squared!)</span>
+        <span class="lbl">V_a</span><span>Aliasing velocity at that shell (cm/s)</span><span class="role">numerator</span>
+      </div>
+      <div class="pearl-box">
+        <b>Setting V<sub>a</sub>:</b> shift the color baseline <b>in the direction of the regurgitant jet</b>. The number on the color scale at the new baseline IS your V<sub>a</sub>. Target 30&ndash;40 cm/s &mdash; gives a clean, measurable hemisphere.
+      </div>
+      <div class="anchor-box">
+        <div class="anchor-title">Never forget</div>
+        <ul>
+          <li><b>r</b> is YOU measuring (with callipers, mid-systole)</li>
+          <li><b>V<sub>a</sub></b> is YOU choosing (the baseline shift)</li>
+          <li><b>V_peak &amp; VTI</b> are the JET telling you (CW)</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</div>
+
+</div>
+
+<!-- ===== Reference panel: where each number lives ===== -->
+<div class="recipe-box">
+  <div class="recipe-title">THE FOUR NUMBERS YOU NEED &mdash; AND WHERE TO GET THEM</div>
+  <div class="key-grid" style="grid-template-columns: 90px 1fr 110px 110px;">
+    <span class="lbl">r</span><span>Color zoom view, baseline-shifted, mid-systole</span><span>callipers on screen</span><span class="role">EROA numerator</span>
+    <span class="lbl">V<sub>a</sub></span><span>Read off color bar at new baseline</span><span>set to 30&ndash;40 cm/s</span><span class="role">EROA numerator</span>
+    <span class="lbl">V<sub>peak MR</sub></span><span>CW Doppler: deepest point of envelope</span><span>auto-traced or peak</span><span class="role">EROA denominator</span>
+    <span class="lbl">VTI<sub>MR</sub></span><span>CW Doppler: traced area under envelope</span><span>manual trace</span><span class="role">RegVol multiplier</span>
+  </div>
+</div>
+
+<div class="footer">PISA Method &mdash; Reading Echo Data</div>
+
+<!-- ============================================================== -->
+<!-- ====================== PAGE 3 ================================ -->
+<!-- ============================================================== -->
+<div class="page-break"></div>
+
+<div class="page-title">PISA &mdash; Worked Examples</div>
+<div class="subtitle">Four cases, broken down step-by-step &nbsp;|&nbsp; Each one teaches a different lesson</div>
+
+<!-- ===== CASE 1 ===== -->
+<div class="case-card">
+  <div class="case-head"><span class="case-num">CASE 1</span> 67M with new murmur &mdash; TEE shows P2 flail (degenerative MR)</div>
+  <div class="case-body">
+    <div class="echo-data">
+      <b>Echo data:</b>
+      <div class="lbl-row">
+        <span><b>r</b> = 1.0 cm</span>
+        <span><b>V<sub>a</sub></b> = 40 cm/s</span>
+        <span><b>V<sub>peak</sub></b> = 5 m/s (500)</span>
+        <span><b>VTI</b> = 160 cm</span>
+      </div>
+    </div>
+
+    <div class="step-row"><span class="step-num">1</span><span><b>PISA flow rate</b> at the shell = 2&pi;r&sup2; &times; V<sub>a</sub><br>= 2 &times; 3.14 &times; (1.0)&sup2; &times; 40 = 6.28 &times; 1.0 &times; 40 = <b>251 mL/s</b></span></div>
+    <div class="step-row"><span class="step-num">2</span><span><b>EROA</b> = PISA flow &divide; V<sub>peak</sub> = 251 &divide; 500 = <b>0.50 cm&sup2;</b></span></div>
+    <div class="step-row"><span class="step-num">3</span><span><b>RegVol</b> = EROA &times; VTI = 0.50 &times; 160 = <b>80 mL</b></span></div>
+    <div class="step-row"><span class="step-num">4</span><span><b>Sanity check (r&sup2;/2 trick):</b> 1.0&sup2; &divide; 2 = 0.50 cm&sup2; &check;</span></div>
+
+    <div class="answer-box severe">
+      <span class="ans-title">Answer:</span> EROA <b>0.50 cm&sup2;</b> + RegVol <b>80 mL</b> &rarr; <span class="highlight">SEVERE primary MR</span> (both criteria met). Surgical referral.
+    </div>
+
+    <div class="lesson-box">
+      <b>Lesson #1 &mdash; The "5-and-40" trick:</b> Whenever V<sub>a</sub> = 40 cm/s and V<sub>peak</sub> = 500 cm/s, the equation collapses to <b>EROA &asymp; r&sup2; / 2</b>. Memorize this once and you'll never need a calculator at the bedside for textbook MR.<br>
+      <span class="small-note">Math: 2&pi; &times; 40 / 500 = 251/500 = 0.502 &asymp; 0.5</span>
+    </div>
+  </div>
+</div>
+
+<!-- ===== CASE 2 ===== -->
+<div class="case-card">
+  <div class="case-head"><span class="case-num">CASE 2</span> 54F asymptomatic, screening echo &mdash; mild rheumatic MR</div>
+  <div class="case-body">
+    <div class="echo-data">
+      <b>Echo data:</b>
+      <div class="lbl-row">
+        <span><b>r</b> = 0.4 cm</span>
+        <span><b>V<sub>a</sub></b> = 40 cm/s</span>
+        <span><b>V<sub>peak</sub></b> = 5 m/s (500)</span>
+        <span><b>VTI</b> = 110 cm</span>
+      </div>
+    </div>
+
+    <div class="step-row"><span class="step-num">1</span><span><b>PISA flow rate</b> = 2&pi; &times; (0.4)&sup2; &times; 40 = 6.28 &times; 0.16 &times; 40 = <b>40.2 mL/s</b></span></div>
+    <div class="step-row"><span class="step-num">2</span><span><b>EROA</b> = 40.2 &divide; 500 = <b>0.08 cm&sup2;</b></span></div>
+    <div class="step-row"><span class="step-num">3</span><span><b>RegVol</b> = 0.08 &times; 110 = <b>8.8 mL</b></span></div>
+    <div class="step-row"><span class="step-num">4</span><span><b>Sanity check (r&sup2;/2):</b> 0.16 &divide; 2 = 0.08 cm&sup2; &check;</span></div>
+
+    <div class="answer-box mild">
+      <span class="ans-title">Answer:</span> EROA <b>0.08 cm&sup2;</b> + RegVol <b>9 mL</b> &rarr; <span class="blue">MILD MR</span>. Monitor.
+    </div>
+
+    <div class="lesson-box">
+      <b>Lesson #2 &mdash; r is SQUARED, not linear:</b> Compare to Case 1 &mdash; r dropped from 1.0 to 0.4 (a <b>2.5&times;</b> change). EROA dropped from 0.50 to 0.08 &mdash; a <b>6.25&times;</b> change. Why? Because <b>2.5&sup2; = 6.25</b>. A 1 mm error in your calliper placement can move a patient between severity grades. <b>Zoom hard, freeze on the clearest hemisphere, measure twice.</b>
+    </div>
+  </div>
+</div>
+
+<!-- ===== CASE 3 ===== -->
+<div class="case-card">
+  <div class="case-head"><span class="case-num">CASE 3</span> 72F with AFib, RVR at 130 bpm &mdash; secondary MR</div>
+  <div class="case-body">
+    <div class="echo-data">
+      <b>Echo data:</b>
+      <div class="lbl-row">
+        <span><b>r</b> = 0.7 cm</span>
+        <span><b>V<sub>a</sub></b> = 40 cm/s</span>
+        <span><b>V<sub>peak</sub></b> = 5 m/s (500)</span>
+        <span><b>VTI</b> = 90 cm <span class="small-note">(short systole)</span></span>
+      </div>
+    </div>
+
+    <div class="step-row"><span class="step-num">1</span><span><b>PISA flow rate</b> = 2&pi; &times; (0.7)&sup2; &times; 40 = 6.28 &times; 0.49 &times; 40 = <b>123 mL/s</b></span></div>
+    <div class="step-row"><span class="step-num">2</span><span><b>EROA</b> = 123 &divide; 500 = <b>0.25 cm&sup2;</b> &rarr; moderate by primary cutoffs, but borderline-severe by functional cutoffs</span></div>
+    <div class="step-row"><span class="step-num">3</span><span><b>RegVol</b> = 0.25 &times; 90 = <b>22 mL</b> &rarr; mild by volume!</span></div>
+    <div class="step-row"><span class="step-num">4</span><span><b>Sanity check:</b> 0.49 &divide; 2 = 0.245 &check;</span></div>
+
+    <div class="answer-box">
+      <span class="ans-title">Answer:</span> EROA says moderate (borderline-severe by the lower functional-MR thresholds). RegVol says mild. <b>Discordance &mdash; report both, integrate clinically.</b> In AFib RVR, average 5&ndash;10 cycles and re-image after rate control before committing to severity.
+    </div>
+
+    <div class="lesson-box">
+      <b>Lesson #3 &mdash; EROA and RegVol can DISAGREE:</b> They tell you different things.<br>
+      &bull; <b>EROA</b> = how big is the hole (instantaneous orifice area)<br>
+      &bull; <b>RegVol</b> = how much actually leaks per beat (orifice &times; stroke distance)<br>
+      A big hole open for a short time leaks less total volume than a smaller hole open longer. Tachycardia, late-systolic MR, or short ejection &rarr; low VTI &rarr; RegVol underestimates relative to EROA. <b>Always report both numbers.</b>
+    </div>
+  </div>
+</div>
+
+<!-- ===== CASE 4 ===== -->
+<div class="case-card">
+  <div class="case-head"><span class="case-num">CASE 4</span> 58M, day 5 post-MI, acute pulmonary edema &mdash; suspected papillary muscle rupture</div>
+  <div class="case-body">
+    <div class="echo-data">
+      <b>Echo data:</b>
+      <div class="lbl-row">
+        <span><b>r</b> = 0.7 cm</span>
+        <span><b>V<sub>a</sub></b> = 40 cm/s</span>
+        <span><b>V<sub>peak</sub></b> = 3.8 m/s (380) <span class="small-note">low!</span></span>
+        <span><b>VTI</b> = 80 cm</span>
+      </div>
+    </div>
+
+    <div class="step-row"><span class="step-num">1</span><span><b>PISA flow rate</b> = 2&pi; &times; (0.7)&sup2; &times; 40 = <b>123 mL/s</b> <span class="small-note">(same as Case 3 &mdash; same r)</span></span></div>
+    <div class="step-row"><span class="step-num">2</span><span><b>EROA</b> = 123 &divide; <b>380</b> = <b>0.32 cm&sup2;</b> &rarr; calculation says approaching severe</span></div>
+    <div class="step-row"><span class="step-num">3</span><span><b>RegVol</b> = 0.32 &times; 80 = <b>26 mL</b></span></div>
+    <div class="step-row"><span class="step-num">4</span><span><b>Sanity check fails!</b> r&sup2;/2 = 0.245 &mdash; but EROA came out 0.32. <b>Why? V<sub>peak</sub> &ne; 500.</b><br>The trick only works at V<sub>peak</sub> = 5 m/s. Here, lower V<sub>peak</sub> &rarr; smaller denominator &rarr; LARGER EROA for the same r.</span></div>
+
+    <div class="answer-box severe">
+      <span class="ans-title">Clinical reality:</span> Patient has acute severe MR (LV is hyperdynamic, LA is small &amp; non-compliant, LAP is sky-high). The <b>low V<sub>peak</sub> is itself a sign of severity</b> &mdash; LA pressure has risen so much that the LV-LA gradient is narrow. <span class="highlight">Don't be reassured by a "modest" RegVol</span> &mdash; this is a surgical emergency.
+    </div>
+
+    <div class="lesson-box">
+      <b>Lesson #4 &mdash; Low V<sub>peak</sub> changes the math AND the interpretation:</b><br>
+      <b>The math:</b> EROA = (2&pi;r&sup2;V<sub>a</sub>) &divide; V<sub>peak</sub>. If V<sub>peak</sub> drops 25% (500 &rarr; 380), EROA inflates ~33%. The r&sup2;/2 shortcut breaks.<br>
+      <b>The clinical read:</b> low V<sub>peak</sub> in acute MR doesn't mean the leak is mild &mdash; it means the LV-LA gradient is collapsing because LA pressure is enormous. Cross-check with VC width, dense triangular early-peaking CW envelope, S-wave reversal in pulm veins, small hyperdynamic LV, and the <b>clinical picture (flash pulmonary edema)</b>.<br>
+      <b>Bottom line:</b> trust the math but interpret with the patient.
+    </div>
+  </div>
+</div>
+
+<!-- ===== CASE 5 ===== -->
+<div class="case-card">
+  <div class="case-head"><span class="case-num">CASE 5</span> 48F with MVP and late-systolic murmur &mdash; PISA looks "severe" but isn't</div>
+  <div class="case-body">
+
+    <div style="font-size: 7.6pt; margin-bottom: 4px;">
+      <b>The instantaneous-vs-time-averaged orifice problem.</b> PISA measures EROA at <i>one moment</i> (peak convergence). The equation then assumes that orifice is open and leaking for <i>all</i> of systole. That works for holosystolic MR. It <span class="highlight">overestimates</span> for late-systolic MR (classic MVP) because the orifice is only open during the last fraction of systole.
+    </div>
+
+    <div class="formula-box small" style="margin: 3px 0;">
+      True RegVol = &int; EROA(t) &middot; V(t) dt &nbsp;&mdash;&nbsp; PISA assumes EROA is constant across systole
+    </div>
+
+    <div class="echo-data">
+      <b>Echo data (same patient as Case 1, but MVP instead of flail):</b>
+      <div class="lbl-row">
+        <span><b>r</b> = 1.0 cm</span>
+        <span><b>V<sub>a</sub></b> = 40 cm/s</span>
+        <span><b>V<sub>peak</sub></b> = 5 m/s (500)</span>
+        <span><b>VTI</b> = 70 cm <span class="small-note">(short, late)</span></span>
+      </div>
+    </div>
+
+    <div class="step-row"><span class="step-num">1</span><span><b>PISA flow rate</b> = 2&pi; &times; (1.0)&sup2; &times; 40 = <b>251 mL/s</b> <span class="small-note">(same as Case 1)</span></span></div>
+    <div class="step-row"><span class="step-num">2</span><span><b>EROA</b> = 251 &divide; 500 = <b>0.50 cm&sup2;</b> &rarr; "looks severe" by PISA EROA alone</span></div>
+    <div class="step-row"><span class="step-num">3</span><span><b>RegVol</b> = 0.50 &times; <b>70</b> = <b>35 mL</b> &rarr; only moderate by volume</span></div>
+    <div class="step-row"><span class="step-num">4</span><span><b>Why the disconnect?</b> CW envelope is dagger-shaped &amp; late-peaking. Orifice is only open for ~40% of systole. The shorter VTI partially self-corrects RegVol &mdash; but PISA EROA still overstates the leak's true burden.</span></div>
+
+    <div class="answer-box">
+      <span class="ans-title">Answer:</span> EROA <b>0.50 cm&sup2;</b> + RegVol <b>35 mL</b> &rarr; <b>moderate MR</b> (not severe). Don't trust PISA EROA alone in MVP. Cross-check with VC, 3D VC area, pulm vein flow, RegFraction.
+    </div>
+
+    <!-- Side-by-side comparison table -->
+    <div style="margin-top: 5px;">
+      <div class="sub-head">Same EROA, different cardiac-cycle phase &mdash; very different leaks</div>
+      <table class="co-table">
+        <tr>
+          <th style="width:24%"></th>
+          <th style="width:38%">Holosystolic MR (e.g., flail / functional)</th>
+          <th style="width:38%">Late-systolic MR (classic MVP)</th>
+        </tr>
+        <tr>
+          <td><b>Orifice timing</b></td>
+          <td class="prefer">Open entire systole (~0.30 s)</td>
+          <td>Open only last ~40% (~0.12 s)</td>
+        </tr>
+        <tr>
+          <td><b>CW envelope</b></td>
+          <td class="prefer">Full parabolic, dense, holosystolic</td>
+          <td>Dagger-shaped, late-peaking, truncated</td>
+        </tr>
+        <tr>
+          <td><b>PISA EROA</b></td>
+          <td class="prefer">0.50 cm&sup2;</td>
+          <td>0.50 cm&sup2; <span class="small-note">(same!)</span></td>
+        </tr>
+        <tr>
+          <td><b>VTI of MR jet</b></td>
+          <td class="prefer">~150 cm</td>
+          <td>~70 cm</td>
+        </tr>
+        <tr>
+          <td><b>RegVol</b></td>
+          <td class="prefer">75 mL &rarr; severe</td>
+          <td>35 mL &rarr; moderate</td>
+        </tr>
+        <tr>
+          <td><b>True severity</b></td>
+          <td class="prefer">Severe</td>
+          <td><span class="highlight">PISA EROA overstates</span></td>
+        </tr>
+      </table>
+    </div>
+
+    <!-- Mental model table -->
+    <div style="margin-top: 5px;">
+      <div class="sub-head">Mental model &mdash; "hose diameter vs how long the water flows"</div>
+      <table class="co-table">
+        <tr><th style="width:30%">Concept</th><th>Translation</th></tr>
+        <tr><td><b>EROA</b></td><td class="prefer">Diameter of the hose &mdash; <i>how big is the leak orifice right now?</i></td></tr>
+        <tr><td><b>VTI</b></td><td>How far a column of leaking blood travels per beat &mdash; captures both <i>velocity</i> AND <i>duration</i></td></tr>
+        <tr><td><b>RegVol = EROA &times; VTI</b></td><td>Volume per beat &mdash; partially self-corrects for short orifice opening because VTI shrinks</td></tr>
+        <tr><td><b>Why it still overestimates in MVP</b></td><td>PISA reads <i>peak</i> EROA at one instant. Real EROA(t) is zero for half of systole &rarr; integral of flow is smaller than peak-EROA &times; VTI suggests</td></tr>
+      </table>
+    </div>
+
+    <!-- ASE recommendations -->
+    <div style="margin-top: 5px;">
+      <div class="sub-head">ASE 2017 guidance for late-systolic / biphasic MR</div>
+      <ul class="compact">
+        <li>Do NOT grade severity on PISA EROA alone</li>
+        <li>Always compute RegVol = EROA &times; VTI (never EROA &times; estimated systolic time)</li>
+        <li>Integrate with: VC width, 3D VC area, PV flow pattern, LA/LV size, RegFraction</li>
+        <li>Consider 3D volumetric quantification &mdash; gold standard in MVP because it integrates flow over the actual leaking window</li>
+      </ul>
+    </div>
+
+    <div class="lesson-box">
+      <b>Lesson #5 &mdash; PISA assumes a constant orifice; MVP violates that:</b><br>
+      The PISA equation snapshots EROA at one instant and treats the leak as if it were holosystolic. In MVP, the leak is late-systolic only &mdash; same instantaneous EROA, but the orifice is only open for ~40% of systole. <b>Result: PISA overstates severity.</b><br>
+      <b>What to do:</b> use RegVol (not EROA alone), cross-check with multiple parameters, and lean on 3D for definitive grading. <b>If the CW envelope is dagger-shaped instead of holosystolic, downgrade your trust in PISA EROA before you commit to severity.</b>
+    </div>
+  </div>
+</div>
+
+<!-- ===== CASE 6 ===== -->
+<div class="case-card">
+  <div class="case-head"><span class="case-num">CASE 6</span> 73F with class 3 dyspnea, ischemic CMP, secondary MR &mdash; PISA UNDERESTIMATES</div>
+  <div class="case-body">
+
+    <div style="font-size: 7.6pt; margin-bottom: 4px;">
+      <b>The elliptical-orifice problem &mdash; mirror image of Case 5.</b> Functional/secondary MR creates a <b>slit-shaped or crescentic orifice</b> (commissure-to-commissure leaflet tethering), not a circle. PISA's hemispheric assumption breaks: a flat 2D measurement of a non-circular orifice <span class="highlight">underestimates</span> EROA. Direct from Mayo lecture (slide 73).
+    </div>
+
+    <div class="echo-data">
+      <b>Echo data (real case):</b>
+      <div class="lbl-row">
+        <span><b>r</b> = 0.95 cm</span>
+        <span><b>V<sub>a</sub></b> = 31 cm/s</span>
+        <span><b>V<sub>peak</sub></b> = 4.8 m/s (480)</span>
+        <span><b>VTI</b> = 145 cm</span>
+      </div>
+    </div>
+
+    <div class="step-row"><span class="step-num">1</span><span><b>PISA flow rate</b> = 2&pi; &times; (0.95)&sup2; &times; 31 = 6.28 &times; 0.9025 &times; 31 = <b>176 mL/s</b></span></div>
+    <div class="step-row"><span class="step-num">2</span><span><b>EROA</b> = 176 &divide; 480 = <b>0.37 cm&sup2;</b> &rarr; "moderate-severe" by PISA alone</span></div>
+    <div class="step-row"><span class="step-num">3</span><span><b>RegVol</b> = 0.37 &times; 145 = <b>53 mL</b> &rarr; moderate-severe</span></div>
+    <div class="step-row"><span class="step-num">4</span><span><b>3D vena contracta cross-check</b> = <b>0.72 cm&sup2;</b> &rarr; clearly SEVERE. True RegVol &asymp; 0.72 &times; 145 = <b>104 mL</b>.</span></div>
+
+    <div class="answer-box severe">
+      <span class="ans-title">Answer:</span> PISA EROA 0.37 / RV 53 mL <span class="highlight">UNDERESTIMATED</span> the true severity by ~50%. 3D VCA = 0.72 cm&sup2; confirms severe secondary MR. <b>Refer for intervention (TEER vs surgery).</b>
+    </div>
+
+    <div class="lesson-box">
+      <b>Lesson #6 &mdash; The two-sided PISA failure: it OVERestimates in MVP and UNDERestimates in functional MR:</b><br>
+      &bull; <b>MVP (Case 5)</b>: instantaneous orifice, brief opening &rarr; PISA OVERstates<br>
+      &bull; <b>Functional MR (Case 6)</b>: elliptical/crescent orifice &rarr; PISA UNDERstates<br>
+      <b>What to do:</b> in any secondary MR (ischemic or non-ischemic CMP, AFib-related atrial MR), <b>always cross-check PISA with 3D VCA</b>. If 3D VCA is &gt; 2D PISA EROA, trust 3D. The discrepancy is biggest with central, biphasic jets and tethered leaflets.<br>
+      <b>PISA's sweet spot:</b> central, holosystolic, <i>circular</i> orifice in primary MR (Cases 1&ndash;3). Outside that, integrate.
+    </div>
+  </div>
+</div>
+
+<!-- ===== Multiple jets quick reference ===== -->
+<div class="recipe-box" style="background: #fff3e0; border-color: #ef6c00;">
+  <div class="recipe-title" style="color: #bf360c;">MULTIPLE JETS &mdash; SUMMING PISA</div>
+  <div style="font-size: 8pt; text-align: center; color: #4e342e;">
+    Two regurgitant jets with PISA radii r&#8321; and r&#8322; &rarr; <b>combined R = &radic;(r&#8321;&sup2; + r&#8322;&sup2;)</b><br>
+    <span class="small-note">Example: r&#8321; = 0.6 cm, r&#8322; = 0.4 cm &rarr; combined R = &radic;(0.36 + 0.16) = &radic;0.52 = 0.72 cm</span>
+  </div>
+</div>
+
+<!-- ===== Final cheat sheet ===== -->
+<div class="recipe-box">
+  <div class="recipe-title">THE THREE-STEP NEVER-FORGET RECIPE</div>
+  <ol>
+    <li><b>Color zoom + baseline shift &rarr;</b> measure <b>r</b>, read <b>V<sub>a</sub></b> off the scale</li>
+    <li><b>CW through the jet &rarr;</b> note <b>V<sub>peak</sub></b> (deepest point), trace <b>VTI</b> (area under)</li>
+    <li><b>Calculate:</b> EROA = (2&pi;r&sup2;V<sub>a</sub>) &divide; V<sub>peak</sub> &nbsp;&rarr;&nbsp; RegVol = EROA &times; VTI</li>
+  </ol>
+  <div style="font-size: 7.6pt; text-align: center; color: #1a237e; margin-top: 4px;">
+    <b>Bedside shortcut:</b> when V<sub>a</sub> = 40, V<sub>peak</sub> = 500 &rarr; <b>EROA &asymp; r&sup2; / 2</b>. &nbsp;&nbsp; <b>Severe = EROA &ge; 0.40 cm&sup2;</b>.
+  </div>
+</div>
+
+<div class="footer">PISA Method &mdash; Worked Examples</div>
+
+<!-- ============================================================== -->
+<!-- ====================== PAGE 4 ================================ -->
+<!-- ============================================================== -->
+<div class="page-break"></div>
+
+<div class="page-title">Beyond PISA &mdash; Cross-Checks &amp; Integrative Assessment</div>
+<div class="subtitle">Other semiquant signs &nbsp;|&nbsp; Continuity equation &nbsp;|&nbsp; 3D VCA &nbsp;|&nbsp; ASE 2017 integrative algorithm</div>
+
+<div class="cols">
+
+<!-- ===== LEFT: Semiquant signs ===== -->
+<div class="col">
+  <div class="section">
+    <div class="section-head">Semiquantitative Signs of Severe MR</div>
+    <div class="section-body">
+      <table class="co-table">
+        <tr><th style="width:38%">Parameter</th><th style="width:30%">Severe MR</th><th>Specificity / note</th></tr>
+        <tr><td><b>Vena contracta width</b></td><td><b>&ge; 7 mm</b> (biplane average)</td><td>Specific for severe; intermediate 3&ndash;6.9 mm</td></tr>
+        <tr><td><b>3D vena contracta area</b></td><td><b>&ge; 0.40 cm&sup2;</b></td><td>Best for elliptical/eccentric orifice; gold std for functional MR</td></tr>
+        <tr><td><b>Pulm vein systolic flow</b></td><td><b>Reversal</b> (S-wave below baseline)</td><td>Highly specific for severe; blunting alone is non-specific</td></tr>
+        <tr><td><b>Mitral inflow E-wave</b></td><td><b>&gt; 1.2 m/s</b> + high E/A</td><td>Severe MR or restrictive filling</td></tr>
+        <tr><td><b>Mitral inflow (mild MR)</b></td><td>A-dominant pattern</td><td>Specific for <i>mild</i> MR (low E)</td></tr>
+        <tr><td><b>LA size</b></td><td>Enlarged (chronic)</td><td>Acute severe may have <i>normal</i> LA</td></tr>
+        <tr><td><b>LV size</b></td><td>Enlarged (chronic primary)</td><td><b>Normal LV = specific for non-severe MR</b></td></tr>
+      </table>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-head">CW Doppler Profile &mdash; Mild vs Severe</div>
+    <div class="section-body">
+      <table class="co-table">
+        <tr><th style="width:30%">Feature</th><th style="width:35%" class="prefer">Mild MR envelope</th><th>Severe MR envelope</th></tr>
+        <tr><td><b>Density</b></td><td class="prefer">Faint, incomplete</td><td>Dense, full envelope</td></tr>
+        <tr><td><b>Shape</b></td><td class="prefer">Symmetric, parabolic</td><td>Asymmetric, dagger-shaped</td></tr>
+        <tr><td><b>Peak</b></td><td class="prefer">Mid-systolic</td><td>Early-peaking (severe), then sharp decline</td></tr>
+        <tr><td><b>Duration</b></td><td class="prefer">Holosystolic but faint</td><td>Holosystolic + dense</td></tr>
+        <tr><td><b>If non-holosystolic</b></td><td colspan="2">Mid-late = MVP &nbsp;|&nbsp; Early systolic only = secondary MR &nbsp;|&nbsp; <b>Both suggest LESS severe than the EROA implies</b></td></tr>
+      </table>
+      <div class="pearl-box">
+        <b>"Cut-off sign":</b> in acute severe MR, sharp early-systolic deceleration of the CW envelope reflects rapid LA pressure equalization &mdash; the V-wave of the LA pressure trace pushed up against the LV pressure curve. Strongly suggests severe + acute.
+      </div>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-head">Variability &amp; Why Quantitation Matters</div>
+    <div class="section-body" style="font-size: 7.6pt;">
+      <b>Thaden et al. Circ CV Imaging 2017:</b> External echos read as &le; moderate were re-read internally as <b>&gt; moderate in 60%</b> of cases. With diagnostic quantitation, discordance dropped from <b>31% to 15%</b>. Quantitative parameters are the difference-maker between operators &mdash; not visual gestalt.
+    </div>
+  </div>
+</div>
+
+<!-- ===== RIGHT: Continuity, 3D VCA, integrative ===== -->
+<div class="col">
+  <div class="section">
+    <div class="section-head">Continuity Equation Method (Quantitative Doppler)</div>
+    <div class="section-body">
+      Independent of PISA. Compares total mitral inflow stroke volume to LVOT (forward) stroke volume. The difference is the regurgitant volume.
+      <div class="formula-box small">
+        RegVol = SV<sub>MV inflow</sub> &minus; SV<sub>LVOT</sub>
+      </div>
+      <div class="formula-box small">
+        SV = &pi; (D/2)&sup2; &times; VTI &nbsp; <span class="small-note">(annular cross-section &times; flow VTI)</span>
+      </div>
+      <div class="def-grid">
+        <span class="lbl">D<sub>LVOT</sub></span><span>LVOT diameter, PSLAX, mid-systole (cm)</span>
+        <span class="lbl">VTI<sub>LVOT</sub></span><span>PW Doppler at LVOT, A5C view (cm)</span>
+        <span class="lbl">D<sub>MV</sub></span><span>Mitral annulus diameter, A4C, early diastole (cm)</span>
+        <span class="lbl">VTI<sub>MV</sub></span><span>PW Doppler at MV annulus, A4C (cm)</span>
+      </div>
+      <div class="sub-head">Then derive EROA</div>
+      <div class="formula-box small">
+        EROA = RegVol &divide; VTI<sub>MR jet</sub>
+      </div>
+      <div class="pearl-box">
+        <b>Worked example (from lecture):</b> SV<sub>MV</sub> 218 mL &minus; SV<sub>LVOT</sub> 71 mL = <b>RegVol 147 mL</b>. With MR VTI 216 cm &rarr; <b>EROA = 0.68 cm&sup2;</b>.
+      </div>
+      <div class="sub-head">Pitfalls of continuity equation</div>
+      <ul class="compact">
+        <li><b>&gt; mild AR</b> &mdash; LVOT SV is contaminated by regurgitant flow; use RVOT instead</li>
+        <li><b>Calcified annuli</b> &mdash; D&sup2; error magnifies (D is squared, like PISA radius)</li>
+        <li><b>Trace MODAL velocity</b> for mitral annular VTI (brightest line, not peak edge)</li>
+        <li><b>Learning curve</b> &mdash; reproducibility lower than PISA</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-head">3D Vena Contracta Area</div>
+    <div class="section-body" style="font-size: 7.6pt;">
+      Directly measures the regurgitant orifice in <b>cross-section</b> using 3D color Doppler MPR. No hemispheric assumption &mdash; ideal for non-circular orifices.
+      <ul class="compact">
+        <li><b>VCA &ge; 0.40 cm&sup2;</b> = severe</li>
+        <li>Best for: <b>functional/secondary MR</b>, eccentric jets, biphasic jets</li>
+        <li>In primary MR: 3D VCA and 2D PISA EROA agree (mean diff 0.04 cm&sup2;)</li>
+        <li>In secondary MR: <b>3D VCA exceeds 2D PISA EROA by ~0.12 cm&sup2; on average</b> (Zeng et al. Circ CV Imaging 2011)</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-head">Integrative Approach (ASE 2017)</div>
+    <div class="section-body">
+      <table class="co-table">
+        <tr><th style="width:32%">Bucket</th><th>Components</th></tr>
+        <tr><td><b>2D Findings</b></td><td>Flail leaflet, LV enlargement, LA enlargement, mechanism</td></tr>
+        <tr><td><b>Semiquant Doppler</b></td><td>VC width, PV flow, mitral inflow, CW Doppler profile</td></tr>
+        <tr><td><b>Quant Doppler</b></td><td>EROA + RegVol + RegFraction (PISA, continuity, or 3D)</td></tr>
+      </table>
+      <div class="pearl-box">
+        <b>Algorithm:</b> Does MR meet specific criteria for mild OR severe? &rarr; Yes, label it. &rarr; If intermediate (or borderline), <b>perform quantitation always</b>. &rarr; If discordant or poor quality, label <b>indeterminate</b> and consider TEE/CMR.
+      </div>
+    </div>
+  </div>
+</div>
+
+</div>
+
+<div class="footer">PISA Method &mdash; Cross-Checks &amp; Integrative Assessment</div>
+
+<!-- ============================================================== -->
+<!-- ====================== PAGE 5 ================================ -->
+<!-- ============================================================== -->
+<div class="page-break"></div>
+
+<div class="page-title">PISA &mdash; Mechanism, Prognosis, &amp; Surgical Indications</div>
+<div class="subtitle">Carpentier classification &nbsp;|&nbsp; Repairability &nbsp;|&nbsp; Outcomes &nbsp;|&nbsp; When to operate</div>
+
+<div class="cols">
+
+<!-- ===== LEFT: Carpentier ===== -->
+<div class="col">
+  <div class="section">
+    <div class="section-head">Carpentier Classification of MR Mechanism</div>
+    <div class="section-body">
+      <table class="co-table">
+        <tr><th style="width:18%">Type</th><th style="width:22%">Leaflet motion</th><th style="width:30%">Etiologies</th><th>Repairability</th></tr>
+        <tr>
+          <td><b>Type I</b></td>
+          <td>Normal</td>
+          <td>Annular dilatation (atrial MR), leaflet perforation (endocarditis)</td>
+          <td class="prefer">Potentially repairable</td>
+        </tr>
+        <tr>
+          <td><b>Type II</b></td>
+          <td>Excess (prolapse / flail)</td>
+          <td>Degenerative MVP, chordal rupture, papillary muscle rupture (acute MI)</td>
+          <td class="prefer">Highly repairable</td>
+        </tr>
+        <tr>
+          <td><b>Type IIIA</b></td>
+          <td>Restricted in <i>both</i> systole &amp; diastole</td>
+          <td>Rheumatic, mitral annular calcification (MAC), drug-induced (e.g., serotonin)</td>
+          <td>Not repairable &rarr; <b>replacement</b></td>
+        </tr>
+        <tr>
+          <td><b>Type IIIB</b></td>
+          <td>Restricted in <i>systole only</i></td>
+          <td>Ischemic CMP (papillary muscle displacement), nonischemic CMP (leaflet tethering)</td>
+          <td>Medical first; repair/replace 2nd line</td>
+        </tr>
+      </table>
+      <div class="pearl-box">
+        <b>Special cases:</b><br>
+        &bull; <b>SAM-mediated MR</b>: mid-late systolic timing (matches LVOT obstruction), typically <i>posteriorly directed</i>, dynamic (varies with loading conditions)<br>
+        &bull; <b>Endocarditis</b>: can produce multiple mechanisms simultaneously (perforation + flail + paravalvular)<br>
+        &bull; <b>Atrial functional MR</b>: Type I (annular dilatation) from chronic AFib + LA enlargement &mdash; growing recognition
+      </div>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-head">PISA by MR Mechanism &mdash; What to Expect</div>
+    <div class="section-body">
+      <table class="co-table">
+        <tr><th style="width:32%">Mechanism</th><th style="width:24%">PISA tendency</th><th>Why</th></tr>
+        <tr><td><b>Primary, holosystolic (flail, perforation)</b></td><td class="prefer">Accurate</td><td>Circular orifice, constant area, high gradient</td></tr>
+        <tr><td><b>MVP (mid-late systolic)</b></td><td>OVERestimates EROA</td><td>Brief opening, peak ROA snapshot &times; full VTI</td></tr>
+        <tr><td><b>Functional/secondary (Type IIIB)</b></td><td>UNDERestimates EROA</td><td>Elliptical/crescent orifice violates hemisphere</td></tr>
+        <tr><td><b>Eccentric / wall-hugging</b></td><td>Unreliable</td><td>Coand&#259; effect, distorted convergence</td></tr>
+        <tr><td><b>Acute severe (papillary rupture)</b></td><td>EROA inflated by low V<sub>peak</sub></td><td>High LAP narrows LV-LA gradient</td></tr>
+        <tr><td><b>Multiple jets</b></td><td>Underestimates if only one measured</td><td>Combined R = &radic;(r&#8321;&sup2; + r&#8322;&sup2;)</td></tr>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- ===== RIGHT: Indications, prognosis ===== -->
+<div class="col">
+  <div class="section">
+    <div class="section-head">Surgical Indications &mdash; Severe Primary MR (ACC/AHA + Mayo)</div>
+    <div class="section-body">
+      <div class="sub-head">Class 1 (operate)</div>
+      <ul class="compact">
+        <li><b>Symptomatic</b> severe primary MR &mdash; any LVEF (Stage D)</li>
+        <li><b>Asymptomatic with LV systolic dysfunction</b> &mdash; LVEF &le; 60% <b>and/or</b> LVESD &ge; 40 mm (Stage C2). 2020 ACC/AHA makes this a Class 1 recommendation, not IIa.</li>
+      </ul>
+      <div class="sub-head">Class 2a (reasonable in asymptomatic, normal LV function)</div>
+      <ul class="compact">
+        <li><b>New-onset atrial fibrillation</b></li>
+        <li><b>PASP &gt; 50 mmHg</b> (rest)</li>
+        <li><b>Likelihood of a durable repair &gt; 95% with expected mortality &lt; 1%</b> at a primary or comprehensive Valve Center</li>
+      </ul>
+      <div class="pearl-box">
+        <b>Why these thresholds matter:</b> in primary MR, the LV unloads into the LA. EF &lt; 60% means systolic function is already abnormal (would be lower without the regurgitant pop-off). Wait too long &rarr; irreversible LV dysfunction post-op.
+      </div>
+      <div class="sub-head">Severe secondary MR &mdash; very different pathway</div>
+      <ul class="compact">
+        <li>GDMT first (BB, ACEi/ARNI, MRA, SGLT2)</li>
+        <li>CRT if eligible</li>
+        <li>If still symptomatic: TEER (MitraClip) per COAPT criteria, or surgery in selected</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-head">Prognosis by EROA &mdash; The Data</div>
+    <div class="section-body">
+      <div class="sub-head">Sarano NEJM 2005 / Circulation 2018 &mdash; primary MR survival under medical management</div>
+      <table class="co-table">
+        <tr><th>EROA</th><th>10-yr survival</th><th>Note</th></tr>
+        <tr><td>None / no MR</td><td class="prefer">~83%</td><td>Reference</td></tr>
+        <tr><td>1&ndash;19 mm&sup2;</td><td>~70%</td><td>Mild</td></tr>
+        <tr><td>20&ndash;39 mm&sup2;</td><td>~62%</td><td>Moderate</td></tr>
+        <tr class="severe"><td>&ge; 40 mm&sup2; (&ge; 0.40 cm&sup2;)</td><td>~40%</td><td>Severe &mdash; massive survival deficit, even asymptomatic</td></tr>
+      </table>
+      <div class="sub-head">Topilsky Circulation 2012 &mdash; mid-late vs holosystolic MR</div>
+      <table class="co-table">
+        <tr><th>Pattern</th><th>5-yr CV events</th></tr>
+        <tr><td>Holosystolic MR</td><td><span class="highlight">40.4 &plusmn; 6.2%</span></td></tr>
+        <tr class="prefer"><td>Mid-late systolic MR (MVP-pattern)</td><td>15.9 &plusmn; 4.7%</td></tr>
+      </table>
+      <div class="pearl-box">
+        <b>Bottom line:</b> for the SAME EROA, mid-late systolic MR has dramatically better outcomes than holosystolic MR. Confirms that <b>PISA EROA alone in MVP overstates the prognostic burden</b>. Always integrate timing.
+      </div>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-head">The 30-Second Bedside Workflow</div>
+    <div class="section-body" style="font-size: 7.7pt;">
+      <ol class="compact">
+        <li><b>Mechanism:</b> Carpentier type? Primary or secondary?</li>
+        <li><b>Color Doppler:</b> jet area, eccentricity, flow convergence visible?</li>
+        <li><b>Vena contracta:</b> &ge; 7 mm? &lt; 3 mm?</li>
+        <li><b>Pulm vein flow:</b> systolic blunting or reversal?</li>
+        <li><b>Mitral inflow:</b> E &gt; 1.2 m/s or A-dominant?</li>
+        <li><b>CW envelope:</b> dense + dagger-shaped + holosystolic? Or symmetric + faint?</li>
+        <li><b>PISA:</b> EROA + RegVol via the recipe</li>
+        <li><b>Cross-check:</b> 3D VCA in functional MR; continuity equation if PISA limited</li>
+        <li><b>2D context:</b> LV size, LA size, EF, PASP &mdash; do they match the severity grade?</li>
+        <li><b>Final call:</b> ASE grade I&ndash;IV. Indeterminate &rarr; CMR.</li>
+      </ol>
+    </div>
+  </div>
+</div>
+
+</div>
+
+<div class="footer">PISA Method &mdash; Mechanism, Prognosis &amp; Surgical Indications</div>
+
+</body>
+</html>

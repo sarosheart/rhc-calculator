@@ -885,7 +885,7 @@ const MODULES = {
         ],
         tdi: [
           { key: 's',     label: 's′ (systolic)',         value: 'POSITIVE — annular descent during systole. Lateral s′ ≥ 6 cm/s normal; reduced in systolic dysfunction.', text: true },
-          { key: 'eprime', label: 'e′ (early diastolic)', value: 'NEGATIVE — early annular ascent. Lateral e′ ≥ 10 cm/s, septal ≥ 7 cm/s normal. KEY for E/e′ and diastolic grading.', text: true },
+          { key: 'eprime', label: 'e′ (early diastolic)', value: 'NEGATIVE — early annular ascent. Reduced e′ by the 2025 ASE algorithm this tool runs is septal ≤ 6, lateral ≤ 7, or average ≤ 6.5 cm/s (2016 used septal &lt; 7 / lateral &lt; 10). KEY for E/e′ and diastolic grading.', text: true },
           { key: 'aprime', label: 'a′ (atrial)',           value: 'NEGATIVE — late diastolic motion from atrial systole. Reduced or absent in AF.', text: true },
           { key: 'use',    label: 'How TDI differs',      value: 'Velocities are 10–20× LOWER than blood-flow Doppler (cm/s vs m/s). Filter settings differ. Used for diastolic function, dyssynchrony, longitudinal systolic function.', text: true, wide: true },
         ],
@@ -944,7 +944,7 @@ const MODULES = {
         else if (sv < 100)  svBand = 'Normal stroke volume.';
         else                svBand = 'High — hyperdynamic, regurgitant LV (AR / MR), or high-output state.';
         return [
-          { key: 'vti',  label: 'LVOT VTI',     value: vtiCm.toFixed(1), unit: 'cm' },
+          { key: 'vti',  label: 'VTI (triangular approx.)', value: vtiCm.toFixed(1), unit: 'cm' },
           { key: 'sv',   label: 'Stroke volume', value: sv.toFixed(0),    unit: 'mL' },
           { key: 'mean', label: 'Mean velocity', value: meanV.toFixed(0), unit: 'cm/s' },
           { key: 'note', label: 'SV assessment', value: svBand, unit: '', text: true, wide: true },
@@ -974,7 +974,7 @@ const MODULES = {
           { v: 'gls',      text: 'GLS calculator',     help: 'Enter a global GLS value, see severity grading and interpretation' },
         ],
       },
-      { type: 'picker', key: 'pattern', label: 'Pattern', default: 'normal',
+      { type: 'picker', key: 'pattern', label: 'Pattern', default: 'normal', showFor: { view: ['patterns'] },
         options: [
           { v: 'normal',         text: 'Normal',                 help: 'All 17 segments ≈ −20%' },
           { v: 'amyloid',        text: 'Amyloid (apical-spar)',  help: 'Apical preserved, basal severely reduced — "cherry on top"' },
@@ -985,7 +985,7 @@ const MODULES = {
           { v: 'mi_lcx',         text: 'Post-MI: LCx',           help: 'Lateral wall infarct' },
         ],
       },
-      { type: 'slider', key: 'gls', label: 'GLS', unit: '%', min: -25, max: -4, step: 0.5, default: -19, decimals: 1 },
+      { type: 'slider', key: 'gls', label: 'GLS', unit: '%', min: -25, max: -4, step: 0.5, default: -19, showFor: { view: ['gls'] }, decimals: 1 },
     ],
     compute: (p) => {
       if (p.view === 'concept') {
@@ -1044,7 +1044,7 @@ const MODULES = {
       '<strong>Apical foreshortening</strong> makes the apex look pseudo-reduced. Always optimise the apical view to capture the true LV length before strain analysis. Pseudo-reduction at the apex can be confused with apical-sparing if not appreciated.',
       '<strong>Atrial fibrillation</strong> requires averaging ≥ 5 beats because of beat-to-beat variability. Single-beat strain in AF is unreliable.',
       '<strong>Sign convention.</strong> Negative is good. GLS = −10% is WORSE than GLS = −18%. The literature sometimes drops the minus sign; always confirm.',
-      '<strong>Apical sparing is a RATIO, not an absolute.</strong> Calculate (avg apical strain) / (avg basal + mid strain). A ratio > 1.0 has ~93% specificity for amyloid in the right clinical context.',
+      '<strong>Apical sparing is a RATIO, not an absolute.</strong> Calculate (avg apical strain) / (avg basal + mid strain). A ratio &gt; 1.0 had 93% SENSITIVITY and 82% specificity in the derivation cohort (Phelan, Heart 2012); pooled real-world performance is lower (sensitivity ~66%, specificity ~83%).',
       '<strong>Strain rate ≠ strain.</strong> Strain rate (s⁻¹) is the time derivative; it tracks fast deformation events and is used for diastolic function (e\'-equivalent) and dyssynchrony. Strain (%) is the cumulative deformation.',
       '<strong>Tissue-Doppler strain is angle-dependent</strong> and largely obsolete for clinical work — speckle tracking is the modern standard. If a report says "strain" without specifying, it almost always means speckle-tracking 2D strain.',
       '<strong>EF can be preserved with abnormal GLS</strong> — this is the early signal in chemotherapy cardiotoxicity (anthracyclines, trastuzumab), HFpEF, and infiltrative cardiomyopathies. A relative drop ≥ 15% from baseline GLS triggers the cardiotoxicity work-up.',
@@ -1091,7 +1091,7 @@ const MODULES = {
     id: 'doppler_co',
     title: 'Doppler Cardiac Output',
     purpose: 'Estimate stroke volume and cardiac output from LVOT diameter and the LVOT pulsed-wave velocity-time integral. Standard reporting workflow whenever LVOT VTI is available.',
-    formula: 'SV = π·(LVOT/2)<sup>2</sup> · LVOT&nbsp;VTI &nbsp;·&nbsp; CO = SV · HR &nbsp;·&nbsp; CI = CO / BSA',
+    formula: 'SV (mL) = π·(LVOT<sub>cm</sub>/2)<sup>2</sup> · LVOT&nbsp;VTI<sub>cm</sub> &nbsp;·&nbsp; CO (L/min) = SV · HR / 1000 &nbsp;·&nbsp; CI = CO / BSA',
     inputs: [
       { type: 'slider', key: 'lvot', label: 'LVOT diameter', unit: 'cm', min: 1.6, max: 2.6, step: 0.01, default: 2.10, decimals: 2 },
       { type: 'slider', key: 'vti',  label: 'LVOT VTI',      unit: 'cm', min: 8,   max: 30,  step: 0.5, default: 20,    decimals: 1 },
@@ -1220,7 +1220,7 @@ const MODULES = {
     id: 'dpdt',
     title: 'dP/dt (LV Contractility)',
     purpose: 'Estimate LV peak rate of pressure rise during isovolumic contraction from the MR jet. The 1→3 m/s slope corresponds to a 32 mmHg pressure rise (4 vs 36 mmHg by Bernoulli).',
-    formula: 'dP/dt = 32 / Δt &nbsp;·&nbsp; Δt = time from 1 m/s to 3 m/s on MR ascending limb',
+    formula: 'dP/dt (mmHg/s) = 32 / Δt<sub>seconds</sub> = 32000 / Δt<sub>ms</sub> &nbsp;·&nbsp; Δt = time from 1 m/s to 3 m/s on the MR ascending limb',
     inputs: [
       { type: 'slider', key: 'dt', label: 'Δt (1→3 m/s)', unit: 'ms', min: 15, max: 90, step: 1, default: 30, decimals: 0 },
     ],
@@ -1259,7 +1259,7 @@ const MODULES = {
     pitfalls: [
       'Abbas 2003 was derived in patients with PVR &lt; 8 WU and TR/RVOT ratios &lt; 0.275 — results above that range are unreliable. When TRV/VTI<sub>RVOT</sub> &gt; 0.275 (PVR likely &gt; 6 WU) use Abbas 2013 instead: PVR (WU) = 5.19 × (TR V<sub>max</sub>² / RVOT VTI) − 0.4.',
       'Anything that lowers RVOT VTI (low CO, severe RV dysfunction, beta-blockade) inflates apparent PVR. Always interpret in clinical context.',
-      'PVR ≥ 3 WU is abnormal. Use as a screen — NOT as a substitute for RHC PVR when management decisions hinge on the number (PAH-targeted therapy, transplant candidacy, congenital surgical planning).',
+      'The upper limit of normal PVR is 2 WU. The 2022 ESC/ERS definition of pre-capillary PH is mPAP &gt; 20 mmHg with PAWP ≤ 15 mmHg and PVR &gt; 2 WU — the older ≥ 3 WU cut-off was retired. Use this as a screen, NOT as a substitute for invasive PVR when management hinges on the number (PAH-targeted therapy, transplant candidacy, congenital surgical planning).',
       'Confirm the CW signal you\'re measuring is truly TR — RVOT obstruction, MR contamination, or eccentric jets all mimic the envelope shape.',
     ],
   },
@@ -1364,7 +1364,7 @@ const MODULES = {
         { key: 'ea',     label: 'E / A',               value: ea.toFixed(2),                 unit: '' },
         { key: 'main',   label: 'Main abnormal',       value: mainAbn + ' / 3',              unit: '' },
         { key: 'sup',    label: 'Supp. abnormal',      value: supAbn + ' / 4',               unit: '' },
-        { key: 'grade',  label: 'Grade · LAP',         value: grade + ' · ' + lap,           unit: '', severity: { label: gradeKlass + (gradeKlass === 'normal' ? '' : ' lap'), klass: gradeKlass } },
+        { key: 'grade',  label: 'Grade · LAP',         value: grade + ' · ' + lap,           unit: '', severity: { label: lap, klass: gradeKlass } },
       ];
     },
     draw: drawDiastolic,
@@ -1532,7 +1532,7 @@ const MODULES = {
     id: 'ar_atlas',
     title: 'Aortic Regurgitation',
     calculatorLink: 'pisa',
-    purpose: 'Normal vs mild vs severe AR CW envelope. The diagnostic feature is the deceleration slope (pressure half-time, PHT): a steeper slope means a faster equilibration of LV and aortic diastolic pressures, which signals more severe AR.',
+    purpose: 'Mild vs moderate vs severe AR CW envelope — grading starts at mild because trace AR is physiologic in healthy adults. The diagnostic feature is the deceleration slope (pressure half-time, PHT): a steeper slope means a faster equilibration of LV and aortic diastolic pressures, which signals more severe AR.',
     formula: '<strong>Severe AR</strong>: PHT &lt; 200 ms &nbsp;·&nbsp; vena contracta &gt; 0.6 cm &nbsp;·&nbsp; holodiastolic flow reversal in descending aorta',
     inputs: [],
     compute: () => [
@@ -1571,7 +1571,7 @@ const MODULES = {
     pitfalls: [
       'AF makes PHT noisy — average ≥ 5 beats with similar RR intervals.',
       'In the presence of significant AR, PHT is shortened (not lengthened) and overestimates MVA. Use planimetry instead.',
-      'Wilkins score (TEE) determines suitability for PMBC: leaflet mobility, thickening, calcification, subvalvular involvement. Score ≤ 8 = good candidate.',
+      'Wilkins score (TTE) determines suitability for PMBC: leaflet mobility, thickening, calcification, subvalvular involvement. Score ≤ 8 = good candidate. TEE is done before PMBC to exclude LA appendage thrombus and grade MR — it is not how the Wilkins score is obtained.',
       'In sinus rhythm, prominent A wave with short DT can be confused with MS. Distinguish using the deceleration slope, not the peak velocity.',
     ],
   },
@@ -1581,7 +1581,7 @@ const MODULES = {
     id: 'mr_atlas',
     title: 'Mitral Regurgitation',
     calculatorLink: 'pisa',
-    purpose: 'Normal vs moderate vs severe MR CW envelope. Severe MR has a dense, often early-peaking ("v-wave cutoff sign") envelope due to a steep LA pressure rise. The contour shape is as informative as the peak velocity.',
+    purpose: 'Mild vs moderate vs severe MR CW envelope — grading starts at mild because trace MR is physiologic in healthy adults. Severe MR has a dense, often early-peaking ("v-wave cutoff sign") envelope due to a steep LA pressure rise. The contour shape is as informative as the peak velocity.',
     formula: '<strong>Severe MR</strong>: EROA ≥ 0.4 cm² &nbsp;·&nbsp; R<sub>vol</sub> ≥ 60 mL &nbsp;·&nbsp; vena contracta ≥ 0.7 cm &nbsp;·&nbsp; pulmonary vein systolic flow reversal',
     inputs: [],
     compute: () => [
@@ -1618,7 +1618,7 @@ const MODULES = {
     pitfalls: [
       'Severe TR with RA–RV equalization can present with a low V_max — qualitative envelope shape (triangular, dense) and hepatic vein systolic flow reversal are essential.',
       'Don\'t use TR V_max for PASP estimation when severe TR is suspected — the gradient is unreliable. Get RHC for true pressures.',
-      'The new ASE 2021 grading adds "massive" and "torrential" categories beyond severe — based on vena contracta and EROA: massive VC 1.4–2.0 cm, torrential ≥ 2.0 cm.',
+      'The Hahn &amp; Zamorano 2017 (EHJ-CI) scheme extends grading beyond severe: massive = VC 1.4–2.0 cm (EROA 0.60–0.79 cm²), torrential = VC ≥ 2.1 cm (EROA ≥ 0.80 cm²).',
       'Always interrogate TR from multiple windows (apical 4C, parasternal RV inflow, subcostal). The HIGHEST velocity from any window is what counts.',
     ],
   },
@@ -1651,18 +1651,19 @@ const MODULES = {
     id: 'pr_atlas',
     title: 'Pulmonary Regurgitation',
     purpose: 'Mild vs moderate vs severe pulmonary regurgitation CW envelope. The diagnostic feature is the deceleration slope (pressure half-time) and the presence of end-diastolic equalisation between PA and RV. PR is very common after TOF repair and after PV interventions.',
-    formula: '<strong>Severe PR</strong>: PHT &lt; 100 ms &nbsp;·&nbsp; jet width &gt; 50% of RVOT &nbsp;·&nbsp; end-diastolic flow reversal in branch PAs &nbsp;·&nbsp; <strong>PADP</strong> = 4·V²<sub>end-diastolic</sub> + RAP',
+    formula: '<strong>Severe PR</strong>: PHT &lt; 100 ms &nbsp;·&nbsp; jet width / pulmonary annulus &ge; 0.7 &nbsp;·&nbsp; end-diastolic flow reversal in branch PAs &nbsp;·&nbsp; <strong>PADP</strong> = 4·V²<sub>end-diastolic</sub> + RAP',
     inputs: [],
     compute: () => [
-      { key: 'mi',  label: 'Mild PR',     value: 'PHT > 200 ms  ·  jet < 25% of RVOT',          unit: '', text: true },
-      { key: 'mo',  label: 'Moderate',    value: 'PHT 100–200 ms  ·  jet 25–50%',               unit: '', text: true },
-      { key: 'sev', label: 'Severe PR',   value: 'PHT < 100 ms  ·  jet > 50% RVOT  ·  PA=RV early diastole', unit: '', text: true },
+      { key: 'mi',  label: 'Mild PR',     value: 'PHT > 200 ms  ·  thin jet, narrow origin (< 10 mm long)', unit: '', text: true },
+      { key: 'mo',  label: 'Moderate',    value: 'PHT 100–200 ms  ·  intermediate jet width  ·  PR index < 0.77', unit: '', text: true },
+      { key: 'sev', label: 'Severe PR',   value: 'PHT < 100 ms  ·  jet/annulus ≥ 0.7  ·  PA=RV early diastole', unit: '', text: true },
       { key: 'padp',label: 'PADP estimate',value: 'PADP = 4·V²<sub>end-diastolic</sub> + RAP — derived from the PR end-diastolic velocity', unit: '', text: true },
       { key: 'p',   label: 'Pearl',       value: 'In severe PR, the PR jet velocity equilibrates EARLY in diastole because PA and RV pressures equalise — the envelope terminates abruptly in mid-diastole. Common after TOF repair; PV replacement is timed by RV size and function (CMR-guided).', unit: '', text: true, wide: true },
     ],
     draw: drawPRAtlas,
     pitfalls: [
       'Trace PR is common in healthy adults (especially with high-frequency probes). Severity grading begins at MILD.',
+      'The jet-width ratio is referenced to the PULMONARY ANNULUS, not the RVOT — ASE 2017 uses jet width / annulus &gt; 0.7 for severe, validated against a CMR regurgitant fraction ≥ 40%. After a transannular patch the RVOT is far wider than the annulus, so ratioing to the RVOT under-calls exactly the jets that matter most.',
       'PR is the rule, not the exception, after TOF repair. Indications for PV replacement combine RV volumes (RVEDVi > 150 mL/m² on CMR), RV dysfunction, symptoms, and arrhythmias — NOT PR severity alone.',
       'PR end-diastolic velocity allows estimation of PA diastolic pressure (PADP = 4·V² + RAP). This complements TR-derived PASP and gives mean PAP if both are obtained.',
       'After PV intervention (balloon valvuloplasty for PS, valve-in-valve TPVR), PR is the trade-off. Anticipate and counsel patients beforehand.',
@@ -2339,7 +2340,7 @@ function drawContinuity(p, t) {
   const xL = W * 0.13;
   const xR = W * 0.40;
   const cy = H * 0.50;
-  const lvotR = Math.min(W * 0.090, H * 0.32);
+  const lvotR = Math.min(W * 0.090, H * 0.32) * (p.lvot / 2.10);   // scale with the input; 2.10 = default
   // AV area scales with continuity ratio: AVA / LVOT_area = LVOT_VTI / AV_VTI
   const ratio = Math.max(0.18, Math.min(1.0, p.lvti / p.avti));
   const avR = lvotR * Math.sqrt(ratio);
@@ -3507,8 +3508,8 @@ function drawCvRMmodeView() {
       ctx.fillStyle = '#fdcc4d';
       ctx.font = '700 10px DM Sans, system-ui, sans-serif';
       ctx.textAlign = 'center';
-      ctx.fillText('insp ↓', x0 + w * 0.25, y0 + 18);
-      ctx.fillText('exp ↑',  x0 + w * 0.75, y0 + 18);
+      ctx.fillText('insp — septum → LV', x0 + w * 0.25, y0 + 18);
+      ctx.fillText('exp — septum → RV',  x0 + w * 0.75, y0 + 18);
     }
   };
 
@@ -3577,23 +3578,7 @@ function drawCvRSummaryView() {
   }
 }
 
-function wrapText(text, x, y, maxW, lineH) {
-  const words = text.split(' ');
-  let line = '';
-  let curY = y;
-  for (const word of words) {
-    const testLine = line ? line + ' ' + word : word;
-    if (ctx.measureText(testLine).width > maxW) {
-      ctx.fillText(line, x, curY);
-      line = word;
-      curY += lineH;
-    } else {
-      line = testLine;
-    }
-  }
-  if (line) ctx.fillText(line, x, curY);
-}
-
+// (duplicate wrapText removed — the definition further down is the one that ran)
 function drawCvR(p, t) {
   ctx.clearRect(0, 0, W, H);
   // Title varies by view
@@ -4016,15 +4001,15 @@ function drawPRAtlas(p, t) {
 
   drawAtlasPanel(L.x0, L.panelY, L.panelW, L.panelH, 'MILD', 'mild',
     (a) => drawAtlasEnvelope(a, { dir: 'up', shape: 'phtSlope', peakV: 2.5, maxV: 3.5, beats: 3, color: 'rgba(120, 200, 130, 0.78)', slowSlope: 0.95, refLines: [1, 2] }),
-    ['PHT > 200 ms', 'gentle slope', 'jet < 25% of RVOT']
+    ['PHT > 200 ms', 'gentle slope', 'thin jet, narrow origin']
   );
   drawAtlasPanel(L.x1, L.panelY, L.panelW, L.panelH, 'MODERATE', 'moderate',
     (a) => drawAtlasEnvelope(a, { dir: 'up', shape: 'phtSlope', peakV: 2.5, maxV: 3.5, beats: 3, color: 'rgba(255, 200, 90, 0.78)', slowSlope: 0.50, refLines: [1, 2] }),
-    ['PHT 100–200 ms', 'intermediate slope', 'jet 25–50% of RVOT']
+    ['PHT 100–200 ms', 'intermediate slope', 'intermediate jet width']
   );
   drawAtlasPanel(L.x2, L.panelY, L.panelW, L.panelH, 'SEVERE', 'severe',
     (a) => drawAtlasEnvelope(a, { dir: 'up', shape: 'phtSlope', peakV: 2.5, maxV: 3.5, beats: 3, color: 'rgba(239, 100, 100, 0.80)', slowSlope: 0.10, refLines: [1, 2] }),
-    ['PHT < 100 ms', 'STEEP slope (PA/RV equalise)', 'jet > 50% RVOT  ·  end-diast flow rev']
+    ['PHT < 100 ms', 'STEEP slope (PA/RV equalise)', 'jet/annulus ≥ 0.7  ·  end-diast flow rev']
   );
 }
 
@@ -4921,11 +4906,11 @@ function drawAmyloidAtlas(p, t) {
     );
   } else if (p.view === 'inflow') {
     drawAtlasPanel(L.x0, L.panelY, L.panelW, L.panelH, 'NORMAL', 'normal',
-      (a) => drawAtlasEnvelope(a, { dir: 'up', shape: 'mitralInflow', peakV: 0.8, maxV: 2.0, beats: 2, color: 'rgba(120, 200, 130, 0.78)', slowSlope: 0.20, aPeak: 0.5, refLines: [1] }),
+      (a) => drawAtlasEnvelope(a, { dir: 'up', shape: 'mitralInflow', peakV: 0.8, maxV: 2.0, beats: 2, color: 'rgba(120, 200, 130, 0.78)', slowSlope: 0.20, aPeak: 0.7, refLines: [1] }),
       ['E/A ≈ 1.0', 'DT 160–240 ms', 'normal e′ ≥ 9 cm/s']
     );
     drawAtlasPanel(L.x1, L.panelY, L.panelW, L.panelH, 'HCM', 'moderate',
-      (a) => drawAtlasEnvelope(a, { dir: 'up', shape: 'mitralInflow', peakV: 0.7, maxV: 2.0, beats: 2, color: 'rgba(255, 200, 90, 0.78)', slowSlope: 0.55, aPeak: 0.7, refLines: [1] }),
+      (a) => drawAtlasEnvelope(a, { dir: 'up', shape: 'mitralInflow', peakV: 0.6, maxV: 2.0, beats: 2, color: 'rgba(255, 200, 90, 0.78)', slowSlope: 0.55, aPeak: 0.9, refLines: [1] }),
       ['E/A often < 1 (impaired relaxation)', 'DT prolonged', 'reduced e′ — but variable']
     );
     drawAtlasPanel(L.x2, L.panelY, L.panelW, L.panelH, 'AMYLOID', 'severe',
@@ -4949,7 +4934,7 @@ function drawAmyloidAtlas(p, t) {
         const r = Math.min(a.w, a.h) * 0.40;
         drawStrainBullsEye(cx, cy, r, 'reducedAll');
       },
-      ['GLS −10 to −15%', 'reduced especially in HYPERTROPHIED segments', 'no apical sparing']
+      ['GLS −12 to −15%', 'reduced especially in HYPERTROPHIED segments', 'no apical sparing']
     );
     drawAtlasPanel(L.x2, L.panelY, L.panelW, L.panelH, 'AMYLOID', 'severe',
       (a) => {
@@ -5870,6 +5855,13 @@ function buildInputs(m) {
   // Hide the Inputs card entirely for static atlas modules with no inputs
   const inputsCard = document.querySelector('.inputs-card');
   if (inputsCard) inputsCard.style.display = (m.inputs && m.inputs.length > 0) ? '' : 'none';
+  // An input can declare the view(s) it applies to. Without this the Pattern picker and the GLS
+  // slider stayed on screen in every Strain view, doing nothing in most of them.
+  const applies = (inp) => {
+    if (!inp.showFor) return true;
+    return Object.entries(inp.showFor).every(([k, vals]) =>
+      vals.includes(inputState[k] !== undefined ? inputState[k] : (m.inputs.find(i => i.key === k) || {}).default));
+  };
   for (const inp of m.inputs) {
     inputState[inp.key] = inp.default;
     if (inp.type === 'slider') {
@@ -5881,6 +5873,7 @@ function buildInputs(m) {
         <span class="val" id="val-${inp.key}">${(+inp.default).toFixed(inp.decimals || 1)}</span>
         <span class="unit">${inp.unit}</span>
       `;
+      if (!applies(inp)) row.style.display = 'none';
       wrap.appendChild(row);
       const slider = row.querySelector('input');
       slider.addEventListener('input', () => {
@@ -5904,13 +5897,32 @@ function buildInputs(m) {
           opts.querySelectorAll('.picker-opt').forEach(o => o.classList.remove('active'));
           b.classList.add('active');
           help.textContent = opt.help;
+          refreshInputVisibility();
           recompute();
         };
         opts.appendChild(b);
         if (opt.v === inp.default) help.textContent = opt.help;
       }
+      if (!applies(inp)) row.style.display = 'none';
+      row.dataset.inputKey = inp.key;
       wrap.appendChild(row);
     }
+  }
+}
+
+// Re-evaluate every input's showFor after a picker changes, so controls appear and disappear
+// with the view they belong to instead of sitting inert on screen.
+function refreshInputVisibility() {
+  const m = MODULES[activeModule];
+  if (!m || !m.inputs) return;
+  const wrap = document.getElementById('modInputs');
+  const rows = wrap.querySelectorAll('.input-row, .picker-row');
+  let idx = 0;
+  for (const inp of m.inputs) {
+    const row = rows[idx++];
+    if (!row) continue;
+    const show = !inp.showFor || Object.entries(inp.showFor).every(([k, vals]) => vals.includes(inputState[k]));
+    row.style.display = show ? '' : 'none';
   }
 }
 

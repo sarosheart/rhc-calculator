@@ -983,12 +983,12 @@ body.dark .seo-content-body h3 { color: #e8ecf2; }
       </div>
       <div class="slider-row">
         <span class="slider-label" data-tip="Maximum diastolic potential — the most negative voltage reached after repolarization, before phase 4 begins. Adenosine hyperpolarizes via I_KAch.">MDP</span>
-        <input type="range" id="slMdp" min="-80" max="-50" step="1" value="-65">
+        <input type="range" id="slMdp" min="-80" max="-55" step="1" value="-65">
         <span class="slider-val" id="slMdpVal">-65 mV</span>
       </div>
       <div class="slider-row">
         <span class="slider-label" data-tip="Voltage at which the cell fires phase 0. Reaching it from MDP triggers the upstroke. Longer time to threshold = slower heart rate.">Threshold</span>
-        <input type="range" id="slThr" min="-55" max="-30" step="1" value="-40">
+        <input type="range" id="slThr" min="-45" max="-30" step="1" value="-40">
         <span class="slider-val" id="slThrVal">-40 mV</span>
       </div>
     </div>
@@ -1174,7 +1174,7 @@ const DRUGS = {
 
   // OTHER
   adenosine:    { name:'Adenosine', cls:'V', paceMajor:true, vent:{}, pace:{phase4SlopeFactor:0.20, MDP:-10}, mech:'A1 receptor → I_KAch → AV nodal block. 6 mg → 12 mg IV push. Half-life ~10 sec.' },
-  digoxin:      { name:'Digoxin', cls:'V', paceMajor:true, vent:{}, pace:{phase4SlopeFactor:0.92, apdMult:+0.10}, mech:'↑ vagal tone slows AV node. Narrow therapeutic index. Inotrope via Na/K-ATPase block.' },
+  digoxin:      { name:'Digoxin', cls:'V', paceMajor:true, vent:{apdMult:-0.05}, pace:{phase4SlopeFactor:0.92, apdMult:+0.10}, mech:'↑ vagal tone slows AV node. Narrow therapeutic index. Inotrope via Na/K-ATPase block.' },
   magnesium:    { name:'Magnesium', cls:'V', paceMajor:false, vent:{apdMult:-0.03}, pace:{}, mech:'First-line for torsades. Membrane stabilizer — acts on ventricular EADs, not pacemaker.' },
 };
 
@@ -1408,7 +1408,11 @@ function eadBump(t, p) {
   const t3 = d0 + d1 + d2;            // start of phase 3
   const center = t3 + d3 * 0.45;       // ~45% into phase 3
   const width = 28;
-  const amp = 18 * Math.min(2, p.apdMult);
+  // EADs need a PROLONGED action potential — they are the phase-2/3 consequence of repolarisation
+  // reserve failing. On a normal or shortened AP (Class IB, short-QT) they should not appear, so
+  // the amplitude ramps in from apdMult 1.1 and is zero below it rather than being drawn always.
+  const lengthening = Math.max(0, Math.min(2, p.apdMult) - 1.1) / 0.9;
+  const amp = 18 * Math.min(2, p.apdMult) * lengthening;
   const dt = (t - center) / width;
   return amp * Math.exp(-(dt * dt));
 }
@@ -1420,7 +1424,15 @@ function dadBump(t, p) {
   const apdDur = ventAPDuration(p);
   const center = apdDur + 90;          // 90 ms into diastole
   const width = 32;
-  const amp = 12;
+  // DADs come from sarcoplasmic Ca overload, so the amplitude has to track the things that cause
+  // it rather than being a fixed 12 mV bump: digoxin (Na/K-ATPase block -> Na/Ca exchange ->
+  // Ca loading) and fast rates (less time for Ca reuptake). Both are exactly the conditions in
+  // which DADs are taught to appear, and neither moved the overlay before.
+  let caLoad = 1;
+  if (activeDrugs.has('digoxin')) caLoad += 1.1;
+  const hrNow = 60000 / Math.max(1, pacemakerCycleLen(paceParams));
+  if (hrNow > 90) caLoad += Math.min(1.0, (hrNow - 90) / 60);
+  const amp = 12 * caLoad;
   const dt = (t - center) / width;
   return amp * Math.exp(-(dt * dt));
 }
@@ -1767,7 +1779,9 @@ function drawThreshold(p, isPace) {
   const plotW = W - margin.l - margin.r;
   const plotH = H - margin.t - margin.b;
   const vMin = -100, vMax = 40;
-  const thr = isPace ? p.threshold : -50;
+  // Fast-response threshold is about -70 mV (nodal cells fire near -40, which is what
+  // p.threshold carries in pace mode). -50 drew the line part-way up phase 0.
+  const thr = isPace ? p.threshold : -70;
   const y = margin.t + plotH * (1 - (thr - vMin) / (vMax - vMin));
   ctx.strokeStyle = styles.threshold;
   ctx.setLineDash([4, 4]);
@@ -1843,7 +1857,11 @@ function drawECG(live, isPace) {
 
   // Cycle length sets the x-axis span. Vent mode = fixed 1000ms (HR 60).
   // Pace mode = live cycle length so TP segment shows HR change.
-  const cycleLen = isPace ? Math.max(400, Math.min(2400, pacemakerCycleLen(live))) : 1000;
+  // Clamped for DRAWING only — a 4 s cycle would leave the strip mostly blank. The label
+  // below always reports the true rate so the strip cannot contradict the measurement panel.
+  const trueCycleLen = isPace ? pacemakerCycleLen(live) : 1000;
+  const cycleLen = isPace ? Math.max(400, Math.min(2400, trueCycleLen)) : 1000;
+  const ecgIsClamped = isPace && Math.abs(trueCycleLen - cycleLen) > 1;
 
   // Map measurement formulas to ECG component widths.
   // In pace mode, the AP being modeled is the SA/AV node, not the ventricle —
@@ -1906,7 +1924,12 @@ function drawECG(live, isPace) {
   ecgCtx.fillStyle = styles.textDim;
   ecgCtx.font = '10px -apple-system, sans-serif';
   ecgCtx.textAlign = 'right';
-  const hrStr = isPace ? `${Math.round(60000 / cycleLen)} bpm` : '60 bpm reference';
+  // Report the TRUE rate, not the clamped drawing cycle — the clamp exists so the strip stays
+  // legible at very slow or very fast rates, and it used to make this label disagree with the
+  // Heart Rate row in the measurement panel (16 bpm shown as 25).
+  const hrStr = isPace
+    ? `${Math.round(60000 / trueCycleLen)} bpm${ecgIsClamped ? ' (strip time-compressed)' : ''}`
+    : '60 bpm reference';
   ecgCtx.fillText(hrStr, padL + plotW - 2, padT + 11);
 }
 
@@ -1997,8 +2020,16 @@ function updateMeasurements(live, baseline, isPace) {
       { label: 'APD', value: Math.round(apd) + ' ms', delta: apd - apdBase, unit: 'ms' },
       { label: 'ERP', value: Math.round(erp) + ' ms', delta: erp - erpBase, unit: 'ms' },
       { label: 'Phase 0 dV/dt', value: Math.round(dvdt) + ' mV/ms', delta: dvdt - dvdtBase, unit: 'mV/ms' },
-      { label: 'QRS estimate', value: Math.round(80 / live.phase0Mult) + ' ms', delta: 80/live.phase0Mult - 80, unit: 'ms' },
-      { label: 'QT estimate', value: Math.round(380 * live.apdMult) + ' ms', delta: 380*live.apdMult - 380, unit: 'ms' },
+      // Only the ventricular myocyte produces a QRS and a QT. An atrial AP contributes the P
+      // wave; a Purkinje AP contributes to the QRS but its repolarisation is not the QT.
+      ...(cellType === 'atrial'
+        ? [{ label: 'P-wave width estimate', value: Math.round(80 / live.phase0Mult) + ' ms', delta: 80/live.phase0Mult - 80, unit: 'ms' },
+           { label: 'Atrial ERP contribution', value: Math.round(380 * live.apdMult) + ' ms', delta: 380*live.apdMult - 380, unit: 'ms' }]
+        : cellType === 'purkinje'
+        ? [{ label: 'QRS estimate', value: Math.round(80 / live.phase0Mult) + ' ms', delta: 80/live.phase0Mult - 80, unit: 'ms' },
+           { label: 'Contributes to QT', value: Math.round(380 * live.apdMult) + ' ms', delta: 380*live.apdMult - 380, unit: 'ms' }]
+        : [{ label: 'QRS estimate', value: Math.round(80 / live.phase0Mult) + ' ms', delta: 80/live.phase0Mult - 80, unit: 'ms' },
+           { label: 'QT estimate', value: Math.round(380 * live.apdMult) + ' ms', delta: 380*live.apdMult - 380, unit: 'ms' }]),
     ];
   }
   wrap.innerHTML = m.map(x => {
