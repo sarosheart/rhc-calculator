@@ -974,7 +974,7 @@
           <input type="number" id="ava_sep" step="0.1" placeholder="sec/min" oninput="calc()">
           <span class="unit">sec/min</span>
         </div>
-        <div class="hint">SEP = ejection time/beat × HR. Typical: 0.30–0.35 sec/beat → 20–25 sec/min. Measured from AV open to dicrotic notch.</div>
+        <div class="hint">SEP = ejection time/beat × HR. Typical: 0.30–0.35 sec/beat → 20–25 sec/min. Measured from AV open to dicrotic notch. <b>Type over the SEP to use a measured value</b> — it is kept, and clearing it hands the box back to the ejection time.</div>
       </div>
 
       <div id="mvaSingleInputs">
@@ -993,7 +993,7 @@
           <input type="number" id="mva_dfp" step="0.1" placeholder="sec/min" oninput="calc()">
           <span class="unit">sec/min</span>
         </div>
-        <div class="hint">DFP = filling time/beat × HR. Typical: 0.40–0.50 sec/beat → 30–40 sec/min. Shortened in tachycardia. Average ≥5 beats in AFib.</div>
+        <div class="hint">DFP = filling time/beat × HR. Typical: 0.40–0.50 sec/beat → 30–40 sec/min. Shortened in tachycardia. Average ≥5 beats in AFib. <b>Type over the DFP to use a measured value</b> — it is kept, and clearing it hands the box back to the filling time.</div>
       </div>
 
       <!-- AFIB PER-BEAT INPUTS (hidden by default) -->
@@ -1615,9 +1615,84 @@ function v(id) {
   const val = parseFloat(el.value);
   return isNaN(val) ? null : val;
 }
+/**
+ * ROUND THE DECIMAL THE DOUBLE DENOTES, HALF-UP — not the binary double.
+ *
+ * `Number(v.toFixed(dp))` rounds half-up on the EXACT BINARY value, and a decimal half is
+ * almost never exactly representable: the double nearest 14.35 is 14.34999999999999964…, so
+ * `toFixed(1)` takes it DOWN. This report exists because its arithmetic can be checked by
+ * eye, and that put lines like
+ *
+ *     Ejection time: 0.35 sec/beat × 41 HR = 14.3 sec/min (SEP)
+ *
+ * on the page — 0.35 × 41 is 14.35, which is 14.4 at the tenth the line prints. Exhaustive
+ * over the grid that line can print on (interval 0.01–2.00 at 2 dp × HR 1–400): 7,200 of
+ * 80,000 pairs are exact decimal halves and 2,579 printed one tenth below their own stated
+ * product. It is not a rounding CONVENTION either way — the result disagrees with half-up on
+ * 2,579 of them and with half-even on 3,623, because it is not rounding the decimal at all.
+ *
+ * The decimal a double denotes is its shortest round-trip representation, which is what
+ * `toExponential()` with no argument returns. The rounding is done on those digits by string
+ * carry and read back from a decimal STRING rather than divided by a power of ten
+ * (13.6 / 10 !== 1.36 — the same defect one operation later). `toPrecision(15)` comes first
+ * because a PRODUCT of two rounded operands is not the double nearest their exact decimal
+ * product: 0.03 * 15 is 0.44999999999999996, a full ulp below the 0.45 that 45 / 100 gives.
+ * Any 15-significant-digit decimal round-trips through a double exactly and nothing here
+ * legitimately carries a 16th.
+ */
+function decRound(val, dp) {
+  if (val === 0) return 0;
+  const neg = val < 0;
+  const snapped = Number(val.toPrecision(15));
+  const parts = Math.abs(snapped).toExponential().split('e');
+  const digits = parts[0].replace('.', '');
+  // The value is 0.<digits> × 10^(exp+1), so `keep` digits survive at `dp` places.
+  const keep = Number(parts[1]) + 1 + dp;
+  if (keep >= digits.length) return snapped;
+  if (keep < 0) return 0;
+  let out = keep === 0 ? '0' : digits.slice(0, keep);
+  if (digits.charCodeAt(keep) >= 53 /* '5' */) {
+    // Carry by hand rather than through a Number: `keep` can be past the last integer a
+    // double represents exactly.
+    const a = out.split('');
+    let i = a.length - 1;
+    for (; i >= 0 && a[i] === '9'; i--) a[i] = '0';
+    if (i < 0) a.unshift('1');
+    else a[i] = String.fromCharCode(a[i].charCodeAt(0) + 1);
+    out = a.join('');
+  }
+  const padded = out.padStart(dp + 1, '0');
+  const t = dp === 0 ? out : padded.slice(0, -dp) + '.' + padded.slice(-dp);
+  return Number(neg ? '-' + t : t);
+}
+
+/**
+ * THE ONE RULE THIS REPORT LIVES BY: an operand is rounded ONCE, where it becomes text, and
+ * every result is computed from those same rounded operands.
+ *
+ * Half of it used to happen by accident — the SEP, the DFP and the thermodilution mean are
+ * written back into their own `<input>`s at the precision they print at, so anything reading
+ * those fields divided by the number on the screen — and the rest divided at full precision
+ * under a two-decimal printout. An auditor that parses every arithmetic claim in the copied
+ * report put the failure rates at 87.5% of Gorlin denominators, 69.3% of Gorlin numerators,
+ * 56.1% of LaFarge lines and 45.8% of stroke volumes. `q()` is that rule, applied wherever a
+ * value is produced; `vq()` is it applied at the entry, so that a mean PA pressure typed as
+ * 32.4 and printed as `32` is 32 in every equation underneath it rather than 32.4.
+ *
+ * The clinical size of the family is one digit in the last printed place. The point is not
+ * the digit; it is that `TPG = 32 - 16 = 17` cannot appear above `PVR = 17 / 2.44 = 6.96`
+ * when 17 / 2.44 is 6.97.
+ */
+function q(val, dp) {
+  if (val === null || val === undefined || isNaN(val) || !isFinite(val)) return null;
+  return decRound(val, dp);
+}
+function vq(id, dp) { return q(v(id), dp); }
+
 function fmt(val, dec) {
   if (val === null || val === undefined || isNaN(val) || !isFinite(val)) return '—';
-  return val.toFixed(dec === undefined ? 2 : dec);
+  const dp = dec === undefined ? 2 : dec;
+  return decRound(val, dp).toFixed(dp);
 }
 function setText(id, text) { document.getElementById(id).textContent = text; }
 function setFlag(id, text, cls) {
@@ -1631,11 +1706,13 @@ function clearFlag(id) { setFlag(id, '', ''); }
 function calcTD() {
   const runs = [];
   for (let i = 1; i <= 5; i++) {
-    const val = v('td' + i);
+    // Each injection at the hundredth the panel shows it at, so the mean is the mean of the
+    // numbers on the screen and not of the raw entries underneath them.
+    const val = vq('td' + i, 2);
     if (val !== null && val > 0) runs.push(val);
   }
   if (runs.length > 0) {
-    const avg = runs.reduce((a, b) => a + b, 0) / runs.length;
+    const avg = decRound(runs.reduce((a, b) => a + b, 0) / runs.length, 2);
     document.getElementById('td_co').value = avg.toFixed(2);
     document.getElementById('tdAvgHint').textContent = `(avg of ${runs.length} runs)`;
   } else {
@@ -1644,20 +1721,38 @@ function calcTD() {
 }
 
 // ===================== SEP / DFP AUTO-CALC =====================
-function calcSEP() {
-  const ejTime = v('ava_ejtime');
+/**
+ * A MEASURED PERIOD TYPED BY HAND WINS OVER interval × HR.
+ *
+ * These ran at the top of every `calc()` and overwrote the field UNCONDITIONALLY, so typing a
+ * measured systolic ejection period was impossible: the derived value won back one keystroke
+ * later, and the field's own hint ("Type over to use a measured value") described something
+ * the page would not let you do. Measured — ejection time 0.30, HR 70, SEP typed 19.0: the
+ * aortic valve area was computed off 21.0, a 10.5% error, with 21.0 back in the box the
+ * instant the digit landed. Same for the diastolic filling period.
+ *
+ * The derived number is remembered ON the element, which is what tells the two states apart
+ * without a second store: a field still holding the last derived value is still derived (move
+ * the ejection time and the period follows it), a field holding anything else was typed and is
+ * left alone, and CLEARING the field hands it back to the derivation.
+ */
+function deriveInterval(intervalId, targetId) {
+  const el = document.getElementById(targetId);
+  const interval = v(intervalId);
   const hr = v('hr');
-  if (ejTime !== null && hr !== null && hr > 0) {
-    document.getElementById('ava_sep').value = (ejTime * hr).toFixed(1);
-  }
+  if (interval === null || hr === null || hr <= 0) return;
+  const cur = el.value.trim();
+  if (cur !== '' && cur !== el.dataset.derived) return;  // typed by hand — it wins
+  // The interval and the rate at the two decimals and the whole bpm the report SUBSTITUTES
+  // them at, so "0.34 sec/beat × 70 HR = 23.8 sec/min" is the product of its own operands.
+  // It used to multiply the raw pair under a rounded printout: at ejection time 0.335 and
+  // HR 70 the line read "0.34 sec/beat × 70 HR = 23.5 sec/min", and 0.34 × 70 is 23.8.
+  const next = decRound(decRound(interval, 2) * decRound(hr, 0), 1).toFixed(1);
+  el.value = next;
+  el.dataset.derived = next;
 }
-function calcDFP() {
-  const fillTime = v('mva_filltime');
-  const hr = v('hr');
-  if (fillTime !== null && hr !== null && hr > 0) {
-    document.getElementById('mva_dfp').value = (fillTime * hr).toFixed(1);
-  }
-}
+function calcSEP() { deriveInterval('ava_ejtime', 'ava_sep'); }
+function calcDFP() { deriveInterval('mva_filltime', 'mva_dfp'); }
 
 // ===================== AFIB TOGGLE =====================
 function toggleAfib() {
@@ -1697,9 +1792,11 @@ function handleVo2Source() {
     lafargeRow.style.display = 'none';
     vo2Input.readOnly = false;
     vo2Input.style.background = '';
-    const bsa = v('bsa');
+    // `calcLaFarge()` recomputes this on every calc(); this is the first write, and it uses
+    // the same reader so the two cannot disagree by a tenth the instant the panel opens.
+    const bsa = vq('bsa', 2);
     if (bsa) {
-      vo2Input.value = (125 * bsa).toFixed(1);
+      vo2Input.value = decRound(125 * bsa, 1).toFixed(1);
     }
   }
 }
@@ -1714,9 +1811,9 @@ function calcLaFarge() {
   // the hint still read "VO2 = 125 x BSA". Fick CO, CI, SV, SVI, PVR, SVR and CPO all
   // inherited that stale number silently. Recompute it here, on every calc().
   if (src === 'estimated') {
-    const bsaEst = v('bsa');
+    const bsaEst = vq('bsa', 2);
     document.getElementById('vo2').value = (bsaEst !== null && bsaEst > 0)
-      ? (125 * bsaEst).toFixed(1) : '';
+      ? decRound(125 * bsaEst, 1).toFixed(1) : '';
     document.getElementById('vo2_per_m2').textContent = (bsaEst !== null && bsaEst > 0)
       ? '(125 mL/min/m² assumed)' : '';
     return;
@@ -1725,16 +1822,21 @@ function calcLaFarge() {
   if (src !== 'lafarge') {
     // Measured / manual: show the index of whatever VO2 the user actually entered rather than
     // leaving a stale LaFarge index on screen.
-    const bsaAny = v('bsa'), vo2Any = v('vo2');
+    const bsaAny = vq('bsa', 2), vo2Any = vq('vo2', 1);
     document.getElementById('vo2_per_m2').textContent =
       (vo2Any !== null && bsaAny !== null && bsaAny > 0)
-        ? `(${(vo2Any / bsaAny).toFixed(1)} mL/min/m²)` : '';
+        ? `(${fmt(vo2Any / bsaAny, 1)} mL/min/m²)` : '';
     return;
   }
 
-  const age = v('age');
-  const hr = v('hr');
-  const bsa = v('bsa');
+  // AT THE PRECISION THE LINE SUBSTITUTES THEM AT. The copied report prints
+  // "= [138.1 - (11.49 × ln(65)) + (0.378 × 88)] × 1.51 = 186.3 mL/min", so age is a whole
+  // year, the rate a whole bpm and the body surface area two decimals — in the equation as
+  // well as on the page. It read the raw entries: at age 65.4 and HR 70.6 the line printed
+  // "ln(65)" and "× 71" and evaluated to neither. 56.1% of LaFarge lines did not check out.
+  const age = vq('age', 0);
+  const hr = vq('hr', 0);
+  const bsa = vq('bsa', 2);
   const sex = document.getElementById('sex').value;
   const detail = document.getElementById('lafargeDetail');
   const perM2 = document.getElementById('vo2_per_m2');
@@ -1749,10 +1851,10 @@ function calcLaFarge() {
 
   const k = (sex === 'female') ? 17.04 : 11.49;
   const vo2_per_m2 = 138.1 - (k * Math.log(age)) + (0.378 * hr);
-  const vo2_total = vo2_per_m2 * bsa;
+  const vo2_total = decRound(vo2_per_m2 * bsa, 1);
 
   document.getElementById('vo2').value = vo2_total.toFixed(1);
-  perM2.textContent = `(${vo2_per_m2.toFixed(1)} mL/min/m²)`;
+  perM2.textContent = `(${decRound(vo2_per_m2, 1).toFixed(1)} mL/min/m²)`;
 
   const sexLabel = sex === 'female' ? 'F' : 'M';
   detail.innerHTML = `<b>LaFarge (${sexLabel}):</b> [138.1 − (${k} × ln(${age})) + (0.378 × ${hr})] × ${bsa} = <b>${vo2_total.toFixed(1)} mL/min</b>`;
@@ -1766,60 +1868,155 @@ document.getElementById('useDissolvedO2').addEventListener('change', function() 
 });
 
 // ===================== MAIN CALCULATION =====================
+/* ===================== GORLIN'S DOMAIN =====================
+ *
+ * TWO OPERAND FLOORS AND FOUR RESULT BOUNDS. Gorlin is `(CO x 1000) / (k x period x sqrt(dP))`,
+ * so the gradient is a DIVISOR and the small end of it is the dangerous one: the calculator
+ * used to compute an area from any dP above zero and then classify it. Measured, on a
+ * physiologic grid:
+ *
+ *     Mean transmitral gradient (dP): 2.5 mmHg      ...five lines later...
+ *     = 0.90 cm²      Interpretation: Severe MS (< 1.0)
+ *
+ * 8.6% of mitral areas came from a gradient below 5 mmHg and 13.6% of aortic areas from one
+ * below 10. The mirror -- what must still be reported -- is genuine low-flow/low-gradient
+ * severe AS: AVA 0.9 cm² at a mean gradient of 6 mmHg over an output of 2 L/min is internally
+ * consistent and a real entity, and it is above both floors.
+ *
+ *   AVA_GRAD_MIN 5 mmHg. A normal mean transaortic gradient is under 5; low-flow/low-gradient
+ *   severe AS is DEFINED at 20-40, so the floor sits far below the entity it must not refuse.
+ *   MVA_GRAD_MIN 3 mmHg. Mild mitral stenosis begins at a mean of 5, so 3 is below the
+ *   whole stenotic range. Must not be refused: mitral stenosis at exactly 3.0 mmHg.
+ *
+ * AND THE RESULT HAS A DOMAIN TOO, which is what made `Interpretation: Normal (4-6)` print
+ * over a mitral valve area of 6.68 cm² -- a closed range that excludes its own number, in the
+ * one artifact that is pasted into a chart on its own. Measured on the same grid, 15.3% of
+ * mitral areas above 6 cm² carried that label, and 3,080 of 6,864 aortic areas above 4 cm²
+ * were called normal.
+ *
+ *   AVA_MAX 4 cm² -- the top of a native aortic orifice.  AVA_MIN 0.3 cm².
+ *   MVA_MAX 6 cm² -- the top of the normal mitral range, and exactly the bound `mvaLabel`'s
+ *   last bucket already PRINTS, so the refusal and the printed range meet and the label is
+ *   true of every area that can still reach it.  MVA_MIN 0.4 cm².
+ *   Must not be refused: critical AS at 0.4 cm², critical MS at 0.5 cm².
+ *
+ * An operand bound and a result bound are not substitutes -- the floor asks whether the
+ * equation applies to the gradient at all, the ceiling intercepts when the quotient leaves the
+ * anatomic range, and neither implies the other.
+ *
+ * These are the constants `src/lib/rhc.js` in CardioDoc has carried for a month, signed off
+ * 2026-08-13. Both tools now read the same numbers.
+ */
+const AVA_GRAD_MIN = 5;
+const MVA_GRAD_MIN = 3;
+const AVA_MAX = 4, AVA_MIN = 0.3;
+const MVA_MAX = 6, MVA_MIN = 0.4;
+
+/**
+ * A valve area outside its own domain: withheld, and SAID. Returns the sentence, or null when
+ * the area is reportable.
+ *
+ * The copied report simply has no block for a withheld area -- this calculator's sanity checks
+ * live on the page, not in the copied text, and that is deliberate: a warning banner is not
+ * something to paste into a chart. So the reason goes to the Quality Checks list, where every
+ * other refusal on this page already goes.
+ */
+function areaOutOfRange(area, max, min, what, G) {
+  if (area === null) return null;
+  let s = null;
+  if (area > max) {
+    s = `Calculated ${what} valve area ${fmt(area)} cm² is above ${max} cm², which is larger than that orifice can be — Gorlin has produced a number rather than a valve. Check the cardiac output, the mean gradient and the ${what === 'aortic' ? 'ejection' : 'filling'} period. The area is withheld.`;
+  } else if (area < min) {
+    s = `Calculated ${what} valve area ${fmt(area)} cm² is below ${min} cm², which is below any orifice reported in a living patient. Check the cardiac output, the mean gradient and the ${what === 'aortic' ? 'ejection' : 'filling'} period. The area is withheld.`;
+  }
+  if (s) G.notes.push(s);
+  return s;
+}
+
+/**
+ * Beats the grid did not average, named. Everything else on this page refuses a value with a
+ * sentence; this loop used to `continue` past a trivial-gradient beat, taking it out of the
+ * mean AND out of the count in silence, under a line reading "the mean of 4 consecutive beats"
+ * when five were entered. The direction is not symmetric and is worth saying: Gorlin divides by
+ * sqrt(dP), so the beats being removed are the ones with the LARGEST areas.
+ */
+function gorlinBeatNotes(G, zeros, lows, valve, floor, kept) {
+  if (zeros.length) {
+    G.notes.push(`${valve} beat${zeros.length > 1 ? 's' : ''} ${zeros.join(', ')} — a gradient of zero: Gorlin divides by √ΔP, so ${zeros.length > 1 ? 'they yield' : 'it yields'} no area and ${zeros.length > 1 ? 'are' : 'is'} not averaged${kept ? `; the reported area is the mean of the remaining ${kept}` : ', and no beat is left to average'}.`);
+  }
+  if (lows.length) {
+    G.notes.push(`${valve} beat${lows.length > 1 ? 's' : ''} ${lows.join(', ')} — a mean gradient below ${floor} mmHg, which is not a stenotic gradient: ${lows.length > 1 ? 'they are' : 'it is'} not averaged${kept ? `; the reported area is the mean of the remaining ${kept}, and is smaller than the mean of the whole grid because the discarded beats are the ones with the largest areas` : ', and no beat is left to average'}.`);
+  }
+}
+
 function calc() {
   // --- Auto-calculate LaFarge if selected, and SEP/DFP from HR ---
   calcLaFarge();
   calcSEP();
   calcDFP();
 
-  // --- Get inputs ---
-  const bsa = v('bsa');
-  const hb = v('hb');
-  const hr = v('hr');
+  // --- Get inputs, EACH AT THE PRECISION IT IS PRINTED AT (see `q`) ---
+  // A pressure is printed and slotted at the whole mmHg, the haemoglobin and the saturations
+  // at a tenth, the body surface area and the intervals at a hundredth. Reading them at full
+  // precision under a rounded printout is what made `TPG = 32 - 16 = 16` sit above a PVR
+  // computed from 16.8.
+  const bsa = vq('bsa', 2);
+  const hb = vq('hb', 1);
+  const hr = vq('hr', 0);
   const o2k = parseFloat(document.getElementById('o2const').value);
   const useDissolved = document.getElementById('useDissolvedO2').checked;
 
-  const ra_a = v('ra_a'), ra_v = v('ra_v'), ra_mean = v('ra_mean');
-  const rv_sys = v('rv_sys'), rv_dia = v('rv_dia'), rv_edp = v('rv_edp');
-  const pa_sys = v('pa_sys'), pa_dia = v('pa_dia'), pa_mean = v('pa_mean');
-  const pcwp_a = v('pcwp_a'), pcwp_v = v('pcwp_v'), pcwp_mean = v('pcwp_mean');
-  const ao_sys = v('ao_sys'), ao_dia = v('ao_dia'), ao_mean = v('ao_mean');
-  const lv_sys = v('lv_sys'), lv_dia = v('lv_dia'), lv_edp = v('lv_edp');
+  const ra_a = vq('ra_a', 0), ra_v = vq('ra_v', 0), ra_mean = vq('ra_mean', 0);
+  const rv_sys = vq('rv_sys', 0), rv_dia = vq('rv_dia', 0), rv_edp = vq('rv_edp', 0);
+  const pa_sys = vq('pa_sys', 0), pa_dia = vq('pa_dia', 0), pa_mean = vq('pa_mean', 0);
+  const pcwp_a = vq('pcwp_a', 0), pcwp_v = vq('pcwp_v', 0), pcwp_mean = vq('pcwp_mean', 0);
+  const ao_sys = vq('ao_sys', 0), ao_dia = vq('ao_dia', 0), ao_mean = vq('ao_mean', 0);
+  const lv_sys = vq('lv_sys', 0), lv_dia = vq('lv_dia', 0), lv_edp = vq('lv_edp', 0);
 
-  const sao2_pct = v('sao2'), svo2_pct = v('svo2');
+  const sao2_pct = vq('sao2', 1), svo2_pct = vq('svo2', 1);
   const sao2 = (sao2_pct !== null && sao2_pct <= 100) ? sao2_pct / 100 : null;
   const svo2 = (svo2_pct !== null && svo2_pct <= 100) ? svo2_pct / 100 : null;
   const pao2 = v('pao2'), pvo2 = v('pvo2');
 
-  const vo2 = v('vo2');
-  const td_co = v('td_co');
+  const vo2 = vq('vo2', 1);
+  const td_co = vq('td_co', 2);
 
   const useFick = document.getElementById('coFick').checked;
 
   // --- O2 Content ---
+  // Both sides or neither: adding 0.0031 x PaO2 without the matching PvO2 term inflates the
+  // a-vO2 difference and drives the Fick CO down for no physiologic reason.
+  const dissolvedTerm = useDissolved && pao2 !== null && pvo2 !== null;
   let cao2 = null, cvo2 = null, avo2 = null;
   if (hb !== null && sao2 !== null) {
-    cao2 = hb * o2k * sao2;
-    // Both sides or neither: adding 0.0031 x PaO2 without the matching PvO2 term inflates the
-    // a-vO2 difference and drives the Fick CO down for no physiologic reason.
-    if (useDissolved && pao2 !== null && pvo2 !== null) cao2 += 0.0031 * pao2;
+    cao2 = q(hb * o2k * sao2 + (dissolvedTerm ? 0.0031 * pao2 : 0), 2);
   }
   if (hb !== null && svo2 !== null) {
-    cvo2 = hb * o2k * svo2;
-    if (useDissolved && pao2 !== null && pvo2 !== null) cvo2 += 0.0031 * pvo2;
+    cvo2 = q(hb * o2k * svo2 + (dissolvedTerm ? 0.0031 * pvo2 : 0), 2);
   }
-  if (cao2 !== null && cvo2 !== null) avo2 = cao2 - cvo2;
+  // THE a-vO2 LINE IS THE DIFFERENCE OF THE TWO CONTENTS PRINTED ABOVE IT. It was the
+  // difference of the unrounded pair under a two-decimal printout, so 18.05 - 10.42 was
+  // reported as 7.62. 21.8% of a-vO2 lines did not evaluate.
+  if (cao2 !== null && cvo2 !== null) avo2 = q(cao2 - cvo2, 2);
 
   setText('r_cao2', fmt(cao2));
   setText('r_cvo2', fmt(cvo2));
   setText('r_avo2', fmt(avo2));
 
   // --- Fick CO ---
+  // IT DIVIDES BY THE DENOMINATOR IT SUBSTITUTES. With dissolved O2 off the report spells out
+  // `Hb × (k × 10) × (SaO2 - SvO2)`, so that product is the divisor; with it on the report
+  // states `VO2 / (a-vO2 × 10)`, so the printed a-vO2 is. The two are DIFFERENT claims about
+  // one quantity and both are right: round(a) - round(b) is not round(a - b), they agree to
+  // within 0.01 mL O2/dL, and no printed line says they are the same number.
   let fickCO = null, fickCI = null, sv = null, svi = null;
-  if (vo2 !== null && avo2 !== null && avo2 > 0) {
-    fickCO = vo2 / (avo2 * 10);
+  const fickDen = useDissolved
+    ? (avo2 === null ? null : avo2 * 10)
+    : (hb !== null && sao2 !== null && svo2 !== null ? hb * (o2k * 10) * (sao2 - svo2) : null);
+  if (vo2 !== null && fickDen !== null && fickDen > 0) {
+    fickCO = q(vo2 / fickDen, 2);
   }
-  if (fickCO !== null && bsa !== null && bsa > 0) fickCI = fickCO / bsa;
+  if (fickCO !== null && bsa !== null && bsa > 0) fickCI = q(fickCO / bsa, 2);
   // NB: sv / svi are deliberately NOT derived here. They belong to whichever CO the user
   // selected, and that choice is not known until the TD block below has run.
 
@@ -1832,7 +2029,7 @@ function calc() {
 
   // --- TD ---
   let tdCI = null;
-  if (td_co !== null && bsa !== null && bsa > 0) tdCI = td_co / bsa;
+  if (td_co !== null && bsa !== null && bsa > 0) tdCI = q(td_co / bsa, 2);
   setText('r_td_co', td_co !== null ? fmt(td_co) : '—');
   setText('r_td_ci', fmt(tdCI));
 
@@ -1862,8 +2059,12 @@ function calc() {
   // Fick-TD discordance that is enough to flip the RVSWI flag between Normal and LOW. It
   // also meant a pure TD study with no oximetry showed "—" for SV, SVI and RVSWI even
   // though CO, HR and BSA were all present.
-  if (co !== null && hr !== null && hr > 0) sv = (co * 1000) / hr;
-  if (sv !== null && bsa !== null && bsa > 0) svi = sv / bsa;
+  //
+  // AND IT USES THE CO AND THE HR IT PRINTS — `SV 27.8 mL/beat` under `CO 2.44` and `HR 88`
+  // was 2.4437 × 1000 / 88. 45.8% of stroke volumes did not evaluate against the two numbers
+  // printed above them; the SVI below divides the SV it prints by the BSA it prints.
+  if (co !== null && hr !== null && hr > 0) sv = q((co * 1000) / hr, 1);
+  if (sv !== null && bsa !== null && bsa > 0) svi = q(sv / bsa, 1);
   setText('r_sv', fmt(sv, 1));
   setText('r_svi', fmt(svi, 1));
   flagValue('f_sv', sv, 60, 100, 'SV');
@@ -1871,11 +2072,15 @@ function calc() {
 
   // --- Pulmonary hemodynamics ---
   let tpg = null, dpg = null, pvr = null, pvrDyn = null, pvri = null;
-  if (pa_mean !== null && pcwp_mean !== null) tpg = pa_mean - pcwp_mean;
-  if (pa_dia !== null && pcwp_mean !== null) dpg = pa_dia - pcwp_mean;
-  if (tpg !== null && co !== null && co > 0) pvr = tpg / co;
-  if (pvr !== null) pvrDyn = pvr * 80;
-  if (tpg !== null && ci !== null && ci > 0) pvri = tpg / ci;
+  // Each resistance divides the gradient it prints by the output it prints, and the
+  // dyn·s·cm⁻⁵ form multiplies the Wood units on the line above it rather than the unrounded
+  // quotient behind them: `PVR = 17 / 2.44 = 6.96` with `= 557` under it, where 17 / 2.44 is
+  // 6.97 and 6.97 × 80 is 558.
+  if (pa_mean !== null && pcwp_mean !== null) tpg = q(pa_mean - pcwp_mean, 0);
+  if (pa_dia !== null && pcwp_mean !== null) dpg = q(pa_dia - pcwp_mean, 0);
+  if (tpg !== null && co !== null && co > 0) pvr = q(tpg / co, 2);
+  if (pvr !== null) pvrDyn = q(pvr * 80, 0);
+  if (tpg !== null && ci !== null && ci > 0) pvri = q(tpg / ci, 2);
 
   setText('r_tpg', fmt(tpg, 0));
   setText('r_dpg', fmt(dpg, 0));
@@ -1905,11 +2110,11 @@ function calc() {
   // --- Systemic hemodynamics ---
   let svr = null, svrDyn = null, svri = null;
   if (ao_mean !== null && ra_mean !== null && co !== null && co > 0) {
-    svr = (ao_mean - ra_mean) / co;
+    svr = q((ao_mean - ra_mean) / co, 2);
   }
-  if (svr !== null) svrDyn = svr * 80;
+  if (svr !== null) svrDyn = q(svr * 80, 0);
   if (ao_mean !== null && ra_mean !== null && ci !== null && ci > 0) {
-    svri = (ao_mean - ra_mean) / ci;
+    svri = q((ao_mean - ra_mean) / ci, 2);
   }
 
   setText('r_svr', fmt(svr));
@@ -1920,16 +2125,17 @@ function calc() {
   // --- RV Performance ---
   let papi = null, rvswi = null, cpo = null, cpi = null;
   if (pa_sys !== null && pa_dia !== null && ra_mean !== null && ra_mean > 0) {
-    papi = (pa_sys - pa_dia) / ra_mean;
+    papi = q((pa_sys - pa_dia) / ra_mean, 2);
   }
+  // RVSWI multiplies the SVI printed above it, which is the operand the report substitutes.
   if (pa_mean !== null && ra_mean !== null && svi !== null) {
-    rvswi = (pa_mean - ra_mean) * svi * 0.0136;
+    rvswi = q((pa_mean - ra_mean) * svi * 0.0136, 2);
   }
   if (ao_mean !== null && co !== null) {
-    cpo = (ao_mean * co) / 451;
+    cpo = q((ao_mean * co) / 451, 2);
   }
   if (ao_mean !== null && ci !== null) {
-    cpi = (ao_mean * ci) / 451;
+    cpi = q((ao_mean * ci) / 451, 2);
   }
 
   setText('r_papi', fmt(papi));
@@ -1959,7 +2165,7 @@ function calc() {
 
     // LV-Ao peak-to-peak gradient
     if (lv_sys !== null && ao_sys !== null) {
-      lv_ao_gradient = lv_sys - ao_sys;
+      lv_ao_gradient = q(lv_sys - ao_sys, 0);
       setText('r_lv_ao_gradient', fmt(lv_ao_gradient, 0));
       if (lv_ao_gradient >= 50) setFlag('f_lv_ao_gradient', 'Severe AS', 'flag-severe');
       else if (lv_ao_gradient >= 30) setFlag('f_lv_ao_gradient', 'Significant', 'flag-high');
@@ -2011,47 +2217,94 @@ function calc() {
   const avaAfibDetailEl = document.getElementById('avaAfibDetail');
   const mvaAfibDetailEl = document.getElementById('mvaAfibDetail');
   gorlinCoLabel.textContent = isAfib ? coLabel + ' — AFib beat averaging' : coLabel;
-
   let ava = null, mva = null;
   let showGorlin = false;
 
+  // Everything the copied report needs to print a valve block, and everything the page needs
+  // to say why one is missing. It is built HERE, where the arithmetic is decided, because a
+  // formatter that recomputed sqrt(dP) or `k x SEP x sqrt(dP)` for display would be a second
+  // implementation of this loop -- which is exactly how `= (2.44 x 1000)` came to sit above
+  // `= 2444 / 6246`.
+  const G = {
+    avaRoot: null, avaNum: null, avaDen: null, avaRefusal: null, avaRows: null,
+    mvaRoot: null, mvaNum: null, mvaDen: null, mvaRefusal: null, mvaRows: null,
+    notes: [],
+  };
+  // Gorlin's numerator as the report prints it: `= (2.44 x 1000) / (...)` and then
+  // `= 2440 / 6246`, so the integer on the second line IS the product on the first.
+  const gFlow = (co !== null && co > 0) ? q(co * 1000, 0) : null;
+
   if (isAfib) {
     // --- AFib: per-beat Gorlin ---
-    // AVA per-beat
-    const avaBeats = [];
-    let avaDetailLines = [];
-    let anyAvaInput = false;
-    for (let i = 1; i <= 10; i++) {
-      const grad = v('ava_af_grad_' + i);
-      const et = v('ava_af_et_' + i);
-      const resultEl = document.getElementById('ava_af_result_' + i);
-      if (grad !== null || et !== null) anyAvaInput = true;
-      if (grad !== null && grad > 0 && et !== null && et > 0 && co !== null && co > 0 && hr !== null && hr > 0) {
-        const sep_i = et * hr;
-        const sqrtG = Math.sqrt(grad);
-        const ava_i = (co * 1000) / (44.3 * sep_i * sqrtG);
-        avaBeats.push(ava_i);
-        resultEl.textContent = fmt(ava_i);
-        avaDetailLines.push(`Beat ${i}: ΔP=${fmt(grad,1)}, ET=${fmt(et,2)}s, SEP=${fmt(sep_i,1)}, √ΔP=${fmt(sqrtG)}, AVA=${fmt(ava_i)} cm²`);
-      } else {
+    // Each column is quantised at the width it is printed in -- the gradient and the period to
+    // a tenth, the interval, the root and the area to a hundredth -- and each row's area is
+    // computed from the period and root PRINTED BESIDE IT. The table is a table of arithmetic;
+    // 33.1% of its SEP/DFP column did not evaluate before.
+    const beatRows = (gradId, timeId, k, floor, zeros, lows, resultPrefix) => {
+      const rows = [];
+      for (let i = 1; i <= 10; i++) {
+        const grad = vq(gradId + i, 1);
+        const t = vq(timeId + i, 2);
+        const resultEl = document.getElementById(resultPrefix + i);
         resultEl.textContent = '—';
+        if (grad === null || t === null || t <= 0 || gFlow === null || hr === null || hr <= 0) continue;
+        // A BEAT AT A TRIVIAL GRADIENT IS DISCARDED AND SAID, never dropped in silence.
+        // Gorlin divides by sqrt(dP), so a beat at 0.4 mmHg contributes an area of its own
+        // magnitude to a MEAN and moves the reported area of the other four.
+        // A NEGATIVE gradient is not a small one — it is an entry that is wrong, and calling
+        // it "below 3 mmHg, which is not a stenotic gradient" would tell the operator the
+        // valve is fine. It yields no area and no sentence, exactly as it did before.
+        if (grad < 0) continue;
+        if (grad === 0) { zeros.push(i); continue; }
+        if (grad < floor) { lows.push(i); continue; }
+        const dur = q(t * hr, 1);
+        const root = q(Math.sqrt(grad), 2);
+        if (!dur || !root) continue;
+        // THE DENOMINATOR IS NOT ROUNDED HERE, and that is the difference from the sinus block
+        // twenty lines down. There the report PRINTS `= 2440 / 6246`, so the integer has to be
+        // the number the area is the quotient of; the beat table prints no denominator at all,
+        // only the period and the root beside each area, so rounding the product would be an
+        // extra rounding no printed line asks for. Measured: at ΔP 20.7, DFP 18.9, √ΔP 4.55 and
+        // a flow of 3550, `q(37.7 × 18.9 × 4.55, 0)` is 3242 and the quotient lands exactly on
+        // 1.095 — printed 1.10 — while the unrounded 3242.0115 gives 1.094996, printed 1.09.
+        const den = k * dur * root;
+        if (!den) continue;
+        const area = q(gFlow / den, 2);
+        rows.push({ beat: i, grad: grad, t: t, dur: dur, root: root, area: area });
+        resultEl.textContent = fmt(area);
       }
-    }
-    if (avaBeats.length > 0) {
-      ava = avaBeats.reduce((a, b) => a + b, 0) / avaBeats.length;
-      setText('r_ava', fmt(ava));
-      flagAVA('f_ava', ava);
-      document.getElementById('ava_math').textContent =
-        `AFib average of ${avaBeats.length} beats = ${fmt(ava)} cm²`;
-      let detailHtml = avaDetailLines.join('\n');
+      return rows;
+    };
+    const anyFilled = (gradId, timeId) => {
+      for (let i = 1; i <= 10; i++) if (v(gradId + i) !== null || v(timeId + i) !== null) return true;
+      return false;
+    };
+
+    // AVA per-beat
+    const avaZero = [], avaLow = [];
+    const avaRows = beatRows('ava_af_grad_', 'ava_af_et_', 44.3, AVA_GRAD_MIN, avaZero, avaLow, 'ava_af_result_');
+    const anyAvaInput = anyFilled('ava_af_grad_', 'ava_af_et_');
+    gorlinBeatNotes(G, avaZero, avaLow, 'Aortic', AVA_GRAD_MIN, avaRows.length);
+    if (avaRows.length > 0) {
+      // The average is the mean of the areas the table PRINTS, which is what a reader adding
+      // up the last column gets -- and the mean is asked the SAME result domain the sinus area
+      // is, because a mean of areas each inside the bound is inside the bound.
+      const mean = q(avaRows.reduce((a, b) => a + b.area, 0) / avaRows.length, 2);
+      const bad = areaOutOfRange(mean, AVA_MAX, AVA_MIN, 'aortic', G);
+      if (!bad) { ava = mean; G.avaRows = avaRows; }
+      setText('r_ava', bad ? '—' : fmt(ava));
+      if (bad) clearFlag('f_ava'); else flagAVA('f_ava', ava);
+      document.getElementById('ava_math').textContent = bad ? ''
+        : `AFib average of ${avaRows.length} beats = ${fmt(ava)} cm²`;
+      let detailHtml = avaRows.map((r) =>
+        `Beat ${r.beat}: ΔP=${fmt(r.grad,1)}, ET=${fmt(r.t,2)}s, SEP=${fmt(r.dur,1)}, √ΔP=${fmt(r.root)}, AVA=${fmt(r.area)} cm²`).join('\n');
       detailHtml += `\n─────────────────────────────────`;
-      detailHtml += `\nAverage AVA (${avaBeats.length} beats) = ${fmt(ava)} cm²`;
+      detailHtml += bad
+        ? `\n${bad}`
+        : `\nAverage AVA (${avaRows.length} beats) = ${fmt(ava)} cm²`;
+      if (!bad && avaRows.length < 5) detailHtml += `\n⚠ Only ${avaRows.length} beat(s) — minimum 5 recommended in AFib`;
       avaAfibDetailEl.textContent = detailHtml;
       avaAfibDetailEl.style.display = 'block';
-      if (avaBeats.length < 5) {
-        detailHtml += `\n⚠ Only ${avaBeats.length} beat(s) — minimum 5 recommended in AFib`;
-        avaAfibDetailEl.textContent = detailHtml;
-      }
       avaDiv.style.display = 'block';
       showGorlin = true;
     } else {
@@ -2064,40 +2317,27 @@ function calc() {
     }
 
     // MVA per-beat
-    const mvaBeats = [];
-    let mvaDetailLines = [];
-    let anyMvaInput = false;
-    for (let i = 1; i <= 10; i++) {
-      const grad = v('mva_af_grad_' + i);
-      const ft = v('mva_af_ft_' + i);
-      const resultEl = document.getElementById('mva_af_result_' + i);
-      if (grad !== null || ft !== null) anyMvaInput = true;
-      if (grad !== null && grad > 0 && ft !== null && ft > 0 && co !== null && co > 0 && hr !== null && hr > 0) {
-        const dfp_i = ft * hr;
-        const sqrtG = Math.sqrt(grad);
-        const mva_i = (co * 1000) / (37.7 * dfp_i * sqrtG);
-        mvaBeats.push(mva_i);
-        resultEl.textContent = fmt(mva_i);
-        mvaDetailLines.push(`Beat ${i}: ΔP=${fmt(grad,1)}, FT=${fmt(ft,2)}s, DFP=${fmt(dfp_i,1)}, √ΔP=${fmt(sqrtG)}, MVA=${fmt(mva_i)} cm²`);
-      } else {
-        resultEl.textContent = '—';
-      }
-    }
-    if (mvaBeats.length > 0) {
-      mva = mvaBeats.reduce((a, b) => a + b, 0) / mvaBeats.length;
-      setText('r_mva', fmt(mva));
-      flagMVA('f_mva', mva);
-      document.getElementById('mva_math').textContent =
-        `AFib average of ${mvaBeats.length} beats = ${fmt(mva)} cm²`;
-      let detailHtml = mvaDetailLines.join('\n');
+    const mvaZero = [], mvaLow = [];
+    const mvaRows = beatRows('mva_af_grad_', 'mva_af_ft_', 37.7, MVA_GRAD_MIN, mvaZero, mvaLow, 'mva_af_result_');
+    const anyMvaInput = anyFilled('mva_af_grad_', 'mva_af_ft_');
+    gorlinBeatNotes(G, mvaZero, mvaLow, 'Mitral', MVA_GRAD_MIN, mvaRows.length);
+    if (mvaRows.length > 0) {
+      const mean = q(mvaRows.reduce((a, b) => a + b.area, 0) / mvaRows.length, 2);
+      const bad = areaOutOfRange(mean, MVA_MAX, MVA_MIN, 'mitral', G);
+      if (!bad) { mva = mean; G.mvaRows = mvaRows; }
+      setText('r_mva', bad ? '—' : fmt(mva));
+      if (bad) clearFlag('f_mva'); else flagMVA('f_mva', mva);
+      document.getElementById('mva_math').textContent = bad ? ''
+        : `AFib average of ${mvaRows.length} beats = ${fmt(mva)} cm²`;
+      let detailHtml = mvaRows.map((r) =>
+        `Beat ${r.beat}: ΔP=${fmt(r.grad,1)}, FT=${fmt(r.t,2)}s, DFP=${fmt(r.dur,1)}, √ΔP=${fmt(r.root)}, MVA=${fmt(r.area)} cm²`).join('\n');
       detailHtml += `\n─────────────────────────────────`;
-      detailHtml += `\nAverage MVA (${mvaBeats.length} beats) = ${fmt(mva)} cm²`;
+      detailHtml += bad
+        ? `\n${bad}`
+        : `\nAverage MVA (${mvaRows.length} beats) = ${fmt(mva)} cm²`;
+      if (!bad && mvaRows.length < 5) detailHtml += `\n⚠ Only ${mvaRows.length} beat(s) — minimum 5 recommended in AFib`;
       mvaAfibDetailEl.textContent = detailHtml;
       mvaAfibDetailEl.style.display = 'block';
-      if (mvaBeats.length < 5) {
-        detailHtml += `\n⚠ Only ${mvaBeats.length} beat(s) — minimum 5 recommended in AFib`;
-        mvaAfibDetailEl.textContent = detailHtml;
-      }
       mvaDiv.style.display = 'block';
       showGorlin = true;
     } else {
@@ -2114,63 +2354,82 @@ function calc() {
     avaAfibDetailEl.style.display = 'none';
     mvaAfibDetailEl.style.display = 'none';
 
-    const ava_gradient = v('ava_gradient');
-    const ava_sep = v('ava_sep');
-    const mva_gradient = v('mva_gradient');
-    const mva_dfp = v('mva_dfp');
+    const ava_gradient = vq('ava_gradient', 1);
+    const ava_sep = vq('ava_sep', 1);
+    const mva_gradient = vq('mva_gradient', 1);
+    const mva_dfp = vq('mva_dfp', 1);
 
-    // AVA
-    if (ava_gradient !== null && ava_gradient > 0 && ava_sep !== null && ava_sep > 0 && co !== null && co > 0) {
-      const sqrtG = Math.sqrt(ava_gradient);
-      ava = (co * 1000) / (44.3 * ava_sep * sqrtG);
-      setText('r_ava', fmt(ava));
-      flagAVA('f_ava', ava);
-      document.getElementById('ava_math').textContent =
-        `= (${fmt(co)} × 1000) / (44.3 × ${fmt(ava_sep,1)} × √${fmt(ava_gradient,1)}) = ${fmt(co*1000,0)} / (44.3 × ${fmt(ava_sep,1)} × ${fmt(sqrtG)}) = ${fmt(co*1000,0)} / ${fmt(44.3 * ava_sep * sqrtG,0)} = ${fmt(ava)} cm²`;
-      avaDiv.style.display = 'block';
-      showGorlin = true;
-    } else {
-      setText('r_ava', '—');
-      clearFlag('f_ava');
-      document.getElementById('ava_math').textContent = '';
-      avaDiv.style.display = (ava_gradient !== null || ava_sep !== null) ? 'block' : 'none';
-      if (ava_gradient !== null || ava_sep !== null) showGorlin = true;
-    }
+    // One chain per valve: sqrt(dP) off the gradient as printed, the denominator off the
+    // period and the root as printed, and the area off the two integers printed above it.
+    const sinus = (grad, dur, k, what, key, floor, max, min, mathId, valId, flagFn, div) => {
+      let area = null, refusal = null;
+      if (grad !== null && dur !== null && dur > 0 && gFlow !== null) {
+        if (grad === 0) {
+          refusal = `Mean ${what} gradient 0.0 mmHg — Gorlin divides by √ΔP, so a gradient of zero leaves the equation with no denominator. The ${key === 'ava' ? 'aortic' : 'mitral'} valve area is withheld.`;
+        } else if (grad > 0 && grad < floor) {
+          refusal = `Mean ${what} gradient ${fmt(grad,1)} mmHg — below ${floor} mmHg, which is not a stenotic gradient. Gorlin divides by √ΔP, so at this end the area rises without bound and its severity class is not a measurement of the valve. The ${key === 'ava' ? 'aortic' : 'mitral'} valve area is withheld.`;
+        } else if (grad > 0) {
+          const root = q(Math.sqrt(grad), 2);
+          // The denominator IS the integer the report prints on its own line, so the area
+          // below it is that integer's quotient. (The AFib grid deliberately does not round
+          // here — it prints no denominator; see the note in `beatRows`.)
+          const den = q(k * dur * root, 0);
+          if (root && den) {
+            const a = q(gFlow / den, 2);
+            // THE SUBSTITUTION STEPS GO WITH THE AREA. They are the report's own working, and
+            // a root and a denominator left standing under a refused quotient are
+            // three-quarters of an equation with nothing to conclude.
+            if (!areaOutOfRange(a, max, min, key === 'ava' ? 'aortic' : 'mitral', G)) {
+              area = a;
+              G[key + 'Root'] = root; G[key + 'Num'] = gFlow; G[key + 'Den'] = den;
+            }
+          }
+        }
+      }
+      G[key + 'Refusal'] = refusal;
+      if (area !== null) {
+        setText(valId, fmt(area));
+        flagFn('f_' + key, area);
+        document.getElementById(mathId).textContent =
+          `= (${fmt(co)} × 1000) / (${k} × ${fmt(dur,1)} × √${fmt(grad,1)}) = ${fmt(G[key + 'Num'],0)} / (${k} × ${fmt(dur,1)} × ${fmt(G[key + 'Root'])}) = ${fmt(G[key + 'Num'],0)} / ${fmt(G[key + 'Den'],0)} = ${fmt(area)} cm²`;
+        div.style.display = 'block';
+        showGorlin = true;
+      } else {
+        setText(valId, '—');
+        clearFlag('f_' + key);
+        document.getElementById(mathId).textContent = refusal || '';
+        const anyInput = grad !== null || dur !== null;
+        div.style.display = anyInput ? 'block' : 'none';
+        if (anyInput) showGorlin = true;
+      }
+      return area;
+    };
 
-    // MVA
-    if (mva_gradient !== null && mva_gradient > 0 && mva_dfp !== null && mva_dfp > 0 && co !== null && co > 0) {
-      const sqrtG = Math.sqrt(mva_gradient);
-      mva = (co * 1000) / (37.7 * mva_dfp * sqrtG);
-      setText('r_mva', fmt(mva));
-      flagMVA('f_mva', mva);
-      document.getElementById('mva_math').textContent =
-        `= (${fmt(co)} × 1000) / (37.7 × ${fmt(mva_dfp,1)} × √${fmt(mva_gradient,1)}) = ${fmt(co*1000,0)} / (37.7 × ${fmt(mva_dfp,1)} × ${fmt(sqrtG)}) = ${fmt(co*1000,0)} / ${fmt(37.7 * mva_dfp * sqrtG,0)} = ${fmt(mva)} cm²`;
-      mvaDiv.style.display = 'block';
-      showGorlin = true;
-    } else {
-      setText('r_mva', '—');
-      clearFlag('f_mva');
-      document.getElementById('mva_math').textContent = '';
-      mvaDiv.style.display = (mva_gradient !== null || mva_dfp !== null) ? 'block' : 'none';
-      if (mva_gradient !== null || mva_dfp !== null) showGorlin = true;
-    }
+    ava = sinus(ava_gradient, ava_sep, 44.3, 'transaortic', 'ava',
+      AVA_GRAD_MIN, AVA_MAX, AVA_MIN, 'ava_math', 'r_ava', flagAVA, avaDiv);
+    mva = sinus(mva_gradient, mva_dfp, 37.7, 'transmitral', 'mva',
+      MVA_GRAD_MIN, MVA_MAX, MVA_MIN, 'mva_math', 'r_mva', flagMVA, mvaDiv);
   }
 
   gorlinSection.style.display = showGorlin ? 'block' : 'none';
 
   // --- Quality Checks ---
   buildQualityChecks(hb, sao2, svo2, avo2, fickCO, td_co, vo2, ra_mean, papi,
-    sao2_pct, svo2_pct, pa_sys, pa_dia, pcwp_mean, ao_mean, lv_edp, lv_sys, ao_sys);
+    sao2_pct, svo2_pct, pa_sys, pa_dia, pcwp_mean, ao_mean, lv_edp, lv_sys, ao_sys, G);
 
   // --- Interpretation ---
   buildRhcInterpretation(ci, fickCI, tdCI, useFick, ra_mean, pcwp_mean, pa_mean, pvr, papi, rvswi, cpo, cpi, avo2, fickCO, td_co, ava, mva, lv_edp, lv_sys, ao_sys, lv_ao_gradient);
 
 
   // --- Copy text ---
-  const _ava_gradient = isAfib ? null : v('ava_gradient');
-  const _ava_sep = isAfib ? null : v('ava_sep');
-  const _mva_gradient = isAfib ? null : v('mva_gradient');
-  const _mva_dfp = isAfib ? null : v('mva_dfp');
+  // The gradient and the period come off the SAME readers `sinus` used, so the block prints
+  // the gradient it took the square root of. They were read raw here, at full precision,
+  // while the arithmetic above ran on the tenth: two numbers for one measurement, on the two
+  // sides of one line.
+  const _ava_gradient = isAfib ? null : vq('ava_gradient', 1);
+  const _ava_sep = isAfib ? null : vq('ava_sep', 1);
+  const _mva_gradient = isAfib ? null : vq('mva_gradient', 1);
+  const _mva_dfp = isAfib ? null : vq('mva_dfp', 1);
   buildCopyText(bsa, hb, hr, o2k, useDissolved,
     ra_a, ra_v, ra_mean, rv_sys, rv_dia, rv_edp,
     pa_sys, pa_dia, pa_mean, pcwp_a, pcwp_v, pcwp_mean,
@@ -2179,7 +2438,7 @@ function calc() {
     td_co, tdCI, tpg, dpg, pvr, pvrDyn, pvri, svr, svrDyn, svri,
     papi, rvswi, cpo, cpi, useFick,
     ava, mva, _ava_gradient, _ava_sep, _mva_gradient, _mva_dfp, isAfib,
-    lv_sys, lv_dia, lv_edp, lv_ao_gradient);
+    lv_sys, lv_dia, lv_edp, lv_ao_gradient, G);
 
   if (currentTab === 'shunt') {
     calcShunt();
@@ -2253,6 +2512,11 @@ function mvaLabel(val) {
   if (val < 1.0) return 'Severe MS (< 1.0)';
   if (val <= 1.5) return 'Moderate MS (1.0–1.5)';
   if (val <= 4.0) return 'Mild MS (> 1.5)';
+  // `Normal (4–6)` IS A CLOSED RANGE, and it used to be an unbounded catch-all: an area of
+  // 6.68 cm² printed under a range that excludes it — a printed bound that is false of its own
+  // number, in an artifact pasted into a chart. 15.3% of mitral areas above 6 carried it.
+  // `MVA_MAX` is 6 for exactly this reason, so nothing above the range can reach this line;
+  // the refusal and the printed bound meet, and no wording had to change.
   return 'Normal (4–6)';
 }
 function flagQpQs(id, val) {
@@ -2293,7 +2557,8 @@ function calcShunt() {
   const pvo2_src = document.getElementById('pvo2_source').value;
   const pv_o2_manual = v('pv_o2_manual');
 
-  const n = (val, dec) => (val !== null && val !== undefined && !isNaN(val) && isFinite(val)) ? val.toFixed(dec === undefined ? 2 : dec) : '—';
+  // `fmt`, so that one rounding convention serves the panel and the copied report alike.
+  const n = (val, dec) => fmt(val, dec);
 
   // --- MV O2 (Flamm formula): (3 × high_SVC + IVC) / 4 ---
   let mvo2 = null;
@@ -2677,9 +2942,16 @@ function copyShuntResults() {
 
 // ===================== QUALITY CHECKS =====================
 function buildQualityChecks(hb, sao2, svo2, avo2, fickCO, td_co, vo2, ra_mean, papi,
-    sao2_pct, svo2_pct, pa_sys, pa_dia, pcwp_mean, ao_mean, lv_edp, lv_sys, ao_sys) {
+    sao2_pct, svo2_pct, pa_sys, pa_dia, pcwp_mean, ao_mean, lv_edp, lv_sys, ao_sys, G) {
   const el = document.getElementById('qualityChecks');
   const checks = [];
+
+  // EVERY VALVE AREA THIS PAGE DECLINED TO REPORT, AND WHY. `calc()` decides; this states it.
+  // A value dropped is worse than a value refused — the Gorlin section simply disappearing is
+  // indistinguishable from a gradient nobody entered.
+  if (G) for (const note of G.notes) checks.push({type: 'error', msg: note});
+  if (G && G.avaRefusal) checks.push({type: 'warn', msg: G.avaRefusal});
+  if (G && G.mvaRefusal) checks.push({type: 'warn', msg: G.mvaRefusal});
 
   // LaFarge validity domain. It was derived by LaFarge & Miettinen in patients aged 3-40, and
   // the equation is the DEFAULT VO2 source here, so an adult study silently extrapolates.
@@ -2692,7 +2964,9 @@ function buildQualityChecks(hb, sao2, svo2, avo2, fickCO, td_co, vo2, ra_mean, p
   // Systole + diastole cannot exceed the minute. A SEP + DFP above 60 sec/min means an ejection
   // or filling time was entered in the wrong units (ms instead of sec/beat is the usual slip),
   // and Gorlin will happily return a confident "critical" valve area from it.
-  const sepQ = v('ava_sep'), dfpQ = v('mva_dfp');
+  // Through the same reader the arithmetic uses: a check that quotes a number the report
+  // prints differently is a check the operator cannot act on.
+  const sepQ = vq('ava_sep', 1), dfpQ = vq('mva_dfp', 1);
   if (sepQ !== null && sepQ > 60) checks.push({type:'error', msg:`SEP ${sepQ.toFixed(1)} sec/min exceeds 60 — impossible. Ejection time is entered per BEAT in seconds (e.g. 0.32), not milliseconds. Gorlin AVA is invalid.`});
   if (dfpQ !== null && dfpQ > 60) checks.push({type:'error', msg:`DFP ${dfpQ.toFixed(1)} sec/min exceeds 60 — impossible. Filling time is entered per BEAT in seconds (e.g. 0.32), not milliseconds. Gorlin MVA is invalid.`});
   if (sepQ !== null && dfpQ !== null && sepQ + dfpQ > 60) checks.push({type:'error', msg:`SEP + DFP = ${(sepQ+dfpQ).toFixed(1)} sec/min. Systole and diastole together cannot exceed 60 sec/min — check the ejection and filling times against the cycle length (60/HR).`});
@@ -2784,12 +3058,13 @@ function buildCopyText(bsa, hb, hr, o2k, useDissolved,
   td_co, tdCI, tpg, dpg, pvr, pvrDyn, pvri, svr, svrDyn, svri,
   papi, rvswi, cpo, cpi, useFick,
   ava, mva, ava_gradient, ava_sep, mva_gradient, mva_dfp, isAfib,
-  lv_sys, lv_dia, lv_edp, lv_ao_gradient) {
+  lv_sys, lv_dia, lv_edp, lv_ao_gradient, G) {
 
   const vo2src = document.getElementById('vo2source');
   const vo2label = vo2src.options[vo2src.selectedIndex].text;
   const coMethod = useFick ? 'Fick CO' : 'TD CO';
-  const n = (val, dec) => (val !== null && val !== undefined && !isNaN(val) && isFinite(val)) ? val.toFixed(dec === undefined ? 2 : dec) : '—';
+  // `fmt`, so that one rounding convention serves the panel and the copied report alike.
+  const n = (val, dec) => fmt(val, dec);
 
   // Equipment info
   const sheathEl = document.getElementById('venous_sheath');
@@ -2907,98 +3182,88 @@ function buildCopyText(bsa, hb, hr, o2k, useDissolved,
   }
 
   // --- Gorlin Valve Areas ---
-  const coUsed = useFick ? fickCO : td_co;
+  // The numerator the blocks below substitute is `G.avaNum` / `G.mvaNum` — `calc()`'s own
+  // `q(co * 1000, 0)` — so there is no second cardiac output here to fall out of step with it.
   const coUsedStr = useFick ? n(fickCO) : n(td_co);
+  const g = G || {};
 
-  if (ava !== null || mva !== null) {
+  // A REFUSED VALVE AREA IS A SECTION, NOT AN ABSENCE. A gradient too small for Gorlin to be
+  // about anything withholds the area — and the report used to have no block for that valve at
+  // all, so a physician reading it sees a page that never mentions the mitral valve. The same
+  // sentence the Quality Checks list carries goes here, fetched rather than rewritten, so the
+  // two surfaces cannot say it two different ways.
+  if (ava !== null || mva !== null || g.avaRefusal || g.mvaRefusal) {
     const afibNote = isAfib ? ' — AFib beat-by-beat averaging' : '';
     t += `\nGORLIN VALVE AREA CALCULATIONS (using ${coMethod}: ${coUsedStr} L/min${afibNote})\n`;
   }
 
-  if (isAfib && ava !== null) {
-    // AFib AVA: per-beat tabular data
-    t += `\nAortic Valve Area (AVA) — AFib per-beat method:\n`;
-    t += `  CO: ${coUsedStr} L/min, HR: ${n(hr,0)} bpm\n`;
-    t += `  Beat  ΔP(mmHg)  ET(s)    SEP      √ΔP     AVA(cm²)\n`;
-    const avaBeats = [];
-    for (let i = 1; i <= 10; i++) {
-      const grad = v('ava_af_grad_' + i);
-      const et = v('ava_af_et_' + i);
-      if (grad !== null && grad > 0 && et !== null && et > 0 && coUsed > 0 && hr > 0) {
-        const sep_i = et * hr;
-        const sqrtG = Math.sqrt(grad);
-        const ava_i = (coUsed * 1000) / (44.3 * sep_i * sqrtG);
-        avaBeats.push(ava_i);
-        const pad = (s, w) => s.toString().padStart(w);
-        t += `  ${pad(i,4)}  ${pad(n(grad,1),8)}  ${pad(n(et,2),5)}  ${pad(n(sep_i,1),7)}  ${pad(n(sqrtG),7)}  ${pad(n(ava_i),8)}\n`;
-      }
+  // The period line is built once, because the REFUSAL block prints it too: a gradient of zero
+  // withholds the valve area and does NOT withhold the ejection period the operator measured.
+  // It states the interval form only when the interval IS the arithmetic — a SEP typed by hand
+  // no longer gets overwritten (see `deriveInterval`), so it can now disagree with
+  // interval × HR, and "0.30 sec/beat × 70 HR = 19.0 sec/min" would be a false equation in the
+  // one artifact whose whole purpose is that its arithmetic can be checked.
+  const periodLine = (dur, durName, interval, intervalName) => {
+    const fromInterval = interval !== null && hr !== null && hr > 0
+      && q(q(interval, 2) * q(hr, 0), 1) === q(dur, 1);
+    return fromInterval
+      ? `  ${intervalName}: ${n(interval,2)} sec/beat × ${n(hr,0)} HR = ${n(dur,1)} sec/min (${durName})\n`
+      : `  ${durName}: ${n(dur,1)} sec/min\n`;
+  };
+
+  // One table per valve, from the rows `calc()` computed — never recomputed here, because a
+  // second implementation of the per-beat arithmetic is how the printed operands and the
+  // printed results came apart in the first place.
+  const afibTable = (title, timeCol, durCol, areaCol, rows, mean, label) => {
+    let b = `\n${title} — AFib per-beat method:\n`;
+    b += `  CO: ${coUsedStr} L/min, HR: ${n(hr,0)} bpm\n`;
+    b += `  Beat  ΔP(mmHg)  ${timeCol}(s)    ${durCol}      √ΔP     ${areaCol}(cm²)\n`;
+    const pad = (s, w) => s.toString().padStart(w);
+    for (const r of rows) {
+      b += `  ${pad(r.beat,4)}  ${pad(n(r.grad,1),8)}  ${pad(n(r.t,2),5)}  ${pad(n(r.dur,1),7)}  ${pad(n(r.root),7)}  ${pad(n(r.area),8)}\n`;
     }
-    t += `  ──────────────────────────────────────────────────\n`;
-    t += `  Average AVA (${avaBeats.length} beats) = ${n(ava)} cm²\n`;
-    if (avaBeats.length < 5) t += `  ⚠ Only ${avaBeats.length} beat(s) — minimum 5 recommended in AFib\n`;
-    t += `  Interpretation: ${avaLabel(ava)}\n`;
+    b += `  ──────────────────────────────────────────────────\n`;
+    b += `  Average ${areaCol} (${rows.length} beats) = ${n(mean)} cm²\n`;
+    if (rows.length < 5) b += `  ⚠ Only ${rows.length} beat(s) — minimum 5 recommended in AFib\n`;
+    b += `  Interpretation: ${label}\n`;
+    return b;
+  };
+
+  // The sinus blocks likewise: `root`, `numer` and `denom` are `calc()`'s, so the integer on
+  // the second line IS the product on the first and the area below is their quotient.
+  const sinusBlock = (title, abbr, what, grad, dur, durName, interval, intervalName, k, area, label, root, numer, denom) => {
+    let b = `\n${title}:\n`;
+    b += `  Mean ${what} gradient (ΔP): ${n(grad,1)} mmHg\n`;
+    b += periodLine(dur, durName, interval, intervalName);
+    b += `  √ΔP = √${n(grad,1)} = ${n(root)}\n`;
+    b += `\n`;
+    b += `  ${abbr} = (CO × 1000) / (${k} × ${durName} × √ΔP)\n`;
+    b += `      = (${coUsedStr} × 1000) / (${k} × ${n(dur,1)} × ${n(root)})\n`;
+    b += `      = ${n(numer,0)} / ${n(denom,0)}\n`;
+    b += `      = ${n(area)} cm²\n`;
+    b += `  Interpretation: ${label}\n`;
+    return b;
+  };
+
+  if (isAfib && ava !== null && g.avaRows) {
+    t += afibTable('Aortic Valve Area (AVA)', 'ET', 'SEP', 'AVA', g.avaRows, ava, avaLabel(ava));
   } else if (!isAfib && ava !== null && ava_gradient !== null && ava_sep !== null) {
-    const sqrtG = Math.sqrt(ava_gradient);
-    const denom = 44.3 * ava_sep * sqrtG;
-    const ejTime = v('ava_ejtime');
-    t += `\nAortic Valve Area (AVA):\n`;
-    t += `  Mean transaortic gradient (ΔP): ${n(ava_gradient,1)} mmHg\n`;
-    if (ejTime !== null) {
-      t += `  Ejection time: ${n(ejTime,2)} sec/beat × ${n(hr,0)} HR = ${n(ava_sep,1)} sec/min (SEP)\n`;
-    } else {
-      t += `  SEP: ${n(ava_sep,1)} sec/min\n`;
-    }
-    t += `  √ΔP = √${n(ava_gradient,1)} = ${n(sqrtG)}\n`;
-    t += `\n`;
-    t += `  AVA = (CO × 1000) / (44.3 × SEP × √ΔP)\n`;
-    t += `      = (${coUsedStr} × 1000) / (44.3 × ${n(ava_sep,1)} × ${n(sqrtG)})\n`;
-    t += `      = ${n(coUsed * 1000, 0)} / ${n(denom, 0)}\n`;
-    t += `      = ${n(ava)} cm²\n`;
-    t += `  Interpretation: ${avaLabel(ava)}\n`;
+    t += sinusBlock('Aortic Valve Area (AVA)', 'AVA', 'transaortic', ava_gradient, ava_sep, 'SEP',
+      v('ava_ejtime'), 'Ejection time', 44.3, ava, avaLabel(ava), g.avaRoot, g.avaNum, g.avaDen);
+  } else if (g.avaRefusal) {
+    t += `\nAortic Valve Area (AVA):\n  ${g.avaRefusal}\n`;
+    if (ava_sep !== null) t += periodLine(ava_sep, 'SEP', v('ava_ejtime'), 'Ejection time');
   }
 
-  if (isAfib && mva !== null) {
-    // AFib MVA: per-beat tabular data
-    t += `\nMitral Valve Area (MVA) — AFib per-beat method:\n`;
-    t += `  CO: ${coUsedStr} L/min, HR: ${n(hr,0)} bpm\n`;
-    t += `  Beat  ΔP(mmHg)  FT(s)    DFP      √ΔP     MVA(cm²)\n`;
-    const mvaBeats = [];
-    for (let i = 1; i <= 10; i++) {
-      const grad = v('mva_af_grad_' + i);
-      const ft = v('mva_af_ft_' + i);
-      if (grad !== null && grad > 0 && ft !== null && ft > 0 && coUsed > 0 && hr > 0) {
-        const dfp_i = ft * hr;
-        const sqrtG = Math.sqrt(grad);
-        const mva_i = (coUsed * 1000) / (37.7 * dfp_i * sqrtG);
-        mvaBeats.push(mva_i);
-        const pad = (s, w) => s.toString().padStart(w);
-        t += `  ${pad(i,4)}  ${pad(n(grad,1),8)}  ${pad(n(ft,2),5)}  ${pad(n(dfp_i,1),7)}  ${pad(n(sqrtG),7)}  ${pad(n(mva_i),8)}\n`;
-      }
-    }
-    t += `  ──────────────────────────────────────────────────\n`;
-    t += `  Average MVA (${mvaBeats.length} beats) = ${n(mva)} cm²\n`;
-    if (mvaBeats.length < 5) t += `  ⚠ Only ${mvaBeats.length} beat(s) — minimum 5 recommended in AFib\n`;
-    t += `  Interpretation: ${mvaLabel(mva)}\n`;
+  if (isAfib && mva !== null && g.mvaRows) {
+    t += afibTable('Mitral Valve Area (MVA)', 'FT', 'DFP', 'MVA', g.mvaRows, mva, mvaLabel(mva));
   } else if (!isAfib && mva !== null && mva_gradient !== null && mva_dfp !== null) {
-    const sqrtG = Math.sqrt(mva_gradient);
-    const denom = 37.7 * mva_dfp * sqrtG;
-    const fillTime = v('mva_filltime');
-    t += `\nMitral Valve Area (MVA):\n`;
-    t += `  Mean transmitral gradient (ΔP): ${n(mva_gradient,1)} mmHg\n`;
-    if (fillTime !== null) {
-      t += `  Filling time: ${n(fillTime,2)} sec/beat × ${n(hr,0)} HR = ${n(mva_dfp,1)} sec/min (DFP)\n`;
-    } else {
-      t += `  DFP: ${n(mva_dfp,1)} sec/min\n`;
-    }
-    t += `  √ΔP = √${n(mva_gradient,1)} = ${n(sqrtG)}\n`;
-    t += `\n`;
-    t += `  MVA = (CO × 1000) / (37.7 × DFP × √ΔP)\n`;
-    t += `      = (${coUsedStr} × 1000) / (37.7 × ${n(mva_dfp,1)} × ${n(sqrtG)})\n`;
-    t += `      = ${n(coUsed * 1000, 0)} / ${n(denom, 0)}\n`;
-    t += `      = ${n(mva)} cm²\n`;
-    t += `  Interpretation: ${mvaLabel(mva)}\n`;
+    t += sinusBlock('Mitral Valve Area (MVA)', 'MVA', 'transmitral', mva_gradient, mva_dfp, 'DFP',
+      v('mva_filltime'), 'Filling time', 37.7, mva, mvaLabel(mva), g.mvaRoot, g.mvaNum, g.mvaDen);
+  } else if (g.mvaRefusal) {
+    t += `\nMitral Valve Area (MVA):\n  ${g.mvaRefusal}\n`;
+    if (mva_dfp !== null) t += periodLine(mva_dfp, 'DFP', v('mva_filltime'), 'Filling time');
   }
-
   if (document.getElementById('plainTextToggle').checked) {
     t = toPlainText(t);
   }
@@ -3371,7 +3636,7 @@ function buildRhcInterpretation(ci, fickCI, tdCI, useFick, ra_mean, pcwp_mean, p
 function buildShuntInterpretation(svc_ref, pa_sat, ra_mean_sat, rv_mean_sat, qpqs, qp, qs, qeff, lr_shunt, rl_shunt, pvr_shunt, svr_shunt, pvr_svr_ratio) {
   const el = document.getElementById('shuntInterpretation');
   const bullets = [];
-  const n = (val, dec) => (val !== null && val !== undefined && !isNaN(val) && isFinite(val)) ? val.toFixed(dec === undefined ? 2 : dec) : '\u2014';
+  const n = (val, dec) => fmt(val, dec);
 
   if (svc_ref === null && pa_sat === null && qpqs === null) {
     el.innerHTML = '<div class="info-box">Enter oximetry data to generate interpretation.</div>';
