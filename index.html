@@ -118,10 +118,19 @@ body {
   pointer-events: none;
 }
 
+/* The hero logo IS the page's primary heading: h1.logo-wrap. The img's alt text
+   ("CathMath — Hemodynamics Visualized") becomes the h1's accessible name, so the
+   heading outline starts at h1 without adding a visible text node. These four
+   resets neutralise the UA h1 defaults so the rendering is byte-identical to the
+   div it replaced. */
 .logo-wrap {
   position: relative;
   width: 800px;
   max-width: 90vw;
+  margin: 0;
+  padding: 0;
+  font-size: inherit;
+  font-weight: inherit;
 }
 
 .logo-base {
@@ -629,10 +638,10 @@ body {
 
 <!-- ══════ HERO ══════ -->
 <section class="hero">
-  <div class="logo-wrap">
+  <h1 class="logo-wrap">
     <img src="logo/single_2_no_ekg.png" alt="CathMath — Hemodynamics Visualized" class="logo-base" id="logoBase">
     <img src="logo/single_2_transparent.png" alt="" class="logo-ekg" id="logoEkg">
-  </div>
+  </h1>
   <div class="hero-url" id="heroUrl">cathmath.org</div>
   <div class="hero-credit" id="heroCredit">Developed by <a href="https://x.com/Sarotonin_" target="_blank" rel="noopener" class="credit-link">Dr. Saro Avedikian, MD, MPH</a></div>
   <div class="swan-wrap">

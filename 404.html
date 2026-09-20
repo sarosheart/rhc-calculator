@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Page not found (404) | CathMath</title>
+<meta name="description" content="That CathMath page does not exist. Jump to the RHC calculator, the hemodynamic waveform simulator, the echo calculator, or any of the other tools.">
+<meta name="robots" content="noindex, follow">
+<link rel="icon" type="image/x-icon" href="/favicon.ico">
+<link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+<link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+<!--
+  Cloudflare Pages serves this file, with a real HTTP 404 status, for any path that does not
+  match a published asset. Its mere existence is the mechanism: with no 404.html anywhere in
+  the project, Pages falls back to SPA mode and returns index.html with HTTP 200 for every
+  unmatched URL, which is the site-wide soft 404 this file fixes. No _redirects file (that
+  would need a `/* /index.html 200` rule, i.e. the opposite of what is wanted) and no
+  _routes.json (that only scopes the Pages Functions runtime, and this project has no
+  functions/ directory and no _worker.js).
+
+  Deliberately self-contained: no webfont, no image, no script. A 404 is what a reader sees
+  when something is already broken, so it must not depend on anything else loading. Every
+  link is absolute, because this page is served from arbitrary URL depths.
+-->
+<style>
+:root {
+  --navy: #0d2240;
+  --navy-deep: #091a33;
+  --navy-card: #0c1f3a;
+  --accent: #00e676;
+  --text: rgba(255,255,255,0.92);
+  --text-dim: rgba(255,255,255,0.5);
+  --text-muted: rgba(255,255,255,0.3);
+  --border: rgba(255,255,255,0.07);
+  --border-hover: rgba(0,230,118,0.22);
+}
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+  font-family: 'DM Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  background: var(--navy);
+  color: var(--text);
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 48px 20px;
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+}
+.wrap { width: 100%; max-width: 760px; }
+.code {
+  font-size: 13px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--accent);
+  margin-bottom: 14px;
+}
+h1 {
+  font-size: 30px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  margin-bottom: 14px;
+}
+.lede { color: var(--text-dim); font-size: 16px; margin-bottom: 8px; }
+.path {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 13px;
+  color: var(--text-muted);
+  word-break: break-all;
+  margin-bottom: 34px;
+}
+h2 {
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  margin: 0 0 14px;
+}
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(212px, 1fr));
+  gap: 10px;
+  margin-bottom: 34px;
+}
+.tool {
+  display: block;
+  padding: 13px 15px;
+  background: var(--navy-card);
+  border: 1px solid var(--border);
+  border-radius: 9px;
+  text-decoration: none;
+  color: var(--text);
+  transition: border-color 0.18s ease, transform 0.18s ease;
+}
+.tool:hover, .tool:focus-visible {
+  border-color: var(--border-hover);
+  transform: translateY(-1px);
+}
+.tool b { display: block; font-size: 14.5px; font-weight: 600; margin-bottom: 3px; }
+.tool span { display: block; font-size: 12.5px; color: var(--text-dim); }
+.home {
+  display: inline-block;
+  padding: 11px 22px;
+  border-radius: 8px;
+  background: var(--accent);
+  color: #06301a;
+  font-weight: 700;
+  font-size: 14.5px;
+  text-decoration: none;
+}
+.home:hover, .home:focus-visible { filter: brightness(1.08); }
+footer {
+  margin-top: 34px;
+  padding-top: 20px;
+  border-top: 1px solid var(--border);
+  font-size: 12.5px;
+  color: var(--text-muted);
+}
+@media (max-width: 560px) {
+  body { padding: 34px 16px; }
+  h1 { font-size: 24px; }
+}
+</style>
+</head>
+<body>
+<main class="wrap">
+  <div class="code">Error 404</div>
+  <h1>That page isn&rsquo;t here.</h1>
+  <p class="lede">The URL was mistyped, or it pointed at a tool that has since moved or been retired.</p>
+  <p class="path">cathmath.org &mdash; no page at this address</p>
+
+  <h2>The tools</h2>
+  <div class="grid">
+    <a class="tool" href="/rhc/"><b>RHC Calculator</b><span>Fick, Gorlin, shunts, PVR</span></a>
+    <a class="tool" href="/hemodynamics/"><b>Hemodynamic Waveforms</b><span>Tracings by lesion</span></a>
+    <a class="tool" href="/echocalc/"><b>Echo Calculator</b><span>PISA, continuity, diastology</span></a>
+    <a class="tool" href="/pvloop/"><b>PV Loop Simulator</b><span>Pressure&ndash;volume loops</span></a>
+    <a class="tool" href="/ekg/"><b>EKG Simulator</b><span>12-lead, rhythm, axis</span></a>
+    <a class="tool" href="/ap/"><b>Action Potential</b><span>Vaughan-Williams drugs</span></a>
+    <a class="tool" href="/angio/"><b>Angiographic Views</b><span>C-arm angles vs anatomy</span></a>
+    <a class="tool" href="/intracoronary/"><b>Intracoronary Physiology</b><span>FFR, IVUS, OCT</span></a>
+    <a class="tool" href="/embryology/"><b>Cardiac Embryology</b><span>Ten stages in 3D</span></a>
+    <a class="tool" href="/worksheets/"><b>Reference Worksheets</b><span>Printable, one page each</span></a>
+  </div>
+
+  <a class="home" href="/">Go to the home page</a>
+
+  <footer>
+    CathMath &mdash; free interactive cardiology teaching tools. For education only; not a substitute for clinical judgment.
+  </footer>
+</main>
+</body>
+</html>

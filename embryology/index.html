@@ -131,6 +131,23 @@ body {
   background: radial-gradient(ellipse at 50% 40%, #0d1f3a 0%, #060e1a 70%);
   transition: all 0.5s cubic-bezier(0.4,0,0.2,1);
 }
+/* Shown only when three.js fails to load (CDN blocked, offline, SRI mismatch) or when
+   JavaScript is off. Never visible on a healthy page. */
+.dep-fail {
+  position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+  z-index: 30; max-width: 460px; width: calc(100% - 48px);
+  padding: 22px 24px; border-radius: 12px;
+  background: rgba(10, 22, 40, 0.94); border: 1px solid rgba(255,255,255,0.14);
+  box-shadow: 0 10px 40px rgba(0,0,0,0.55);
+  color: rgba(255,255,255,0.88); font-size: 14px; line-height: 1.55; text-align: left;
+}
+.dep-fail strong { display: block; margin-bottom: 10px; font-size: 16px; color: #ffb4a2; }
+.dep-fail p { margin: 0 0 10px; }
+.dep-fail p:last-child { margin-bottom: 0; }
+.dep-fail em { font-style: normal; color: rgba(255,255,255,0.96); }
+.dep-fail-detail { font-size: 12px; color: rgba(255,255,255,0.45); }
+.dep-fail-detail:empty { display: none; }
+
 /* PIP mode: 3D canvas shrinks to corner when cross-section is active */
 .viewport-row.has-xs .canvas-wrap {
   position: absolute; top: 16px; right: 16px; z-index: 20;
@@ -512,6 +529,14 @@ body {
           </div>
         </div>
         <div class="rotate-hint" id="rotateHint">Drag to rotate · Scroll to zoom</div>
+        <noscript>
+          <div class="dep-fail" role="alert">
+            <strong>This simulator needs JavaScript.</strong>
+            <p>The cardiac embryology model is drawn in WebGL, so there is nothing to show with
+            scripting turned off. The written walkthrough of all ten stages is still readable at
+            the bottom of this page, under <em>About the Cardiac Embryology Simulator</em>.</p>
+          </div>
+        </noscript>
       </div>
       <div class="xsection-panel" id="xsPanel">
         <div class="xs-canvas-area">
@@ -589,11 +614,72 @@ body {
 
 
 
+<!-- three.js is the ONLY third-party runtime dependency on cathmath.org. Every other tool is a
+     self-contained single file. Two mitigations, added 2026-09-20, for two different failures:
+
+     (1) SUPPLY CHAIN - the "integrity" map below. Hashes were computed from the bytes jsDelivr
+         actually served on 2026-09-20 and cross-checked byte-for-byte against unpkg
+         (three.module.js sha256 76dea815..., OrbitControls.js sha256 5a44a9e8...), so a
+         compromised or substituted CDN response will not execute on this origin.
+         LIMIT, stated plainly: import-map "integrity" is Chrome 127+ / Edge only. Safari and
+         Firefox parse the map, ignore the unknown key, and load without verification - and
+         Safari is this site's primary browser. This raises the floor; it does not close the
+         hole. Vendoring the two files into the repo is the only complete fix.
+
+     (2) AVAILABILITY - the failure handler in the classic <script> below. A hospital proxy or a
+         CDN outage leaves the module graph un-instantiated and the page a dead shell with no
+         message. <noscript> does NOT cover that case (JavaScript is still enabled when a
+         firewall blocks a CDN), so there is a real error listener and a timeout as well. -->
 <script type="importmap">
-{ "imports": {
+{
+  "imports": {
     "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
     "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
-} }
+  },
+  "integrity": {
+    "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js": "sha384-61S/Nu32S3E5+n+KpCOTb2eRYps6fVKm+9Gz1QBvSePFthb46f063Aa/qe/lykFZ",
+    "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/controls/OrbitControls.js": "sha384-qlO/ZugKPxAQUAvTlQoo0QECzxJIJySZmCF/DHdb2Xn/hHndFwX/vfUAC9Hbk6LP"
+  }
+}
+</script>
+<!-- Classic (non-module) script on purpose: if the module graph above fails to instantiate,
+     nothing inside <script type="module"> ever runs, so the handler cannot live there. This is
+     the one place the site's one-inline-script rule is deliberately broken. -->
+<script>
+(function () {
+  var TIMEOUT_MS = 8000;
+  var shown = false;
+  function fail(detail) {
+    if (shown || window.__cathmathEmbryoReady) return;
+    shown = true;
+    var wrap = document.getElementById('canvasWrap');
+    if (!wrap) return;
+    var box = document.createElement('div');
+    box.className = 'dep-fail';
+    box.setAttribute('role', 'alert');
+    box.innerHTML =
+      '<strong>The 3D model could not load.</strong>' +
+      '<p>This page draws the embryology model with three.js, which it loads from the jsDelivr ' +
+      'CDN. Something blocked that request \u2014 most often a hospital or corporate network ' +
+      'filter, a content blocker, or no connection.</p>' +
+      '<p>The rest of the page still works. The stage and substep list on the left, the ' +
+      'descriptions, and the board pearls are all local to this file, and the full written ' +
+      'walkthrough of all ten stages is at the bottom under ' +
+      '<em>About the Cardiac Embryology Simulator</em>.</p>' +
+      '<p class="dep-fail-detail"></p>';
+    wrap.appendChild(box);
+    if (detail) { box.querySelector('.dep-fail-detail').textContent = detail; }
+  }
+  // A failed module load fires 'error' on its <script> element and does not bubble, so capture
+  // on window. An SRI mismatch surfaces the same way. Runtime exceptions inside the module
+  // arrive with target === window (no tagName) and are deliberately NOT treated as a load failure.
+  window.addEventListener('error', function (e) {
+    var t = e.target;
+    if (t && t.tagName === 'SCRIPT') { fail('Script blocked or failed integrity check.'); }
+  }, true);
+  // A proxy that black-holes the request produces no error event at all, so time out too.
+  window.setTimeout(function () { fail('Timed out after ' + (TIMEOUT_MS / 1000) + ' s.'); }, TIMEOUT_MS);
+})();
 </script>
 <script type="module">
 import * as THREE from 'three';
@@ -2367,6 +2453,10 @@ function animate(time){requestAnimationFrame(animate);controls.update();renderSc
 
 // ===== INIT =====
 onResize();needsRebuild=true;updateUI();updateCrossSection();animate(0);
+
+// Tells the pre-module failure handler that the scene actually came up, so its timeout is a
+// no-op on a healthy load.
+window.__cathmathEmbryoReady = true;
 
 </script>
 
