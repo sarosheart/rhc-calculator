@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>PV Loop Simulator — Pressure-Volume Loops, Drugs, Diseases, MCS | CathMath</title>
-<meta name="description" content="Interactive pressure-volume loop simulator. Visualize cardiac physiology with 15 drugs, 18 diseases, 5 MCS devices. Suga-Sagawa elastance model. Free cardiology teaching tool.">
+<meta name="description" content="Interactive LV pressure-volume loop simulator with 15 drugs, 18 disease presets and 5 MCS devices. ESPVR, EDPVR and Ea lines. Free cardiology teaching tool.">
 <meta name="keywords" content="PV loop, pressure volume loop, cardiac physiology, Suga-Sagawa, elastance, ESPVR, EDPVR, Frank-Starling, afterload, preload, contractility, aortic stenosis PV loop, mitral regurgitation PV loop, heart failure, IABP, Impella, ECMO, cardiogenic shock">
 <meta name="author" content="Dr. Saro Avedikian, MD, MPH">
 <meta name="robots" content="index, follow">
@@ -60,6 +60,7 @@
     --loop-color: #0d2240;
     --ghost-color: rgba(70,140,220,0.55);
     --dot-color: #c62828;
+    --dot-core: #ffffff;
     --grid-color: rgba(0,0,0,0.04);
     --grid-major: rgba(0,0,0,0.08);
     --section-radius: 10px;
@@ -76,8 +77,12 @@
     line-height: 1.4;
     color: var(--text);
     background: var(--light-bg);
-    overflow: hidden;
-    height: 100vh;
+    /* SEO checklist item 14. A full-viewport app must not lock the document: the About
+       section sits below the app in normal flow, and `overflow:hidden; height:100vh`
+       made it unreachable on every desktop. The app pane keeps its own fixed height
+       (.container), so the layout is unchanged; the document now scrolls past it. */
+    overflow-y: auto;
+    min-height: 100vh;
   }
 
   /* SITE NAV */
@@ -186,6 +191,7 @@
   .panel-left {
     width: 340px;
     min-width: 340px;
+    max-height: calc(100vh - 80px);
     overflow-y: auto;
     padding: 12px;
     background: #fff;
@@ -229,8 +235,18 @@
     cursor: pointer;
     user-select: none;
     transition: background 0.15s;
+    /* rendered as a <button> so the section can be opened from the keyboard.
+       No `background` here: the navy bar is set by the rule above and a reset
+       would strip it. */
+    appearance: none;
+    -webkit-appearance: none;
+    border: 0;
+    width: 100%;
+    font-family: inherit;
+    text-align: left;
   }
   .section-head:hover { background: #163050; }
+  .section-head:focus-visible { outline: 2px solid var(--blue-light); outline-offset: -3px; }
   .section-head .icon { font-size: 12px; opacity: 0.6; }
   .section-head .chevron {
     margin-left: auto;
@@ -276,6 +292,10 @@
     outline: none;
     cursor: pointer;
     transition: background 0.15s;
+  }
+  input[type="range"]:focus-visible {
+    outline: 2px solid var(--blue-light);
+    outline-offset: 3px;
   }
   input[type="range"]::-webkit-slider-thumb {
     -webkit-appearance: none;
@@ -606,6 +626,18 @@
     width: 100%;
     height: 100%;
   }
+  /* Off-screen but still in the accessibility tree — display:none or visibility:hidden would
+     remove it from the tree and the live region would never speak. */
+  .sr-only {
+    position: absolute;
+    width: 1px; height: 1px;
+    margin: -1px; padding: 0;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    clip-path: inset(50%);
+    white-space: nowrap;
+    border: 0;
+  }
 
   /* HEMODYNAMIC INDICES OVERLAY */
   .indices-overlay {
@@ -805,6 +837,7 @@
     --loop-color: #ff6b6b;
     --ghost-color: rgba(100,180,255,0.55);
     --dot-color: #ffeb3b;
+    --dot-core: #1c2029;
     --espvr-color: #66bb6a;
     --edpvr-color: #ba68c8;
     --ea-color: #78909c;
@@ -865,7 +898,19 @@
     .nav-brand { flex-shrink: 0; margin-right: 14px; font-size: 14px; }
     .nav-tabs { flex-shrink: 0; gap: 0; }
     .nav-tab { flex-shrink: 0; white-space: nowrap; padding: 0 10px; font-size: 11px; }
-    .nav-right { display: none; }
+    /* Not display:none. This container holds the only light/dark control on the page,
+       and the preference is shared site-wide, so hiding it locked a phone-only user
+       into whatever theme they last chose on a desktop. The nav strip scrolls
+       horizontally, so the toggle is pinned to its right edge instead of hidden. */
+    .nav-right {
+      flex-shrink: 0;
+      margin-left: 12px;
+      position: sticky;
+      right: 0;
+      background: #0a1628;
+      padding: 0 4px 0 8px;
+      height: 100%;
+    }
   }
 
 /* ═══ Static About section (SEO checklist item 10) ═══ */
@@ -976,15 +1021,15 @@ body.dark .seo-content-body p { color: #c4ccda; }
 <div class="panel-left">
 
   <!-- PARAMETERS -->
-  <div class="section collapsed" id="secParams">
-    <div class="section-head" onclick="toggleSection(this)"><span class="icon">&#9881;</span> Hemodynamic Parameters<span class="chevron">&#9660;</span></div>
-    <div class="section-body">
+  <div class="section" id="secParams">
+    <button type="button" class="section-head" aria-expanded="true" aria-controls="secBodyParams" onclick="toggleSection(this)"><span class="icon">&#9881;</span> Hemodynamic Parameters<span class="chevron">&#9660;</span></button>
+    <div class="section-body" id="secBodyParams">
 
       <div class="slider-row">
         <span class="slider-label">E<sub>es</sub></span>
-        <span class="slider-info">ⓘ<span class="tooltip"><b>End-Systolic Elastance (Contractility)</b><br>Slope of the ESPVR line. Reflects intrinsic LV contractility independent of loading conditions. Higher = stronger contraction.</span></span>
+        <span class="slider-info" tabindex="0" role="button" aria-label="Parameter definition">ⓘ<span class="tooltip"><b>End-Systolic Elastance (Contractility)</b><br>Slope of the ESPVR line. Reflects intrinsic LV contractility independent of loading conditions. Higher = stronger contraction.</span></span>
         <div class="slider-wrap">
-          <input type="range" id="slEes" min="0.3" max="5.0" step="0.1" value="2.5" oninput="onParamChange()">
+          <input type="range" id="slEes" aria-label="End-systolic elastance Ees (contractility), mmHg per mL" min="0.3" max="5.0" step="0.1" value="2.5" oninput="onParamChange()">
           <span class="slider-value" id="valEes">2.5</span>
           <span class="slider-unit">mmHg/mL</span>
         </div>
@@ -992,9 +1037,9 @@ body.dark .seo-content-body p { color: #c4ccda; }
 
       <div class="slider-row">
         <span class="slider-label">E<sub>a</sub></span>
-        <span class="slider-info">ⓘ<span class="tooltip"><b>Arterial Elastance (Afterload)</b><br>Lumped measure of total arterial load on the LV. Integrates SVR, arterial compliance, and heart rate. Higher = more afterload.</span></span>
+        <span class="slider-info" tabindex="0" role="button" aria-label="Parameter definition">ⓘ<span class="tooltip"><b>Arterial Elastance (Afterload)</b><br>Lumped measure of total arterial load on the LV. Integrates SVR, arterial compliance, and heart rate. Higher = more afterload.</span></span>
         <div class="slider-wrap">
-          <input type="range" id="slEa" min="0.3" max="6.0" step="0.1" value="1.8" oninput="onParamChange()">
+          <input type="range" id="slEa" aria-label="Arterial elastance Ea (afterload), mmHg per mL" min="0.3" max="6.0" step="0.1" value="1.8" oninput="onParamChange()">
           <span class="slider-value" id="valEa">1.8</span>
           <span class="slider-unit">mmHg/mL</span>
         </div>
@@ -1002,9 +1047,9 @@ body.dark .seo-content-body p { color: #c4ccda; }
 
       <div class="slider-row">
         <span class="slider-label">EDV</span>
-        <span class="slider-info">ⓘ<span class="tooltip"><b>End-Diastolic Volume (Preload)</b><br>LV volume at end of diastole. Determined by venous return and LV compliance. Higher = more preload (Frank-Starling mechanism).</span></span>
+        <span class="slider-info" tabindex="0" role="button" aria-label="Parameter definition">ⓘ<span class="tooltip"><b>End-Diastolic Volume (Preload)</b><br>LV volume at end of diastole. Determined by venous return and LV compliance. Higher = more preload (Frank-Starling mechanism).</span></span>
         <div class="slider-wrap">
-          <input type="range" id="slEDV" min="60" max="250" step="1" value="125" oninput="onParamChange()">
+          <input type="range" id="slEDV" aria-label="End-diastolic volume (preload), mL" min="60" max="250" step="1" value="125" oninput="onParamChange()">
           <span class="slider-value" id="valEDV">125</span>
           <span class="slider-unit">mL</span>
         </div>
@@ -1012,9 +1057,9 @@ body.dark .seo-content-body p { color: #c4ccda; }
 
       <div class="slider-row">
         <span class="slider-label">B</span>
-        <span class="slider-info">ⓘ<span class="tooltip"><b>Chamber Stiffness (Diastolic)</b><br>Exponent of the EDPVR curve. Higher = stiffer ventricle = steeper diastolic pressure rise. Elevated in HFpEF, concentric LVH, constriction.</span></span>
+        <span class="slider-info" tabindex="0" role="button" aria-label="Parameter definition">ⓘ<span class="tooltip"><b>Chamber Stiffness (Diastolic)</b><br>Exponent of the EDPVR curve. Higher = stiffer ventricle = steeper diastolic pressure rise. Elevated in HFpEF, concentric LVH, constriction.</span></span>
         <div class="slider-wrap">
-          <input type="range" id="slB" min="0.005" max="0.10" step="0.001" value="0.025" oninput="onParamChange()">
+          <input type="range" id="slB" aria-label="Chamber stiffness B (EDPVR exponent), per mL" min="0.005" max="0.10" step="0.001" value="0.025" oninput="onParamChange()">
           <span class="slider-value" id="valB">0.025</span>
           <span class="slider-unit">mL<sup>-1</sup></span>
         </div>
@@ -1022,9 +1067,9 @@ body.dark .seo-content-body p { color: #c4ccda; }
 
       <div class="slider-row">
         <span class="slider-label">HR</span>
-        <span class="slider-info">ⓘ<span class="tooltip"><b>Heart Rate</b><br>Affects cardiac output (CO = SV x HR) and contributes to arterial elastance. Does not change the PV loop shape directly but alters CO and Ea.</span></span>
+        <span class="slider-info" tabindex="0" role="button" aria-label="Parameter definition">ⓘ<span class="tooltip"><b>Heart Rate</b><br>Sets cycle length. Because Ea = R x HR/60 (afterload rises WITH rate at fixed resistance) and diastolic filling time shortens as rate rises, moving this slider also moves Ea and EDV — so cardiac output does <b>not</b> rise in proportion to rate.</span></span>
         <div class="slider-wrap">
-          <input type="range" id="slHR" min="40" max="150" step="1" value="70" oninput="onParamChange()">
+          <input type="range" id="slHR" aria-label="Heart rate, beats per minute" min="40" max="150" step="1" value="70" oninput="onRateChange()">
           <span class="slider-value" id="valHR">70</span>
           <span class="slider-unit">bpm</span>
         </div>
@@ -1032,9 +1077,9 @@ body.dark .seo-content-body p { color: #c4ccda; }
 
       <div class="slider-row">
         <span class="slider-label">V<sub>0</sub></span>
-        <span class="slider-info">ⓘ<span class="tooltip"><b>Unstressed Volume</b><br>Volume-axis intercept of the ESPVR. The theoretical LV volume at zero pressure. Shifts the entire PV loop left or right. Increased in DCM/eccentric remodeling.</span></span>
+        <span class="slider-info" tabindex="0" role="button" aria-label="Parameter definition">ⓘ<span class="tooltip"><b>Unstressed Volume</b><br>Volume-axis intercept of the ESPVR. The theoretical LV volume at zero pressure. Shifts the entire PV loop left or right. Increased in DCM/eccentric remodeling.</span></span>
         <div class="slider-wrap">
-          <input type="range" id="slV0" min="0" max="50" step="1" value="10" oninput="onParamChange()">
+          <input type="range" id="slV0" aria-label="Unstressed volume V0, mL" min="0" max="50" step="1" value="10" oninput="onParamChange()">
           <span class="slider-value" id="valV0">10</span>
           <span class="slider-unit">mL</span>
         </div>
@@ -1045,8 +1090,8 @@ body.dark .seo-content-body p { color: #c4ccda; }
 
   <!-- DRUGS & INTERVENTIONS -->
   <div class="section">
-    <div class="section-head" onclick="toggleSection(this)"><span class="icon">&#9883;</span> Drugs & Interventions<span class="chevron">&#9660;</span></div>
-    <div class="section-body">
+    <button type="button" class="section-head" aria-expanded="true" aria-controls="secBodyDrugs" onclick="toggleSection(this)"><span class="icon">&#9883;</span> Drugs & Interventions<span class="chevron">&#9660;</span></button>
+    <div class="section-body" id="secBodyDrugs">
 
       <div class="drug-category">
         <div class="drug-cat-label">Inotropes</div>
@@ -1100,8 +1145,8 @@ body.dark .seo-content-body p { color: #c4ccda; }
 
   <!-- DISEASE STATES -->
   <div class="section">
-    <div class="section-head" onclick="toggleSection(this)"><span class="icon">&#9764;</span> Disease States<span class="chevron">&#9660;</span></div>
-    <div class="section-body">
+    <button type="button" class="section-head" aria-expanded="true" aria-controls="secBodyDiseases" onclick="toggleSection(this)"><span class="icon">&#9764;</span> Disease States<span class="chevron">&#9660;</span></button>
+    <div class="section-body" id="secBodyDiseases">
 
       <div class="drug-category">
         <div class="drug-cat-label">Heart Failure</div>
@@ -1164,8 +1209,8 @@ body.dark .seo-content-body p { color: #c4ccda; }
 
   <!-- MCS DEVICES -->
   <div class="section">
-    <div class="section-head" onclick="toggleSection(this)"><span class="icon">&#9881;</span> MCS Devices<span class="chevron">&#9660;</span></div>
-    <div class="section-body">
+    <button type="button" class="section-head" aria-expanded="true" aria-controls="secBodyMCS" onclick="toggleSection(this)"><span class="icon">&#9881;</span> MCS Devices<span class="chevron">&#9660;</span></button>
+    <div class="section-body" id="secBodyMCS">
 
       <div class="drug-category">
         <div class="drug-cat-label">Counterpulsation</div>
@@ -1203,8 +1248,8 @@ body.dark .seo-content-body p { color: #c4ccda; }
 
   <!-- DISPLAY OPTIONS -->
   <div class="section collapsed" id="secDisplay">
-    <div class="section-head" onclick="toggleSection(this)"><span class="icon">&#9673;</span> Display<span class="chevron">&#9660;</span></div>
-    <div class="section-body">
+    <button type="button" class="section-head" aria-expanded="false" aria-controls="secBodyDisplay" onclick="toggleSection(this)"><span class="icon">&#9673;</span> Display<span class="chevron">&#9660;</span></button>
+    <div class="section-body" id="secBodyDisplay">
       <div class="toggle-row">
         <label class="toggle-switch">
           <input type="checkbox" id="togESPVR" checked onchange="requestDraw()">
@@ -1245,8 +1290,8 @@ body.dark .seo-content-body p { color: #c4ccda; }
 
   <!-- SNAPSHOT / COMPARE -->
   <div class="section">
-    <div class="section-head" onclick="toggleSection(this)"><span class="icon">&#10697;</span> Compare<span class="chevron">&#9660;</span></div>
-    <div class="section-body">
+    <button type="button" class="section-head" aria-expanded="true" aria-controls="secBodyCompare" onclick="toggleSection(this)"><span class="icon">&#10697;</span> Compare<span class="chevron">&#9660;</span></button>
+    <div class="section-body" id="secBodyCompare">
       <div class="btn-row">
         <button class="btn-snapshot" onclick="takeSnapshot()" id="btnSnapshot">Snapshot Current Loop</button>
       </div>
@@ -1264,7 +1309,11 @@ body.dark .seo-content-body p { color: #c4ccda; }
 
   <!-- CANVAS -->
   <div class="canvas-container" id="canvasContainer">
-    <canvas id="pvCanvas"></canvas>
+    <canvas id="pvCanvas" role="img" aria-label="Left ventricular pressure-volume loop"></canvas>
+    <!-- Announces the derived numbers when a slider is RELEASED (see announceLoopValues).
+         The canvas aria-label below carries the same numbers but is only read when the canvas
+         is reached; a role=status region is what makes a change audible without moving focus. -->
+    <div id="srStatus" class="sr-only" role="status" aria-live="polite" aria-atomic="true"></div>
 
     <!-- HEMODYNAMIC INDICES OVERLAY -->
     <div class="indices-overlay" id="indicesOverlay" data-size="1">
@@ -1292,9 +1341,87 @@ body.dark .seo-content-body p { color: #c4ccda; }
 <div class="global-tooltip" id="globalTooltip"></div>
 
 <script>
+// <shared:analytics v1>
+// GENERATED FROM shared/analytics.js BY scripts/sync-shared.mjs — DO NOT EDIT HERE.
+// Edit shared/analytics.js, then run: node scripts/sync-shared.mjs --write
+// CathMath analytics — GA4, property 555096463, stream G-ZME4G2EYJS.
+// Design and the reasons for every choice: plans/2026-09-21-analytics-design.md
+//
+// THIS BLOCK MUST NEVER BE ABLE TO BREAK A TOOL. It runs first, so it is wrapped whole, and
+// cmTrack() exists as a no-op before anything that can throw is attempted.
+//
+// HOST GUARD. Unless the page is being served from cathmath.org, nothing loads and nothing is
+// sent: not from file://, not from localhost, not in the node vm harness, not in CardioDoc's
+// fixture capture, not from a copy of this page hosted somewhere else. That is what keeps the
+// house rule true — every tool works with zero runtime dependencies and no network. Analytics is
+// an enhancement that exists only on the production host.
+//
+// NOTHING A USER TYPES IS EVER SENT. Parameters are fixed id strings that already exist in the
+// source (module ids, preset ids, drug ids). cmTrack drops any parameter that is not a short
+// string, so a number read from an input cannot leave even if a caller passes one by mistake.
+(function () {
+  var TOOL = 'pvloop';
+  var ID = 'G-ZME4G2EYJS';
+  window.cmTrack = function () {};
+  try {
+    var host = String((window.location && window.location.hostname) || '');
+    if (host !== 'cathmath.org' && host !== 'www.cathmath.org') return;
+
+    // Own-traffic flag, as on CardioQFlow: visit once with ?internal=1 (clear with ?internal=0)
+    // and every event from this browser carries traffic_type=internal for a GA4 data filter.
+    var internal = false;
+    try {
+      var q = new URLSearchParams(window.location.search).get('internal');
+      if (q === '1' || q === 'on') window.localStorage.setItem('cathmath_internal', '1');
+      else if (q === '0' || q === 'off') window.localStorage.removeItem('cathmath_internal');
+      internal = window.localStorage.getItem('cathmath_internal') === '1';
+    } catch (e) { internal = false; }
+
+    window.dataLayer = window.dataLayer || [];
+    window.gtag = window.gtag || function () { window.dataLayer.push(arguments); };
+    var base = { tool: TOOL };
+    if (internal) base.traffic_type = 'internal';
+    window.gtag('js', new Date());
+    window.gtag('config', ID, base);           // parameters in config ride on every event, page_view included
+
+    // Injected, never a static <script src>: gtag.js is regenerated by Google constantly, so an
+    // integrity= hash cannot be pinned to it. scripts/lint.mjs DEP-1 allow-lists this one origin
+    // by name rather than failing to notice it.
+    var s = document.createElement('script');
+    s.async = true;
+    s.src = 'https://www.googletagmanager.com/gtag/js?id=' + ID;
+    document.head.appendChild(s);
+
+    var once = {};
+    // cmTrack(name, params, onceKey) — fire-and-forget. onceKey, when given, sends the event at
+    // most once per page load for that key (calc_used: once per module).
+    window.cmTrack = function (name, params, onceKey) {
+      try {
+        if (onceKey) { if (once[onceKey]) return; once[onceKey] = 1; }
+        var p = { tool: TOOL };
+        if (internal) p.traffic_type = 'internal';
+        for (var k in (params || {})) {
+          var v = params[k];
+          if (typeof v === 'string' && v.length > 0 && v.length <= 64) p[k] = v;   // enum ids only
+        }
+        window.gtag('event', String(name), p);
+      } catch (e) { /* analytics must never throw into a tool */ }
+    };
+  } catch (e) { /* blocked, offline, private mode — the tool carries on */ }
+})();
+// </shared:analytics>
+
 // ============================================================
 // CathMath PV Loop Simulator — Phase 1 Core Engine
-// Mathematical model: Time-varying elastance (Suga-Sagawa)
+//
+// MATHEMATICAL MODEL — what the code does, not what it resembles.
+// This is NOT a time-varying-elastance integration: there is no activation function e(t)
+// and no state integrated over time. End systole is solved in CLOSED FORM as the
+// intersection of the ESPVR (P = Ees*(V - V0), Suga & Sagawa 1974) with the arterial
+// elastance line; end diastole is read off the exponential EDPVR; the four phases between
+// those two corners are drawn geometrically. Time enters in exactly two places, and both
+// are explicit: the phase DURATIONS that pace the animated dot (cycleTiming), and the
+// rate coupling that moves afterload and preload when the rate changes (coupleToRate).
 // ============================================================
 
 // ---- CONSTANTS ----
@@ -1304,6 +1431,164 @@ body.dark .seo-content-body p { color: #c4ccda; }
 // headline index in the overlay and the ED point is drawn at that pressure, so the whole
 // diastolic half of the loop sat on the floor. 0.54 puts the baseline at 9.0 mmHg.
 const A_EDPVR = 0.54; // EDPVR scaling constant (mmHg)
+
+// ---- PRINTED-NUMBER LAW ----
+// An operand is rounded ONCE, where it becomes text, and every result is computed from
+// those same rounded operands. The overlay prints SV, EF and CO side by side and the HR
+// slider's own tooltip states CO = SV x HR, so CO has to be the product of the two
+// numbers on the screen. decRound is the canonical implementation (rhc_calculator.html):
+// it rounds the DECIMAL a double denotes, by string carry, because toFixed rounds the
+// binary value and takes exact halves like 14.35 down.
+function decRound(val, dp) {
+  if (val === 0) return 0;
+  const neg = val < 0;
+  const snapped = Number(val.toPrecision(15));
+  const parts = Math.abs(snapped).toExponential().split('e');
+  const digits = parts[0].replace('.', '');
+  const keep = Number(parts[1]) + 1 + dp;
+  if (keep >= digits.length) return snapped;
+  if (keep < 0) return 0;
+  let out = keep === 0 ? '0' : digits.slice(0, keep);
+  if (digits.charCodeAt(keep) >= 53 /* '5' */) {
+    const a = out.split('');
+    let i = a.length - 1;
+    for (; i >= 0 && a[i] === '9'; i--) a[i] = '0';
+    if (i < 0) a.unshift('1');
+    else a[i] = String.fromCharCode(a[i].charCodeAt(0) + 1);
+    out = a.join('');
+  }
+  const padded = out.padStart(dp + 1, '0');
+  const t = dp === 0 ? out : padded.slice(0, -dp) + '.' + padded.slice(-dp);
+  return Number(neg ? '-' + t : t);
+}
+function q(val, dp) {
+  if (val === null || val === undefined || isNaN(val) || !isFinite(val)) return null;
+  return decRound(val, dp);
+}
+
+// ---- CARDIAC TIMING ----
+// Phase durations in SECONDS, derived from the rate. The animation used to advance by a
+// fixed increment per FRAME (0.008), so the dot circled at 28.8 bpm on a 60 Hz display and
+// 57.6 bpm on a 120 Hz phone and never at the rate on the slider; and it advanced by array
+// index, so it spent 20% of the cycle in isovolumic contraction and 27% in filling — the
+// opposite of the lesson. Both now come from here.
+//   LVET  Weissler's regression for ejection time: LVET(ms) = 413 - 1.7 x HR
+//   IVCT  isovolumic contraction, ~50 ms, near-constant across rates
+//   IVRT  isovolumic relaxation, ~80 ms, near-constant across rates
+//   fill  the remainder of the RR interval — the term tachycardia actually eats
+// At HR 70 that is 6% / 34% / 9% / 51%, which is the textbook division.
+const IVCT_S = 0.050, IVRT_S = 0.080, FILL_MIN_S = 0.060;
+function cycleTiming(HR) {
+  const hr = Math.max(20, Math.min(220, HR || 70));
+  const rr = 60 / hr;
+  const lvet = Math.max(0.12, (413 - 1.7 * hr) / 1000);
+  const fill = Math.max(FILL_MIN_S, rr - IVCT_S - lvet - IVRT_S);
+  return { rr, ivct: IVCT_S, lvet, ivrt: IVRT_S, fill, total: IVCT_S + lvet + IVRT_S + fill };
+}
+
+// Filling is approximately exponential and strongly front-loaded: early rapid filling moves
+// most of the stroke volume inside the first ~150 ms, diastasis adds little. A time constant
+// of 0.10 s reproduces that (78% filled at 150 ms, essentially complete by 400 ms). The
+// share of the achievable end-diastolic volume a diastole of length t reaches is
+// 1 - exp(-t / TAU_FILL), so at rest the ventricle is effectively full and only tachycardia
+// bites — which is the point.
+const TAU_FILL = 0.10;
+function fillingFraction(HR) {
+  return 1 - Math.exp(-cycleTiming(HR).fill / TAU_FILL);
+}
+
+// ---- RATE COUPLING ----
+// Heart rate used to appear exactly once in the whole model, as a multiplier in
+// CO = SV x HR, so doubling the rate doubled cardiac output with a bit-identical loop —
+// no filling penalty, no afterload consequence. Two couplings fix that, and both are
+// exact ratios, so the mapping is analytically invertible:
+//
+//   (1) AFTERLOAD.  Ea = R_sys / T = R_sys x HR / 60 (Sunagawa). At constant systemic
+//       resistance, arterial elastance is PROPORTIONAL to rate. This is why metoprolol's
+//       -15 bpm is also an afterload reduction, and why isoproterenol's vasodilation is
+//       largely cancelled by its own tachycardia.
+//   (2) PRELOAD.  Shorter diastole fills less, so EDV falls as rate rises (above V0,
+//       which is not filled volume).
+//
+// REVERSIBILITY IS NOT UNCONDITIONAL. The ratios invert exactly, but every step is passed
+// through clampParams (the slider ranges), and a clamp is lossy. If a drag pushes Ea or EDV
+// past the end of its slider, the excess is gone and dragging back does not restore it.
+// Reproduced: load MS + AS (Ea 3.5, EDV 80, HR 80), drag HR to 150 and back to 80 — Ea returns
+// 3.2, not 3.5, because it hit the 6.0 ceiling on the way up, and EDV returns 84, not 80,
+// because it hit the 60 floor. From the baseline state, and from any state whose excursion
+// stays inside the slider ranges, the round trip IS exact. Keeping the clamp is the deliberate
+// choice: the six sliders are the model's whole visible state, so no parameter may hold a
+// value its slider cannot show.
+//
+// This is a rate coupling, NOT a closed loop: venous return, the baroreflex and the
+// force-frequency relation are still absent, and the six sliders remain the model's whole
+// state. A disease preset sets all six at once and is therefore NOT re-coupled — its
+// numbers are the authored ones. Drug/MCS rate deltas and the HR slider are.
+function coupleToRate(from, toHR) {
+  const out = { ...from, HR: toHR };
+  if (!(toHR > 0) || !(from.HR > 0) || toHR === from.HR) return out;
+  out.Ea = from.Ea * (toHR / from.HR);
+  out.EDV = from.V0 + (from.EDV - from.V0) * (fillingFraction(toHR) / fillingFraction(from.HR));
+  return out;
+}
+
+// One clamp table for the six parameters — the slider ranges, and nothing else.
+function clampParams(p) {
+  return {
+    Ees: Math.max(0.3, Math.min(5.0, p.Ees)),
+    Ea: Math.max(0.3, Math.min(6.0, p.Ea)),
+    EDV: Math.max(60, Math.min(250, p.EDV)),
+    B: Math.max(0.005, Math.min(0.10, p.B)),
+    HR: Math.max(40, Math.min(150, p.HR)),
+    V0: Math.max(0, Math.min(50, p.V0)),
+  };
+}
+
+// ---- ARTERIAL DIASTOLIC PRESSURE ----
+// Aortic diastolic pressure is where the loop's AV-opens corner sits. It used to be a flat
+// 0.55 x ESP, which fixed pulse pressure at 45% of end-systolic pressure in EVERY state:
+// aortic regurgitation and tamponade drew the SAME relative pulse pressure, so neither of
+// the two most-tested bedside signs could appear at all. It is now a two-element Windkessel
+// decay across the real diastolic interval:
+//     P_dia = P_ao_sys x exp(-t_diastole / tau),  tau = C_ART x R_sys,  R_sys = Ea x 60/HR
+// C_ART is a lumped arterial compliance calibrated so the baseline state draws 120/83.
+// tau is held inside 0.35-2.2 s because that is the measured range of the human aortic
+// pressure-decay time constant; an Ea of 6 at 40 bpm otherwise implies a decay slower than
+// any artery has. What falls out, rather than being asserted: warm sepsis and vasodilators
+// widen the pulse pressure, tamponade / hypovolaemia / HFrEF narrow it.
+const C_ART = 1.0;        // mL/mmHg, lumped total arterial compliance
+const TAU_MIN = 0.35, TAU_MAX = 2.2;
+
+// A stenotic aortic valve holds LV systolic pressure above AORTIC systolic pressure by the
+// transvalvular gradient, and the loop draws the LV. This closed-form model has exactly ONE
+// systolic pressure — ESP, the ESPVR corner — so the aortic ceiling has to be ESP minus a
+// single representative systolic offset.
+//
+// BE PRECISE ABOUT WHAT 40 IS. It is the MEAN systolic gradient that defines severe AS
+// (ACC/AHA 2020 Valvular Heart Disease guideline, stage D1: mean gradient >= 40 mmHg). It is
+// NOT an end-systolic gradient: the instantaneous gradient is near zero at aortic valve
+// closure and largest in early-to-mid systole, and the peak-to-peak gradient is larger than
+// the mean. So this constant is a severity-anchored stand-in for the average systolic offset,
+// borrowed to place the aortic ceiling; it is not a claim that LV-minus-aortic equals 40 mmHg
+// at the instant ESP is measured. The AV-opens corner it produces (aortic_stenosis: 146/113)
+// is in range for severe AS, which is why the approximation is kept. A real instantaneous
+// gradient needs a time-resolved flow model — Phase 1, not a constant.
+// Without some offset the AS presets put the AV-opens corner ~40 mmHg too high.
+const AV_GRADIENT = { aortic_stenosis: 40, as_ar: 40, as_mr: 40, ms_as: 40 };
+
+// An incompetent aortic valve is a second runoff path in parallel with the systemic bed, so
+// the aortic pressure decays faster in diastole — the mechanism behind the wide pulse pressure
+// and low diastolic of AR. This is the REGURGITANT SHARE OF DIASTOLIC RUNOFF: the fraction of
+// total diastolic outflow from the aorta that goes backwards through the valve instead of
+// forwards into the systemic bed. Conductances in parallel add, so the decay constant scales
+// by (1 - share).
+//
+// It lives here, keyed by preset, and NOT in REGURG_SHAPES. The limb-slope fractions in
+// REGURG_SHAPES are DRAWING constants, picked so the loop reads correctly on screen; this is a
+// PHYSIOLOGIC quantity that sets a printed pressure. They happen to carry the same values
+// today, which is exactly why they must not share a variable: retuning how the relaxation limb
+// looks would otherwise silently move the reported aortic diastolic pressure.
+const AR_RUNOFF_SHARE = { aortic_regurg: 0.30, as_ar: 0.24 };
 
 // ---- STATE ----
 let params = {
@@ -1380,7 +1665,9 @@ function clampFrac(f) {
 //   little volume (smaller effect — that window is short).
 //
 // Fractions are of stroke volume. Sign convention matches computeLoop: negative = volume
-// falls across the limb, positive = volume rises.
+// falls across the limb, positive = volume rises. These are DRAWING constants only — they set
+// limb slope and nothing else. No printed number may be derived from them; the regurgitant
+// share of diastolic runoff has its own constant (AR_RUNOFF_SHARE).
 const REGURG_SHAPES = {
   mitral_regurg: { ivc: -0.30, ivr: -0.12, lesion: 'MR' },
   aortic_regurg: { ivc: +0.12, ivr: +0.30, lesion: 'AR' },
@@ -1393,7 +1680,15 @@ function getRegurgShape() {
   return (activeDisease && REGURG_SHAPES[activeDisease]) || null;
 }
 
-function computeLoop(p, triFactor, regurgShape) {
+function getAvGradient() {
+  return (activeDisease && AV_GRADIENT[activeDisease]) || 0;
+}
+
+function getArRunoffShare() {
+  return (activeDisease && AR_RUNOFF_SHARE[activeDisease]) || 0;
+}
+
+function computeLoop(p, triFactor, regurgShape, avGradient, arRunoffShare) {
   const { Ees, Ea, EDV, B, HR, V0 } = p;
   const tri = triFactor || 0; // 0 = normal rectangular, 1 = fully triangular (Impella)
   const rg = regurgShape || { ivc: 0, ivr: 0 };
@@ -1402,9 +1697,15 @@ function computeLoop(p, triFactor, regurgShape) {
   const ESP = Ees * (ESV - V0);
   const EDP = edpvr(EDV, B, V0);
   const SV = EDV - ESV;
-  const EF = SV / EDV * 100;
-  const CO = SV * HR / 1000;
-  const coupling = Ea / Ees;
+
+  // Printed-number law: SV, EDV, HR, Ees and Ea are all on the screen, so EF, CO and the
+  // coupling ratio are computed from the ROUNDED numbers the user can read, not from the
+  // doubles underneath them. CO = SV x HR is a claim the HR tooltip makes explicitly.
+  const SV_p = q(SV, 0), EDV_p = q(EDV, 0), HR_p = q(HR, 0);
+  const Ees_p = q(Ees, 1), Ea_p = q(Ea, 1);
+  const EF = (EDV_p ? q(SV_p / EDV_p * 100, 1) : 0) || 0;
+  const CO = q(SV_p * HR_p / 1000, 1) || 0;
+  const coupling = (Ees_p ? q(Ea_p / Ees_p, 2) : 0) || 0;
 
   const pts = [];
   const N_IVC = 30;
@@ -1412,7 +1713,22 @@ function computeLoop(p, triFactor, regurgShape) {
   const N_IVR = 30;
   const N_FILL = 40;
 
-  const P_ao_dia = Math.max(ESP * 0.55, EDP + 5);
+  // Windkessel diastolic runoff (see C_ART / TAU_MIN above). The runoff interval is the
+  // whole of diastole as the AORTA sees it: from valve closure, through relaxation and
+  // filling, to the next valve opening.
+  const timing = cycleTiming(HR);
+  const tDia = timing.ivrt + timing.fill + timing.ivct;
+  const R_sys = Ea * 60 / Math.max(20, HR);
+  // Aortic regurgitation opens a second runoff path in parallel with the systemic bed
+  // (see AR_RUNOFF_SHARE above — a physiologic share, deliberately not the drawing constant).
+  const arShare = Math.min(0.5, Math.max(0, arRunoffShare || 0));
+  const tau = Math.max(TAU_MIN, Math.min(TAU_MAX, C_ART * R_sys)) * (1 - arShare);
+  const P_ao_sys = Math.max(20, ESP - (avGradient || 0));
+  let P_ao_dia = P_ao_sys * Math.exp(-tDia / tau);
+  // The AV-opens corner has to sit above end-diastolic pressure and below end-systolic,
+  // or there is no isovolumic contraction limb left to draw.
+  P_ao_dia = Math.max(P_ao_dia, EDP + 5);
+  P_ao_dia = Math.min(P_ao_dia, Math.max(EDP + 5, ESP - 5));
 
   // === LIMB SLOPE: how much volume moves during the two "isovolumic" phases ===
   // Both limbs are expressed as a SIGNED fraction of SV. Negative = volume falls,
@@ -1497,18 +1813,45 @@ function computeLoop(p, triFactor, regurgShape) {
     // Limb geometry, so the phase labels can tell the truth about what each limb is:
     // a limb with a non-zero fraction is NOT isovolumic and must not be labelled IVC/IVR.
     shape: { ivcFrac, ivrFrac, lesion: rg.lesion || null },
+    // Where each phase starts in pts[], and how long it lasts in seconds. The animated dot
+    // walks TIME across these, so its dwell in each phase is that phase's real share of the
+    // cycle rather than its share of the sample points.
+    timing: {
+      bounds: [0, N_IVC + 1, N_IVC + 1 + N_EJ, N_IVC + 1 + N_EJ + N_IVR, pts.length],
+      durs: [timing.ivct, timing.lvet, timing.ivrt, timing.fill],
+      total: timing.total,
+      P_ao_dia: P_ao_dia
+    },
     values: {
-      SV: Math.round(SV),
+      SV: SV_p,
       EF: EF.toFixed(1),
       CO: CO.toFixed(1),
-      ESP: Math.round(ESP),
-      EDP: EDP.toFixed(1),
-      SW: Math.round(SW),
+      ESP: q(ESP, 0),
+      EDP: q(EDP, 1).toFixed(1),
+      SW: q(SW, 0),
       coupling: coupling.toFixed(2),
-      ESV: Math.round(ESV),
-      EDV: Math.round(EDV)
+      ESV: q(ESV, 0),
+      EDV: EDV_p
     }
   };
+}
+
+// Map a fraction of the CYCLE (time) onto a fraction of the loop's point array, so the
+// tracing and the dot move at the speed the phase actually runs at.
+function loopIndexFraction(loop, tFrac) {
+  const t = loop.timing;
+  if (!t || !t.total) return tFrac;
+  const n = t.bounds[t.bounds.length - 1];
+  let acc = 0;
+  for (let i = 0; i < t.durs.length; i++) {
+    const f = t.durs[i] / t.total;
+    if (tFrac < acc + f || i === t.durs.length - 1) {
+      const u = f > 0 ? Math.min(1, Math.max(0, (tFrac - acc) / f)) : 0;
+      return (t.bounds[i] + u * (t.bounds[i + 1] - t.bounds[i])) / n;
+    }
+    acc += f;
+  }
+  return 0;
 }
 
 // ---- RENDERING ----
@@ -1553,11 +1896,16 @@ function drawGrid() {
   // Grid lines
   ctx.lineWidth = 0.5;
 
+  // getCSS() is a forced style resolution. It used to be called inside both grid loops —
+  // ~24 of them per frame, 1,400/s while the dot animates. Read each token once.
+  const cMajor = getCSS('--grid-major');
+  const cMinor = getCSS('--grid-color');
+
   // Vertical grid (Volume)
   const vStep = vMax <= 200 ? 20 : 40;
   for (let v = 0; v <= vMax; v += vStep) {
     const x = vToX(v);
-    ctx.strokeStyle = (v % (vStep * 2) === 0) ? getCSS('--grid-major') : getCSS('--grid-color');
+    ctx.strokeStyle = (v % (vStep * 2) === 0) ? cMajor : cMinor;
     ctx.beginPath();
     ctx.moveTo(x, MARGIN.top);
     ctx.lineTo(x, MARGIN.top + plotH);
@@ -1568,7 +1916,7 @@ function drawGrid() {
   const pStep = pMax <= 200 ? 20 : 40;
   for (let p = 0; p <= pMax; p += pStep) {
     const y = pToY(p);
-    ctx.strokeStyle = (p % (pStep * 2) === 0) ? getCSS('--grid-major') : getCSS('--grid-color');
+    ctx.strokeStyle = (p % (pStep * 2) === 0) ? cMajor : cMinor;
     ctx.beginPath();
     ctx.moveTo(MARGIN.left, y);
     ctx.lineTo(MARGIN.left + plotW, y);
@@ -1790,10 +2138,10 @@ function drawAnimDot(pts, progress) {
   ctx.globalAlpha = 1;
   ctx.fill();
 
-  // White center
+  // Core
   ctx.beginPath();
   ctx.arc(x, y, 1.5, 0, Math.PI * 2);
-  ctx.fillStyle = '#fff';
+  ctx.fillStyle = getCSS('--dot-core');
   ctx.fill();
   ctx.restore();
 }
@@ -1995,7 +2343,7 @@ function draw() {
   drawGrid();
 
   // Compute current loop (with triangularization for MCS devices)
-  const loop = computeLoop(params, getTriangularFactor(), getRegurgShape());
+  const loop = computeLoop(params, getTriangularFactor(), getRegurgShape(), getAvGradient(), getArRunoffShare());
 
   // Draw ghost if exists
   if (ghostLoop) {
@@ -2007,11 +2355,14 @@ function draw() {
   drawESPVR();
   drawEaLine(loop);
 
-  // Draw main loop
+  // Draw main loop. animProgress is a fraction of the CYCLE; the path and the dot need a
+  // fraction of the point array, and the two are not the same because the phases have very
+  // different durations.
   const loopColor = getCSS('--loop-color');
   if (animRunning) {
-    drawLoopPath(loop.pts, loopColor, 2.5, 1, animProgress);
-    drawAnimDot(loop.pts, animProgress);
+    const idxFrac = loopIndexFraction(loop, animProgress);
+    drawLoopPath(loop.pts, loopColor, 2.5, 1, idxFrac);
+    drawAnimDot(loop.pts, idxFrac);
   } else {
     drawLoopPath(loop.pts, loopColor, 2.5, 1);
   }
@@ -2032,11 +2383,19 @@ function requestDraw() {
 }
 
 // ---- ANIMATION LOOP ----
-function animate() {
+// Advance by ELAPSED TIME, not by a fixed increment per frame. The old fixed 0.008 per
+// frame ran the dot at 28.8 bpm on a 60 Hz display and 57.6 bpm on a 120 Hz phone, and at
+// the slider's heart rate on neither. One revolution now takes 60/HR seconds everywhere.
+let animLastTs = null;
+function animate(ts) {
   if (!animRunning) return;
-  const speed = 0.008; // loops per frame (~2 seconds per loop at 60fps)
-  animProgress += speed;
-  if (animProgress >= 1) animProgress -= 1;
+  if (ts === undefined) { animFrameId = requestAnimationFrame(animate); return; }
+  if (animLastTs === null) animLastTs = ts;
+  // A backgrounded tab delivers one enormous dt on return; cap it rather than teleport.
+  const dt = Math.min(0.25, Math.max(0, (ts - animLastTs) / 1000));
+  animLastTs = ts;
+  const cycle = cycleTiming(params.HR).total;
+  animProgress = (animProgress + dt / cycle) % 1;
   draw();
   animFrameId = requestAnimationFrame(animate);
 }
@@ -2045,9 +2404,11 @@ function toggleAnimation() {
   animRunning = document.getElementById('togAnimate').checked;
   if (animRunning) {
     animProgress = 0;
+    animLastTs = null;
     animate();
   } else {
     if (animFrameId) cancelAnimationFrame(animFrameId);
+    animFrameId = null;
     requestDraw();
   }
 }
@@ -2087,7 +2448,28 @@ function onParamChange() {
   if (!animRunning) requestDraw();
 }
 
+// Heart rate is no longer a bare multiplier on CO (see coupleToRate): moving it also moves
+// afterload and preload. Those two land on their own sliders, where the user can see them,
+// rather than being applied invisibly inside the model. The mapping is an exact ratio in both
+// directions, so the round trip restores the starting state — EXCEPT where clampParams bites
+// mid-drag, which is lossy; see the reversibility note above coupleToRate.
+function onRateChange() {
+  const newHR = parseFloat(document.getElementById('slHR').value);
+  params = clampParams(coupleToRate(params, newHR));
+  setSliders(params);
+  updateSliderDisplays();
+  if (!animRunning) requestDraw();
+}
+
+// draw() runs on every animation frame, so this used to write 7 textContent values and 3
+// className changes 120 times a second on a ProMotion phone for numbers that had not
+// changed. Write only what moved.
+let lastPrinted = null;
 function updateValues(v) {
+  const key = v.SV + '|' + v.EF + '|' + v.CO + '|' + v.ESP + '|' + v.EDP + '|' + v.SW + '|' + v.coupling;
+  if (key === lastPrinted) return;
+  lastPrinted = key;
+
   document.getElementById('outSV').textContent = v.SV;
   document.getElementById('outEF').textContent = v.EF;
   document.getElementById('outCO').textContent = v.CO;
@@ -2100,6 +2482,30 @@ function updateValues(v) {
   colorVal('outEF', parseFloat(v.EF), 55, 40, 70, 100);
   colorVal('outCO', parseFloat(v.CO), 4.0, 2.0, 8.0, 12.0);
   colorCoupling(parseFloat(v.coupling));
+
+  // The canvas is the whole teaching artifact and a screen reader gets nothing from it, so the
+  // accessible NAME carries the numbers the picture is drawn from. An accessible name is not a
+  // live region: it is read when the canvas is reached, so it makes the picture inspectable but
+  // it announces nothing while a slider moves. announceLoopValues() below is the live half.
+  canvas.setAttribute('aria-label',
+    'Left ventricular pressure-volume loop. Stroke volume ' + v.SV + ' mL, ejection fraction ' +
+    v.EF + ' percent, cardiac output ' + v.CO + ' litres per minute, end-systolic pressure ' +
+    v.ESP + ' mmHg, end-diastolic pressure ' + v.EDP + ' mmHg, stroke work ' + v.SW +
+    ' mmHg mL, Ea over Ees ' + v.coupling + '.');
+}
+
+// The live half of the same job. Fired on the sliders' `change` event — i.e. when a drag is
+// RELEASED, or once per arrow key — never on `input`, because a polite region updated 60 times
+// a second during a drag produces an unusable queue of speech. It recomputes rather than
+// reading the last drawn values, so it can never announce a frame-stale number.
+function announceLoopValues() {
+  const el = document.getElementById('srStatus');
+  if (!el) return;
+  const v = computeLoop(params, getTriangularFactor(), getRegurgShape(), getAvGradient(),
+                        getArRunoffShare()).values;
+  el.textContent = 'Stroke volume ' + v.SV + ' millilitres, ejection fraction ' + v.EF +
+    ' percent, cardiac output ' + v.CO + ' litres per minute, end-systolic pressure ' + v.ESP +
+    ' mmHg, end-diastolic pressure ' + v.EDP + ' mmHg.';
 }
 
 function colorVal(id, val, lowWarn, lowBad, hiWarn, hiBad) {
@@ -2120,7 +2526,7 @@ function colorCoupling(ratio) {
 
 // ---- SNAPSHOT ----
 function takeSnapshot() {
-  const loop = computeLoop(params, getTriangularFactor(), getRegurgShape());
+  const loop = computeLoop(params, getTriangularFactor(), getRegurgShape(), getAvGradient(), getArRunoffShare());
   ghostLoop = { pts: [...loop.pts] };
   ghostValues = { ...loop.values };
   document.getElementById('btnClearSnap').style.display = '';
@@ -2155,6 +2561,69 @@ function resetToBaseline() {
   requestDraw();
 }
 
+// ---- TOOLTIPS ----
+// Roughly forty mechanism strings — every drug's pharmacology, every disease's category,
+// every device's flow, and the definitions of the six parameters — used to be bound to
+// mouseenter/mouseleave only. On a phone, tapping a drug applied it and the explanation
+// never appeared; from the keyboard nothing appeared at all. One binding now covers hover,
+// focus and tap: a tap toggles the tip, a tap anywhere else dismisses it.
+let tipOwner = null;
+
+function showTip(anchor, html) {
+  const tip = document.getElementById('globalTooltip');
+  tip.innerHTML = html;
+  tip.classList.add('visible');
+  tipOwner = anchor;
+  const rect = anchor.getBoundingClientRect();
+  tip.style.left = (rect.right + 10) + 'px';
+  tip.style.top = (rect.top + rect.height / 2) + 'px';
+  tip.style.transform = 'translateY(-50%)';
+  requestAnimationFrame(() => {
+    const tipRect = tip.getBoundingClientRect();
+    if (tipRect.right > window.innerWidth - 10) {
+      tip.style.left = Math.max(8, rect.left - tipRect.width - 10) + 'px';
+    }
+    if (tipRect.bottom > window.innerHeight - 10) {
+      tip.style.top = Math.max(10, window.innerHeight - tipRect.height - 10) + 'px';
+      tip.style.transform = 'none';
+    }
+    if (tipRect.top < 10) {
+      tip.style.top = '10px';
+      tip.style.transform = 'none';
+    }
+  });
+}
+
+function hideTip() {
+  document.getElementById('globalTooltip').classList.remove('visible');
+  tipOwner = null;
+}
+
+function bindTip(el, htmlFn) {
+  el.addEventListener('mouseenter', () => showTip(el, htmlFn()));
+  el.addEventListener('mouseleave', () => { if (tipOwner === el) hideTip(); });
+  el.addEventListener('focus', () => showTip(el, htmlFn()));
+  el.addEventListener('blur', () => { if (tipOwner === el) hideTip(); });
+  // Pointer click TOGGLES, because a mouse user opened the tip by hovering and wants a way to
+  // pin or dismiss it. A keyboard user is in the opposite situation: focus has ALREADY opened
+  // the tip, so routing Enter through the same toggle closed the tooltip that focus had just
+  // opened — Enter became "hide". Keys therefore do not toggle: Enter/Space (re-)opens and
+  // Escape closes, which is also what a keyboard user expects of a disclosure.
+  el.addEventListener('click', (e) => {
+    if (e.detail === 0) return; // synthesized / keyboard-originated click: the key handler owns it
+    if (tipOwner === el) hideTip(); else showTip(el, htmlFn());
+  });
+  el.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') { if (tipOwner === el) hideTip(); return; }
+    if (e.key !== 'Enter' && e.key !== ' ') return;
+    // A native <button> activates ITSELF on Enter/Space; calling preventDefault here would
+    // cancel that and the button's own handler (select the drug, select the preset) would
+    // never run. Only the info spans, which are not buttons, need the default suppressed.
+    if (el.tagName !== 'BUTTON') e.preventDefault();
+    showTip(el, htmlFn());
+  });
+}
+
 // ---- DRUGS & INTERVENTIONS ----
 
 const BASELINE = { Ees: 2.5, Ea: 1.8, EDV: 125, B: 0.025, HR: 70, V0: 10 };
@@ -2176,6 +2645,13 @@ const DRUGS = {
   fluids:        { name: 'IV Fluids',       Ees: 0,    Ea: 0,    EDV: +20, B: 0, HR: 0,      mech: 'Volume expansion — ↑preload (Frank-Starling)' },
   diuretics:     { name: 'Diuretics',       Ees: 0,    Ea: 0,    EDV: -20, B: 0, HR: 0,      mech: 'Volume removal — ↓preload' },
 };
+
+// Both animation chains — the tracing dot and the 400 ms drug transition — start on load or
+// on a click. A user who asked their OS for reduced motion gets neither.
+const REDUCED_MOTION = (() => {
+  try { return !!(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches); }
+  catch (e) { return false; }
+})();
 
 let activeDrugs = new Set();
 let animatingDrugs = false;
@@ -2223,7 +2699,7 @@ function getBaseParams() {
 
 function animateDrugTransition(ts) {
   if (!animatingDrugs) return;
-  const elapsed = ts - drugAnimStart;
+  const elapsed = REDUCED_MOTION ? DRUG_ANIM_MS : ts - drugAnimStart;
   let t = Math.min(elapsed / DRUG_ANIM_MS, 1);
   // Ease-out cubic
   t = 1 - Math.pow(1 - t, 3);
@@ -2277,40 +2753,30 @@ function clearAllDrugs() {
 function initDrugButtons() {
   document.querySelectorAll('.drug-btn').forEach(btn => {
     btn.addEventListener('click', () => toggleDrug(btn.dataset.drug));
-
-    // Tooltip on hover via global tooltip
-    const drugId = btn.dataset.drug;
-    const drug = DRUGS[drugId];
+    const drug = DRUGS[btn.dataset.drug];
     if (!drug) return;
-
-    btn.addEventListener('mouseenter', () => {
-      const tip = document.getElementById('globalTooltip');
-      tip.innerHTML = '<b>' + drug.name + '</b><br>' + drug.mech;
-      tip.classList.add('visible');
-      const rect = btn.getBoundingClientRect();
-      tip.style.left = (rect.right + 10) + 'px';
-      tip.style.top = (rect.top + rect.height / 2) + 'px';
-      tip.style.transform = 'translateY(-50%)';
-      requestAnimationFrame(() => {
-        const tipRect = tip.getBoundingClientRect();
-        if (tipRect.right > window.innerWidth - 10) {
-          tip.style.left = (rect.left - tipRect.width - 10) + 'px';
-        }
-        if (tipRect.bottom > window.innerHeight - 10) {
-          tip.style.top = (window.innerHeight - tipRect.height - 10) + 'px';
-          tip.style.transform = 'none';
-        }
-      });
-    });
-
-    btn.addEventListener('mouseleave', () => {
-      document.getElementById('globalTooltip').classList.remove('visible');
-    });
+    btn.setAttribute('aria-pressed', 'false');
+    bindTip(btn, () => '<b>' + drug.name + '</b><br>' + drug.mech);
   });
 }
 
 // ---- DISEASE STATES ----
-
+//
+// Three presets were retuned on 2026-09-20 because the numbers they produced contradicted
+// their own descriptions. The model's closed form is ESV = (Ees*V0 + Ea*EDV)/(Ees + Ea),
+// ESP = Ees*(ESV - V0), so a preset is a claim about SV/EF/CO/ESP and has to be checked:
+//
+//   aortic_stenosis  Ees 3.0 / Ea 3.5 -> EF 44%, on a preset whose text says "compensatory
+//                    concentric LVH". Compensated severe AS preserves EF; that is the whole
+//                    point of the adaptation. Now Ees 4.3 / Ea 2.6 -> EF 60%, ESP 186.
+//   mitral_regurg    Ea 0.8 represented the regurgitant pop-off but dragged the pressure
+//                    ceiling to ESP 89, drawing a SHORT loop. Chronic MR is normal-height
+//                    and wide. Now Ees 2.5 / Ea 1.1 -> ESP 119, EF 63%, total SV 108.
+//   septic_shock     Ea 0.6 gave ESP 54, i.e. a systolic near 60 — not the high-output,
+//                    modestly hypotensive state the description promises. Now Ees 1.6 /
+//                    Ea 1.0 -> ESP 83, EF 55%, CO 9.1.
+//
+// The full derived table for all 18 presets is printed in the comment block below DISEASES.
 const DISEASES = {
   hfref:             { name: 'HFrEF', params: {Ees:1.0, Ea:2.2, EDV:180, B:0.025, HR:85, V0:30},
                        desc: 'Reduced ejection fraction HF. ↓↓Contractility (Ees), ↑afterload, dilated LV. EF <40%.', category: 'Heart failure with reduced systolic function.' },
@@ -2320,17 +2786,17 @@ const DISEASES = {
                        desc: 'Severely dilated LV with ↓↓contractility. ↑↑EDV, ↑V0 (rightward shift). Very low EF.', category: 'End-stage dilated cardiomyopathy.' },
   cardiogenic_shock: { name: 'Cardiogenic Shock', params: {Ees:0.6, Ea:2.5, EDV:200, B:0.024, HR:110, V0:35},
                        desc: '↓↓↓Contractility with ↑afterload (compensatory vasoconstriction). Tachycardic. EF <20%, ↓CO.', category: 'SCAI Stage C/D shock.' },
-  septic_shock:      { name: 'Septic Shock (warm)', params: {Ees:1.2, Ea:0.6, EDV:150, B:0.02, HR:110, V0:15},
+  septic_shock:      { name: 'Septic Shock (warm)', params: {Ees:1.6, Ea:1.0, EDV:150, B:0.02, HR:110, V0:15},
                        desc: 'Distributive: ↓↓SVR (low Ea), mild myocardial depression, ↑HR. High-output, low-pressure state.', category: 'Vasodilatory/distributive shock.' },
   hypovolemic_shock: { name: 'Hypovolemic Shock', params: {Ees:2.8, Ea:2.5, EDV:70, B:0.025, HR:120, V0:10},
                        desc: '↓↓Preload (low EDV), compensatory ↑HR and vasoconstriction (↑Ea). Small loop, low SV.', category: 'Hemorrhage, dehydration.' },
-  aortic_stenosis:   { name: 'Aortic Stenosis', params: {Ees:3.0, Ea:3.5, EDV:120, B:0.0307, HR:70, V0:5},
+  aortic_stenosis:   { name: 'Aortic Stenosis', params: {Ees:4.3, Ea:2.6, EDV:120, B:0.0307, HR:70, V0:5},
                        desc: 'Fixed obstruction → ↑↑afterload (Ea). Compensatory concentric LVH (↑Ees, ↑B). ↑↑ESP, ↓SV.', category: 'Pressure overload → concentric hypertrophy.' },
   mitral_stenosis:   { name: 'Mitral Stenosis', params: {Ees:2.5, Ea:1.8, EDV:85, B:0.025, HR:80, V0:10},
                        desc: 'Restricted LV filling → ↓EDV. Normal contractility and afterload. Small loop, low SV.', category: 'Inflow obstruction limits preload.' },
   aortic_regurg:     { name: 'Aortic Regurgitation', params: {Ees:1.8, Ea:1.0, EDV:190, B:0.02, HR:75, V0:25},
                        desc: 'Volume overload → ↑↑EDV, eccentric remodeling (↑V0). ↓Effective Ea (regurgitant flow). Wide loop. <b>No isovolumic relaxation</b> — the aortic valve leaks the moment LV pressure drops below aortic, so volume RISES through relaxation and that limb slopes down-and-right instead of falling vertically.', category: 'Combined volume + pressure overload.' },
-  mitral_regurg:     { name: 'Mitral Regurgitation', params: {Ees:2.0, Ea:0.8, EDV:170, B:0.02, HR:85, V0:15},
+  mitral_regurg:     { name: 'Mitral Regurgitation', params: {Ees:2.5, Ea:1.1, EDV:170, B:0.02, HR:85, V0:15},
                        desc: 'Low-impedance ejection into LA → ↓effective Ea. Volume overload → ↑EDV. High total SV but ↓forward SV. <b>No isovolumic contraction</b> — the mitral valve leaks as soon as LV pressure exceeds LA pressure, so volume FALLS before the aortic valve opens and that limb slopes up-and-left instead of rising vertically.', category: 'Part of SV is regurgitant.' },
   concentric_lvh:    { name: 'Concentric LVH', params: {Ees:3.5, Ea:2.5, EDV:100, B:0.036, HR:70, V0:5},
                        desc: 'Wall thickening without chamber dilation. ↑Ees (supranormal contractility), ↑B (stiff), ↓cavity size.', category: 'Hypertension, AS response.' },
@@ -2350,6 +2816,49 @@ const DISEASES = {
   ms_as:             { name: 'MS + AS (Rheumatic)', params: {Ees:3.0, Ea:3.5, EDV:80, B:0.045, HR:80, V0:5},
                        desc: 'Worst combination: restricted inflow (MS) + outflow obstruction (AS). Tiny high-pressure loop. Very low CO.', category: 'Rheumatic multivalvular disease.' },
 };
+
+// ---- WHAT EVERY PRESET ACTUALLY DRAWS ----
+// Generated from this file's own computeLoop on 2026-09-20. A preset is a claim about SV,
+// EF, CO and ESP, and until this table existed there was no way to diff a preset change or
+// to notice that one of them contradicted its own description. Regenerate it when a preset
+// or a model constant moves; a preset whose row disagrees with its text is a defect.
+// Pao-dia is the AV-opens corner (Windkessel decay; AS rows include the 40 mmHg gradient).
+//
+//   preset              Ees   Ea    EDV   B      HR   V0 |  SV   EF    CO   ESP  EDP   SW    Pao-dia
+//   (baseline)          2.5   1.8   125  0.025   70  10 |  67  53.6   4.7  120   9.0   6855    84
+//   hfref               1.0   2.2   180  0.025   85  30 |  47  26.1   4.0  103  22.4   3783    78
+//   hfpef               3.2   2.2   110 0.0364   75  10 |  59  53.6   4.4  130  20.0   6528    97
+//   dcm                 0.8   2.0   220   0.02   90  40 |  51  23.2   4.6  103  19.2   4164    76
+//   cardiogenic_shock   0.6   2.5   200  0.024  110  35 |  32  16.0   3.5   80  27.8   1737    63
+//   septic_shock        1.6   1.0   150   0.02  110  15 |  83  55.3   9.1   83   7.5   5481    46
+//   hypovolemic_shock   2.8   2.5    70  0.025  120  10 |  32  45.7   3.8   79   1.9   2282    63
+//   aortic_stenosis     4.3   2.6   120 0.0307   70   5 |  72  60.0   5.0  186  17.9  10907   113
+//   mitral_stenosis     2.5   1.8    85  0.025   80  10 |  44  51.8   3.5   78   3.0   2975    55
+//   aortic_regurg       1.8   1.0   190   0.02   75  25 | 106  55.8   8.0  106  14.1   7161    42
+//   mitral_regurg       2.5   1.1   170   0.02   85  15 | 108  63.5   9.2  118  11.4   9050    67
+//   concentric_lvh      3.5   2.5   100  0.036   70   5 |  55  55.0   3.9  139  16.0   6650   107
+//   eccentric_lvh       1.5   1.8   170   0.02   75  25 |  66  38.8   5.0  119   9.3   6620    83
+//   constriction        2.5   1.8   100 0.0415   85  10 |  52  52.0   4.4   94  22.1   3939    67
+//   tamponade           2.5   2.2    80  0.052  110  10 |  37  46.3   4.1   82  20.0   2466    63
+//   as_ar               2.5   2.5   170  0.025   75  20 |  75  44.1   5.6  188  22.4  10059   105
+//   as_mr               2.8   2.0   150  0.026   80  10 |  82  54.7   6.6  163  20.0   9525    90
+//   ms_mr               2.2   1.0   100  0.025   90  10 |  62  62.0   5.6   62   4.6   2720    34
+//   ms_as               3.0   3.5    80  0.045   80   5 |  35  43.8   2.8  121  15.2   3217    65
+//
+// Known residuals, recorded rather than quietly tuned away:
+//   ms_mr  ESP 62, and therefore an aortic 62/34, a MAP near 43 — frankly hypotensive for a
+//          preset described as stable rheumatic valve disease. The low ESP is the closed
+//          form's doing (a small ventricle ejecting into a low-impedance regurgitant path
+//          cannot be given a normal systolic pressure without an Ees the lesion does not
+//          have), and the Windkessel then decays honestly FROM that ESP, so the aortic
+//          pressure inherits it. The loop SHAPE is right; the absolute pressures on this
+//          preset are not. Do not cite this row's pressures.
+//   as_ar / eccentric_lvh  EF 44% and 39% (table above), defensible for decompensated mixed aortic disease
+//          but should be revisited with the closed-loop engine.
+//   EDPVR at the extremes  edpvr() is exponential and unbounded: EDV 150 with B 0.05 prints
+//          EDP 591.6 mmHg, and the slider maxima reach ~3.9e10. Pre-existing, not introduced
+//          by the Windkessel, but P_ao_dia is floored at EDP + 5, so an absurd B now produces
+//          an absurd aortic diastolic too.
 
 let activeDisease = null;
 
@@ -2412,34 +2921,10 @@ function clearDisease() {
 function initDiseaseButtons() {
   document.querySelectorAll('.disease-btn').forEach(btn => {
     btn.addEventListener('click', () => toggleDisease(btn.dataset.disease));
-
-    const diseaseId = btn.dataset.disease;
-    const disease = DISEASES[diseaseId];
+    const disease = DISEASES[btn.dataset.disease];
     if (!disease) return;
-
-    btn.addEventListener('mouseenter', () => {
-      const tip = document.getElementById('globalTooltip');
-      tip.innerHTML = '<b>' + disease.name + '</b><br>' + disease.category;
-      tip.classList.add('visible');
-      const rect = btn.getBoundingClientRect();
-      tip.style.left = (rect.right + 10) + 'px';
-      tip.style.top = (rect.top + rect.height / 2) + 'px';
-      tip.style.transform = 'translateY(-50%)';
-      requestAnimationFrame(() => {
-        const tipRect = tip.getBoundingClientRect();
-        if (tipRect.right > window.innerWidth - 10) {
-          tip.style.left = (rect.left - tipRect.width - 10) + 'px';
-        }
-        if (tipRect.bottom > window.innerHeight - 10) {
-          tip.style.top = (window.innerHeight - tipRect.height - 10) + 'px';
-          tip.style.transform = 'none';
-        }
-      });
-    });
-
-    btn.addEventListener('mouseleave', () => {
-      document.getElementById('globalTooltip').classList.remove('visible');
-    });
+    btn.setAttribute('aria-pressed', 'false');
+    bindTip(btn, () => '<b>' + disease.name + '</b><br>' + disease.category + '<br>' + disease.desc);
   });
 }
 
@@ -2548,16 +3033,14 @@ function calcFullParams() {
     result.V0 += m.V0;
   }
 
-  // Clamp
-  result.Ees = Math.max(0.3, Math.min(5.0, result.Ees));
-  result.Ea = Math.max(0.3, Math.min(6.0, result.Ea));
-  result.EDV = Math.max(60, Math.min(250, result.EDV));
-  result.B = Math.max(0.005, Math.min(0.10, result.B));
-  result.HR = Math.max(35, Math.min(180, result.HR));
-  result.HR = Math.max(40, Math.min(150, result.HR));
-  result.V0 = Math.max(0, Math.min(50, result.V0));
+  // A drug or device that changes the rate changes afterload and filling time with it, so
+  // the rate delta goes through the same coupling the HR slider uses. This is what makes
+  // metoprolol read as afterload relief rather than as a bare 29% cut in cardiac output.
+  const coupled = coupleToRate({ ...result, HR: base.HR }, result.HR);
 
-  return result;
+  // One clamp, and it is the slider range. There used to be two consecutive clamps here,
+  // 35-180 immediately overwritten by 40-150, and pvloop/CLAUDE.md documented the dead one.
+  return clampParams(coupled);
 }
 
 function getTriangularFactor() {
@@ -2591,44 +3074,37 @@ function clearMCS() {
 function initMCSButtons() {
   document.querySelectorAll('.mcs-btn').forEach(btn => {
     btn.addEventListener('click', () => toggleMCS(btn.dataset.mcs));
-
-    const mcsId = btn.dataset.mcs;
-    const device = MCS_DEVICES[mcsId];
+    const device = MCS_DEVICES[btn.dataset.mcs];
     if (!device) return;
-
-    btn.addEventListener('mouseenter', () => {
-      const tip = document.getElementById('globalTooltip');
-      tip.innerHTML = '<b>' + device.name + '</b><br>' + device.mech + '<br><span style="opacity:0.7;font-size:10px">Flow: ~' + device.flow + ' L/min</span>';
-      tip.classList.add('visible');
-      const rect = btn.getBoundingClientRect();
-      tip.style.left = (rect.right + 10) + 'px';
-      tip.style.top = (rect.top + rect.height / 2) + 'px';
-      tip.style.transform = 'translateY(-50%)';
-      requestAnimationFrame(() => {
-        const tipRect = tip.getBoundingClientRect();
-        if (tipRect.right > window.innerWidth - 10) {
-          tip.style.left = (rect.left - tipRect.width - 10) + 'px';
-        }
-        if (tipRect.bottom > window.innerHeight - 10) {
-          tip.style.top = (window.innerHeight - tipRect.height - 10) + 'px';
-          tip.style.transform = 'none';
-        }
-      });
-    });
-
-    btn.addEventListener('mouseleave', () => {
-      document.getElementById('globalTooltip').classList.remove('visible');
-    });
+    btn.setAttribute('aria-pressed', 'false');
+    bindTip(btn, () => '<b>' + device.name + '</b><br>' + device.mech +
+      '<br><span style="opacity:0.7;font-size:10px">Flow: ~' + device.flow + ' L/min</span>');
   });
 }
 
 // ---- COLLAPSIBLE SECTIONS ----
+// The opener is a <button> (it was a bare <div>, so a keyboard-only user could not open the
+// parameter panel at all — and that panel holds the six sliders that ARE the simulator).
 function toggleSection(headEl) {
-  headEl.parentElement.classList.toggle('collapsed');
+  const collapsed = headEl.parentElement.classList.toggle('collapsed');
+  headEl.setAttribute('aria-expanded', String(!collapsed));
 }
 
 // ---- STATE BADGE ----
+// Toggle state used to live only in a CSS class, so assistive tech could not tell an active
+// drug from an inactive one. Every state change routes through updateStateBadge, so this is
+// the one place the pressed state needs syncing.
+function syncPressedState() {
+  document.querySelectorAll('.drug-btn').forEach(b =>
+    b.setAttribute('aria-pressed', String(activeDrugs.has(b.dataset.drug))));
+  document.querySelectorAll('.disease-btn').forEach(b =>
+    b.setAttribute('aria-pressed', String(b.dataset.disease === activeDisease)));
+  document.querySelectorAll('.mcs-btn').forEach(b =>
+    b.setAttribute('aria-pressed', String(b.dataset.mcs === activeMCS)));
+}
+
 function updateStateBadge() {
+  syncPressedState();
   const badge = document.getElementById('stateBadge');
 
   if (!activeDisease && activeDrugs.size === 0 && !activeMCS) {
@@ -2771,6 +3247,25 @@ function loadExample() {
 }
 
 // ---- DARK MODE ----
+// Applied at module level rather than inside init() on DOMContentLoaded: this script sits
+// at the end of <body>, so the toggle exists here, and restoring the theme any later means
+// a light-mode user watches the page flash dark for the length of the parse.
+function applyStoredTheme() {
+  // Safari in private mode throws on localStorage access, and this is bootstrap code.
+  let darkPref = null;
+  try { darkPref = localStorage.getItem('cathmath_dark'); } catch (e) {}
+  const btn = document.getElementById('darkToggle');
+  if (darkPref === '0') {
+    document.body.classList.remove('dark');
+    if (btn) { btn.textContent = 'Dark Mode'; btn.classList.remove('active'); }
+  } else {
+    // Default to dark (first visit or explicit '1')
+    document.body.classList.add('dark');
+    if (btn) { btn.textContent = 'Light Mode'; btn.classList.add('active'); }
+  }
+}
+applyStoredTheme();
+
 function toggleDark() {
   document.body.classList.toggle('dark');
   const isDark = document.body.classList.contains('dark');
@@ -2783,23 +3278,6 @@ function toggleDark() {
 
 // ---- INIT ----
 function init() {
-  // Restore dark mode — default to dark if no preference saved
-  // Safari in private mode throws on localStorage access. This is module-level bootstrap
-  // code, so an unguarded read took the whole tool down — pvloop was the only page on the
-  // site without the try/catch the others already use.
-  let darkPref = null;
-  try { darkPref = localStorage.getItem('cathmath_dark'); } catch(e) {}
-  if (darkPref === '0') {
-    document.body.classList.remove('dark');
-    document.getElementById('darkToggle').textContent = 'Dark Mode';
-    document.getElementById('darkToggle').classList.remove('active');
-  } else {
-    // Default to dark (first visit or explicit '1')
-    document.body.classList.add('dark');
-    document.getElementById('darkToggle').textContent = 'Light Mode';
-    document.getElementById('darkToggle').classList.add('active');
-  }
-
   // Restore indices size
   let savedSize = null;
   try { savedSize = localStorage.getItem('pvloop_idx_size'); } catch(e) {}
@@ -2813,7 +3291,13 @@ function init() {
   initMCSButtons();
   resizeCanvas();
 
-  // Start animation
+  // Start animation — unless the user asked the OS for reduced motion, in which case the
+  // loop is drawn complete and static and the toggle shows why.
+  if (REDUCED_MOTION) {
+    animRunning = false;
+    const togAnim = document.getElementById('togAnimate');
+    if (togAnim) togAnim.checked = false;
+  }
   if (animRunning) animate();
 
   // Resize handler
@@ -2828,37 +3312,21 @@ function init() {
     canvas.style.cursor = 'default';
   });
 
-  // Global tooltip for slider info buttons
-  const tip = document.getElementById('globalTooltip');
+  // Slider release announces the derived numbers to assistive tech (see announceLoopValues).
+  document.querySelectorAll('.slider-wrap input[type="range"]').forEach(el => {
+    el.addEventListener('change', announceLoopValues);
+  });
+
+  // Parameter definitions — reachable by hover, by tab and by tap.
   document.querySelectorAll('.slider-info').forEach(el => {
     const content = el.querySelector('.tooltip');
     if (!content) return;
-    el.addEventListener('mouseenter', (e) => {
-      tip.innerHTML = content.innerHTML;
-      tip.classList.add('visible');
-      const rect = el.getBoundingClientRect();
-      tip.style.left = (rect.right + 10) + 'px';
-      tip.style.top = (rect.top + rect.height / 2) + 'px';
-      tip.style.transform = 'translateY(-50%)';
-      // Keep tooltip on screen
-      requestAnimationFrame(() => {
-        const tipRect = tip.getBoundingClientRect();
-        if (tipRect.right > window.innerWidth - 10) {
-          tip.style.left = (rect.left - tipRect.width - 10) + 'px';
-        }
-        if (tipRect.bottom > window.innerHeight - 10) {
-          tip.style.top = (window.innerHeight - tipRect.height - 10) + 'px';
-          tip.style.transform = 'none';
-        }
-        if (tipRect.top < 10) {
-          tip.style.top = '10px';
-          tip.style.transform = 'none';
-        }
-      });
-    });
-    el.addEventListener('mouseleave', () => {
-      tip.classList.remove('visible');
-    });
+    bindTip(el, () => content.innerHTML);
+  });
+
+  // A tap anywhere else dismisses an open tip (there is no mouseleave on a touch screen).
+  document.addEventListener('pointerdown', (e) => {
+    if (tipOwner && !tipOwner.contains(e.target)) hideTip();
   });
 }
 
@@ -2886,9 +3354,9 @@ document.addEventListener('DOMContentLoaded', init);
         <summary>About the Pressure-Volume Loop Simulator</summary>
         <div class="seo-content-body">
           <h3>The elastance model behind the loop</h3>
-          <p>This simulator draws a left ventricular pressure-volume loop from the time-varying elastance model of Suga and Sagawa. Three reference lines frame it: the ESPVR, a straight line of slope Ees through the unstressed volume V0; the EDPVR, an exponential curve whose steepness is set by the chamber stiffness constant B; and the arterial elastance line Ea, drawn from end-diastolic volume on the volume axis to the end-systolic point. Six sliders set Ees, Ea, EDV, B, heart rate and V0; end-systole falls where the ESPVR and Ea line intersect.</p>
+          <p>This simulator solves the end-systolic pressure-volume point in closed form and draws the four phases of the cardiac cycle geometrically between it and end diastole. Three reference lines frame the loop: the ESPVR, the Suga-Sagawa end-systolic elastance line of slope Ees through the unstressed volume V0; the EDPVR, an exponential curve whose steepness is set by the chamber stiffness constant B; and the arterial elastance line Ea, drawn from end-diastolic volume on the volume axis to the end-systolic point. Six sliders set Ees, Ea, EDV, B, heart rate and V0; end-systole falls where the ESPVR and the Ea line intersect. There is no time-varying activation function: time enters as phase durations and as the rate coupling described below, and nowhere else.</p>
           <h3>Hemodynamic readouts and ventriculo-arterial coupling</h3>
-          <p>Each change updates stroke volume, ejection fraction, cardiac output, end-systolic and end-diastolic pressure, stroke work as the area enclosed by the loop, and the Ea/Ees coupling ratio. Readouts are flagged against the tool's bands: ejection fraction normal from 55 to 70 percent, cardiac output from 4.0 to 8.0 L/min, and coupling normal from 0.5 to 1.3 and borderline up to 1.5. Moving one slider at a time separates preload, afterload and contractility.</p>
+          <p>Each change updates stroke volume, ejection fraction, cardiac output, end-systolic and end-diastolic pressure, stroke work as the area enclosed by the loop, and the Ea/Ees coupling ratio. Readouts are flagged against the tool's bands: ejection fraction normal from 55 to 70 percent, cardiac output from 4.0 to 8.0 L/min, and coupling normal from 0.5 to 1.3 and borderline up to 1.5. Moving one slider at a time separates preload, afterload and contractility — with one deliberate exception. Heart rate is coupled to the other two: arterial elastance is systemic resistance divided by cycle length, and diastolic filling time shortens as rate rises, so moving the rate slider also moves Ea and end-diastolic volume and cardiac output does not scale linearly with rate. Aortic diastolic pressure, the pressure at which the loop's valve-opening corner sits, decays from end-systole with a Windkessel time constant, so pulse pressure widens in aortic regurgitation and vasodilatation and narrows in tamponade, hypovolemia and low-output heart failure.</p>
           <h3>Drugs and interventions</h3>
           <p>Fifteen agents are grouped as inotropes (dobutamine, milrinone, isoproterenol, low- and high-dose dopamine), vasopressors (phenylephrine, norepinephrine), vasodilators (nitroprusside, nitroglycerin, phentolamine, an ACE inhibitor and a dihydropyridine calcium channel blocker), metoprolol as a negative inotrope, and volume as fluids or diuretics. Each acts by shifting Ees, Ea, EDV or B, so phenylephrine moves the Ea line alone while nitroglycerin, mainly a venodilator, pulls preload down. Agents stack additively.</p>
           <h3>Disease states</h3>
@@ -2896,7 +3364,7 @@ document.addEventListener('DOMContentLoaded', init);
           <h3>Mechanical circulatory support</h3>
           <p>Five configurations layer onto any disease and drug combination. The intra-aortic balloon pump unloads modestly by counterpulsation, adding about 0.5 L/min. Impella CP and Impella 5.0 are transvalvular axial pumps that unload the ventricle directly, lower LVEDP and progressively triangularize the loop; with the 5.0 the aortic valve may not open. VA-ECMO raises afterload and distends the left ventricle despite full systemic support, which is why LV venting is considered. ECPELLA adds an Impella to ECMO, unloading while perfusing.</p>
           <h3>Comparing loops and worked cases</h3>
-          <p>A ghost loop is stored automatically before the first drug, disease or device is chosen, so each new loop is drawn against its own baseline; snapshots can also be taken manually. Toggles hide the ESPVR, EDPVR and Ea lines, the phase labels and the animated tracing. The phase-label toggle also carries markers for mitral and aortic valve opening and closing, and renames any limb no longer isovolumic. Three worked examples load full scenarios, one of them cardiogenic shock supported with an Impella CP and dobutamine.</p>
+          <p>A ghost loop is stored automatically before the first drug, disease or device is chosen, so each new loop is drawn against its own baseline; snapshots can also be taken manually. Toggles hide the ESPVR, EDPVR and Ea lines, the phase labels and the animated tracing; the tracing takes 60/HR seconds per revolution and dwells in each phase for that phase's real share of the cycle, and it does not run for a visitor whose system asks for reduced motion. The phase-label toggle also carries markers for mitral and aortic valve opening and closing, and renames any limb no longer isovolumic. Three worked examples load full scenarios, one of them cardiogenic shock supported with an Impella CP and dobutamine.</p>
         </div>
       </details>
 </body>

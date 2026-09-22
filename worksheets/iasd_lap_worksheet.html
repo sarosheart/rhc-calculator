@@ -3,7 +3,48 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>iASD Doppler &mdash; Echo Estimate of Peak LA Pressure</title>
+<title>iASD Doppler &mdash; Echo Estimate of Peak LA Pressure | CathMath</title>
+<meta name="description" content="Printable worksheet for estimating left atrial pressure from iatrogenic ASD shunt velocity, with the off-axis error and the limits of simplified Bernoulli.">
+<meta name="keywords" content="iatrogenic ASD, iASD, left atrial pressure, LAP, interatrial shunt velocity, simplified Bernoulli, transseptal puncture, MitraClip, echocardiography worksheet">
+<link rel="canonical" href="https://cathmath.org/worksheets/iasd_lap_worksheet">
+<meta name="robots" content="index, follow">
+<meta property="og:type" content="article">
+<meta property="og:site_name" content="CathMath">
+<meta property="og:title" content="iASD Doppler — Echo Estimate of Peak LA Pressure | CathMath">
+<meta property="og:description" content="Printable worksheet for estimating left atrial pressure from iatrogenic ASD shunt velocity, with the off-axis error and the limits of simplified Bernoulli.">
+<meta property="og:url" content="https://cathmath.org/worksheets/iasd_lap_worksheet">
+<meta property="og:image" content="https://cathmath.org/og-image.png">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="iASD Doppler — Echo Estimate of Peak LA Pressure | CathMath">
+<meta name="twitter:description" content="Printable worksheet for estimating left atrial pressure from iatrogenic ASD shunt velocity, with the off-axis error and the limits of simplified Bernoulli.">
+<meta name="twitter:image" content="https://cathmath.org/og-image.png">
+<link rel="icon" href="/favicon.ico">
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    {
+      "@type": "ListItem",
+      "position": 1,
+      "name": "CathMath",
+      "item": "https://cathmath.org/"
+    },
+    {
+      "@type": "ListItem",
+      "position": 2,
+      "name": "Reference worksheets",
+      "item": "https://cathmath.org/worksheets/"
+    },
+    {
+      "@type": "ListItem",
+      "position": 3,
+      "name": "iASD left atrial pressure",
+      "item": "https://cathmath.org/worksheets/iasd_lap_worksheet"
+    }
+  ]
+}
+</script>
 <style>
   @page { size: letter; margin: 0.35in 0.4in 0.5in 0.4in; }
   * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -194,11 +235,44 @@
 
   .highlight { font-weight: 700; color: #b71c1c; }
   .blue { color: #0d47a1; font-weight: 600; }
+  /* ---- Screen-only site chrome -------------------------------------------------
+     The printed sheet must render identically to the PDF that ships beside it — same page
+     count, same text, same pixels — so the breadcrumb and the related-tools row are
+     display:none in @media print. Nothing below this comment affects the printed output.
+     Not byte-identical: re-printing writes today's <title> into the PDF's Title metadata and
+     today's Chrome into Creator/Producer, which moves 9-45 bytes with no change on the page.
+     Verified 2026-09-21: 13 of 13 pages pixel-identical at 80 dpi, pdftotext -layout identical. */
+  .site-nav {
+    font-size: 8pt;
+    margin-bottom: 5px;
+    color: #666;
+  }
+  .site-nav a { color: #0d47a1; text-decoration: none; font-weight: 600; }
+  .site-nav a:hover { text-decoration: underline; }
+  .related {
+    margin-top: 12px;
+    padding-top: 6px;
+    border-top: 1px solid #e0e0e0;
+    font-size: 7.5pt;
+    color: #555;
+  }
+  .related a { color: #0d47a1; }
+  @media screen and (max-width: 760px) {
+    /* On a phone these sheets render at their Letter layout width, so 8pt chrome is
+       unreadably small. Screen only — the printed sheet is untouched. */
+    .site-nav { font-size: 13pt; margin-bottom: 10px; }
+    .related { font-size: 12pt; line-height: 2.1; }
+  }
+  @media print {
+    .site-nav, .related { display: none !important; }
+  }
 </style>
 </head>
 <body>
 
-<div class="page-title">iASD Doppler &mdash; Echo Estimate of Peak LA Pressure</div>
+<nav class="site-nav"><a href="/">CathMath</a> &rsaquo; <a href="/worksheets/">Reference worksheets</a> &rsaquo; iASD left atrial pressure</nav>
+
+<h1 class="page-title">iASD Doppler &mdash; Echo Estimate of Peak LA Pressure</h1>
 <div class="subtitle">Iatrogenic atrial septal defect after transseptal puncture (MitraClip, PFA, LAAO, etc.)</div>
 
 <div class="cols">
@@ -333,5 +407,78 @@
 </div>
 </div>
 
+<div class="related"><b>More from CathMath:</b> <a href="/worksheets/iasd_lap_worksheet.pdf">Print this sheet (PDF)</a> &middot; <a href="/echocalc/">Echo hemodynamics</a> &middot; <a href="/rhc/">RHC calculator</a> &middot; <a href="/hemodynamics/">Hemodynamic waveforms</a> &middot; <a href="/worksheets/">All reference worksheets</a></div>
+
+<script>
+// <shared:analytics v1>
+// GENERATED FROM shared/analytics.js BY scripts/sync-shared.mjs — DO NOT EDIT HERE.
+// Edit shared/analytics.js, then run: node scripts/sync-shared.mjs --write
+// CathMath analytics — GA4, property 555096463, stream G-ZME4G2EYJS.
+// Design and the reasons for every choice: plans/2026-09-21-analytics-design.md
+//
+// THIS BLOCK MUST NEVER BE ABLE TO BREAK A TOOL. It runs first, so it is wrapped whole, and
+// cmTrack() exists as a no-op before anything that can throw is attempted.
+//
+// HOST GUARD. Unless the page is being served from cathmath.org, nothing loads and nothing is
+// sent: not from file://, not from localhost, not in the node vm harness, not in CardioDoc's
+// fixture capture, not from a copy of this page hosted somewhere else. That is what keeps the
+// house rule true — every tool works with zero runtime dependencies and no network. Analytics is
+// an enhancement that exists only on the production host.
+//
+// NOTHING A USER TYPES IS EVER SENT. Parameters are fixed id strings that already exist in the
+// source (module ids, preset ids, drug ids). cmTrack drops any parameter that is not a short
+// string, so a number read from an input cannot leave even if a caller passes one by mistake.
+(function () {
+  var TOOL = 'worksheets';
+  var ID = 'G-ZME4G2EYJS';
+  window.cmTrack = function () {};
+  try {
+    var host = String((window.location && window.location.hostname) || '');
+    if (host !== 'cathmath.org' && host !== 'www.cathmath.org') return;
+
+    // Own-traffic flag, as on CardioQFlow: visit once with ?internal=1 (clear with ?internal=0)
+    // and every event from this browser carries traffic_type=internal for a GA4 data filter.
+    var internal = false;
+    try {
+      var q = new URLSearchParams(window.location.search).get('internal');
+      if (q === '1' || q === 'on') window.localStorage.setItem('cathmath_internal', '1');
+      else if (q === '0' || q === 'off') window.localStorage.removeItem('cathmath_internal');
+      internal = window.localStorage.getItem('cathmath_internal') === '1';
+    } catch (e) { internal = false; }
+
+    window.dataLayer = window.dataLayer || [];
+    window.gtag = window.gtag || function () { window.dataLayer.push(arguments); };
+    var base = { tool: TOOL };
+    if (internal) base.traffic_type = 'internal';
+    window.gtag('js', new Date());
+    window.gtag('config', ID, base);           // parameters in config ride on every event, page_view included
+
+    // Injected, never a static <script src>: gtag.js is regenerated by Google constantly, so an
+    // integrity= hash cannot be pinned to it. scripts/lint.mjs DEP-1 allow-lists this one origin
+    // by name rather than failing to notice it.
+    var s = document.createElement('script');
+    s.async = true;
+    s.src = 'https://www.googletagmanager.com/gtag/js?id=' + ID;
+    document.head.appendChild(s);
+
+    var once = {};
+    // cmTrack(name, params, onceKey) — fire-and-forget. onceKey, when given, sends the event at
+    // most once per page load for that key (calc_used: once per module).
+    window.cmTrack = function (name, params, onceKey) {
+      try {
+        if (onceKey) { if (once[onceKey]) return; once[onceKey] = 1; }
+        var p = { tool: TOOL };
+        if (internal) p.traffic_type = 'internal';
+        for (var k in (params || {})) {
+          var v = params[k];
+          if (typeof v === 'string' && v.length > 0 && v.length <= 64) p[k] = v;   // enum ids only
+        }
+        window.gtag('event', String(name), p);
+      } catch (e) { /* analytics must never throw into a tool */ }
+    };
+  } catch (e) { /* blocked, offline, private mode — the tool carries on */ }
+})();
+// </shared:analytics>
+</script>
 </body>
 </html>

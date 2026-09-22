@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Coronary Angiography Views — C-arm Angles & Anatomy | CathMath</title>
-<meta name="description" content="Interactive coronary angiography view simulator. See how LAO/RAO and cranial/caudal C-arm angles change the apparent anatomy of the LAD, LCx, RCA, and all major branches. Free cardiology fellow teaching tool.">
+<meta name="description" content="Interactive coronary angiography simulator: see how LAO/RAO and cranial/caudal C-arm angles change the apparent anatomy of the LAD, LCx, RCA and branches.">
 <meta name="keywords" content="coronary angiography, angio views, LAO, RAO, cranial, caudal, Spider view, LAD, LCx, RCA, left main, diagonal, obtuse marginal, PDA, PLV, AV groove, C-arm, fluoroscopy, cardiology fellowship">
 <meta name="author" content="Dr. Saro Avedikian, MD, MPH">
 <meta name="robots" content="index, follow">
@@ -248,6 +248,10 @@ body.dark .seg-btn.active.rca-active { color: #6eb0f7; }
   cursor: pointer;
 }
 body.dark .slider-row input[type=range] { background: #1a2030; }
+.slider-row input[type=range]:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 3px;
+}
 .slider-row input[type=range]::-webkit-slider-thumb {
   -webkit-appearance: none;
   appearance: none;
@@ -390,6 +394,7 @@ body:not(.dark) .orient-header {
   transition: background 0.15s;
 }
 .orient-collapse:hover { background: rgba(255, 255, 255, 0.08); }
+body:not(.dark) .orient-readout { color: #8a5a00; }
 body:not(.dark) .orient-collapse { color: rgba(40, 50, 70, 0.7); }
 body:not(.dark) .orient-collapse:hover { background: rgba(0, 0, 0, 0.06); }
 .orient-body {
@@ -402,6 +407,11 @@ body:not(.dark) .orient-collapse:hover { background: rgba(0, 0, 0, 0.06); }
   width: 100%;
   height: auto;
   border-radius: 3px;
+}
+.orient-header:focus-visible,
+.orient-resize:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: -2px;
 }
 .orient-resize {
   position: absolute;
@@ -523,6 +533,45 @@ body.dark .label-toggle:hover { background: rgba(60, 80, 110, 0.92); }
 body.dark .label-text { fill: #c4ccda; }
 body.dark .label-text.lead { fill: #e8ecf2; }
 
+/* Overlays that render() builds as SVG strings. They are CLASS-driven, never
+   attribute-driven, so light mode / dark mode / X-ray mode all reach them —
+   toggleDark() re-renders, but the cascade alone is enough. */
+.plane-line { fill: none; stroke: rgba(60, 80, 115, 0.45); stroke-width: 0.9; }
+body.dark .plane-line { stroke: rgba(180, 195, 220, 0.32); }
+.viz-wrap.xray .plane-line { stroke: rgba(180, 195, 220, 0.32); }
+
+.plane-label {
+  font-size: 9.5px; font-style: italic; font-weight: 600; letter-spacing: 0.04em;
+  paint-order: stroke fill; stroke-width: 3.5; stroke-linejoin: round;
+  fill: rgba(35, 48, 70, 0.9); stroke: rgba(255, 255, 255, 0.92);
+}
+body.dark .plane-label { fill: rgba(210, 220, 235, 0.78); stroke: rgba(13, 16, 25, 0.92); }
+.viz-wrap.xray .plane-label { fill: rgba(210, 220, 235, 0.78); stroke: rgba(13, 16, 25, 0.92); }
+
+.chamber-label {
+  font-size: 14px; font-weight: 800; letter-spacing: 0.06em;
+  paint-order: stroke fill; stroke-width: 4; stroke-linejoin: round;
+  fill: rgba(30, 42, 64, 0.9); stroke: rgba(255, 255, 255, 0.92);
+}
+body.dark .chamber-label { fill: rgba(220, 230, 245, 0.78); stroke: rgba(13, 16, 25, 0.92); }
+.viz-wrap.xray .chamber-label { fill: rgba(220, 230, 245, 0.78); stroke: rgba(13, 16, 25, 0.92); }
+
+/* Orientation-widget text + beam. The widget panel itself flips background
+   with the theme, so its lettering has to flip too. */
+.opv-compass {
+  font-size: 9px; font-weight: 700; letter-spacing: 0.08em;
+  paint-order: stroke fill; stroke-width: 2.4; stroke-linejoin: round;
+  fill: rgba(30, 42, 64, 0.9); stroke: rgba(255, 255, 255, 0.9);
+}
+body.dark .opv-compass { fill: rgba(220, 230, 245, 0.75); stroke: rgba(13, 16, 25, 0.8); }
+.opv-caption { font-size: 7.5px; fill: rgba(55, 70, 95, 0.75); }
+body.dark .opv-caption { fill: rgba(180, 195, 220, 0.55); }
+.opv-caption.italic { font-style: italic; }
+.opv-readout-text { font-size: 13px; font-weight: 800; letter-spacing: 0.03em; fill: #8a5a00; }
+body.dark .opv-readout-text { fill: #fdcc4d; }
+.opv-beam { stroke: rgba(150, 100, 0, 0.5); stroke-width: 0.9; }
+body.dark .opv-beam { stroke: rgba(253, 204, 77, 0.38); }
+
 /* ═══ SEO CONTENT (collapsed by default) ═══ */
 .seo-content {
   padding: 16px 24px 32px;
@@ -533,44 +582,6 @@ body.dark .label-text.lead { fill: #e8ecf2; }
   color: var(--text);
 }
 .seo-content .seo-inner { max-width: 920px; margin: 0 auto; }
-.seo-section summary {
-  list-style: none;
-  cursor: pointer;
-  padding: 10px 16px;
-  font-size: 12px;
-  font-weight: 600;
-  letter-spacing: 0.02em;
-  color: var(--text-muted);
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  border-radius: 8px;
-  border: 1px solid transparent;
-  transition: color 0.15s, background 0.15s, border-color 0.15s;
-  user-select: none;
-}
-.seo-section summary::-webkit-details-marker { display: none; }
-.seo-section summary::before {
-  content: '▸';
-  font-size: 10px;
-  display: inline-block;
-  transition: transform 0.2s;
-}
-.seo-section[open] summary::before { transform: rotate(90deg); }
-.seo-section summary:hover { color: var(--text); background: var(--panel-bg-2); border-color: var(--border); }
-.seo-section[open] summary { margin-bottom: 8px; }
-.seo-content-body {
-  padding: 24px 28px;
-  background: var(--panel-bg-2);
-  border: 1px solid var(--border);
-  border-radius: 12px;
-}
-.seo-content-body h3 { font-size: 16px; font-weight: 700; margin: 22px 0 8px; color: var(--text); }
-.seo-content-body h3:first-child { margin-top: 0; }
-.seo-content-body p { margin: 0 0 12px; color: var(--text-dim); }
-.seo-content-body ul { padding-left: 22px; margin-bottom: 12px; }
-.seo-content-body ul li { margin-bottom: 6px; color: var(--text-dim); }
-.seo-content-body strong { color: var(--text); font-weight: 600; }
 .related-tools { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px; font-size: 13px; }
 .related-tools a {
   display: inline-block; padding: 6px 14px; background: var(--panel-bg);
@@ -592,107 +603,24 @@ body.dark .label-text.lead { fill: #e8ecf2; }
   .nav-brand { flex-shrink: 0; margin-right: 14px; font-size: 14px; }
   .nav-tabs { flex-shrink: 0; gap: 0; }
   .nav-tab { flex-shrink: 0; white-space: nowrap; padding: 0 10px; font-size: 11px; }
-  .nav-right { display: none; }
-}
-
-/* ═══ SEO "About" POPOVER — small trigger in the nav that opens a modal-style
-   panel. Content stays in the DOM for indexing but doesn't clutter the canvas. ═══ */
-.seo-popover { display: inline-block; position: relative; }
-.seo-trigger {
-  list-style: none;
-  cursor: pointer;
-  background: rgba(255, 255, 255, 0.1);
-  color: rgba(255, 255, 255, 0.78);
-  border: 1px solid transparent;
-  border-radius: 4px;
-  padding: 5px 10px;
-  font-size: 11px;
-  font-weight: 600;
-  letter-spacing: 0.02em;
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
-  transition: all 0.15s;
-}
-.seo-trigger::-webkit-details-marker { display: none; }
-.seo-trigger:hover {
-  background: rgba(255, 255, 255, 0.2);
-  color: #fff;
-  border-color: rgba(255, 255, 255, 0.22);
-}
-.seo-popover[open] .seo-trigger {
-  background: rgba(253, 204, 77, 0.18);
-  color: #fdcc4d;
-  border-color: rgba(253, 204, 77, 0.42);
-}
-.seo-popover-body { display: none; }
-.seo-popover[open] .seo-popover-body {
-  display: block;
-  position: fixed;
-  top: 54px;
-  right: 12px;
-  width: min(640px, calc(100vw - 24px));
-  max-height: calc(100vh - 70px);
-  overflow-y: auto;
-  background: var(--panel-bg, #fff);
-  color: var(--text, #1a1a2e);
-  border: 1px solid var(--border, #d8dfe8);
-  border-radius: 10px;
-  padding: 24px 28px;
-  z-index: 1000;
-  box-shadow: 0 14px 44px rgba(0, 0, 0, 0.55);
-  font-size: 13.5px;
-  line-height: 1.6;
-  animation: seoPopoverFadeIn 0.18s ease-out;
-}
-@keyframes seoPopoverFadeIn {
-  from { opacity: 0; transform: translateY(-8px); }
-  to   { opacity: 1; transform: translateY(0); }
-}
-.seo-popover-body h2 {
-  font-size: 17px; font-weight: 700; margin: 0 0 10px;
-  color: var(--text, #1a1a2e); letter-spacing: -0.005em;
-}
-.seo-popover-body h3 {
-  font-size: 13.5px; font-weight: 700; margin: 16px 0 6px;
-  color: var(--text, #1a1a2e);
-}
-.seo-popover-body h3:first-of-type { margin-top: 0; }
-.seo-popover-body p { margin: 0 0 9px; color: var(--text-dim, #5a6478); }
-.seo-popover-body ul { padding-left: 20px; margin-bottom: 9px; }
-.seo-popover-body ul li { margin-bottom: 4px; color: var(--text-dim, #5a6478); }
-.seo-popover-body ul ul { margin-top: 4px; padding-left: 20px; }
-.seo-popover-body strong { color: var(--text, #1a1a2e); font-weight: 600; }
-.seo-popover-body .related-tools {
-  display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px; font-size: 12px;
-}
-.seo-popover-body .related-tools a {
-  display: inline-block; padding: 4px 11px;
-  background: var(--panel-bg-2, #f9fafc);
-  border: 1px solid var(--border, #d8dfe8);
-  border-radius: 12px;
-  color: var(--text, #1a1a2e); text-decoration: none; font-weight: 600;
-  transition: all 0.15s;
-}
-.seo-popover-body .related-tools a:hover {
-  border-color: var(--accent, #3b82f6); color: var(--accent, #3b82f6);
-}
-.seo-popover[open]::before {
-  content: '';
-  position: fixed; inset: 0;
-  background: rgba(0, 0, 0, 0.30);
-  z-index: 999;
-  pointer-events: none;
-}
-@media (max-width: 800px) {
-  .seo-trigger { padding: 4px 7px; font-size: 10.5px; }
-  .seo-trigger-text { display: none; }
-  .seo-popover[open] .seo-popover-body {
-    top: 50px; right: 8px; left: 8px; width: auto;
-    max-height: calc(100vh - 64px); padding: 18px 20px;
+  /* The theme toggle is the only control for a site-wide persisted setting, so it
+     must stay reachable on a phone. .site-nav is itself the horizontal scroller,
+     so the button is pinned to the right edge of the scrollport rather than left
+     to scroll off the end of the tab strip. */
+  .nav-right {
+    position: sticky; right: 0; flex-shrink: 0; gap: 8px;
+    margin-left: auto; padding-left: 10px; z-index: 2;
+    background: #0a1628;
+    box-shadow: -10px 0 10px -6px rgba(10, 22, 40, 0.9);
   }
-}
+  .nav-right button { padding: 5px 9px; font-size: 10.5px; white-space: nowrap; }
 
+  /* The widget is HTML, so it does not shrink with the SVG (which drops to
+     ~47% on a phone). Shrink it explicitly and never let it exceed the canvas. */
+  .orient-widget { width: 118px; max-width: calc(100% - 20px); }
+  .orient-header { padding: 5px 7px; gap: 5px; font-size: 9px; }
+  .orient-readout { font-size: 9px; }
+}
 
 /* ═══ Static About section (SEO checklist item 10) ═══ */
 .seo-section {
@@ -794,7 +722,7 @@ body.dark .seo-content-body p { color: #c4ccda; }
         <h1>Coronary Angiography Views</h1>
         <div class="sub">C-arm angles → apparent anatomy</div>
       </div>
-      <button class="btn-reset" onclick="resetAll()" title="Reset to AP view">Reset</button>
+      <button class="btn-reset" onclick="resetAll()" title="Reset to the default view for the selected system (AP for the left coronary, LAO 45° for the right)">Reset</button>
     </div>
 
     <!-- Coronary side selector -->
@@ -811,12 +739,12 @@ body.dark .seo-content-body p { color: #c4ccda; }
       <div class="card-title">C-arm Angles</div>
       <div class="slider-row">
         <span class="slider-label">LAO / RAO</span>
-        <input type="range" id="slLao" min="-120" max="120" step="1" value="0">
+        <input type="range" id="slLao" min="-120" max="120" step="1" value="0" aria-label="LAO / RAO angle, degrees">
         <span class="slider-val" id="slLaoVal">AP</span>
       </div>
       <div class="slider-row">
         <span class="slider-label">CRA / CAU</span>
-        <input type="range" id="slCra" min="-40" max="40" step="1" value="0">
+        <input type="range" id="slCra" min="-40" max="40" step="1" value="0" aria-label="Cranial / caudal angle, degrees">
         <span class="slider-val" id="slCraVal">0°</span>
       </div>
     </div>
@@ -877,16 +805,18 @@ body.dark .seo-content-body p { color: #c4ccda; }
     <div class="viz-wrap">
       <svg id="angioSvg" viewBox="0 0 800 600" preserveAspectRatio="xMidYMid meet"></svg>
       <div class="orient-widget" id="orientWidget">
-        <div class="orient-header" id="orientHeader">
-          <span class="orient-grip">⋮⋮</span>
+        <div class="orient-header" id="orientHeader" tabindex="0" role="group"
+             aria-label="C-arm position panel — arrow keys move it">
+          <span class="orient-grip" aria-hidden="true">⋮⋮</span>
           <span class="orient-title">C-arm Position</span>
           <span class="orient-readout" id="orientReadout">AP</span>
-          <button class="orient-collapse" id="orientCollapse" title="Collapse / expand">−</button>
+          <button class="orient-collapse" id="orientReset" title="Reset panel position and size" aria-label="Reset the C-arm panel to its default position and size">⟳</button>
+          <button class="orient-collapse" id="orientCollapse" title="Collapse / expand" aria-label="Collapse or expand the C-arm panel">−</button>
         </div>
         <div class="orient-body">
           <svg id="orientSvg" viewBox="0 0 300 260" preserveAspectRatio="xMidYMid meet"></svg>
         </div>
-        <div class="orient-resize" id="orientResize" title="Drag corner to resize"></div>
+        <div class="orient-resize" id="orientResize" tabindex="0" aria-label="Resize the C-arm panel — arrow keys change its width" title="Drag corner to resize (or focus it and use the arrow keys)"></div>
       </div>
       <div class="view-label" id="viewLabel">AP — Anteroposterior</div>
       <button class="label-toggle" id="labelToggleBtn" title="Hide or show anatomical labels">
@@ -912,6 +842,18 @@ body.dark .seo-content-body p { color: #c4ccda; }
           <p>A draggable, resizable, collapsible widget draws the C-arm gantry, table, and supine patient from the operator's viewpoint at the patient's right side, head to the screen's left. Labels can be detailed, simplified, or hidden. Overlays add the cardiac silhouette, the atrioventricular and interventricular planes, chamber labels, and both coronary systems at once; an X-ray mode approximates the fluoroscopy monitor.</p>
           <h3>Intended use</h3>
           <p>This is a geometry teaching aid for fellows learning to ask for a specific view rather than accept whatever is on the screen, not a substitute for reading real angiograms.</p>
+          <h3>Related tools</h3>
+          <div class="related-tools">
+            <a href="/">CathMath home</a>
+            <a href="/rhc/">RHC Calculator</a>
+            <a href="/pvloop/">PV Loops</a>
+            <a href="/ekg/">EKG Simulator</a>
+            <a href="/embryology/">Embryology</a>
+            <a href="/hemodynamics/">Hemodynamics</a>
+            <a href="/echocalc/">Echo Calc</a>
+            <a href="/ap/">Action Potential</a>
+            <a href="/intracoronary/">Intracoronary</a>
+          </div>
         </div>
       </details>
   </main>
@@ -920,6 +862,76 @@ body.dark .seo-content-body p { color: #c4ccda; }
 
 
 <script>
+// <shared:analytics v1>
+// GENERATED FROM shared/analytics.js BY scripts/sync-shared.mjs — DO NOT EDIT HERE.
+// Edit shared/analytics.js, then run: node scripts/sync-shared.mjs --write
+// CathMath analytics — GA4, property 555096463, stream G-ZME4G2EYJS.
+// Design and the reasons for every choice: plans/2026-09-21-analytics-design.md
+//
+// THIS BLOCK MUST NEVER BE ABLE TO BREAK A TOOL. It runs first, so it is wrapped whole, and
+// cmTrack() exists as a no-op before anything that can throw is attempted.
+//
+// HOST GUARD. Unless the page is being served from cathmath.org, nothing loads and nothing is
+// sent: not from file://, not from localhost, not in the node vm harness, not in CardioDoc's
+// fixture capture, not from a copy of this page hosted somewhere else. That is what keeps the
+// house rule true — every tool works with zero runtime dependencies and no network. Analytics is
+// an enhancement that exists only on the production host.
+//
+// NOTHING A USER TYPES IS EVER SENT. Parameters are fixed id strings that already exist in the
+// source (module ids, preset ids, drug ids). cmTrack drops any parameter that is not a short
+// string, so a number read from an input cannot leave even if a caller passes one by mistake.
+(function () {
+  var TOOL = 'angio';
+  var ID = 'G-ZME4G2EYJS';
+  window.cmTrack = function () {};
+  try {
+    var host = String((window.location && window.location.hostname) || '');
+    if (host !== 'cathmath.org' && host !== 'www.cathmath.org') return;
+
+    // Own-traffic flag, as on CardioQFlow: visit once with ?internal=1 (clear with ?internal=0)
+    // and every event from this browser carries traffic_type=internal for a GA4 data filter.
+    var internal = false;
+    try {
+      var q = new URLSearchParams(window.location.search).get('internal');
+      if (q === '1' || q === 'on') window.localStorage.setItem('cathmath_internal', '1');
+      else if (q === '0' || q === 'off') window.localStorage.removeItem('cathmath_internal');
+      internal = window.localStorage.getItem('cathmath_internal') === '1';
+    } catch (e) { internal = false; }
+
+    window.dataLayer = window.dataLayer || [];
+    window.gtag = window.gtag || function () { window.dataLayer.push(arguments); };
+    var base = { tool: TOOL };
+    if (internal) base.traffic_type = 'internal';
+    window.gtag('js', new Date());
+    window.gtag('config', ID, base);           // parameters in config ride on every event, page_view included
+
+    // Injected, never a static <script src>: gtag.js is regenerated by Google constantly, so an
+    // integrity= hash cannot be pinned to it. scripts/lint.mjs DEP-1 allow-lists this one origin
+    // by name rather than failing to notice it.
+    var s = document.createElement('script');
+    s.async = true;
+    s.src = 'https://www.googletagmanager.com/gtag/js?id=' + ID;
+    document.head.appendChild(s);
+
+    var once = {};
+    // cmTrack(name, params, onceKey) — fire-and-forget. onceKey, when given, sends the event at
+    // most once per page load for that key (calc_used: once per module).
+    window.cmTrack = function (name, params, onceKey) {
+      try {
+        if (onceKey) { if (once[onceKey]) return; once[onceKey] = 1; }
+        var p = { tool: TOOL };
+        if (internal) p.traffic_type = 'internal';
+        for (var k in (params || {})) {
+          var v = params[k];
+          if (typeof v === 'string' && v.length > 0 && v.length <= 64) p[k] = v;   // enum ids only
+        }
+        window.gtag('event', String(name), p);
+      } catch (e) { /* analytics must never throw into a tool */ }
+    };
+  } catch (e) { /* blocked, offline, private mode — the tool carries on */ }
+})();
+// </shared:analytics>
+
 'use strict';
 
 // ═══════════════════════════════════════════════════════════
@@ -1398,23 +1410,43 @@ function buildRibbon(dense, widthProx, widthDist) {
 }
 
 // Heart silhouette as a closed SVG path.
-function heartPath(laoDeg, craDeg, cx, cy, scale) {
-  const proj = HEART_OUTLINE.map(p => project3D(p, laoDeg, craDeg));
-  const pts = proj.map(pp => ({ x: cx + pp.sx * scale, y: cy + pp.sy * scale }));
-  // Close the loop with smooth curves.
-  let d = `M ${pts[0].x} ${pts[0].y}`;
-  const n = pts.length;
+//
+// The Catmull-Rom control points are built in PROJECTED UNIT space (the raw
+// sx/sy out of project3D) and only then mapped through x = cx + sx·scale,
+// y = cy + sy·scale. That map is affine with a positive uniform factor, so the
+// control polygon — and therefore the drawn curve — is the exact image of the
+// unit-space one. That is what lets silhouetteBBox() below measure the CURVE
+// instead of the vertices it passes through: with tension 0.20 the curve bows
+// outside the polygon on every convex corner — measured across the 15 presets
+// the bbox grows by up to 7.7 px on a side — and framing against the vertices
+// let 7 of those 15 draw the silhouette past the canvas edge, by up to 7.5 px.
+const HEART_TENSION = 0.20;
+
+function heartSegments(laoDeg, craDeg) {
+  const p = HEART_OUTLINE.map(q => project3D(q, laoDeg, craDeg));
+  const n = p.length;
+  const segs = [];
   for (let i = 0; i < n; i++) {
-    const p0 = pts[(i - 1 + n) % n];
-    const p1 = pts[i];
-    const p2 = pts[(i + 1) % n];
-    const p3 = pts[(i + 2) % n];
-    const t = 0.20;
-    const c1x = p1.x + (p2.x - p0.x) * t;
-    const c1y = p1.y + (p2.y - p0.y) * t;
-    const c2x = p2.x - (p3.x - p1.x) * t;
-    const c2y = p2.y - (p3.y - p1.y) * t;
-    d += ` C ${c1x} ${c1y}, ${c2x} ${c2y}, ${p2.x} ${p2.y}`;
+    const p0 = p[(i - 1 + n) % n];
+    const p1 = p[i];
+    const p2 = p[(i + 1) % n];
+    const p3 = p[(i + 2) % n];
+    const t = HEART_TENSION;
+    segs.push({
+      x: [p1.sx, p1.sx + (p2.sx - p0.sx) * t, p2.sx - (p3.sx - p1.sx) * t, p2.sx],
+      y: [p1.sy, p1.sy + (p2.sy - p0.sy) * t, p2.sy - (p3.sy - p1.sy) * t, p2.sy],
+    });
+  }
+  return segs;
+}
+
+function heartPath(laoDeg, craDeg, cx, cy, scale) {
+  const segs = heartSegments(laoDeg, craDeg);
+  const X = (v) => cx + v * scale;
+  const Y = (v) => cy + v * scale;
+  let d = `M ${X(segs[0].x[0])} ${Y(segs[0].y[0])}`;
+  for (const s of segs) {
+    d += ` C ${X(s.x[1])} ${Y(s.y[1])}, ${X(s.x[2])} ${Y(s.y[2])}, ${X(s.x[3])} ${Y(s.y[3])}`;
   }
   d += ' Z';
   return d;
@@ -1537,9 +1569,212 @@ function getLabelMap() {
   return labelMode === 'simplified' ? LABELS_SIMPLIFIED : LABELS_DETAILED;
 }
 
+// ═══════════════════════════════════════════════════════════
+// FIT-TO-CONTENT FRAMING
+// ═══════════════════════════════════════════════════════════
+// CX / CY / SCALE above are the defaults only. With one coronary system drawn,
+// a fixed frame put the tree in one half of the canvas and crushed its label
+// column against the far edge, so the frame is derived from what is actually
+// drawn instead. Two requirements are solved together: the vessel bounding box
+// must sit inside the strip that survives once both label columns are reserved,
+// and the heart silhouette must stay inside the canvas. The scale is the largest
+// one (up to FIT_SCALE_MAX) for which a single offset satisfies both.
+// Everything here is a pure function of the LIVE angles, so the framing tweens
+// with the preset animation for free instead of snapping at the end of it.
+const FIT_SCALE_MIN = 140;
+const FIT_SCALE_MAX = 230;
+const LABEL_GAP = 36;        // px between the vessel cluster and its label column
+
+// ── Label widths are MEASURED, never guessed ──────────────────────────────
+// This used to be a hand-kept constant of 135 px, annotated "Septal
+// perforators ~ 130 px" — which that string does not measure: at 11px/600 in
+// the page's own -apple-system stack it is 95 px. The widest string actually
+// shipped, "Second obtuse marginal (OM2)", is 162 px — so both the framing
+// reserve and placeLabels()' column clamp under-reserved by ~27 px and let
+// that one label run off an 800-wide canvas.
+// Each string is measured once from a real <text>
+// in the live SVG and cached. LABEL_TEXT_FALLBACK is used only before the SVG
+// has a layout box (and is deliberately NOT cached, so the first laid-out
+// frame replaces it with the true width).
+const LABEL_TEXT_FALLBACK = 175;
+const labelWidthCache = new Map();
+
+function labelTextWidth(str) {
+  const hit = labelWidthCache.get(str);
+  if (hit !== undefined) return hit;
+  let w = 0;
+  try {
+    const svg = document.getElementById('angioSvg');
+    if (svg && typeof svg.appendChild === 'function') {
+      const t = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+      t.setAttribute('class', 'label-text');
+      t.setAttribute('x', '-9999');
+      t.setAttribute('y', '-9999');
+      t.textContent = str;
+      svg.appendChild(t);
+      w = t.getComputedTextLength();
+      svg.removeChild(t);
+    }
+  } catch (e) { w = 0; }
+  if (!(w > 0)) return LABEL_TEXT_FALLBACK;   // no layout yet — do not cache
+  labelWidthCache.set(str, w);
+  return w;
+}
+
+// Widest label that the CURRENT state can draw (side + detailed/simplified).
+// Used symmetrically for both reserved columns: which column a given label
+// lands in is decided later, in render(), from the projected geometry.
+function maxLabelWidth() {
+  const map = getLabelMap();
+  const shown = vesselsForCurrentState();
+  let w = 0;
+  for (const [key, v] of Object.entries(COR)) {
+    if (!shown.includes(v)) continue;
+    const txt = map[key];
+    if (!txt) continue;
+    const tw = labelTextWidth(txt);
+    if (tw > w) w = tw;
+  }
+  return w;
+}
+
+function projBBox(points) {
+  let x0 = Infinity, x1 = -Infinity, y0 = Infinity, y1 = -Infinity;
+  for (const p of points) {
+    const q = project3D(p, liveLao, liveCra);
+    if (q.sx < x0) x0 = q.sx;
+    if (q.sx > x1) x1 = q.sx;
+    if (q.sy < y0) y0 = q.sy;
+    if (q.sy > y1) y1 = q.sy;
+  }
+  return { x0, x1, y0, y1, w: x1 - x0, h: y1 - y0, cx: (x0 + x1) / 2, cy: (y0 + y1) / 2 };
+}
+
+// Min/max of ONE cubic Bézier coordinate: the two endpoints plus any interior
+// stationary point. B'(t) = 0 is the quadratic below; roots outside (0,1) are
+// off the segment and ignored.
+function cubicRange(a, b, c, d) {
+  let lo = Math.min(a, d), hi = Math.max(a, d);
+  const qa = -a + 3 * b - 3 * c + d;
+  const qb = 2 * (a - 2 * b + c);
+  const qc = b - a;
+  const roots = [];
+  if (Math.abs(qa) < 1e-12) {
+    if (Math.abs(qb) > 1e-12) roots.push(-qc / qb);
+  } else {
+    const disc = qb * qb - 4 * qa * qc;
+    if (disc >= 0) {
+      const s = Math.sqrt(disc);
+      roots.push((-qb + s) / (2 * qa), (-qb - s) / (2 * qa));
+    }
+  }
+  for (const t of roots) {
+    if (!(t > 0 && t < 1)) continue;
+    const m = 1 - t;
+    const v = m * m * m * a + 3 * m * m * t * b + 3 * m * t * t * c + t * t * t * d;
+    if (v < lo) lo = v;
+    if (v > hi) hi = v;
+  }
+  return [lo, hi];
+}
+
+// Bounding box of the silhouette AS DRAWN, in projected unit space — the same
+// space projBBox() returns, so it drops straight into the framing constraints.
+// Measuring HEART_OUTLINE's vertices instead measures a shape the renderer
+// never draws: the smoothed curve overshoots them on every convex corner.
+function silhouetteBBox() {
+  let x0 = Infinity, x1 = -Infinity, y0 = Infinity, y1 = -Infinity;
+  for (const s of heartSegments(liveLao, liveCra)) {
+    const rx = cubicRange(s.x[0], s.x[1], s.x[2], s.x[3]);
+    const ry = cubicRange(s.y[0], s.y[1], s.y[2], s.y[3]);
+    if (rx[0] < x0) x0 = rx[0];
+    if (rx[1] > x1) x1 = rx[1];
+    if (ry[0] < y0) y0 = ry[0];
+    if (ry[1] > y1) y1 = ry[1];
+  }
+  return { x0, x1, y0, y1, w: x1 - x0, h: y1 - y0, cx: (x0 + x1) / 2, cy: (y0 + y1) / 2 };
+}
+
+// Largest scale on one axis for which a single offset can satisfy BOTH
+// "vessels inside the label-safe strip" and "silhouette inside the canvas".
+// Each pairing of one lower bound with one upper bound gives s <= span / room;
+// the binding one is the smallest.
+function axisScaleLimit(vLo, vHi, sLo, sHi, extent, reserve) {
+  const pos = (d) => Math.max(d, 0.05);
+  return Math.min(
+    extent / pos(sHi - sLo),                        // silhouette fits at all
+    (extent - reserve) / pos(vHi - sLo),            // silhouette's near edge vs vessels' far edge
+    (extent - reserve) / pos(sHi - vLo),            // vessels' near edge vs silhouette's far edge
+    (extent - 2 * reserve) / pos(vHi - vLo)         // vessels fit inside the reserved strip
+  );
+}
+
+function computeFrame() {
+  const pts = [];
+  for (const v of vesselsForCurrentState()) pts.push(...v.points);
+  if (pts.length === 0) return { cx: CX, cy: CY, scale: SCALE };
+
+  const vb = projBBox(pts);
+  const silEl = document.getElementById('ovSilhouette');
+  const sb = (silEl && silEl.checked) ? silhouetteBBox() : null;
+  const showLabels = labelMode !== 'off';
+  const resX = showLabels ? LABEL_GAP + maxLabelWidth() : 20;
+  const resY = showLabels ? 26 : 16;
+
+  let scale = Math.min(
+    (SVG_W - 2 * resX) / Math.max(vb.w, 0.05),
+    (SVG_H - 2 * resY) / Math.max(vb.h, 0.05),
+    FIT_SCALE_MAX
+  );
+  if (sb) {
+    scale = Math.min(scale,
+      axisScaleLimit(vb.x0, vb.x1, sb.x0, sb.x1, SVG_W, resX),
+      axisScaleLimit(vb.y0, vb.y1, sb.y0, sb.y1, SVG_H, resY));
+  }
+  scale = Math.max(FIT_SCALE_MIN, scale);
+
+  // Centre on the vessels, then pull back inside whatever room is left.
+  //
+  // `scale` is chosen AT the binding axisScaleLimit, so whenever that limit is
+  // the one that bites the feasible interval is exactly one point (lo === hi)
+  // and a last-bit floating-point difference decided whether the offset was
+  // clamped to it or thrown away. The discarded branch centred the silhouette
+  // and abandoned the vessels: in the default AP view that pushed them 85 px
+  // past the label strip and clipped the OM2 label.
+  //
+  // There is no discarded branch now. When the interval is empty the midpoint
+  // is the offset that minimises the worst violation, and it degenerates to
+  // the old fallbacks exactly: if the silhouette bounds are the binding pair
+  // it evaluates to extent/2 − (sLo+sHi)/2·scale (the silhouette centred), and
+  // if the vessel bounds are, to extent/2 − (vLo+vHi)/2·scale (the vessels
+  // centred, the `centre` argument). The old behaviour was the special case.
+  function place(vLo, vHi, sLo, sHi, extent, reserve, centre) {
+    let lo = reserve - vLo * scale;
+    let hi = extent - reserve - vHi * scale;
+    if (sb) {
+      lo = Math.max(lo, -sLo * scale);
+      hi = Math.min(hi, extent - sHi * scale);
+    }
+    if (lo > hi) return (lo + hi) / 2;
+    return Math.max(lo, Math.min(hi, extent / 2 - centre * scale));
+  }
+  const sx0 = sb ? sb.x0 : 0, sx1 = sb ? sb.x1 : 0;
+  const sy0 = sb ? sb.y0 : 0, sy1 = sb ? sb.y1 : 0;
+  return {
+    cx: place(vb.x0, vb.x1, sx0, sx1, SVG_W, resX, vb.cx),
+    cy: place(vb.y0, vb.y1, sy0, sy1, SVG_H, resY, vb.cy),
+    scale,
+  };
+}
+
 function render() {
   const showSilhouette = document.getElementById('ovSilhouette').checked;
   const showLabels = labelMode !== 'off';
+
+  // Framing is derived from what is actually on screen (see computeFrame),
+  // not from the fixed CX/CY/SCALE constants.
+  const frame = computeFrame();
+  const FX = frame.cx, FY = frame.cy, FS = frame.scale;
 
   // Build SVG content as an array of element strings — faster than DOM
   // manipulation per-frame.
@@ -1568,10 +1803,10 @@ function render() {
 
     // Mediastinal mound (faint lighter ellipse where heart sits) — sits BEHIND the silhouette
     // path so the silhouette outline still reads as the cardiac contour.
-    parts.push(`<ellipse cx="${CX}" cy="${CY + SCALE * 0.05}" rx="${SCALE * 1.05}" ry="${SCALE * 1.20}" fill="url(#cardiacShadow)"/>`);
+    parts.push(`<ellipse cx="${FX}" cy="${FY + FS * 0.05}" rx="${FS * 1.05}" ry="${FS * 1.20}" fill="url(#cardiacShadow)"/>`);
 
     // Diaphragm shadow at the bottom — broad dome
-    parts.push(`<ellipse cx="${CX}" cy="${SVG_H + 40}" rx="${SVG_W * 0.7}" ry="${SVG_H * 0.30}" fill="url(#diaphragmShadow)"/>`);
+    parts.push(`<ellipse cx="${FX}" cy="${SVG_H + 40}" rx="${SVG_W * 0.7}" ry="${SVG_H * 0.30}" fill="url(#diaphragmShadow)"/>`);
   } else {
     // Schematic mode background (transparent — CSS handles it)
     parts.push(`<rect x="0" y="0" width="${SVG_W}" height="${SVG_H}" fill="transparent"/>`);
@@ -1579,7 +1814,7 @@ function render() {
 
   // Heart silhouette (drawn behind vessels; rendered slightly differently in X-ray mode)
   if (showSilhouette) {
-    const hd = heartPath(liveLao, liveCra, CX, CY, SCALE);
+    const hd = heartPath(liveLao, liveCra, FX, FY, FS);
     if (xrayMode) {
       // Soft cardiac border — like a real fluoroscopy mediastinal contour
       parts.push(`<path d="${hd}" fill="rgba(255,255,255,0.025)" stroke="rgba(255,255,255,0.18)" stroke-width="1"/>`);
@@ -1593,7 +1828,7 @@ function render() {
   const projected = [];
   for (const [key, v] of Object.entries(COR)) {
     if (!vessels.includes(v)) continue;
-    const path = vesselPath(v.points, liveLao, liveCra, CX, CY, SCALE);
+    const path = vesselPath(v.points, liveLao, liveCra, FX, FY, FS);
     // Midpoint depth for z-sorting
     const mid = v.points[Math.floor(v.points.length / 2)];
     const projMid = project3D(mid, liveLao, liveCra);
@@ -1612,8 +1847,8 @@ function render() {
     if (COR[ostiumKey]) {
       const ostiumPt3D = COR[ostiumKey].points[0];
       const ost = project3D(ostiumPt3D, liveLao, liveCra);
-      const ostX = CX + ost.sx * SCALE;
-      const ostY = CY + ost.sy * SCALE;
+      const ostX = FX + ost.sx * FS;
+      const ostY = FY + ost.sy * FS;
       // Bezier from upper-left into the ostium
       const cathStartX = -10, cathStartY = SVG_H * 0.18;
       const cp1X = SVG_W * 0.22, cp1Y = SVG_H * 0.42;
@@ -1717,19 +1952,22 @@ function render() {
       project3D({ x: 0, y:  0.95, z: 0.05 }, liveLao, liveCra),
       project3D({ x: 0, y: -1.15, z: -0.30 }, liveLao, liveCra),
     ];
-    function toSvg(p) { return { x: CX + p.sx * SCALE, y: CY + p.sy * SCALE }; }
+    function toSvg(p) { return { x: FX + p.sx * FS, y: FY + p.sy * FS }; }
     const av0 = toSvg(planeAV[0]), av1 = toSvg(planeAV[1]);
     const iv0 = toSvg(planeIV[0]), iv1 = toSvg(planeIV[1]);
     // AV plane line
-    parts.push(`<line x1="${av0.x.toFixed(1)}" y1="${av0.y.toFixed(1)}" x2="${av1.x.toFixed(1)}" y2="${av1.y.toFixed(1)}" stroke="rgba(180, 195, 220, 0.32)" stroke-width="0.9" stroke-dasharray="4 4" pointer-events="none"/>`);
+    parts.push(`<line x1="${av0.x.toFixed(1)}" y1="${av0.y.toFixed(1)}" x2="${av1.x.toFixed(1)}" y2="${av1.y.toFixed(1)}" class="plane-line" stroke-dasharray="4 4" pointer-events="none"/>`);
     // IV plane line
-    parts.push(`<line x1="${iv0.x.toFixed(1)}" y1="${iv0.y.toFixed(1)}" x2="${iv1.x.toFixed(1)}" y2="${iv1.y.toFixed(1)}" stroke="rgba(180, 195, 220, 0.32)" stroke-width="0.9" stroke-dasharray="4 4" pointer-events="none"/>`);
+    parts.push(`<line x1="${iv0.x.toFixed(1)}" y1="${iv0.y.toFixed(1)}" x2="${iv1.x.toFixed(1)}" y2="${iv1.y.toFixed(1)}" class="plane-line" stroke-dasharray="4 4" pointer-events="none"/>`);
     // Labels — anchored at the MIDPOINT of the plane line with a small
     // perpendicular offset. This keeps them in the central anatomy region of
     // the canvas, well away from the left/right side strips where vessel
     // labels live, so the two label families don't collide. The paint-order
     // halo handles any vessel that happens to cross beneath.
-    const STRIP_W = 130;            // matches placeLabels() column-X clamp
+    // Same reserve the framing and placeLabels() use, so this really does keep
+    // the plane labels out of the vessel-label columns (it used to be a
+    // hand-kept 130 that no longer matched either of them).
+    const STRIP_W = showLabels ? LABEL_GAP + maxLabelWidth() : 20;
     function planeLabel(p0, p1, text) {
       const mx = (p0.x + p1.x) / 2;
       const my = (p0.y + p1.y) / 2;
@@ -1743,7 +1981,7 @@ function render() {
       // Force the label into the central region (out of either side strip)
       lx = Math.max(STRIP_W + 8, Math.min(SVG_W - STRIP_W - 8, lx));
       ly = Math.max(24, Math.min(SVG_H - 14, ly));
-      parts.push(`<text x="${lx.toFixed(1)}" y="${ly.toFixed(1)}" text-anchor="middle" font-size="9.5" font-style="italic" font-weight="600" letter-spacing="0.04em" pointer-events="none" paint-order="stroke fill" stroke="rgba(13, 16, 25, 0.92)" stroke-width="3.5" stroke-linejoin="round" fill="rgba(210, 220, 235, 0.78)">${text}</text>`);
+      parts.push(`<text x="${lx.toFixed(1)}" y="${ly.toFixed(1)}" text-anchor="middle" class="plane-label" pointer-events="none">${text}</text>`);
     }
     planeLabel(av0, av1, 'Atrioventricular plane');
     planeLabel(iv0, iv1, 'Interventricular plane');
@@ -1762,13 +2000,13 @@ function render() {
     ];
     for (const c of CHAMBERS) {
       const p = project3D(c.center, liveLao, liveCra);
-      const sx = CX + p.sx * SCALE;
-      const sy = CY + p.sy * SCALE;
+      const sx = FX + p.sx * FS;
+      const sy = FY + p.sy * FS;
       // Clamp inside the canvas so a steep oblique view doesn't push the label off
       const lx = Math.max(16, Math.min(SVG_W - 16, sx));
       const ly = Math.max(20, Math.min(SVG_H - 8, sy));
       // paint-order halo so the letters carve out their own readable backing
-      parts.push(`<text x="${lx.toFixed(1)}" y="${ly.toFixed(1)}" text-anchor="middle" font-size="14" font-weight="800" letter-spacing="0.06em" pointer-events="none" paint-order="stroke fill" stroke="rgba(13, 16, 25, 0.92)" stroke-width="4" stroke-linejoin="round" fill="rgba(220, 230, 245, 0.78)">${c.key}</text>`);
+      parts.push(`<text x="${lx.toFixed(1)}" y="${ly.toFixed(1)}" text-anchor="middle" class="chamber-label" pointer-events="none">${c.key}</text>`);
     }
   }
 
@@ -1795,7 +2033,7 @@ function render() {
 function placeLabels(labels, which, parts) {
   if (labels.length === 0) return;
   const LABEL_LINE_H = 22;       // vertical pixels per label (bumped from 16)
-  const HORIZ_GAP = 36;          // pixels between vessel cluster and label column
+  const HORIZ_GAP = LABEL_GAP;   // pixels between vessel cluster and label column
   const SVG_EDGE_PAD = 6;        // min distance from SVG edge
 
   // Sort labels by target Y so leaders are roughly parallel (no crossings)
@@ -1807,12 +2045,13 @@ function placeLabels(labels, which, parts) {
 
   // Label column X — hug the vessel cluster as tight as possible, only pulling
   // back to the canvas margin when the cluster sits within text-width of the
-  // edge. The text-width reservation ('Septal perforators' ≈ 130 px @ 11px/600)
-  // guarantees the label string fits horizontally without being clipped.
-  const LABEL_TEXT_W = 135;
+  // edge. The reservation is the MEASURED width of the widest string in THIS
+  // column (see labelTextWidth), so no label can be clipped no matter which
+  // strings the current side and label mode put here.
+  const colTextW = Math.max(...labels.map(L => labelTextWidth(L.text)));
   const labelX = which === 'left'
-    ? Math.max(LABEL_TEXT_W + SVG_EDGE_PAD, minTX - HORIZ_GAP)
-    : Math.min(SVG_W - LABEL_TEXT_W - SVG_EDGE_PAD, maxTX + HORIZ_GAP);
+    ? Math.max(colTextW + SVG_EDGE_PAD, minTX - HORIZ_GAP)
+    : Math.min(SVG_W - colTextW - SVG_EDGE_PAD, maxTX + HORIZ_GAP);
   const anchor = which === 'left' ? 'end' : 'start';
 
   // Decide label Y positions. Start from each target Y as the "ideal" position,
@@ -1873,10 +2112,18 @@ function placeLabels(labels, which, parts) {
 // patient. Head is on the left of the canvas, feet on the right, anterior
 // (chest) up, posterior (table) down.
 //
-// World coords (unchanged from the main canvas):
-//   +x = patient's LEFT (into the page, away from operator)
+// World coords — NOTE: this widget deliberately uses the OPPOSITE x convention
+// from the main canvas model above (which is +x = patient's RIGHT). Here:
+//   +x = patient's LEFT (into the page, away from the operator)
+//   -x = patient's RIGHT (out of the page, toward the operator)
 //   +y = CRANIAL (head)
 //   +z = ANTERIOR (chest, up)
+// The flip is load-bearing: proj() below defines depth = x*cosA - z*sinA with
+// "smaller = closer to the operator", and the operator stands at the patient's
+// right, so -x has to be the near side. The detector construction likewise needs
+// dx > 0 for positive LAO. Do NOT negate x inside proj() to "unify" the two
+// frames — that also inverts the depth term that splits the arc into its front
+// and back halves. Negate at a call site if you need main-canvas coordinates.
 //
 // Camera: slight downward gaze (α ≈ 18°) off pure side-on so the C-arm arc
 // reads as an ellipse instead of a degenerate line. LAO swings the detector
@@ -1888,6 +2135,15 @@ function placeLabels(labels, which, parts) {
 function renderOrientationWidget() {
   const svg = document.getElementById('orientSvg');
   if (!svg) return;
+
+  // The header read-out is visible even when the panel is collapsed, so it is
+  // updated first — and then, if the scene itself is display:none, the ~20-node
+  // SVG rebuild is skipped entirely rather than run once per animation frame.
+  const angTxt = formatAngleReadout();
+  const readout = document.getElementById('orientReadout');
+  if (readout) readout.textContent = angTxt;
+  const widgetEl = document.getElementById('orientWidget');
+  if (widgetEl && widgetEl.classList.contains('collapsed')) return;
 
   const VBW = 320, VBH = 200;
   svg.setAttribute('viewBox', `0 0 ${VBW} ${VBH}`);
@@ -1930,14 +2186,26 @@ function renderOrientationWidget() {
   const heart = { x: 0, y: 0, z: 0 };
   const R = 1.05;                  // C-arm radius (world units)
 
-  // Bulge orthogonal to det-src axis. Force it to point toward the patient's
-  // LEFT (+x) where possible — that's where a real cath-lab gantry's "C" body
-  // wraps around the patient, opening toward the operator on the right.
+  // Bulge orthogonal to the det-source axis. b = d × (0, -1, 0) reduces to
+  // (cos LAO, 0, -sin LAO) once normalised: at AP it lies along +x, and it then
+  // rotates rigidly with the beam exactly as the physical C does — which is the
+  // whole argument for not special-casing it anywhere.
+  // Do NOT annotate +x here as a patient side from memory. This file's axis
+  // header (see the top of the anatomy block) defines +x as the patient's
+  // RIGHT, and the COR data agrees — the left main sits at x = -0.10 and the
+  // main projection puts it on the viewer's right, which is the radiology
+  // convention. Earlier comments here and on the deleted guard called +x the
+  // patient's LEFT; that wording is left over from the file's first axis
+  // header, which was the other way round and was corrected later.
+  // There used to be an "if (bx < 0) negate b" guard here. It never fired inside
+  // |LAO| ≤ 90 (bx = cos LAO · cos CRA, and |CRA| ≤ 40) and always fired outside
+  // it, so past lateral it snapped the whole gantry 180° through the patient —
+  // the shipped Reverse Spider (RAO 100°) drew the C under the table. Removed;
+  // do not restore it.
   let bx = dz, by = 0, bz = -dx;                  // = dir × (0, -1, 0)
   const bLen = Math.hypot(bx, by, bz);
   if (bLen < 0.05) { bx = 1; by = 0; bz = 0; }    // degenerate when det near ±y axis
   else { bx /= bLen; by /= bLen; bz /= bLen; }
-  if (bx < 0) { bx = -bx; by = -by; bz = -bz; }   // keep on patient's-left side
 
   const arcWorld = [];
   for (let i = 0; i <= 26; i++) {
@@ -2087,8 +2355,9 @@ function renderOrientationWidget() {
   const earP = proj({ x: -0.16, y: 1.30, z: -0.02 });
   html += `<ellipse cx="${earP.x.toFixed(1)}" cy="${earP.y.toFixed(1)}" rx="2.8" ry="3.4" fill="rgba(120, 80, 60, 0.55)" stroke="rgba(80, 50, 35, 0.4)" stroke-width="0.4"/>`;
 
-  // Heart marker — small red bean on anterior chest, slightly to patient's left.
-  const heartMarker = proj({ x: -0.10, y: 0.25, z: 0.15 });
+  // Heart marker — small red bean on the anterior chest, slightly to the
+  // patient's left, which is POSITIVE x in this widget's frame (see header).
+  const heartMarker = proj({ x: 0.10, y: 0.25, z: 0.15 });
   html += `<ellipse cx="${heartMarker.x.toFixed(1)}" cy="${heartMarker.y.toFixed(1)}" rx="8" ry="6.5" fill="rgba(220, 60, 50, 0.78)" stroke="rgba(150,30,30,0.65)" stroke-width="0.7"/>`;
 
   // Arc segments in FRONT of the patient — drawn over body.
@@ -2111,7 +2380,7 @@ function renderOrientationWidget() {
   const srcAng  = Math.atan2(heartP.y - srcP.y, heartP.x - srcP.x) * 180 / Math.PI;
 
   // Beam line through heart (faint dashed).
-  html += `<line x1="${srcP.x.toFixed(1)}" y1="${srcP.y.toFixed(1)}" x2="${detP.x.toFixed(1)}" y2="${detP.y.toFixed(1)}" stroke="rgba(253,204,77,0.38)" stroke-width="0.9" stroke-dasharray="2 2"/>`;
+  html += `<line x1="${srcP.x.toFixed(1)}" y1="${srcP.y.toFixed(1)}" x2="${detP.x.toFixed(1)}" y2="${detP.y.toFixed(1)}" class="opv-beam" stroke-dasharray="2 2"/>`;
 
   // Flash state
   const detFlash = (flashDir === 'lao+' || flashDir === 'lao-' || flashDir === 'cra+' || flashDir === 'cra-');
@@ -2134,40 +2403,61 @@ function renderOrientationWidget() {
   // ─── Compass labels ────────────────────────────────────
   const lblHead = proj({ x: 0, y:  1.70, z:  0 });
   const lblFeet = proj({ x: 0, y: -1.70, z:  0 });
-  html += `<text x="${lblHead.x.toFixed(1)}" y="${(lblHead.y - 14).toFixed(1)}" text-anchor="middle" font-size="9" font-weight="700" letter-spacing="0.08em" fill="rgba(220,230,245,0.75)" paint-order="stroke fill" stroke="rgba(13,16,25,0.8)" stroke-width="2.4" stroke-linejoin="round">HEAD</text>`;
-  html += `<text x="${lblFeet.x.toFixed(1)}" y="${(lblFeet.y - 14).toFixed(1)}" text-anchor="middle" font-size="9" font-weight="700" letter-spacing="0.08em" fill="rgba(220,230,245,0.75)" paint-order="stroke fill" stroke="rgba(13,16,25,0.8)" stroke-width="2.4" stroke-linejoin="round">FEET</text>`;
+  html += `<text x="${lblHead.x.toFixed(1)}" y="${(lblHead.y - 14).toFixed(1)}" text-anchor="middle" class="opv-compass">HEAD</text>`;
+  html += `<text x="${lblFeet.x.toFixed(1)}" y="${(lblFeet.y - 14).toFixed(1)}" text-anchor="middle" class="opv-compass">FEET</text>`;
 
   // Anterior / posterior on the right edge (operator's side reference).
-  html += `<text x="${VBW - 6}" y="${CENTER_Y - 50}" text-anchor="end" font-size="7.5" font-style="italic" fill="rgba(180,195,220,0.55)">anterior</text>`;
-  html += `<text x="${VBW - 6}" y="${CENTER_Y + 56}" text-anchor="end" font-size="7.5" font-style="italic" fill="rgba(180,195,220,0.55)">posterior</text>`;
+  html += `<text x="${VBW - 6}" y="${CENTER_Y - 50}" text-anchor="end" class="opv-caption italic">anterior</text>`;
+  html += `<text x="${VBW - 6}" y="${CENTER_Y + 56}" text-anchor="end" class="opv-caption italic">posterior</text>`;
 
   // Big yellow angle readout, bottom-left of the SVG.
-  const angTxt = formatAngleReadout();
-  html += `<text x="8" y="${VBH - 22}" font-size="13" font-weight="800" letter-spacing="0.03em" fill="#fdcc4d">${angTxt}</text>`;
-  html += `<text x="8" y="${VBH - 8}" font-size="7.5" font-weight="600" letter-spacing="0.06em" fill="rgba(180,195,220,0.55)">OPERATOR'S VIEW · from patient's right</text>`;
+  html += `<text x="8" y="${VBH - 22}" class="opv-readout-text">${angTxt}</text>`;
+  html += `<text x="8" y="${VBH - 8}" class="opv-caption" font-weight="600" letter-spacing="0.06em">OPERATOR'S VIEW · from patient's right</text>`;
 
   svg.innerHTML = html;
+}
 
-  const readout = document.getElementById('orientReadout');
-  if (readout) readout.textContent = angTxt;
+// ═══ VIEW NAMING — ONE SOURCE OF TRUTH ═══
+// The on-canvas view label and the widget's readout used to be two hand-kept
+// copies of this rule with different constants: lateral at 85° vs 87°, an AP
+// dead-band of 5° vs 3°, a CRA/CAU dead-band of 3° vs 2°. They now share one
+// implementation and one set of constants; `short` picks the widget's
+// space-constrained wording.
+const LATERAL_DEG     = 85;   // |LAO| at which a left-sided view is called lateral
+const LATERAL_MAX_DEG = 95;   // past this, a steep LAO is named by its angle again
+const AP_DEADBAND_DEG = 5;    // |LAO| under this reads simply "AP"
+const CC_DEADBAND_DEG = 3;    // |CRA| under this is not mentioned at all
+
+function viewName(laoRaw, craRaw, short) {
+  // Round ONCE, here, where the angle becomes text — then every threshold below
+  // is tested against the printed number, so the label can never contradict it.
+  const lao = Math.round(laoRaw);
+  const cra = Math.round(craRaw);
+  let lr;
+  if (Math.abs(lao) < AP_DEADBAND_DEG) lr = 'AP';
+  // Two separate bugs, fixed at two different times — both are why this is a
+  // closed band and not an open-ended test.
+  //   Sign: the first version of this rule branched on Math.abs(lao) (and the
+  //   widget's copy on Math.abs(lao) > 87), so RAO 90-100 — the Reverse Spider
+  //   preset sits at RAO 100 — was announced as a LEFT lateral. Fixed earlier
+  //   by testing lao itself; kept here because `lao >= LATERAL_DEG` is signed.
+  //   Magnitude: even after that, the LAO side stayed open-ended, so every
+  //   LAO past 85 read "LATERAL" and LAO 86-120 — the slider goes to 120 —
+  //   lost its angle entirely. LATERAL_MAX_DEG hands the angle back above 95.
+  else if (lao >= LATERAL_DEG && lao <= LATERAL_MAX_DEG) lr = short ? 'LAT' : 'LATERAL';
+  else if (lao > 0) lr = `LAO ${lao}°`;
+  else lr = `RAO ${-lao}°`;
+  let cc;
+  if (Math.abs(cra) < CC_DEADBAND_DEG) cc = '';
+  else if (cra > 0) cc = ` / CRA ${cra}°`;
+  else cc = ` / CAU ${-cra}°`;
+  // Named view — long form only; the widget header has no room for it.
+  if (!short && lao >= 35 && lao <= 55 && cra <= -20 && cra >= -40) return 'LAO CAUDAL "SPIDER"';
+  return lr + cc;
 }
 
 function formatAngleReadout() {
-  const lao = Math.round(liveLao);
-  const cra = Math.round(liveCra);
-  // Sign-aware, like formatViewName below: |LAO| > 87 used to read 'LAT' either way, so an
-  // RAO 90-100 problem-solving view was labelled a left lateral.
-  const lr =
-    Math.abs(lao) < 3 ? 'AP'
-    : lao > 87 ? 'LAT'
-    : lao < -87 ? `RAO ${-lao}°`
-    : lao > 0 ? `LAO ${lao}°`
-    : `RAO ${-lao}°`;
-  const cc =
-    Math.abs(cra) < 2 ? ''
-    : cra > 0 ? ` / CRA ${cra}°`
-    : ` / CAU ${-cra}°`;
-  return lr + cc;
+  return viewName(liveLao, liveCra, true);
 }
 
 // ═══════════════════════════════════════════════════════════
@@ -2177,21 +2467,57 @@ function formatAngleReadout() {
   const widget = document.getElementById('orientWidget');
   const header = document.getElementById('orientHeader');
   const collapse = document.getElementById('orientCollapse');
+  const resetBtn = document.getElementById('orientReset');
   const resize = document.getElementById('orientResize');
   if (!widget || !header || !resize) return;
 
-  // Load saved state
   const SAVE_KEY = 'cathmath_angio_orient_widget';
+  const MIN_W = 160, MAX_W = 600, EDGE = 2;
+  const KEY_STEP = 8, KEY_STEP_BIG = 24;
+
+  function parentBox() {
+    const par = widget.parentElement;
+    return { w: par.clientWidth, h: par.clientHeight };
+  }
+
+  // Force the widget wholly inside its (overflow:hidden) parent. dragMove has
+  // always clamped, but the RESTORE path never did and there was no resize
+  // handler, so a position saved on a 1400 px desktop reopened off-canvas on a
+  // phone: invisible, its drag header unreachable, and persisted. Called on
+  // load, on window resize, and after any programmatic size change.
+  function clampIntoParent() {
+    const box = parentBox();
+    if (!box.w || !box.h) return;
+    const maxW = Math.max(MIN_W, Math.min(MAX_W, box.w - 2 * EDGE));
+    if (widget.offsetWidth > maxW) widget.style.width = maxW + 'px';
+    const maxL = Math.max(EDGE, box.w - widget.offsetWidth - EDGE);
+    const maxT = Math.max(EDGE, box.h - widget.offsetHeight - EDGE);
+    widget.style.left = Math.max(EDGE, Math.min(maxL, widget.offsetLeft)) + 'px';
+    widget.style.top  = Math.max(EDGE, Math.min(maxT, widget.offsetTop)) + 'px';
+  }
+
+  function setWidth(w) {
+    const box = parentBox();
+    const maxW = Math.max(MIN_W, Math.min(MAX_W, (box.w || MAX_W) - 2 * EDGE));
+    widget.style.width = Math.max(MIN_W, Math.min(maxW, w)) + 'px';
+    if (box.w) {
+      const maxL = Math.max(EDGE, box.w - widget.offsetWidth - EDGE);
+      if (widget.offsetLeft > maxL) widget.style.left = maxL + 'px';
+    }
+  }
+
+  // Load saved state (width first — the position clamp depends on it).
   try {
     const saved = JSON.parse(localStorage.getItem(SAVE_KEY) || '{}');
+    if (typeof saved.width === 'number') widget.style.width = Math.max(MIN_W, Math.min(MAX_W, saved.width)) + 'px';
     if (typeof saved.left === 'number')  widget.style.left  = saved.left  + 'px';
     if (typeof saved.top === 'number')   widget.style.top   = saved.top   + 'px';
-    if (typeof saved.width === 'number') widget.style.width = saved.width + 'px';
     if (saved.collapsed) {
       widget.classList.add('collapsed');
       collapse.textContent = '+';
     }
   } catch (e) {}
+  clampIntoParent();
 
   function save() {
     try {
@@ -2203,6 +2529,16 @@ function formatAngleReadout() {
       }));
     } catch (e) {}
   }
+
+  // Re-clamp when the canvas changes size. Deliberately does NOT save: the
+  // desktop position stays in localStorage and is simply clamped for display
+  // on whatever screen the page is currently open on.
+  let reclampQueued = false;
+  window.addEventListener('resize', () => {
+    if (reclampQueued) return;
+    reclampQueued = true;
+    requestAnimationFrame(() => { reclampQueued = false; clampIntoParent(); });
+  });
 
   // ─── Drag (via header) ───
   let dragging = false, dragOffsetX = 0, dragOffsetY = 0;
@@ -2217,80 +2553,124 @@ function formatAngleReadout() {
     const parent = widget.parentElement.getBoundingClientRect();
     const newL = clientX - parent.left - dragOffsetX;
     const newT = clientY - parent.top  - dragOffsetY;
-    const maxL = parent.width  - widget.offsetWidth  - 2;
-    const maxT = parent.height - widget.offsetHeight - 2;
-    widget.style.left = Math.max(2, Math.min(maxL, newL)) + 'px';
-    widget.style.top  = Math.max(2, Math.min(maxT, newT)) + 'px';
+    const maxL = parent.width  - widget.offsetWidth  - EDGE;
+    const maxT = parent.height - widget.offsetHeight - EDGE;
+    widget.style.left = Math.max(EDGE, Math.min(maxL, newL)) + 'px';
+    widget.style.top  = Math.max(EDGE, Math.min(maxT, newT)) + 'px';
   }
-  function dragEnd() { if (dragging) { dragging = false; save(); } }
+  function dragEnd() { if (dragging) { dragging = false; detachTouchMove(); save(); } }
+
+  // ─── Resize (corner handle) ───
+  let resizing = false, resizeStartX = 0, resizeStartW = 0;
+  function resizeStart(clientX) {
+    resizing = true;
+    resizeStartX = clientX;
+    resizeStartW = widget.offsetWidth;
+  }
+  function resizeMove(clientX) {
+    if (!resizing) return;
+    setWidth(resizeStartW + (clientX - resizeStartX));
+  }
+  function resizeEnd() { if (resizing) { resizing = false; detachTouchMove(); save(); } }
+
+  // A non-passive touchmove on document forces the browser to wait for this
+  // handler before EVERY scroll frame anywhere on the page. It used to be
+  // registered twice at init and left there; it is now attached only for the
+  // duration of an actual drag or resize.
+  function onTouchMove(e) {
+    if (!e.touches.length) return;
+    const t = e.touches[0];
+    if (dragging) dragMove(t.clientX, t.clientY);
+    else if (resizing) resizeMove(t.clientX);
+    else return;
+    e.preventDefault();
+  }
+  function attachTouchMove() { document.addEventListener('touchmove', onTouchMove, { passive: false }); }
+  function detachTouchMove() {
+    if (dragging || resizing) return;
+    document.removeEventListener('touchmove', onTouchMove, { passive: false });
+  }
+
+  const onHeaderControl = (target) => target === collapse || target === resetBtn ||
+    (resetBtn && resetBtn.contains(target)) || collapse.contains(target);
 
   // Mouse
   header.addEventListener('mousedown', e => {
-    if (e.target === collapse) return;
+    if (onHeaderControl(e.target)) return;
     dragStart(e.clientX, e.clientY);
     e.preventDefault();
   });
-  document.addEventListener('mousemove', e => dragMove(e.clientX, e.clientY));
-  document.addEventListener('mouseup', dragEnd);
+  document.addEventListener('mousemove', e => { dragMove(e.clientX, e.clientY); resizeMove(e.clientX); });
+  document.addEventListener('mouseup', () => { dragEnd(); resizeEnd(); });
   // Touch
   header.addEventListener('touchstart', e => {
-    if (e.target === collapse) return;
+    if (onHeaderControl(e.target)) return;
     if (!e.touches.length) return;
     const t = e.touches[0];
     dragStart(t.clientX, t.clientY);
+    attachTouchMove();
     e.preventDefault();
   }, { passive: false });
-  document.addEventListener('touchmove', e => {
-    if (!dragging || !e.touches.length) return;
-    const t = e.touches[0];
-    dragMove(t.clientX, t.clientY);
-    e.preventDefault();
-  }, { passive: false });
-  document.addEventListener('touchend', dragEnd);
-  document.addEventListener('touchcancel', dragEnd);
-
-  // ─── Resize (corner handle) ───
-  let resizing = false, resizeStartX = 0, resizeStartY = 0, resizeStartW = 0;
-  function resizeStart(clientX, clientY) {
-    resizing = true;
-    resizeStartX = clientX;
-    resizeStartY = clientY;
-    resizeStartW = widget.offsetWidth;
-  }
-  function resizeMove(clientX, clientY) {
-    if (!resizing) return;
-    const dx = clientX - resizeStartX;
-    const newW = Math.max(160, Math.min(600, resizeStartW + dx));
-    widget.style.width = newW + 'px';
-  }
-  function resizeEnd() { if (resizing) { resizing = false; save(); } }
-
   resize.addEventListener('mousedown', e => {
-    resizeStart(e.clientX, e.clientY);
+    resizeStart(e.clientX);
     e.stopPropagation();
     e.preventDefault();
   });
-  document.addEventListener('mousemove', e => resizeMove(e.clientX, e.clientY));
-  document.addEventListener('mouseup', resizeEnd);
   resize.addEventListener('touchstart', e => {
     if (!e.touches.length) return;
-    const t = e.touches[0];
-    resizeStart(t.clientX, t.clientY);
+    resizeStart(e.touches[0].clientX);
+    attachTouchMove();
     e.stopPropagation();
     e.preventDefault();
   }, { passive: false });
-  document.addEventListener('touchmove', e => {
-    if (!resizing || !e.touches.length) return;
-    const t = e.touches[0];
-    resizeMove(t.clientX, t.clientY);
+  document.addEventListener('touchend', () => { dragEnd(); resizeEnd(); });
+  document.addEventListener('touchcancel', () => { dragEnd(); resizeEnd(); });
+
+  // ─── Keyboard: move with the header focused, resize with the corner focused ───
+  const ARROWS = { ArrowLeft: [-1, 0], ArrowRight: [1, 0], ArrowUp: [0, -1], ArrowDown: [0, 1] };
+  header.addEventListener('keydown', e => {
+    const dir = ARROWS[e.key];
+    if (!dir) return;
+    const box = parentBox();
+    if (!box.w || !box.h) return;
+    const step = e.shiftKey ? KEY_STEP_BIG : KEY_STEP;
+    const maxL = Math.max(EDGE, box.w - widget.offsetWidth - EDGE);
+    const maxT = Math.max(EDGE, box.h - widget.offsetHeight - EDGE);
+    widget.style.left = Math.max(EDGE, Math.min(maxL, widget.offsetLeft + dir[0] * step)) + 'px';
+    widget.style.top  = Math.max(EDGE, Math.min(maxT, widget.offsetTop  + dir[1] * step)) + 'px';
     e.preventDefault();
-  }, { passive: false });
-  document.addEventListener('touchend', resizeEnd);
+    save();
+  });
+  resize.addEventListener('keydown', e => {
+    if (e.key !== 'ArrowLeft' && e.key !== 'ArrowRight') return;
+    const step = (e.shiftKey ? KEY_STEP_BIG : KEY_STEP) * (e.key === 'ArrowRight' ? 1 : -1);
+    setWidth(widget.offsetWidth + step);
+    e.preventDefault();
+    save();
+  });
+
+  // ─── Reset position / size (the persisted bad state needs an exit) ───
+  if (resetBtn) {
+    resetBtn.addEventListener('click', e => {
+      e.stopPropagation();
+      widget.style.left = '';
+      widget.style.top = '';
+      widget.style.width = '';
+      widget.classList.remove('collapsed');
+      collapse.textContent = '−';
+      clampIntoParent();
+      renderOrientationWidget();   // the scene is not drawn while collapsed
+      save();
+    });
+  }
 
   // ─── Collapse / expand ───
-  collapse.addEventListener('click', () => {
+  collapse.addEventListener('click', e => {
+    e.stopPropagation();
     const isCollapsed = widget.classList.toggle('collapsed');
     collapse.textContent = isCollapsed ? '+' : '−';
+    clampIntoParent();
+    if (!isCollapsed) renderOrientationWidget();   // catch up on angles changed while hidden
     save();
   });
 })();
@@ -2298,23 +2678,7 @@ function formatAngleReadout() {
 // VIEW LABELS
 // ═══════════════════════════════════════════════════════════
 function deriveViewName(lao, cra) {
-  const laoAbs = Math.abs(lao);
-  const craAbs = Math.abs(cra);
-  let lr;
-  if (laoAbs < 5) lr = 'AP';
-  // Sign matters: |LAO| > 85 was labelled LATERAL either way, so an RAO 90-100 view read
-  // 'LATERAL' and the Reverse Spider (RAO) read 'LATERAL / CRA 30'.
-  else if (lao > 85) lr = 'LATERAL';
-  else if (lao < -85) lr = `RAO ${Math.round(laoAbs)}°`;
-  else if (lao > 0) lr = `LAO ${Math.round(laoAbs)}°`;
-  else lr = `RAO ${Math.round(laoAbs)}°`;
-  let cc;
-  if (craAbs < 3) cc = '';
-  else if (cra > 0) cc = ` / CRA ${Math.round(craAbs)}°`;
-  else cc = ` / CAU ${Math.round(craAbs)}°`;
-  // Special names
-  if (lao >= 35 && lao <= 55 && cra <= -20 && cra >= -40) return 'LAO CAUDAL "SPIDER"';
-  return lr + cc;
+  return viewName(lao, cra, false);
 }
 
 function updateViewLabel() {
@@ -2325,11 +2689,14 @@ function updateViewLabel() {
 function updateSliderReadouts() {
   const lao = parseInt(document.getElementById('slLao').value);
   const cra = parseInt(document.getElementById('slCra').value);
+  // These are VALUE read-outs for the sliders, not view names: they print the
+  // slider's own integer, and only read AP / 0° at exactly zero. The view NAME
+  // (with its dead-bands) is viewName() — one rule, one place.
   document.getElementById('slLaoVal').textContent =
-    Math.abs(lao) < 3 ? 'AP' :
+    lao === 0 ? 'AP' :
     lao > 0 ? `LAO ${lao}°` : `RAO ${-lao}°`;
   document.getElementById('slCraVal').textContent =
-    Math.abs(cra) < 2 ? '0°' :
+    cra === 0 ? '0°' :
     cra > 0 ? `CRA ${cra}°` : `CAU ${-cra}°`;
 }
 
@@ -2345,31 +2712,47 @@ function updateClinNote(preset) {
 // ═══════════════════════════════════════════════════════════
 // ANIMATION LOOP
 // ═══════════════════════════════════════════════════════════
+// The rAF loop SLEEPS when nothing is moving. It used to re-arm itself
+// unconditionally, so the compositor never idled even on a page that had been
+// static for an hour. Every code path that starts motion goes through
+// startAnim(), which re-arms it.
+let rafQueued = false;
+function scheduleTick() {
+  if (rafQueued) return;
+  rafQueued = true;
+  requestAnimationFrame(tick);
+}
+
 function startAnim(toLao, toCra) {
   targetLao = toLao;
   targetCra = toCra;
   animStart = performance.now();
   animating = true;
+  scheduleTick();
 }
 
 function tick(now) {
-  if (animating) {
-    const u = Math.min(1, (now - animStart) / ANIM_MS);
-    const e = easeOutCubic(u);
-    // Lerp from current live to target
-    if (!tick._from) {
-      tick._from = { lao: liveLao, cra: liveCra };
-    }
-    liveLao = tick._from.lao + (targetLao - tick._from.lao) * e;
-    liveCra = tick._from.cra + (targetCra - tick._from.cra) * e;
-    if (u >= 1) {
-      animating = false;
-      tick._from = null;
-    }
-    render();
-    updateViewLabel();
+  rafQueued = false;
+  if (!animating) return;          // slider input cancels mid-tween — let the loop sleep
+  // Clamp both ends: a rAF timestamp can predate animStart when the frame that
+  // delivers it began before the event handler that started the tween, and a
+  // negative u fed through easeOutCubic overshoots wildly (LAO 110 from a
+  // target of RAO 30).
+  const u = Math.min(1, Math.max(0, (now - animStart) / ANIM_MS));
+  const e = easeOutCubic(u);
+  // Lerp from current live to target
+  if (!tick._from) {
+    tick._from = { lao: liveLao, cra: liveCra };
   }
-  requestAnimationFrame(tick);
+  liveLao = tick._from.lao + (targetLao - tick._from.lao) * e;
+  liveCra = tick._from.cra + (targetCra - tick._from.cra) * e;
+  if (u >= 1) {
+    animating = false;
+    tick._from = null;
+  }
+  render();
+  updateViewLabel();
+  if (animating) scheduleTick();
 }
 
 // ═══════════════════════════════════════════════════════════
@@ -2529,9 +2912,10 @@ try {
 } catch(e) {}
 
 // INIT
-applyPreset('ap-left');
+applyPreset('ap-left');        // arms the tween loop via startAnim()
 updateSliderReadouts();
-requestAnimationFrame(tick);
+render();                      // paint immediately, before the first frame lands
+updateViewLabel();
 
 </script>
 

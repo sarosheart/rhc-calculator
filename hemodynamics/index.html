@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Hemodynamic Waveforms Simulator — Aortic Stenosis, HOCM, Tamponade, Pulmonary Hypertension | CathMath</title>
-<meta name="description" content="Interactive hemodynamic waveform simulator covering 12 lessons: aortic stenosis, mitral stenosis, HOCM, constrictive vs restrictive cardiomyopathy, cardiac tamponade, pulmonary hypertension, RV failure, and more. Free cardiology teaching tool.">
+<meta name="description" content="Interactive cath lab pressure tracings: aortic and mitral stenosis, HOCM, constriction vs restriction, tamponade and pulmonary hypertension. 12 free lessons.">
 <meta name="keywords" content="hemodynamic waveforms, pressure tracings, aortic stenosis, mitral stenosis, HOCM, hypertrophic cardiomyopathy, constrictive pericarditis, restrictive cardiomyopathy, cardiac tamponade, pulmonary hypertension, RV failure, square root sign, pulsus paradoxus, Brockenbrough sign, Kussmaul sign">
 <meta name="author" content="Dr. Saro Avedikian, MD, MPH">
 <meta name="robots" content="index, follow">
@@ -30,7 +30,7 @@
   "description": "Interactive hemodynamic waveform teaching tool with 12 lessons covering valvular disease, cardiomyopathies, tamponade, and pulmonary hypertension.",
   "applicationCategory": "EducationalApplication",
   "operatingSystem": "Web",
-  "offers": {"@type": "Offer", "price": "0"},
+  "offers": {"@type": "Offer", "price": "0", "priceCurrency": "USD"},
   "author": {"@type": "Person", "name": "Dr. Saro Avedikian", "jobTitle": "Cardiology Fellow"}
 }
 </script>
@@ -48,64 +48,273 @@ body {
   color: var(--text);
 }
 
-/* ===== CSS VARIABLES — DARK (default) ===== */
+/* <shared:design-tokens v1> */
+/* GENERATED FROM shared/design-tokens.css BY scripts/sync-shared.mjs — DO NOT EDIT HERE. */
+/* Edit shared/design-tokens.css, then run: node scripts/sync-shared.mjs --write   */
+/* ═══════════════════════════════════════════════════════════════════════════
+   CathMath canonical design tokens — v1
+   SOURCE OF TRUTH. Do not edit the copy inlined in a tool; edit this file and
+   run `node scripts/sync-shared.mjs --write`.
+
+   Theme mechanism (canonical, site-wide):
+     :root      → DARK. Dark is the default, per CLAUDE.md.
+     body.light → LIGHT overrides. The `light` class is added ONLY when
+                  localStorage 'cathmath_dark' === '0'.
+   Tools that also carry `body.dark` rules (echocalc, angio, ap, intracoronary)
+   keep the `dark` class on <body> so those rules still match; the two classes
+   are kept mutually exclusive by the theme toggle.
+
+   Every value below passes WCAG AA (>= 4.5:1) for normal text against its own
+   theme's --bg, and — for the severity trio — against the tinted pill
+   background it is actually painted on. Ratios were measured, not assumed;
+   see shared/design-tokens.md-less note in clinical-constants.json "notes".
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* ───────────────────────────── DARK (default) ───────────────────────────── */
 :root {
-  --bg: #0b0e14;
+  /* surfaces */
+  --bg: #0a1220;
   --bg2: #101520;
   --bg3: #161b26;
-  --panel: #131922;
-  --panel2: #1a2030;
-  --border: rgba(255,255,255,0.08);
-  --border2: rgba(255,255,255,0.12);
-  --text: #c8cdd6;
+  --panel-bg: #131a26;
+  --panel-bg-2: #0f1722;
+  --panel: #131a26;          /* alias of --panel-bg (hemodynamics naming)  */
+  --panel2: #0f1722;         /* alias of --panel-bg-2                      */
+  --card-bg: #131a26;        /* alias (ekg / pvloop / rhc naming)          */
+  --card-hover: #1a2334;
+  --light-bg: #0a1220;       /* legacy alias of --bg (ekg / pvloop / rhc)  */
+  --canvas-bg: #0d141f;
+
+  /* borders */
+  --border: #2a3340;
+  --border2: #3a4453;
+  --border-active: rgba(74,144,217,0.40);
+
+  /* type */
+  --text: #d8dce4;
   --text-hi: #e8ecf2;
-  --text-dim: #6b7a8d;
-  --navy: #0d2240;
+  --text-dim: #9aa3b3;
+  --text-secondary: #9aa3b3; /* alias of --text-dim (pvloop naming)        */
+  --text-muted: #8b95a7;
+
+  /* brand / accent */
+  --navy: #4a90d9;
+  --navy-deep: #1e2740;
+  --navy-card: #0c1f3a;
   --accent: #4a90d9;
+  --accent-glow: rgba(74,144,217,0.15);
+  --blue: #4a90d9;
+  --blue-light: #6eb0f7;
+
+  /* status */
+  --green: #66bb6a;
+  --red: #ef5350;
+  --amber: #ffa726;
+  --green-bg: rgba(102,187,106,0.14);
+  --red-bg: rgba(239,83,80,0.14);
+  --yellow-bg: rgba(255,167,38,0.14);
+
+  /* severity (painted as TEXT on a 15-18% tint of itself) */
+  --severity-mild: #34d399;
+  --severity-mod: #fbbf24;
+  --severity-severe: #f87171;
+  --threshold: #f87171;
+
+  /* controls */
+  --slider-track: #2a3340;
+  --slider-thumb: #4a90d9;
+
+  /* chamber / waveform identity (hemodynamics, pvloop, rhc figures) */
   --ecg-green: #00e676;
   --right-blue: #42a5f5;
   --left-red: #ef5350;
   --clr-ra: #26c6da;
   --clr-rv: #42a5f5;
-  --clr-pa: #ab47bc;
+  --clr-pa: #ce93d8;
   --clr-pcwp: #ec407a;
   --clr-lv: #ef5350;
   --clr-ao: #ffa726;
   --gradient-fill: rgba(255,193,7,0.18);
+  --normal-ghost: rgba(255,255,255,0.55);
+
+  /* PV-loop curve identity */
+  --espvr-color: #66bb6a;
+  --edpvr-color: #ba68c8;
+  --ea-color: #90a4ae;
+  --loop-color: #ff6b6b;
+  --ghost-color: rgba(100,180,255,0.55);
+  --dot-color: #ffeb3b;
+
+  /* angiographic projections */
+  --rao: #8b8ff0;
+  --lao: #ff8a8a;
+  --cra: #2dd4bf;
+  --cau: #fbbf24;
+  --lca: #ff7b7b;
+  --rca: #6eb0f7;
+
+  /* antiarrhythmic classes (ap simulator) */
+  --c-IA: #8b8ff0;
+  --c-IB: #2dd4bf;
+  --c-IC: #fbbf24;
+  --c-II: #f87171;
+  --c-III: #c084fc;
+  --c-IV: #34d399;
+  --c-V:  #94a3b8;
+  --rest: #94a3b8;
+
+  /* cardiac embryology lineages */
+  --fhf: #4a90d9;
+  --shf: #66bb6a;
+  --defect: #ff5c78;
+  --cushion: #ffa726;
+  --septum-1: #64b5f6;
+  --septum-2: #42a5f5;
+
+  /* ECG paper (ekg simulator) */
+  --ekg-bg: #1a1e24;
+  --ekg-minor: #252a32;
+  --ekg-major: #2e3440;
+  --ekg-trace: #00e676;
+  --panel-left-bg: #131a26;
+  --panel-right-bg: #0a1220;
+
+  /* grid + elevation (theme-independent in feel, theme-dependent in value) */
   --grid-minor: rgba(255,255,255,0.04);
   --grid-major: rgba(255,255,255,0.09);
-  --normal-ghost: rgba(255,255,255,0.55);
-  --sidebar-w: 180px;
-  --nav-h: 42px;
-  --header-h: 38px;
-  --controls-h: 54px;
+  --grid-color: rgba(255,255,255,0.04);
+  --shadow-sm: 0 1px 3px rgba(0,0,0,0.40);
+  --shadow-md: 0 2px 8px rgba(0,0,0,0.45);
+  --shadow-lg: 0 4px 16px rgba(0,0,0,0.50);
+  --section-radius: 10px;
 }
 
-/* ===== LIGHT MODE ===== */
+/* ─────────────────────────────── LIGHT ──────────────────────────────────── */
 body.light {
-  --bg: #f0f2f5;
+  /* surfaces */
+  --bg: #f4f6f9;
   --bg2: #e4e8ec;
   --bg3: #dce0e6;
+  --panel-bg: #ffffff;
+  --panel-bg-2: #f9fafc;
   --panel: #ffffff;
-  --panel2: #f6f7f9;
-  --border: rgba(0,0,0,0.10);
-  --border2: rgba(0,0,0,0.16);
+  --panel2: #f9fafc;
+  --card-bg: #ffffff;
+  --card-hover: #eef2f7;
+  --light-bg: #f4f6f9;
+  --canvas-bg: #fafbfd;
+
+  /* borders */
+  --border: #d8dfe8;
+  --border2: #c2ccd8;
+  --border-active: rgba(21,101,192,0.45);
+
+  /* type */
   --text: #1a1a2e;
   --text-hi: #0d0d1a;
-  --text-dim: #6b7280;
+  --text-dim: #5a6478;
+  --text-secondary: #5a6478;
+  --text-muted: #5f6a7d;
+
+  /* brand / accent */
+  --navy: #0d2240;
+  --navy-deep: #091a33;
+  --navy-card: #0c1f3a;
+  --accent: #1565c0;
+  --accent-glow: rgba(21,101,192,0.12);
+  --blue: #1565c0;
+  --blue-light: #4a90d9;
+
+  /* status */
+  --green: #2e7d32;
+  --red: #c62828;
+  --amber: #b45309;
+  --green-bg: #e8f5e9;
+  --red-bg: #fce4ec;
+  --yellow-bg: #fffde7;
+
+  /* severity */
+  --severity-mild: #047857;
+  --severity-mod: #92400e;
+  --severity-severe: #b91c1c;
+  --threshold: #b91c1c;
+
+  /* controls */
+  --slider-track: #e3e7ee;
+  --slider-thumb: #0d2240;
+
+  /* chamber / waveform identity */
   --ecg-green: #2e7d32;
   --right-blue: #1565c0;
   --left-red: #c62828;
-  --clr-ra: #00838f;
+  --clr-ra: #00646e;
   --clr-rv: #1565c0;
   --clr-pa: #7b1fa2;
   --clr-pcwp: #ad1457;
   --clr-lv: #c62828;
-  --clr-ao: #e65100;
+  --clr-ao: #a64500;
   --gradient-fill: rgba(255,152,0,0.22);
+  --normal-ghost: rgba(0,0,0,0.40);
+
+  /* PV-loop curve identity */
+  --espvr-color: #2e7d32;
+  --edpvr-color: #7b1fa2;
+  --ea-color: #546e7a;
+  --loop-color: #0d2240;
+  --ghost-color: rgba(70,140,220,0.55);
+  --dot-color: #c62828;
+
+  /* angiographic projections */
+  --rao: #4f46e5;
+  --lao: #c0392b;
+  --cra: #0f766e;
+  --cau: #92400e;
+  --lca: #a4262c;
+  --rca: #1565c0;
+
+  /* antiarrhythmic classes */
+  --c-IA: #4338ca;
+  --c-IB: #0f766e;
+  --c-IC: #92400e;
+  --c-II: #b91c1c;
+  --c-III: #7e22ce;
+  --c-IV: #047857;
+  --c-V:  #475569;
+  --rest: #475569;
+
+  /* cardiac embryology lineages */
+  --fhf: #1565c0;
+  --shf: #2e7d32;
+  --defect: #c62828;
+  --cushion: #b45309;
+  --septum-1: #1565c0;
+  --septum-2: #0d47a1;
+
+  /* ECG paper */
+  --ekg-bg: #fff5f5;
+  --ekg-minor: #ffdddd;
+  --ekg-major: #ffbbbb;
+  --ekg-trace: #111111;
+  --panel-left-bg: #ffffff;
+  --panel-right-bg: #f4f6f9;
+
+  /* grid + elevation */
   --grid-minor: rgba(0,0,0,0.05);
   --grid-major: rgba(0,0,0,0.12);
-  --normal-ghost: rgba(0,0,0,0.40);
+  --grid-color: rgba(0,0,0,0.04);
+  --shadow-sm: 0 1px 3px rgba(0,0,0,0.06);
+  --shadow-md: 0 2px 8px rgba(0,0,0,0.08);
+  --shadow-lg: 0 4px 16px rgba(0,0,0,0.10);
+  --section-radius: 10px;
+}
+/* </shared:design-tokens> */
+
+/* ===== TOOL-LOCAL LAYOUT GEOMETRY — deliberately NOT shared ===== */
+:root {
+  --sidebar-w: 180px;
+  --nav-h: 42px;
+  --header-h: 38px;
+  --controls-h: 54px;
 }
 
 /* ===== SITE NAV ===== */
@@ -128,7 +337,6 @@ body.light .site-nav { background: #0a1628; color: #fff; }
 .nav-tab:hover { color: rgba(255,255,255,0.85); }
 .nav-tab.active { color: #fff; border-bottom-color: #4a90d9; }
 .nav-right { margin-left: auto; display: flex; align-items: center; gap: 16px; }
-.nav-credit { font-size: 11px; opacity: 0.5; font-weight: 400; }
 .nav-right button {
   background: rgba(255,255,255,0.1); color: #fff;
   border: 1px solid rgba(255,255,255,0.2);
@@ -271,6 +479,9 @@ input[type="range"]::-webkit-slider-thumb {
   color: var(--text-hi);
 }
 .calc-result .val { color: #ffc107; font-size: 15px; }
+/* A refusal must not look like a result: the calculators print this instead of a number when
+   an operand is missing or was entered in the wrong unit. */
+.calc-result .hint { font-size: 11px; font-weight: 500; color: var(--text-dim); }
 .calc-result .sev { font-size: 11px; font-weight: 600; margin-left: 8px; }
 .sev-mild { color: #66bb6a; }
 .sev-mod { color: #ffa726; }
@@ -337,6 +548,12 @@ input[type="range"]::-webkit-slider-thumb {
 .eq-warn { color: #ffa726; }
 .eq-alert { color: #ef5350; }
 
+/* Text alternatives for the two canvases — visible to a screen reader, not on screen. */
+.visually-hidden {
+  position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0;
+  overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0;
+}
+
 /* ===== RESIZE HANDLE ===== */
 .resize-handle {
   height: 6px; cursor: ns-resize; background: var(--border);
@@ -368,14 +585,62 @@ input[type="range"]::-webkit-slider-thumb {
 ::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 3px; }
 ::-webkit-scrollbar-thumb:hover { background: var(--text-dim); }
 
-/* ═══ MOBILE NAV — horizontally scrollable tab bar (7 tabs need to fit on phone) ═══ */
+/* ═══ MOBILE — nav tab bar scrolls; the app stacks ═══════════════════════════════
+   There used to be no mobile layout at all: the 180 px sidebar could not collapse, so a
+   375 px phone got 195 px of canvas (about 1.2 beats at HR 72), and the theme toggle —
+   the page's only one — lived inside the .nav-right block this query used to hide. */
 @media (max-width: 800px) {
   .site-nav { overflow-x: auto; overflow-y: hidden; -webkit-overflow-scrolling: touch; padding: 0 12px; }
   .site-nav::-webkit-scrollbar { display: none; }
   .nav-brand { flex-shrink: 0; margin-right: 14px; font-size: 14px; }
   .nav-tabs { flex-shrink: 0; gap: 0; }
   .nav-tab { flex-shrink: 0; white-space: nowrap; padding: 0 10px; font-size: 11px; }
-  .nav-right { display: none; }
+  .nav-right { flex-shrink: 0; margin-left: 12px; gap: 8px; }
+
+  /* The app stacks: lessons become a horizontal strip above the tracing. */
+  .app-body { flex-direction: column; height: auto; min-height: calc(100vh - var(--nav-h) - var(--header-h)); }
+  .sidebar {
+    width: 100%; min-width: 0; display: flex; flex-direction: row; align-items: stretch;
+    overflow-x: auto; overflow-y: hidden; -webkit-overflow-scrolling: touch;
+    border-right: none; border-bottom: 1px solid var(--border); padding: 0;
+  }
+  .sidebar::-webkit-scrollbar { display: none; }
+  .sidebar-label, .sidebar-sep { display: none; }
+  .lesson-btn {
+    width: auto; flex-shrink: 0; white-space: nowrap; padding: 9px 12px;
+    border-left: none; border-bottom: 3px solid transparent;
+  }
+  .lesson-btn.active { border-left-color: transparent; border-bottom-color: var(--accent); }
+  .main-area { min-height: 60vh; }
+  .canvas-area { min-height: 240px; }
+  .controls-row { padding: 8px 12px; gap: 12px; }
+  .controls-row input[type="range"] { width: 88px !important; }
+  .teaching-panel { padding: 12px 14px; }
+  .tp-grid { grid-template-columns: 1fr; gap: 10px; }
+  #equationsPanel { padding: 16px 14px; }
+}
+
+/* Touch scrubbing must not also pan the page. Scoped to the two canvases and the resize
+   handle, NOT to .canvas-area: #equationsPanel is an absolutely positioned, overflow-y:auto
+   child of .canvas-area, and touch-action:none on the parent stopped a finger scrolling the
+   equations lesson on exactly the phone the mobile work was added for. */
+#ecgCanvas, #waveCanvas, .resize-handle { touch-action: none; }
+#equationsPanel { touch-action: pan-y; }
+
+/* A keyboard user has to be able to see which control has focus. */
+input[type="range"]:focus-visible,
+button:focus-visible,
+input[type="number"]:focus-visible,
+input[type="checkbox"]:focus-visible,
+.seo-section summary:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+/* Someone who asks the OS for less motion gets a static strip (see the init block). */
+@media (prefers-reduced-motion: reduce) {
+  .resize-handle.pulse { animation: none; }
+  .seo-content-body { animation: none; }
 }
 
 /* ═══ Static About section (SEO checklist item 10) ═══ */
@@ -443,8 +708,6 @@ input[type="range"]::-webkit-slider-thumb {
   color: var(--text);
   font-weight: 600;
 }
-body.dark .seo-content-body { background: var(--panel-bg-2); }
-body.dark .seo-content-body p { color: #c4ccda; }
 </style>
 </head>
 <body>
@@ -464,7 +727,7 @@ body.dark .seo-content-body p { color: #c4ccda; }
     <a href="/intracoronary/" class="nav-tab">Intracoronary</a>
   </div>
   <div class="nav-right">
-    <button id="modeToggle" onclick="toggleMode()">Light Mode</button>
+    <button id="modeToggle" onclick="toggleMode()" aria-pressed="false" aria-label="Switch to light mode">Light Mode</button>
   </div>
 </div>
 
@@ -529,8 +792,9 @@ body.dark .seo-content-body p { color: #c4ccda; }
   <!-- MAIN AREA -->
   <div class="main-area">
     <div class="canvas-area" id="canvasArea">
-      <canvas id="ecgCanvas"></canvas>
-      <canvas id="waveCanvas"></canvas>
+      <canvas id="ecgCanvas" role="img" aria-label="ECG lead II rhythm strip, scrolling on the same time base as the pressure tracings below"></canvas>
+      <canvas id="waveCanvas" role="img" aria-labelledby="waveCanvasDesc"></canvas>
+      <p id="waveCanvasDesc" class="visually-hidden">Scrolling invasive pressure tracings for the selected lesson. The teaching panel below the tracing states, in text, every wave and landmark the tracing is drawn to show, and the equations lesson carries the same numbers as calculators.</p>
       <div id="equationsPanel"></div>
     </div>
 
@@ -538,33 +802,33 @@ body.dark .seo-content-body p { color: #c4ccda; }
     <div class="controls-row">
       <div class="ctrl-group">
         <span class="ctrl-label">HR</span>
-        <input type="range" id="hrSlider" min="40" max="140" value="72" style="width:100px" oninput="updateHR(this.value)">
+        <input type="range" id="hrSlider" min="40" max="140" value="72" style="width:100px" aria-label="Heart rate, beats per minute" oninput="updateHR(this.value)">
         <span class="ctrl-val" id="hrVal">72</span>
         <span class="ctrl-label">bpm</span>
       </div>
       <div class="ctrl-group" id="severityGroup" style="display:none">
         <span class="ctrl-label">Severity</span>
-        <input type="range" id="sevSlider" min="0" max="100" value="80" style="width:110px" oninput="updateSeverity(this.value)">
+        <input type="range" id="sevSlider" min="0" max="100" value="80" style="width:110px" aria-label="Disease severity" oninput="updateSeverity(this.value)">
         <span class="ctrl-val" id="sevVal">Severe</span>
       </div>
       <div class="ctrl-group">
-        <button class="trace-tog on" id="pauseBtn" onclick="togglePause()" style="min-width:28px;font-size:13px" title="Pause/Play (Space)">⏸</button>
+        <button class="trace-tog on" id="pauseBtn" onclick="togglePause()" style="min-width:28px;font-size:13px" title="Pause/Play (Space)" aria-label="Pause" aria-pressed="false">⏸</button>
       </div>
       <div class="ctrl-group">
         <span class="ctrl-label">Speed</span>
-        <button class="trace-tog" id="speed25" onclick="setSpeed(25)">25mm/s</button>
-        <button class="trace-tog on" id="speed50" onclick="setSpeed(50)">50mm/s</button>
+        <button class="trace-tog" id="speed25" onclick="setSpeed(25)" aria-pressed="false">25mm/s</button>
+        <button class="trace-tog on" id="speed50" onclick="setSpeed(50)" aria-pressed="true">50mm/s</button>
       </div>
       <div class="ctrl-group">
         <span class="ctrl-label">Traces</span>
-        <div class="trace-toggles" id="traceToggles"></div>
+        <div class="trace-toggles" id="traceToggles" role="group" aria-label="Which pressure tracings are shown"></div>
       </div>
       <div class="ctrl-group" id="pvcGroup" style="display:none">
         <button class="trace-tog" id="pvcBtn" onclick="triggerPVC()" style="background:rgba(255,23,68,0.15);color:#ff1744;border-color:#ff1744">Trigger PVC</button>
       </div>
       <div class="ctrl-group" id="provocationGroup" style="display:none">
         <span class="ctrl-label">Provocation</span>
-        <input type="range" id="provSlider" min="-100" max="100" value="0" style="width:90px" oninput="updateProvocation(this.value)">
+        <input type="range" id="provSlider" min="-100" max="100" value="0" style="width:90px" aria-label="Provocation, from squat or phenylephrine to Valsalva or amyl nitrite" oninput="updateProvocation(this.value)">
         <span class="ctrl-val" id="provVal" style="min-width:60px;font-size:10px">Baseline</span>
       </div>
       <div class="ctrl-group" id="acuteGroup" style="display:none">
@@ -577,7 +841,7 @@ body.dark .seo-content-body p { color: #c4ccda; }
         <button class="trace-tog" id="phCombBtn" onclick="setPHType('combined')" style="font-size:10px">Combined</button>
       </div>
       <div class="ctrl-group" id="respGroup" style="display:none">
-        <button class="trace-tog" id="respBtn" onclick="toggleResp()" style="background:rgba(102,187,106,0.15);color:#66bb6a;border-color:#66bb6a">Respiration</button>
+        <button class="trace-tog" id="respBtn" onclick="toggleResp()" aria-pressed="false" style="background:rgba(102,187,106,0.15);color:#66bb6a;border-color:#66bb6a">Respiration</button>
       </div>
       <div class="ctrl-check" id="compareGroup" style="display:none">
         <input type="checkbox" id="compareNormal" onchange="toggleCompare()">
@@ -600,6 +864,169 @@ body.dark .seo-content-body p { color: #c4ccda; }
 </div>
 
 <script>
+// <shared:analytics v1>
+// GENERATED FROM shared/analytics.js BY scripts/sync-shared.mjs — DO NOT EDIT HERE.
+// Edit shared/analytics.js, then run: node scripts/sync-shared.mjs --write
+// CathMath analytics — GA4, property 555096463, stream G-ZME4G2EYJS.
+// Design and the reasons for every choice: plans/2026-09-21-analytics-design.md
+//
+// THIS BLOCK MUST NEVER BE ABLE TO BREAK A TOOL. It runs first, so it is wrapped whole, and
+// cmTrack() exists as a no-op before anything that can throw is attempted.
+//
+// HOST GUARD. Unless the page is being served from cathmath.org, nothing loads and nothing is
+// sent: not from file://, not from localhost, not in the node vm harness, not in CardioDoc's
+// fixture capture, not from a copy of this page hosted somewhere else. That is what keeps the
+// house rule true — every tool works with zero runtime dependencies and no network. Analytics is
+// an enhancement that exists only on the production host.
+//
+// NOTHING A USER TYPES IS EVER SENT. Parameters are fixed id strings that already exist in the
+// source (module ids, preset ids, drug ids). cmTrack drops any parameter that is not a short
+// string, so a number read from an input cannot leave even if a caller passes one by mistake.
+(function () {
+  var TOOL = 'hemodynamics';
+  var ID = 'G-ZME4G2EYJS';
+  window.cmTrack = function () {};
+  try {
+    var host = String((window.location && window.location.hostname) || '');
+    if (host !== 'cathmath.org' && host !== 'www.cathmath.org') return;
+
+    // Own-traffic flag, as on CardioQFlow: visit once with ?internal=1 (clear with ?internal=0)
+    // and every event from this browser carries traffic_type=internal for a GA4 data filter.
+    var internal = false;
+    try {
+      var q = new URLSearchParams(window.location.search).get('internal');
+      if (q === '1' || q === 'on') window.localStorage.setItem('cathmath_internal', '1');
+      else if (q === '0' || q === 'off') window.localStorage.removeItem('cathmath_internal');
+      internal = window.localStorage.getItem('cathmath_internal') === '1';
+    } catch (e) { internal = false; }
+
+    window.dataLayer = window.dataLayer || [];
+    window.gtag = window.gtag || function () { window.dataLayer.push(arguments); };
+    var base = { tool: TOOL };
+    if (internal) base.traffic_type = 'internal';
+    window.gtag('js', new Date());
+    window.gtag('config', ID, base);           // parameters in config ride on every event, page_view included
+
+    // Injected, never a static <script src>: gtag.js is regenerated by Google constantly, so an
+    // integrity= hash cannot be pinned to it. scripts/lint.mjs DEP-1 allow-lists this one origin
+    // by name rather than failing to notice it.
+    var s = document.createElement('script');
+    s.async = true;
+    s.src = 'https://www.googletagmanager.com/gtag/js?id=' + ID;
+    document.head.appendChild(s);
+
+    var once = {};
+    // cmTrack(name, params, onceKey) — fire-and-forget. onceKey, when given, sends the event at
+    // most once per page load for that key (calc_used: once per module).
+    window.cmTrack = function (name, params, onceKey) {
+      try {
+        if (onceKey) { if (once[onceKey]) return; once[onceKey] = 1; }
+        var p = { tool: TOOL };
+        if (internal) p.traffic_type = 'internal';
+        for (var k in (params || {})) {
+          var v = params[k];
+          if (typeof v === 'string' && v.length > 0 && v.length <= 64) p[k] = v;   // enum ids only
+        }
+        window.gtag('event', String(name), p);
+      } catch (e) { /* analytics must never throw into a tool */ }
+    };
+  } catch (e) { /* blocked, offline, private mode — the tool carries on */ }
+})();
+// </shared:analytics>
+
+// <shared:clinical-constants v1>
+// GENERATED FROM shared/clinical-constants.json BY scripts/sync-shared.mjs — DO NOT EDIT HERE.
+// Edit shared/clinical-constants.json, then run: node scripts/sync-shared.mjs --write
+//
+// CM     — the number. Every computation and every comparison uses THIS, never a literal.
+// CM_TXT — the printed form. Every sentence that states the threshold uses THIS.
+// CM_SRC — the citation. Anything shown to a user as guideline-backed must have a
+//          CM_SRC entry that does NOT begin with "UNSOURCED".
+const CM = Object.freeze({
+  PVR_ULN_WU: 2,                            // PVR upper limit of normal [WU]
+  PVR_ULN_DYNES: 160,                       // PVR upper limit of normal, CGS units [dyn*s*cm^-5]
+  WOOD_UNIT_TO_DYNES: 80,                   // Wood unit conversion [(dyn*s*cm^-5) per WU]
+  MPAP_PH_THRESHOLD: 20,                    // mean PA pressure defining pulmonary hypertension [mmHg]
+  PAWP_PRECAPILLARY_MAX: 15,                // PAWP ceiling for pre-capillary PH [mmHg]
+  AS_SEVERE_VMAX: 4,                        // severe aortic stenosis peak velocity [m/s]
+  AS_SEVERE_MEAN_GRADIENT: 40,              // severe aortic stenosis mean gradient [mmHg]
+  AS_SEVERE_AVA: 1,                         // severe aortic stenosis valve area [cm2]
+  MS_SEVERE_MVA: 1.5,                       // severe mitral stenosis valve area [cm2]
+  MS_SEVERE_PHT: 150,                       // severe mitral stenosis diastolic pressure half-time [ms]
+  MS_MEAN_GRADIENT_NOT_A_CRITERION: true,   // transmitral mean gradient is NOT a severity criterion [boolean]
+  QPQS_BALANCED: 1,                         // Qp/Qs below which net flow is right-to-left [ratio]
+  QPQS_SIGNIFICANT: 1.5,                    // hemodynamically significant left-to-right shunt [ratio]
+  QPQS_LARGE: 2,                            // large left-to-right shunt [ratio]
+  RAP_IVC_NORMAL: 3,                        // RA pressure, IVC <=2.1 cm collapsing >50% [mmHg]
+  RAP_IVC_INTERMEDIATE: 8,                  // RA pressure, discordant IVC size/collapse [mmHg]
+  RAP_IVC_HIGH: 15,                         // RA pressure, IVC >2.1 cm collapsing <50% [mmHg]
+  IVC_DIAMETER_CUTOFF: 2.1,                 // IVC diameter cut-off for the RAP paradigm [cm]
+  GORLIN_CONST_AORTIC: 44.3,                // Gorlin constant, aortic valve [dimensionless]
+  GORLIN_CONST_MITRAL: 37.7,                // Gorlin constant, mitral valve [dimensionless]
+  HB_O2_CAPACITY: 1.36,                     // haemoglobin oxygen-binding capacity [mL O2 per g Hb]
+  FICK_VO2_NOT_ASSUMED: 125,                // assumed VO2 (LaFarge) - use only when measured VO2 is unavailable [mL/min/m2]
+  PAPI_RV_FAILURE: 0.9,                     // PAPi threshold for RV failure after inferior MI [ratio]
+  SVR_NORMAL_LOW: 800,                      // SVR normal range, lower bound [dyn*s*cm^-5]
+  SVR_NORMAL_HIGH: 1200,                    // SVR normal range, upper bound [dyn*s*cm^-5]
+  BERNOULLI_CONST: 4,                       // simplified Bernoulli constant [mmHg per (m/s)^2]
+});
+const CM_TXT = Object.freeze({
+  PVR_ULN_WU: "2 WU",
+  PVR_ULN_DYNES: "160 dynes",
+  WOOD_UNIT_TO_DYNES: "x80",
+  MPAP_PH_THRESHOLD: "mPAP >20 mmHg",
+  PAWP_PRECAPILLARY_MAX: "PAWP <=15 mmHg",
+  AS_SEVERE_VMAX: ">=4 m/s",
+  AS_SEVERE_MEAN_GRADIENT: ">=40 mmHg",
+  AS_SEVERE_AVA: "<=1.0 cm2",
+  MS_SEVERE_MVA: "<=1.5 cm2",
+  MS_SEVERE_PHT: ">=150 ms",
+  MS_MEAN_GRADIENT_NOT_A_CRITERION: "mean gradient is rate-dependent and is not a severity criterion",
+  QPQS_BALANCED: "<1.0 = net right-to-left",
+  QPQS_SIGNIFICANT: ">=1.5",
+  QPQS_LARGE: ">=2.0",
+  RAP_IVC_NORMAL: "3 mmHg (range 0-5)",
+  RAP_IVC_INTERMEDIATE: "8 mmHg (range 5-10)",
+  RAP_IVC_HIGH: "15 mmHg (range 10-20)",
+  IVC_DIAMETER_CUTOFF: "2.1 cm",
+  GORLIN_CONST_AORTIC: "44.3",
+  GORLIN_CONST_MITRAL: "37.7",
+  HB_O2_CAPACITY: "1.36",
+  FICK_VO2_NOT_ASSUMED: "125 mL/min/m2 (assumed)",
+  PAPI_RV_FAILURE: "<0.9",
+  SVR_NORMAL_LOW: "800 dynes (10 WU)",
+  SVR_NORMAL_HIGH: "1200 dynes (15 WU)",
+  BERNOULLI_CONST: "dP = 4V^2",
+});
+const CM_SRC = Object.freeze({
+  PVR_ULN_WU: "2022 ESC/ERS Guidelines for the diagnosis and treatment of pulmonary hypertension (2022)",
+  PVR_ULN_DYNES: "Derived: PVR_ULN_WU (2 WU) x WOOD_UNIT_TO_DYNES (80)",
+  WOOD_UNIT_TO_DYNES: "Unit definition: 1 WU = 1 mmHg/(L/min) = 80 dyn*s*cm^-5",
+  MPAP_PH_THRESHOLD: "2022 ESC/ERS Pulmonary Hypertension Guidelines, haemodynamic definitions table (2022)",
+  PAWP_PRECAPILLARY_MAX: "2022 ESC/ERS Pulmonary Hypertension Guidelines (2022)",
+  AS_SEVERE_VMAX: "2020 ACC/AHA Guideline for the Management of Patients With Valvular Heart Disease, AS staging table (stages C2/D1) (2020)",
+  AS_SEVERE_MEAN_GRADIENT: "2020 ACC/AHA VHD Guideline, AS staging table (2020)",
+  AS_SEVERE_AVA: "2020 ACC/AHA VHD Guideline, AS staging table (2020)",
+  MS_SEVERE_MVA: "2020 ACC/AHA VHD Guideline, MS staging table (stages C and D) (2020)",
+  MS_SEVERE_PHT: "2020 ACC/AHA VHD Guideline, MS staging table (2020)",
+  MS_MEAN_GRADIENT_NOT_A_CRITERION: "2020 ACC/AHA VHD Guideline, footnote to the MS staging table (2020)",
+  QPQS_BALANCED: "Definition: Qp/Qs <1 means pulmonary flow is less than systemic flow",
+  QPQS_SIGNIFICANT: "2025 ACC/AHA/HRS/ISACHD/SCAI Guideline for the Management of Adults With Congenital Heart Disease (2025)",
+  QPQS_LARGE: "UNSOURCED — UNSOURCED in the local Guidelines library",
+  RAP_IVC_NORMAL: "2015 ASE Recommendations for Cardiac Chamber Quantification by Echocardiography in Adults (2015)",
+  RAP_IVC_INTERMEDIATE: "2015 ASE Chamber Quantification (2015)",
+  RAP_IVC_HIGH: "2015 ASE Chamber Quantification (2015)",
+  IVC_DIAMETER_CUTOFF: "2015 ASE Chamber Quantification (2015)",
+  GORLIN_CONST_AORTIC: "Gorlin R, Gorlin SG. Hydraulic formula for the calculation of the area of the stenotic mitral valve, other cardiac valves, and central circulatory shunts. Am Heart J 1951;41:1-29 (1951)",
+  GORLIN_CONST_MITRAL: "Gorlin & Gorlin 1951, as modified for the mitral valve (37.7 = 0.85 x 44.3) (1951)",
+  HB_O2_CAPACITY: "UNSOURCED — UNSOURCED in the local Guidelines library; theoretical maximum is 1.39 mL/g and 1.34-1.36 are the values in common clinical use",
+  FICK_VO2_NOT_ASSUMED: "UNSOURCED — UNSOURCED in the local Guidelines library (LaFarge & Miettinen 1970 nomogram)",
+  PAPI_RV_FAILURE: "Korabathina R et al. The pulmonary artery pulsatility index identifies severe right ventricular dysfunction in acute inferior myocardial infarction. Catheter Cardiovasc Interv 2012;80:593-600 (2012)",
+  SVR_NORMAL_LOW: "UNSOURCED — UNSOURCED in the local Guidelines library - standard cath-lab reference range",
+  SVR_NORMAL_HIGH: "UNSOURCED — UNSOURCED in the local Guidelines library - standard cath-lab reference range",
+  BERNOULLI_CONST: "Simplified Bernoulli equation, dP = 4 x V^2, with the convective term only",
+});
+// </shared:clinical-constants>
 // ════════════════════════════════════════════════════════════════════
 // HEMODYNAMIC WAVEFORMS — Phase 1: Core Engine + Normal + AS + MS
 // ════════════════════════════════════════════════════════════════════
@@ -627,7 +1054,11 @@ let respPhase = 0; // 0→2π continuous respiratory cycle
 const RESP_RATE = 15; // breaths per minute
 let respEnabled = false; // only active for CP/RCM/Tamponade lessons
 
-const DPR = window.devicePixelRatio || 1;
+// Re-read on every resize: devicePixelRatio changes with browser zoom (a primary low-vision
+// accommodation) and when the window is dragged to a non-Retina monitor. Captured once as a
+// const, the backing store stayed sized to the stale ratio and the traces rendered blurry
+// until reload.
+let DPR = window.devicePixelRatio || 1;
 
 // Trace visibility
 let traceVis = {};
@@ -648,13 +1079,41 @@ function gauss(beat, center, width) {
   return Math.exp(-0.5 * Math.pow((beat - center) / width, 2));
 }
 
+// Cyclic gaussian. The beat wraps, so a wave centred near 1.0 (the RA a wave sits at 0.976)
+// has its falling limb on the NEXT beat. The plain gauss() truncated it at the boundary, so
+// generateRA stepped 2.7 mmHg (normal) to 4.3 mmHg (RCM) vertically at every beat boundary.
+// generateECG already did this by hand for the P wave; this is that trick, named.
+function gaussW(beat, center, width) {
+  let d = Math.abs(beat - center);
+  if (d > 0.5) d = 1 - d;
+  return Math.exp(-0.5 * Math.pow(d / width, 2));
+}
+
+// ── Intra-beat timing ────────────────────────────────────────────────────────────
+// Beat fractions the pressure generators are authored in. They are named because three
+// separate places used to assert the same event with different numbers: the aortic valve
+// closed at 0.27 in generateLV and at 0.30 in generateAo (the dicrotic notch IS valve
+// closure, so the notch was inscribed after LV had already fallen 40-68 mmHg below aortic),
+// and the AS gradient window opened at 0.02 in one copy and 0.05 in the other.
+const AV_OPEN = 0.05;    // end of LV isovolumic contraction — aortic valve opens
+const AO_UPEND = 0.08;   // end of the aortic percussion upstroke
+const AV_CLOSE = 0.30;   // aortic valve closure = dicrotic notch = end of ejection
+const MV_OPEN = 0.37;    // mitral valve opens — end of isovolumic relaxation
+
+// Durations that do NOT scale with the cycle. Anything measured in milliseconds on a real
+// tracing has to be drawn in milliseconds here, or it changes with the HR slider: the A2-P2
+// split ran 18-67 ms and the PCWP transmission delay 24-90 ms across the slider before this.
+const A2_P2_SPLIT_MS = 40;      // physiologic split, 30-50 ms at rest
+const PCWP_DELAY_MS = 60;       // PCWP lags LA by 50-150 ms (the lesson text says so)
+const msToBeat = (ms) => ms / (60000 / HR);
+
 function generateRA(beat, p) {
   let v = p.mean;
-  v += p.aAmp * gauss(beat, p.aCenter, p.aWidth);
-  if (p.cAmp) v += p.cAmp * gauss(beat, p.cCenter || 0.12, p.cWidth || 0.02);
-  v -= p.xDepth * gauss(beat, p.xCenter, p.xWidth || 0.04);
-  v += p.vAmp * gauss(beat, p.vCenter, p.vWidth || 0.05);
-  v -= p.yDepth * gauss(beat, p.yCenter, p.yWidth || 0.04);
+  v += p.aAmp * gaussW(beat, p.aCenter, p.aWidth);
+  if (p.cAmp) v += p.cAmp * gaussW(beat, p.cCenter || 0.12, p.cWidth || 0.02);
+  v -= p.xDepth * gaussW(beat, p.xCenter, p.xWidth || 0.04);
+  v += p.vAmp * gaussW(beat, p.vCenter, p.vWidth || 0.05);
+  v -= p.yDepth * gaussW(beat, p.yCenter, p.yWidth || 0.04);
   return Math.max(0, v);
 }
 
@@ -662,7 +1121,21 @@ function generateRV(beat, p) {
   const uEnd = p.upEnd || 0.05;
   const peakT = 0.08;               // Brief peak (more triangular than LV)
   const ejectEnd = 0.315;           // End of RV ejection — must precede the pulmonic notch
-  const descEnd = p.descEnd || 0.30; // End of rapid descent
+  // End of the rapid descent = the early-diastolic nadir, i.e. tricuspid valve opening.
+  // This used to be a bare 0.30, authored when ejection ended earlier than it does now. With
+  // ejectEnd at 0.315 the whole rapid-descent branch below was UNREACHABLE, and the trace
+  // jumped straight from 0.4 x RVSP to the diastolic nadir in one sample: measured 17.97 mmHg
+  // vertically on the PH lesson (RVSP 65 -> 26 down to RVEDP 8) and 5.96 mmHg on TR, at every
+  // heart rate. Anchoring the nadir to ejectEnd instead of to an absolute fraction keeps the
+  // branch reachable no matter where end-ejection is moved to next.
+  //
+  // DOCUMENTED DEVIATION, in the sense this repo means it: RV_DESC_SPAN is a DRAWING
+  // parameter, not a clinical measurement, and no guideline PDF states it. It is set so the
+  // nadir lands just before MV_OPEN (0.36 vs 0.37), which is the one physiologic constraint
+  // anchoring it — the tricuspid valve opens slightly before the mitral. Anyone re-timing
+  // this file against Weissler should re-derive it rather than preserve it.
+  const RV_DESC_SPAN = 0.045;
+  const descEnd = p.descEnd != null ? p.descEnd : ejectEnd + RV_DESC_SPAN;
   const diaEnd = p.diaEnd || 0.88;
   if (beat < uEnd) {
     // Rapid upstroke
@@ -694,38 +1167,44 @@ function generateRV(beat, p) {
   }
 }
 
+// The pulmonic mirror of AO_NOTCH_FRAC / notchLevel(), and the same defect: pulmonic valve
+// closure was asserted at three pressures — ejection ended at 0.45 of the pulse, the notch
+// bump was raised from 0.35 and the diastolic decay restarted from 0.40 — stepping the trace
+// 3.5 mmHg on the PH lesson at every rate. One number, one event.
+const PA_NOTCH_FRAC = 0.40;
+function paNotchLevel(p) { return p.PADP + (p.PASP - p.PADP) * PA_NOTCH_FRAC; }
+
 function generatePA(beat, p) {
   const uEnd = p.upEnd || 0.08;
-  // P2 FOLLOWS A2. The aortic notch is at 0.30; a normal A2-P2 split is 30-50 ms, which at
-  // HR 72 is about 0.04-0.06 of the cycle.
-  const nStart = p.notchStart || 0.345;
-  const nEnd = p.notchEnd || 0.405;
+  // P2 FOLLOWS A2 by a fixed 30-50 ms, not by a fixed fraction of the cycle. Held as a
+  // fraction (0.345 vs the aortic 0.30) the split read 67 ms at HR 40 and 19 ms at HR 140.
+  const split = msToBeat(p.splitMs != null ? p.splitMs : A2_P2_SPLIT_MS);
+  const nStart = AV_CLOSE + split;
+  const nEnd = nStart + (p.notchWidth != null ? p.notchWidth : 0.06);
   if (beat < uEnd) {
     return p.PADP + (beat / uEnd) * (p.PASP - p.PADP);
   } else if (beat < nStart) {
     const t = (beat - uEnd) / (nStart - uEnd);
-    const postPeak = p.PASP - t * (p.PASP - p.PADP) * 0.55;
-    return postPeak;
+    return p.PASP - t * (p.PASP - paNotchLevel(p));
   } else if (beat < nEnd) {
-    const mid = (nStart + nEnd) / 2;
-    const base = p.PADP + (p.PASP - p.PADP) * 0.35;
-    return base + (p.notchAmp || 2) * Math.sin(((beat - nStart) / (nEnd - nStart)) * Math.PI);
+    return paNotchLevel(p) + (p.notchAmp || 2) * Math.sin(((beat - nStart) / (nEnd - nStart)) * Math.PI);
   } else if (beat < 0.85) {
-    const decayStart = p.PADP + (p.PASP - p.PADP) * 0.4;
     const t = (beat - nEnd) / (0.85 - nEnd);
-    return (decayStart - p.PADP) * Math.exp(-(p.decayRate || 2.0) * t) + p.PADP;
+    return (paNotchLevel(p) - p.PADP) * Math.exp(-(p.decayRate || 2.0) * t) + p.PADP;
   }
   return p.PADP;
 }
 
 function generatePCWP(beat, p) {
-  let b = beat - (p.timeDelay || 0.06);
+  // The wedge lags the LA by a transmission time in MILLISECONDS. Stored as a fraction
+  // (0.06) it was 90 ms at HR 40 and 24 ms at HR 140, against the lesson's own "50-150 ms".
+  let b = beat - msToBeat(p.timeDelayMs != null ? p.timeDelayMs : PCWP_DELAY_MS);
   if (b < 0) b += 1;
   let v = p.mean;
-  v += p.aAmp * gauss(b, p.aCenter || 0.08, p.aWidth || 0.04);
-  v -= (p.xDepth || 3) * gauss(b, p.xCenter || 0.20, p.xWidth || 0.05);
-  v += p.vAmp * gauss(b, p.vCenter || 0.42, p.vWidth || 0.06);
-  v -= (p.yDepth || 4) * gauss(b, p.yCenter || 0.58, p.yWidth || p.yWidthVal || 0.05);
+  v += p.aAmp * gaussW(b, p.aCenter || 0.08, p.aWidth || 0.04);
+  v -= (p.xDepth || 3) * gaussW(b, p.xCenter || 0.20, p.xWidth || 0.05);
+  v += p.vAmp * gaussW(b, p.vCenter || 0.42, p.vWidth || 0.06);
+  v -= (p.yDepth || 4) * gaussW(b, p.yCenter || 0.58, p.yWidth || p.yWidthVal || 0.05);
   return Math.max(0, v);
 }
 
@@ -736,28 +1215,40 @@ function generateLV(beat, p) {
   // the aortic valve opened, 58 ms before the aortic peak, opening an 18.8 mmHg separation on
   // the NORMAL lesson. Isovolumic contraction now ends at aortic-valve-opening pressure, LV
   // peaks mid-ejection at the same instant generateAo does, and it falls with the aorta.
-  const uEnd = p.upEnd || 0.05;     // End of isovolumic contraction — aortic valve opens
+  const uEnd = p.upEnd || AV_OPEN;  // End of isovolumic contraction — aortic valve opens
   const peakT = p.peakTime || 0.12; // Mid-ejection peak, matching generateAo's peakTime
-  const ejectEnd = 0.27;            // End of ejection phase
-  const ivrEnd = 0.34;              // End of isovolumic relaxation
-  const rapidFillEnd = 0.44;        // End of rapid early filling
+  const ejectEnd = AV_CLOSE;        // End of ejection = the dicrotic notch generateAo draws
+  const ivrEnd = 0.37;              // End of isovolumic relaxation
+  const rapidFillEnd = 0.47;        // End of rapid early filling
   const diastasisEnd = 0.82;        // End of diastasis (slow fill)
   // Pre-systolic a wave
-  const aWave = (p.aAmp || 3) * gauss(beat, 0.92, 0.03);
+  const aWave = (p.aAmp || 3) * gaussW(beat, 0.92, 0.03);
   const ejectDrop = p.LVSP * 0.15;  // decline from peak to aortic valve closure
-  // LV pressure when the aortic valve opens — i.e. aortic diastolic. Mirrors generateAo's own
-  // 0.85 fraction so the two curves meet rather than crossing.
+  // LV pressure when the aortic valve opens. This IS the paired aortic diastolic pressure, and
+  // every LV parameter set now carries it as `avOpen`. It used to default to 85% of the LV
+  // pulse — which is aortic diastolic only when LVSP = SBP — so in severe AS the valve was
+  // drawn as opening at 173 mmHg against an aortic diastolic of 74.
   const avOpen = p.avOpen != null ? p.avOpen : p.LVEDP + 0.85 * (p.LVSP - p.LVEDP);
+  // First phase of ejection mirrors generateAo's percussion upstroke, which reaches 85% of its
+  // pulse at AO_UPEND. Without this the aorta out-ran the LV by up to 9.5 mmHg (AR) with the
+  // valve open — impossible — because the two curves used different upstroke geometry.
+  const upEnd1 = Math.min(AO_UPEND, uEnd + (peakT - uEnd) * 0.43);
+  const ejectPre = avOpen + (p.LVSP - avOpen) * 0.85;
 
   if (beat < uEnd) {
     // Isovolumic contraction — rises to valve-opening pressure, NOT to peak systolic
     const t = beat / uEnd;
     const rate = p.upRate || 1;
     return p.LVEDP + Math.pow(t, 1 / rate) * (avOpen - p.LVEDP);
+  } else if (beat < upEnd1) {
+    // Early ejection, percussion upstroke — same geometry as the aortic trace
+    const t = (beat - uEnd) / (upEnd1 - uEnd);
+    const rate = p.upRate || 1;
+    return avOpen + Math.pow(t, 1 / rate) * (ejectPre - avOpen);
   } else if (beat < peakT) {
-    // Early ejection — LV continues to rise with the aorta to the mid-ejection peak
-    const t = (beat - uEnd) / (peakT - uEnd);
-    return avOpen + t * (p.LVSP - avOpen);
+    // Late upstroke — LV continues to rise with the aorta to the mid-ejection peak
+    const t = (beat - upEnd1) / (peakT - upEnd1);
+    return ejectPre + t * (p.LVSP - ejectPre);
   } else if (beat < ejectEnd) {
     // Ejection phase — falls with aortic pressure toward valve closure
     const t = (beat - peakT) / (ejectEnd - peakT);
@@ -781,20 +1272,42 @@ function generateLV(beat, p) {
     const rfTarget = p.LVEDP * 0.5;
     const preA = p.LVEDP - (p.aAmp || 3); // just before a-wave
     return rfTarget + t * (preA - rfTarget);
-  } else {
+  } else if (beat < 0.92) {
     // Atrial contraction (a-wave) bump at end-diastole
     return (p.LVEDP - (p.aAmp || 3)) + aWave;
+  } else {
+    // After the a-wave peak the LV sits at the z point until the upstroke — there is no
+    // mechanism that drops LV pressure between atrial contraction and systole. The branch used
+    // to keep following the gaussian down, so the trace fell 3-5 mmHg and then stepped back up
+    // at every beat boundary, exactly where the reader is told to measure LVEDP. gauss() is 1
+    // at its own centre, so holding LVEDP from 0.92 on is continuous at 0.82, 0.92 and 1.0.
+    return p.LVEDP;
   }
 }
 
-function generateAo(beat, p) {
-  const uEnd = p.upEnd || 0.08;
-  const peakT = p.peakTime || 0.12;
-  const nStart = p.notchStart || 0.30;
-  const nEnd = p.notchEnd || 0.36;
+// The pressure the aortic trace sits at when the valve shuts — ONE number, because it is one
+// event. The ejection descent used to end at 0.45 of the pulse, the dicrotic bump was then
+// raised from 0.38 and the diastolic decay started again from 0.42, so the trace stepped
+// twice within 0.06 of a beat: 8.75 mmHg into the notch and 5.0 mmHg out of it on severe AR,
+// where the pulse is widest. The dicrotic wave is still drawn as a bump of notchDepth above
+// this level; what changed is that the branches on either side of it now start and end here.
+const AO_NOTCH_FRAC = 0.42;
+function notchLevel(p) { return p.DBP + (p.SBP - p.DBP) * AO_NOTCH_FRAC; }
 
-  if (beat < uEnd) {
-    const t = beat / uEnd;
+function generateAo(beat, p) {
+  const avOpenT = AV_OPEN;        // the valve is shut before this — aortic pressure is at its nadir
+  const uEnd = p.upEnd || AO_UPEND;
+  const peakT = p.peakTime || 0.12;
+  const nStart = AV_CLOSE;        // the dicrotic notch IS aortic valve closure
+  const nEnd = nStart + 0.06;
+
+  if (beat < avOpenT) {
+    // Isovolumic contraction: the aortic valve has not opened yet, so aortic pressure sits at
+    // its diastolic nadir. It used to start climbing at beat 0, which put aortic pressure
+    // above LV pressure with the valve shut.
+    return p.DBP;
+  } else if (beat < uEnd) {
+    const t = (beat - avOpenT) / (uEnd - avOpenT);
     const rate = p.upRate || 1;
     return p.DBP + Math.pow(t, 1 / rate) * (p.SBP - p.DBP) * 0.85;
   } else if (beat < peakT) {
@@ -804,51 +1317,67 @@ function generateAo(beat, p) {
   } else if (beat < nStart) {
     const t = (beat - peakT) / (nStart - peakT);
     const postPeak = p.SBP;
-    const preNotch = p.DBP + (p.SBP - p.DBP) * 0.45;
-    return postPeak - t * (postPeak - preNotch);
+    return postPeak - t * (postPeak - notchLevel(p));
   } else if (beat < nEnd) {
-    const base = p.DBP + (p.SBP - p.DBP) * 0.38;
     const nd = p.notchDepth != null ? p.notchDepth : 4;
-    return base + nd * Math.sin(((beat - nStart) / (nEnd - nStart)) * Math.PI);
+    return notchLevel(p) + nd * Math.sin(((beat - nStart) / (nEnd - nStart)) * Math.PI);
   } else if (beat < 0.92) {
-    const postNotch = p.DBP + (p.SBP - p.DBP) * 0.42;
     const t = (beat - nEnd) / (0.92 - nEnd);
-    return (postNotch - p.DBP) * Math.exp(-(p.decayRate || 2.5) * t) + p.DBP;
+    return (notchLevel(p) - p.DBP) * Math.exp(-(p.decayRate || 2.5) * t) + p.DBP;
   }
   return p.DBP;
 }
 
 // Spike-and-dome aortic waveform for HOCM
+const DIP_NADIR = 0.18;   // beat fraction of the mid-systolic (SAM) nadir
+const DOME_CREST = 0.35;  // fraction of the dome window at which the dome peaks
+function dipVal(p, dipDepth) { return p.SBP - (p.SBP - p.DBP) * dipDepth; }
 function generateAoHOCM(beat, p) {
-  const spikeEnd = 0.07;    // Initial rapid spike
-  const dipCenter = 0.14;   // Mid-systolic dip (SAM-septal contact)
-  const domeEnd = 0.30;     // Late systolic dome
+  const avOpenT = AV_OPEN;  // valve opens — same instant generateLV leaves isovolumic contraction
+  // The spike used to run from beat 0 and was compressed to 0.05-0.07 when the pre-AV_OPEN
+  // diastolic hold was added. That made the aortic upstroke steeper than the LV's own
+  // percussion upstroke (generateLV reaches ejectPre at AO_UPEND = 0.08), so the aorta
+  // out-ran the LV by up to 17.5 mmHg with the valve open — impossible, and worst exactly
+  // where the lesson is least obstructed. The spike now ends where the LV has finished its
+  // percussion upstroke and the obstruction bump has begun, so Ao <= LV at every sampled
+  // point of ejection across severity 0-100 with or without provocation.
+  const spikeEnd = 0.10;    // initial rapid spike, matched to the LV percussion upstroke
+  const plateauEnd = 0.11;  // brief plateau at the spike peak
+  const domeEnd = AV_CLOSE; // Late systolic dome ends at valve closure
   const dipDepth = p.dipDepth || 0.35; // fraction of spike height lost at dip
 
-  if (beat < spikeEnd) {
+  if (beat < avOpenT) {
+    // Valve still shut — aortic nadir (see generateAo)
+    return p.DBP;
+  } else if (beat < spikeEnd) {
     // Rapid initial upstroke (spike) — before SAM causes obstruction
-    const t = beat / spikeEnd;
+    const t = (beat - avOpenT) / (spikeEnd - avOpenT);
     return p.DBP + t * (p.SBP - p.DBP);
-  } else if (beat < 0.10) {
+  } else if (beat < plateauEnd) {
     // Brief plateau at spike peak
     return p.SBP;
-  } else if (beat < 0.18) {
-    // Mid-systolic dip — SAM contacts septum
-    const t = (beat - 0.10) / 0.08;
-    const dipVal = p.SBP - (p.SBP - p.DBP) * dipDepth;
-    const dip = dipVal + (p.SBP - dipVal) * 4 * t * (1 - t) * (-0.3); // parabolic dip
-    // Use smooth sine dip
-    return p.SBP - (p.SBP - dipVal) * Math.sin(t * Math.PI);
+  } else if (beat < DIP_NADIR) {
+    // Mid-systolic dip — SAM contacts septum. The sine returned to full SBP at the end of
+    // this window and the dome branch then started 0.4 of the dip depth lower, stepping the
+    // trace 4.8 mmHg at beat 0.18. A raised cosine ENDS at the nadir, so the dome starts
+    // where the dip finished.
+    const t = (beat - plateauEnd) / (DIP_NADIR - plateauEnd);
+    return p.SBP - (p.SBP - dipVal(p, dipDepth)) * (0.5 - 0.5 * Math.cos(t * Math.PI));
   } else if (beat < domeEnd) {
-    // Late systolic dome — partial recovery
-    const t = (beat - 0.18) / (domeEnd - 0.18);
-    const dipVal = p.SBP - (p.SBP - p.DBP) * dipDepth;
-    const domeHeight = dipVal + (p.SBP - dipVal) * 0.6; // dome doesn't reach full spike
-    return domeHeight - t * (domeHeight - (p.DBP + (p.SBP - p.DBP) * 0.3));
+    // Late systolic dome — partial recovery, then fall to aortic valve closure
+    const t = (beat - DIP_NADIR) / (domeEnd - DIP_NADIR);
+    const nadir = dipVal(p, dipDepth);
+    const domeHeight = nadir + (p.SBP - nadir) * 0.6; // dome doesn't reach full spike
+    const postSys = p.DBP + (p.SBP - p.DBP) * 0.28;   // the level the dicrotic region holds
+    if (t < DOME_CREST) {
+      const u = t / DOME_CREST;
+      return nadir + (domeHeight - nadir) * (0.5 - 0.5 * Math.cos(u * Math.PI));
+    }
+    const u = (t - DOME_CREST) / (1 - DOME_CREST);
+    return domeHeight - (domeHeight - postSys) * (0.5 - 0.5 * Math.cos(u * Math.PI));
   } else if (beat < 0.36) {
-    // Dicrotic region (minimal notch in HOCM)
-    const base = p.DBP + (p.SBP - p.DBP) * 0.28;
-    return base;
+    // Dicrotic region (minimal notch in HOCM) — the dome now ends on this level
+    return p.DBP + (p.SBP - p.DBP) * 0.28;
   } else if (beat < 0.90) {
     // Diastolic decay
     const postSys = p.DBP + (p.SBP - p.DBP) * 0.28;
@@ -870,33 +1399,55 @@ function generateLVHOCM(beat, p) {
   return baseP;
 }
 
+// ECG landmarks in MILLISECONDS, not in fractions of the cycle. Held as fractions, the drawn
+// QRS was 70 ms wide at HR 40 and 20 ms at HR 140 and the PR interval ran 256 ms to 73 ms —
+// on the one trace the tool offers as the timing reference. Every value below is the ms
+// equivalent of the old HR-72 fraction, so the default view is unchanged, EXCEPT the QRS
+// widths, which were scaled up to put the complex in the normal 80-100 ms band.
+const ECG_MS = Object.freeze({
+  R_CENTER: 60,   // R peak, ms after the start of the drawn beat (0.072 x 833 ms)
+  Q_OFFSET: -17,  // Q trough, ms relative to R
+  S_OFFSET: 22,   // S trough, ms relative to R
+  Q_SIGMA: 13,
+  R_SIGMA: 20,
+  S_SIGMA: 17,
+  P_SIGMA: 18,    // 0.022 x 833
+  T_SIGMA: 29,    // 0.035 x 833
+  PR: 160,        // P peak to R peak; normal PR is 120-200 ms
+  QT_BAZETT: 380, // QT = 380 ms x sqrt(RR in seconds)
+  // A PVC is wide by definition — the lesson calls it a "wide bizarre QRS" — so its complex
+  // spans about 200 ms from onset to offset, and like the sinus beat it keeps that width at
+  // every rate (measured: 93 ms sinus vs 230 ms PVC, unchanged from HR 40 to HR 140).
+  PVC_R: 70, PVC_PRE: -45, PVC_DOWN: 55, PVC_NOTCH: 95, PVC_T: 180,
+  PVC_SIGMA: 26, PVC_T_SIGMA: 45,
+});
+
 function generateECG(beat, p) {
   let v = 0;
   const hr = p.HR || 72;
+  const rrMs = 60000 / hr;
+  const f = (ms) => ms / rrMs;            // ms -> fraction of THIS beat
+  const wrap = (x) => ((x % 1) + 1) % 1;
+  const rC = f(ECG_MS.R_CENTER);
   const isPVC = p.isPVC;
   if (isPVC) {
-    // PVC: no P wave, wide bizarre QRS, discordant T
-    v -= 0.10 * gauss(beat, 0.03, 0.010);
-    v += 0.60 * gauss(beat, 0.05, 0.018);
-    v -= 0.90 * gauss(beat, 0.08, 0.016);
-    v += 0.15 * gauss(beat, 0.10, 0.012);
-    v += 0.35 * gauss(beat, 0.18, 0.040);
+    // PVC: no P wave, wide bizarre QRS (the whole point is that it is WIDE), discordant T
+    v -= 0.10 * gaussW(beat, wrap(rC + f(ECG_MS.PVC_PRE)), f(ECG_MS.PVC_SIGMA * 0.7));
+    v += 0.60 * gaussW(beat, rC, f(ECG_MS.PVC_SIGMA));
+    v -= 0.90 * gaussW(beat, wrap(rC + f(ECG_MS.PVC_DOWN)), f(ECG_MS.PVC_SIGMA * 0.9));
+    v += 0.15 * gaussW(beat, wrap(rC + f(ECG_MS.PVC_NOTCH)), f(ECG_MS.PVC_SIGMA * 0.6));
+    v += 0.35 * gaussW(beat, wrap(rC + f(ECG_MS.PVC_T)), f(ECG_MS.PVC_T_SIGMA));
     return v;
   }
-  // P wave — placed at 0.88 (end of previous cycle) for proper PR interval
-  // Wrap-around Gaussian: compute shortest distance accounting for beat boundary
-  const pCenter = 0.88;
-  const pDist = Math.min(Math.abs(beat - pCenter), Math.abs(beat - pCenter + 1), Math.abs(beat - pCenter - 1));
-  v += 0.22 * Math.exp(-0.5 * Math.pow(pDist / 0.022, 2));
+  // P wave — one PR interval before the R peak, wrapping into the previous drawn cycle
+  v += 0.22 * gaussW(beat, wrap(rC - f(ECG_MS.PR)), f(ECG_MS.P_SIGMA));
   // QRS
-  v -= 0.06 * gauss(beat, 0.065, 0.005); // Q
-  v += 1.0 * gauss(beat, 0.072, 0.008);  // R
-  v -= 0.18 * gauss(beat, 0.085, 0.007); // S
-  // T wave — asymmetric, center shifts with HR (Bazett-like)
-  const rrSec = 60 / hr;
-  const qtFrac = 0.38 * Math.sqrt(rrSec) / rrSec;
-  const tCenter = 0.072 + qtFrac * 0.7;
-  v += 0.25 * gauss(beat, Math.min(tCenter, 0.42), 0.035);
+  v -= 0.06 * gaussW(beat, wrap(rC + f(ECG_MS.Q_OFFSET)), f(ECG_MS.Q_SIGMA));
+  v += 1.0 * gaussW(beat, rC, f(ECG_MS.R_SIGMA));
+  v -= 0.18 * gaussW(beat, wrap(rC + f(ECG_MS.S_OFFSET)), f(ECG_MS.S_SIGMA));
+  // T wave — QT from Bazett, T peak at ~70% of QT after the R peak
+  const qtMs = ECG_MS.QT_BAZETT * Math.sqrt(rrMs / 1000);
+  v += 0.25 * gaussW(beat, wrap(rC + f(qtMs * 0.7)), f(ECG_MS.T_SIGMA));
   return v;
 }
 
@@ -908,8 +1459,15 @@ const NORMAL_PARAMS = {
   ra: { mean: 4, aAmp: 3, aCenter: 0.976, aWidth: 0.05, cAmp: 0.5, cCenter: 0.14, cWidth: 0.025, xDepth: 2.5, xCenter: 0.22, xWidth: 0.055, vAmp: 2.5, vCenter: 0.44, vWidth: 0.07, yDepth: 2, yCenter: 0.60, yWidth: 0.055 },
   rv: { RVSP: 25, RVEDP: 4, platDrop: 2, diaRise: 1.5 },
   pa: { PASP: 25, PADP: 10, decayRate: 2.0, notchAmp: 2 },
-  pcwp: { mean: 9, aAmp: 4, aWidth: 0.05, vAmp: 5, vWidth: 0.07, xDepth: 2.5, xWidth: 0.06, yDepth: 3, yWidth: 0.06, timeDelay: 0.06 },
-  lv: { LVSP: 120, LVEDP: 10, aAmp: 3, upRate: 1, diaMin: 2 },
+  pcwp: { mean: 9, aAmp: 4, aWidth: 0.05, vAmp: 5, vWidth: 0.07, xDepth: 2.5, xWidth: 0.06, yDepth: 3, yWidth: 0.06 },
+  // avOpen = the paired aortic diastolic pressure: the LV pressure at which the aortic valve
+  // opens. Carried on every LV parameter set so generateLV never has to guess it.
+  // peakTime is carried explicitly, even though it equals generateLV's own default, because
+  // lerpObj copies a key that exists only in the TARGET object at full value even at t = 0.
+  // Without it the AS LV jumped straight to peakTime 0.16 and the AR LV to 0.11 at severity 0
+  // while their paired aortic traces were still peaking at 0.12 — which is what left a
+  // 3.0 mmHg (AS) and 0.9 mmHg (AR) aorta-over-LV crossing with the valve open.
+  lv: { LVSP: 120, LVEDP: 10, aAmp: 3, upRate: 1, diaMin: 2, avOpen: 80, peakTime: 0.12 },
   ao: { SBP: 120, DBP: 80, upRate: 1, peakTime: 0.12, notchDepth: 4, decayRate: 2.5 }
 };
 
@@ -928,29 +1486,32 @@ function lerpObj(a, b, t) {
 const AS_MILD =   { SBP: 130, DBP: 78, upRate: 0.7, peakTime: 0.16, notchDepth: 3, decayRate: 2.5 };
 const AS_MOD =    { SBP: 115, DBP: 76, upRate: 0.45, peakTime: 0.20, notchDepth: 1.5, decayRate: 2.5 };
 const AS_SEVERE = { SBP: 100, DBP: 74, upRate: 0.28, peakTime: 0.25, notchDepth: 0.5, decayRate: 2.5 };
-const AS_LV_MILD =   { LVSP: 140, LVEDP: 12, aAmp: 3, upRate: 1, diaMin: 2 };
-const AS_LV_MOD =    { LVSP: 165, LVEDP: 15, aAmp: 4, upRate: 1, diaMin: 2 };
-const AS_LV_SEVERE = { LVSP: 200, LVEDP: 20, aAmp: 5, upRate: 1, diaMin: 3 };
+// avOpen tracks the paired aortic DBP, and peakTime tracks the paired aortic peakTime: the AS
+// lesson prints "late systolic peak (more severe = later peak)" and the LV used to peak at 0.12
+// while its own aortic trace peaked at 0.25.
+const AS_LV_MILD =   { LVSP: 140, LVEDP: 12, aAmp: 3, upRate: 1, diaMin: 2, avOpen: 78, peakTime: 0.16 };
+const AS_LV_MOD =    { LVSP: 165, LVEDP: 15, aAmp: 4, upRate: 1, diaMin: 2, avOpen: 76, peakTime: 0.20 };
+const AS_LV_SEVERE = { LVSP: 200, LVEDP: 20, aAmp: 5, upRate: 1, diaMin: 3, avOpen: 74, peakTime: 0.25 };
 
 // MS severity presets
-const MS_MILD_PCWP =   { mean: 12, aAmp: 6, vAmp: 7, xDepth: 3, yDepth: 3, yWidthVal: 0.06, timeDelay: 0.06 };
-const MS_MOD_PCWP =    { mean: 18, aAmp: 8, vAmp: 8, xDepth: 3, yDepth: 2.5, yWidthVal: 0.07, timeDelay: 0.06 };
-const MS_SEVERE_PCWP = { mean: 25, aAmp: 12, vAmp: 10, xDepth: 2, yDepth: 2, yWidthVal: 0.08, timeDelay: 0.06 };
+const MS_MILD_PCWP =   { mean: 12, aAmp: 6, vAmp: 7, xDepth: 3, yDepth: 3, yWidthVal: 0.06 };
+const MS_MOD_PCWP =    { mean: 18, aAmp: 8, vAmp: 8, xDepth: 3, yDepth: 2.5, yWidthVal: 0.07 };
+const MS_SEVERE_PCWP = { mean: 25, aAmp: 12, vAmp: 10, xDepth: 2, yDepth: 2, yWidthVal: 0.08 };
 
 // MR severity presets (PCWP with V waves)
-const MR_MILD_PCWP =   { mean: 12, aAmp: 5, vAmp: 12, xDepth: 3, yDepth: 5, yWidthVal: 0.05, timeDelay: 0.06 };
-const MR_MOD_PCWP =    { mean: 16, aAmp: 5, vAmp: 22, xDepth: 3, yDepth: 6, yWidthVal: 0.045, timeDelay: 0.06 };
-const MR_SEV_PCWP =    { mean: 22, aAmp: 5, vAmp: 38, xDepth: 2, yDepth: 8, yWidthVal: 0.04, timeDelay: 0.06 };
+const MR_MILD_PCWP =   { mean: 12, aAmp: 5, vAmp: 12, xDepth: 3, yDepth: 5, yWidthVal: 0.05 };
+const MR_MOD_PCWP =    { mean: 16, aAmp: 5, vAmp: 22, xDepth: 3, yDepth: 6, yWidthVal: 0.045 };
+const MR_SEV_PCWP =    { mean: 22, aAmp: 5, vAmp: 38, xDepth: 2, yDepth: 8, yWidthVal: 0.04 };
 // Chronic MR: compliant LA absorbs volume → modest V waves
-const MR_CHRONIC_PCWP = { mean: 18, aAmp: 6, vAmp: 16, xDepth: 3, yDepth: 5, yWidthVal: 0.05, timeDelay: 0.06 };
+const MR_CHRONIC_PCWP = { mean: 18, aAmp: 6, vAmp: 16, xDepth: 3, yDepth: 5, yWidthVal: 0.05 };
 
 // AR severity presets
 const AR_MILD_AO =   { SBP: 135, DBP: 72, upRate: 1, peakTime: 0.11, notchDepth: 3, decayRate: 2.8 };
 const AR_MOD_AO =    { SBP: 150, DBP: 60, upRate: 1.1, peakTime: 0.10, notchDepth: 1.5, decayRate: 3.5 };
 const AR_SEV_AO =    { SBP: 170, DBP: 45, upRate: 1.2, peakTime: 0.09, notchDepth: 0.3, decayRate: 4.5 };
-const AR_MILD_LV =   { LVSP: 135, LVEDP: 12, aAmp: 3, upRate: 1, diaMin: 2 };
-const AR_MOD_LV =    { LVSP: 150, LVEDP: 16, aAmp: 4, upRate: 1, diaMin: 3 };
-const AR_SEV_LV =    { LVSP: 170, LVEDP: 22, aAmp: 5, upRate: 1, diaMin: 4 };
+const AR_MILD_LV =   { LVSP: 135, LVEDP: 12, aAmp: 3, upRate: 1, diaMin: 2, avOpen: 72, peakTime: 0.11 };
+const AR_MOD_LV =    { LVSP: 150, LVEDP: 16, aAmp: 4, upRate: 1.1, diaMin: 3, avOpen: 60, peakTime: 0.10 };
+const AR_SEV_LV =    { LVSP: 170, LVEDP: 22, aAmp: 5, upRate: 1.2, diaMin: 4, avOpen: 45, peakTime: 0.09 };
 
 // TR severity presets (RA with CV waves)
 const TR_MILD_RA =   { mean: 6, aAmp: 3.5, aCenter: 0.956, aWidth: 0.035, cAmp: 0.8, cCenter: 0.12, cWidth: 0.02, xDepth: 1.5, xCenter: 0.18, vAmp: 5, vCenter: 0.35, vWidth: 0.07, yDepth: 3, yCenter: 0.55 };
@@ -961,9 +1522,9 @@ const TR_SEV_RA =    { mean: 16, aAmp: 2, aCenter: 0.956, aWidth: 0.035, cAmp: 4
 const HOCM_MILD_AO = { SBP: 115, DBP: 75, dipDepth: 0.15 };
 const HOCM_MOD_AO =  { SBP: 110, DBP: 72, dipDepth: 0.28 };
 const HOCM_SEV_AO =  { SBP: 100, DBP: 70, dipDepth: 0.40 };
-const HOCM_MILD_LV = { LVSP: 145, LVEDP: 14, aAmp: 4, upRate: 1, diaMin: 3, gradient: 30 };
-const HOCM_MOD_LV =  { LVSP: 170, LVEDP: 18, aAmp: 5, upRate: 1, diaMin: 3, gradient: 55 };
-const HOCM_SEV_LV =  { LVSP: 200, LVEDP: 22, aAmp: 6, upRate: 1, diaMin: 4, gradient: 80 };
+const HOCM_MILD_LV = { LVSP: 145, LVEDP: 14, aAmp: 4, upRate: 1, diaMin: 3, gradient: 30, avOpen: 75 };
+const HOCM_MOD_LV =  { LVSP: 170, LVEDP: 18, aAmp: 5, upRate: 1, diaMin: 3, gradient: 55, avOpen: 72 };
+const HOCM_SEV_LV =  { LVSP: 200, LVEDP: 22, aAmp: 6, upRate: 1, diaMin: 4, gradient: 80, avOpen: 70 };
 
 function getSeverityT() {
   return severity / 100;
@@ -988,6 +1549,44 @@ function getASParams() {
   return { ao, lv };
 }
 
+// ── Rate dependence of the mitral gradient ───────────────────────────────────────
+// Isovolumic contraction and isovolumic relaxation are rate-invariant and LVET follows
+// Weissler, so the diastolic filling period shortens FASTER than the cycle does. Gorlin
+// rearranged gives the gradient as (flow / (37.7 x MVA x DFP))^2, so the drawn gradient has
+// to rise with heart rate — the lesson's own pearl says it doubles with tachycardia, and the
+// HR slider used to change the shaded gradient by exactly zero.
+const IVC_MS = 60;    // isovolumic contraction, roughly rate-invariant
+const IVRT_MS = 80;   // isovolumic relaxation time, roughly rate-invariant
+const MS_REF_HR = 72; // the rate the PCWP presets are authored at
+// ONE ceiling, in mmHg, and it is CLINICAL: the mean left atrial pressure. Past it the patient
+// is in flash pulmonary oedema, not on a slider. The teaching text states this number, so it
+// must stay the number the mean is actually held to.
+//
+// There is deliberately NO drawing cap on the peak. A second constant, MS_LA_PEAK_CEILING = 50,
+// lived here for one pass (2026-09-20) on the premise that a v wave of 51.9 mmHg ran off the
+// top of a 50 mmHg axis. It does not: drawWaveforms takes its axis from computeAutoScale(),
+// which re-derives the top from the visible traces on every frame plus 12 % headroom, and
+// falls back to LESSONS.ms.scale only when nothing is visible. Measured in a browser at the
+// worst case (severity 100, HR 100) the wedge peak sits well inside the canvas with or without
+// the LV trace. The cap was therefore doing only harm: it subtracted the a/v wave height from
+// the MEAN, a clinical number the pearl prints, holding it to 38 instead of 40 at severity 100.
+const MS_LA_MEAN_CEILING = 40;
+
+// Seconds of diastolic filling per minute at a given heart rate.
+function dfpPerMinute(hr) {
+  const rr = 60000 / hr;
+  const lvet = 413 - 1.7 * hr;                                   // Weissler
+  const dfp = Math.max(40, rr - IVC_MS - lvet - IVRT_MS);        // ms per beat
+  return dfp * hr / 1000;
+}
+
+// Gradient multiplier vs the authored rate. Flow per unit filling time scales as
+// 1/DFP-per-minute, and the gradient as its square.
+function msGradientFactor(hr) {
+  const k = dfpPerMinute(MS_REF_HR) / dfpPerMinute(hr);
+  return k * k;
+}
+
 function getMSParams() {
   const t = getSeverityT();
   let pcwp;
@@ -998,7 +1597,38 @@ function getMSParams() {
   } else {
     pcwp = lerpObj(MS_MOD_PCWP, MS_SEVERE_PCWP, (t - 0.66) / 0.34);
   }
-  return { pcwp, lv: NORMAL_PARAMS.lv };
+  // Raise the LA pressure above the LV diastolic plateau by the rate factor. The plateau is
+  // the level generateLV holds through diastasis (half of LVEDP), so what scales is the
+  // gradient itself, not the whole trace.
+  const lv = NORMAL_PARAMS.lv;
+  const lvDiastolic = lv.LVEDP * 0.5;
+  const raised = lvDiastolic + (pcwp.mean - lvDiastolic) * msGradientFactor(HR);
+  const mean = Math.min(MS_LA_MEAN_CEILING, raised);
+  pcwp = { ...pcwp, mean };
+  return { pcwp, lv };
+}
+
+// The MS pearls print live, HR-dependent values and the text tells the reader to drag the HR
+// slider — but updateHR was not one of the six callers of updateTeaching, so both numbers
+// stayed frozen at whatever they were when the lesson was opened while the shaded gradient
+// moved underneath them. These helpers are the single source for that text, and
+// refreshMSRateText() re-renders only the two spans, so an HR drag does not wipe the typed
+// inputs in the Gorlin MVA card that shares the panel.
+function msMeanPearlHTML() {
+  return `${Math.round(getMSParams().pcwp.mean)} mmHg`;
+}
+
+function msRatePearlHTML() {
+  return `DFP is <strong>${dfpPerMinute(HR).toFixed(1)} s/min</strong> at ${HR} bpm vs `
+       + `${dfpPerMinute(MS_REF_HR).toFixed(1)} s/min at ${MS_REF_HR}, so the gradient scales `
+       + `×<strong>${msGradientFactor(HR).toFixed(2)}</strong>`;
+}
+
+function refreshMSRateText() {
+  const meanEl = document.getElementById('msMeanPearl');
+  if (meanEl) meanEl.innerHTML = msMeanPearlHTML();
+  const rateEl = document.getElementById('msRatePearl');
+  if (rateEl) rateEl.innerHTML = msRatePearlHTML();
 }
 
 let mrAcute = true; // toggle for acute vs chronic MR
@@ -1073,7 +1703,7 @@ function getHOCMParams() {
     lv = lerpObj(HOCM_MILD_LV, HOCM_MILD_LV, 0);
     const s = t / 0.33;
     ao = lerpObj({ SBP: 125, DBP: 78, dipDepth: 0.05 }, HOCM_MILD_AO, s);
-    lv = lerpObj({ LVSP: 130, LVEDP: 12, aAmp: 3, upRate: 1, diaMin: 2, gradient: 15 }, HOCM_MILD_LV, s);
+    lv = lerpObj({ LVSP: 130, LVEDP: 12, aAmp: 3, upRate: 1, diaMin: 2, gradient: 15, avOpen: 78 }, HOCM_MILD_LV, s);
   } else if (t < 0.66) {
     const s = (t - 0.33) / 0.33;
     ao = lerpObj(HOCM_MILD_AO, HOCM_MOD_AO, s);
@@ -1186,9 +1816,9 @@ const TAMP_PARAMS = {
 let phType = 'pre'; // 'pre', 'post', 'combined'
 
 const PH_PRE = {
-  pa: { PASP: 65, PADP: 30, upEnd: 0.07, notchStart: 0.34, notchEnd: 0.40, notchAmp: 3, decayRate: 1.8 },
+  pa: { PASP: 65, PADP: 30, upEnd: 0.07, notchAmp: 3, decayRate: 1.8 },
   rv: { RVSP: 65, RVEDP: 8, upEnd: 0.06 },
-  pcwp: { mean: 12, aAmp: 5, vAmp: 6, xDepth: 3, yDepth: 4, timeDelay: 0.06 },
+  pcwp: { mean: 12, aAmp: 5, vAmp: 6, xDepth: 3, yDepth: 4 },
   ra: { mean: 8, aAmp: 3.5, aCenter: 0.956, aWidth: 0.04, cAmp: 0.8, cCenter: 0.13, cWidth: 0.02,
         xDepth: 2, xCenter: 0.18, xWidth: 0.045,
         vAmp: 2.5, vCenter: 0.40, vWidth: 0.06,
@@ -1196,9 +1826,9 @@ const PH_PRE = {
 };
 
 const PH_POST = {
-  pa: { PASP: 50, PADP: 25, upEnd: 0.08, notchStart: 0.345, notchEnd: 0.41, notchAmp: 2.5, decayRate: 2.0 },
+  pa: { PASP: 50, PADP: 25, upEnd: 0.08, notchAmp: 2.5, decayRate: 2.0 },
   rv: { RVSP: 50, RVEDP: 12, upEnd: 0.06 },
-  pcwp: { mean: 24,   /* PVR must land <= 2 WU for ISOLATED post-capillary */ aAmp: 7, vAmp: 8, xDepth: 2, yDepth: 3, timeDelay: 0.06 },
+  pcwp: { mean: 24,   /* PVR must land <= 2 WU for ISOLATED post-capillary */ aAmp: 7, vAmp: 8, xDepth: 2, yDepth: 3 },
   ra: { mean: 10, aAmp: 4, aCenter: 0.956, aWidth: 0.04, cAmp: 0.8, cCenter: 0.13, cWidth: 0.02,
         xDepth: 2, xCenter: 0.18, xWidth: 0.045,
         vAmp: 3, vCenter: 0.40, vWidth: 0.06,
@@ -1206,9 +1836,9 @@ const PH_POST = {
 };
 
 const PH_COMBINED = {
-  pa: { PASP: 70, PADP: 35, upEnd: 0.07, notchStart: 0.34, notchEnd: 0.40, notchAmp: 3.5, decayRate: 1.6 },
+  pa: { PASP: 70, PADP: 35, upEnd: 0.07, notchAmp: 3.5, decayRate: 1.6 },
   rv: { RVSP: 70, RVEDP: 14, upEnd: 0.06 },
-  pcwp: { mean: 22, aAmp: 7, vAmp: 8, xDepth: 2, yDepth: 3, timeDelay: 0.06 },
+  pcwp: { mean: 22, aAmp: 7, vAmp: 8, xDepth: 2, yDepth: 3 },
   ra: { mean: 12, aAmp: 4.5, aCenter: 0.956, aWidth: 0.04, cAmp: 0.8, cCenter: 0.13, cWidth: 0.02,
         xDepth: 2, xCenter: 0.18, xWidth: 0.045,
         vAmp: 3, vCenter: 0.40, vWidth: 0.06,
@@ -1359,12 +1989,16 @@ const LESSONS = {
         { id: 'ao', label: 'Ao', color: '#ffa726',          gen: (b) => generateAo(b, ao) },
       ];
     },
-    gradient: function(beat) {
-      const { ao, lv } = getASParams();
+    // gradientParams() is called ONCE per frame and handed to gradient(); the gradient used to
+    // rebuild its severity-interpolated parameter objects inside the per-pixel loop.
+    gradientParams: function() { return getASParams(); },
+    gradient: function(beat, gp) {
+      const { ao, lv } = gp || getASParams();
       const lvP = generateLV(beat, lv);
       const aoP = generateAo(beat, ao);
-      // Only shade during systole when LV > Ao
-      if (beat > 0.02 && beat < 0.32 && lvP > aoP) return { top: aoP, bottom: lvP };
+      // Shade only while the aortic valve is open — the isovolumic window carries no
+      // transvalvular gradient. One window, one pair of constants (see AV_OPEN / AV_CLOSE).
+      if (beat > AV_OPEN && beat < AV_CLOSE && lvP > aoP) return { top: aoP, bottom: lvP };
       return null;
     },
     normalTraces: [
@@ -1415,19 +2049,21 @@ const LESSONS = {
         { id: 'pcwp', label: 'PCWP', color: 'var(--clr-pcwp)', gen: (b) => generatePCWP(b, pcwp) },
       ];
     },
-    gradient: function(beat) {
-      const { pcwp, lv } = getMSParams();
+    gradientParams: function() { return getMSParams(); },
+    gradient: function(beat, gp) {
+      const { pcwp, lv } = gp || getMSParams();
       const lvP = generateLV(beat, lv);
       const pcwpP = generatePCWP(beat, pcwp);
-      // Diastolic gradient: shade when PCWP > LV in diastole
-      if (beat > 0.38 && pcwpP > lvP) return { top: lvP, bottom: pcwpP };
+      // Diastolic gradient: shade when PCWP > LV after the mitral valve opens
+      if (beat > MV_OPEN && pcwpP > lvP) return { top: lvP, bottom: pcwpP };
       return null;
     },
     normalTraces: [
       { id: 'pcwp_n', label: 'PCWP (normal)', color: 'var(--normal-ghost)', gen: (b) => generatePCWP(b, NORMAL_PARAMS.pcwp) },
     ],
     defaultOn: ['lv', 'pcwp'],
-    scale: { min: 0, max: 40, step: 5 },
+    // Fallback only: computeAutoScale() replaces this whenever any trace is visible.
+    scale: { min: 0, max: 50, step: 5 },
     hasSeverity: true,
     hasCompare: true,
     teaching: function() {
@@ -1436,23 +2072,22 @@ const LESSONS = {
       if (t > 0.66) { label = 'Severe'; cls = 'sev-sev'; }
       else if (t > 0.33) { label = 'Moderate'; cls = 'sev-mod'; }
 
-      const { pcwp } = getMSParams();
       return `
         <h3>Mitral Stenosis <span class="tag">Lesson 3</span></h3>
         <div class="tp-grid">
           <ul class="tp-pearls">
-            <li>Current: <strong class="${cls}">${label}</strong> — PCWP mean ≈ <strong>${Math.round(pcwp.mean)} mmHg</strong></li>
+            <li>Current: <strong class="${cls}">${label}</strong> — PCWP mean ≈ <strong id="msMeanPearl">${msMeanPearlHTML()}</strong></li>
             <li><strong>Gradient shading</strong> (gold) = diastolic PCWP-LV pressure difference</li>
             <li><strong>Prominent a wave</strong> (forceful atrial contraction vs stenotic valve)</li>
             <li><strong>Slow y descent</strong> = impaired LA emptying (pathognomonic)</li>
             <li>PCWP overestimates true LA gradient by 2-3 mmHg (time delay)</li>
-            <li>Gradient <strong>increases with tachycardia</strong> (shorter DFP)</li>
-            <li>MVA &le;1.5 cm² = severe MS (&le;1.0 = very severe); mean gradient typically &gt;5–10 mmHg, but rate-dependent and not a severity criterion</li>
+            <li>Gradient <strong>increases with tachycardia</strong> — drag the HR slider: <span id="msRatePearl">${msRatePearlHTML()}</span></li>
+            <li>MVA &le;1.5 cm² = severe MS (2020 ACC/AHA stage C/D — there is no &ldquo;very severe&rdquo; tier); mean gradient typically &gt;5–10 mmHg, but rate-dependent and not a severity criterion</li>
             <li>In AFib: loss of a wave, variable diastolic filling — average multiple beats</li>
           </ul>
           <div class="tp-body">
             <p>The <span class="highlight">diastolic gradient</span> between PCWP and LV persists throughout diastole in significant MS. Normally, PCWP equalizes with LV diastolic rapidly after y descent.</p>
-            <p style="margin-top:6px"><strong>Exercise hemodynamics:</strong> Gradient doubles with tachycardia because DFP shortens more than proportionally. This unmasks occult MS.</p>
+            <p style="margin-top:6px"><strong>Exercise hemodynamics:</strong> the gradient roughly doubles by HR ~110 because isovolumic contraction and relaxation are rate-invariant, so diastolic filling time shortens faster than the cycle does (Gorlin rearranged: ΔP ∝ [flow / (37.7 · MVA · DFP)]²). This unmasks occult MS. The <em>mean</em> left atrial pressure is capped at ${MS_LA_MEAN_CEILING} mmHg — beyond that the patient is in flash pulmonary oedema, not on a slider. The a and v waves ride on top of that mean, so the wedge <em>peak</em> reads higher than the cap.</p>
             ${getGorlinMVACalcHTML()}
           </div>
         </div>`;
@@ -1607,12 +2242,14 @@ const LESSONS = {
         { id: 'ao', label: 'Ao', color: '#ffa726',          gen: (b) => generateAoHOCM(b, ao) },
       ];
     },
-    gradient: function(beat) {
-      const isPost = pvcState === 'post';
-      const { ao, lv } = isPost ? getHOCMPostPVCParams() : getHOCMParams();
+    gradientParams: function() {
+      return pvcState === 'post' ? getHOCMPostPVCParams() : getHOCMParams();
+    },
+    gradient: function(beat, gp) {
+      const { ao, lv } = gp || (pvcState === 'post' ? getHOCMPostPVCParams() : getHOCMParams());
       const lvP = generateLVHOCM(beat, lv);
       const aoP = generateAoHOCM(beat, ao);
-      if (beat > 0.05 && beat < 0.32 && lvP > aoP) return { top: aoP, bottom: lvP };
+      if (beat > AV_OPEN && beat < AV_CLOSE && lvP > aoP) return { top: aoP, bottom: lvP };
       return null;
     },
     normalTraces: [
@@ -1665,10 +2302,12 @@ const LESSONS = {
     traces: function() {
       const p = CP_PARAMS;
       return [
-        // Kussmaul: RA mean fails to fall — and here rises — with inspiration. Without this the
-        // pearl printed below the trace describes a sign the trace never shows. applyRespMod
-        // already carries the sign convention (negative amplitude = rises on inspiration).
-        { id: 'ra', label: 'RA', color: 'var(--clr-ra)', gen: (b) => generateRA(b, { ...p.ra, mean: applyRespMod(p.ra.mean, -3) }) },
+        // Kussmaul: RA mean fails to fall — and here rises — with inspiration. applyRespMod
+        // returns baseP + respAmp at inspiration (mod = -1), so a POSITIVE amplitude is the
+        // one that rises on inspiration — the same convention respRV: +10 already relies on.
+        // This was -3, which drew the NORMAL inspiratory fall (23 -> 17) under a pearl and a
+        // comparison table that both promise Kussmaul present.
+        { id: 'ra', label: 'RA', color: 'var(--clr-ra)', gen: (b) => generateRA(b, { ...p.ra, mean: applyRespMod(p.ra.mean, +3) }) },
         { id: 'rv', label: 'RV', color: 'var(--clr-rv)', gen: (b) => generateVent_DipPlateau(b, { ...p.rv, SP: applyRespMod(p.rv.SP, p.respRV) }) },
         { id: 'lv', label: 'LV', color: 'var(--clr-lv)', gen: (b) => generateVent_DipPlateau(b, { ...p.lv, SP: applyRespMod(p.lv.SP, p.respLV) }) },
       ];
@@ -1961,12 +2600,12 @@ function buildEquationsPanel() {
         <div class="eq-mini-calc">
           <div class="mc-title">Quick Calculator</div>
           <div class="mc-row">
-            <label>Hb (g/dL)</label><input type="number" id="eqFickHb" value="14" step="0.1" oninput="calcFick()">
-            <label>BSA (m²)</label><input type="number" id="eqFickBSA" value="1.9" step="0.1" oninput="calcFick()">
+            <label>Hb (g/dL)</label><input aria-label="Hb (g/dL)" type="number" id="eqFickHb" value="14" step="0.1" oninput="calcFick()">
+            <label>BSA (m²)</label><input aria-label="BSA (m²)" type="number" id="eqFickBSA" value="1.9" step="0.1" oninput="calcFick()">
           </div>
           <div class="mc-row">
-            <label>SaO₂ (%)</label><input type="number" id="eqFickSaO2" value="98" step="1" oninput="calcFick()">
-            <label>SvO₂ (%)</label><input type="number" id="eqFickSvO2" value="65" step="1" oninput="calcFick()">
+            <label>SaO₂ (%)</label><input aria-label="SaO₂ (%)" type="number" id="eqFickSaO2" value="98" step="1" oninput="calcFick()">
+            <label>SvO₂ (%)</label><input aria-label="SvO₂ (%)" type="number" id="eqFickSvO2" value="65" step="1" oninput="calcFick()">
           </div>
           <div class="mc-result" id="eqFickResult">CO = — &nbsp; CI = —</div>
         </div>
@@ -1995,12 +2634,12 @@ function buildEquationsPanel() {
         <div class="eq-mini-calc">
           <div class="mc-title">Quick Calculator</div>
           <div class="mc-row">
-            <label>SaO₂ (%)</label><input type="number" id="eqQpSaO2" value="98" step="1" oninput="calcQpQs()">
-            <label>SvO₂ (%)</label><input type="number" id="eqQpSvO2" value="65" step="1" oninput="calcQpQs()">
+            <label>SaO₂ (%)</label><input aria-label="SaO₂ (%)" type="number" id="eqQpSaO2" value="98" step="1" oninput="calcQpQs()">
+            <label>SvO₂ (%)</label><input aria-label="SvO₂ (%)" type="number" id="eqQpSvO2" value="65" step="1" oninput="calcQpQs()">
           </div>
           <div class="mc-row">
-            <label>SpvO₂ (%)</label><input type="number" id="eqQpSpvO2" value="98" step="1" oninput="calcQpQs()">
-            <label>SpaO₂ (%)</label><input type="number" id="eqQpSpaO2" value="75" step="1" oninput="calcQpQs()">
+            <label>SpvO₂ (%)</label><input aria-label="SpvO₂ (%)" type="number" id="eqQpSpvO2" value="98" step="1" oninput="calcQpQs()">
+            <label>SpaO₂ (%)</label><input aria-label="SpaO₂ (%)" type="number" id="eqQpSpaO2" value="75" step="1" oninput="calcQpQs()">
           </div>
           <div class="mc-result" id="eqQpQsResult">Qp/Qs = —</div>
         </div>
@@ -2031,18 +2670,18 @@ function buildEquationsPanel() {
         <div class="eq-mini-calc">
           <div class="mc-title">Quick Calculator</div>
           <div class="mc-row">
-            <label>CO (L/min)</label><input type="number" id="eqGorCO" value="5.0" step="0.1" oninput="calcGorlin()">
-            <label>HR</label><input type="number" id="eqGorHR" value="72" step="1" oninput="calcGorlin()">
+            <label>CO (L/min)</label><input aria-label="CO (L/min)" type="number" id="eqGorCO" value="5.0" step="0.1" oninput="calcGorlin()">
+            <label>HR</label><input aria-label="HR" type="number" id="eqGorHR" value="72" step="1" oninput="calcGorlin()">
           </div>
           <div class="mc-row">
-            <label>SEP (sec)</label><input type="number" id="eqGorSEP" value="0.32" step="0.01" oninput="calcGorlin()">
-            <label>Mean ΔP</label><input type="number" id="eqGorGrad" value="45" step="1" oninput="calcGorlin()">
-            <label>Peak-to-peak ΔP</label><input type="number" id="eqGorPeak" value="70" step="1" oninput="calcGorlin()">
+            <label>SEP (sec)</label><input aria-label="SEP (sec)" type="number" id="eqGorSEP" value="0.32" step="0.01" oninput="calcGorlin()">
+            <label>Mean ΔP</label><input aria-label="Mean ΔP" type="number" id="eqGorGrad" value="45" step="1" oninput="calcGorlin()">
+            <label>Peak-to-peak ΔP</label><input aria-label="Peak-to-peak ΔP" type="number" id="eqGorPeak" value="70" step="1" oninput="calcGorlin()">
           </div>
           <div class="mc-result" id="eqGorlinResult">AVA = —</div>
         </div>
         <div class="eq-interp">
-          <strong>Severe AS:</strong> <span class="eq-alert">AVA &lt;1.0 cm²</span> &nbsp;|&nbsp; <strong>Severe MS:</strong> <span class="eq-alert">MVA &lt;1.5 cm²</span><br>
+          <strong>Severe AS:</strong> <span class="eq-alert">AVA &le;1.0 cm²</span> &nbsp;|&nbsp; <strong>Severe MS:</strong> <span class="eq-alert">MVA &le;1.5 cm²</span><br>
           Gorlin underestimates area in low-flow states. Use dobutamine stress echo to confirm.
         </div>
       </div>
@@ -2073,18 +2712,18 @@ function buildEquationsPanel() {
         <div class="eq-mini-calc">
           <div class="mc-title">Quick Calculator</div>
           <div class="mc-row">
-            <label>MAP</label><input type="number" id="eqResMAP" value="90" step="1" oninput="calcResistance()">
-            <label>RAP</label><input type="number" id="eqResRAP" value="5" step="1" oninput="calcResistance()">
-            <label>CO</label><input type="number" id="eqResCO" value="5.0" step="0.1" oninput="calcResistance()">
+            <label>MAP</label><input aria-label="MAP" type="number" id="eqResMAP" value="90" step="1" oninput="calcResistance()">
+            <label>RAP</label><input aria-label="RAP" type="number" id="eqResRAP" value="5" step="1" oninput="calcResistance()">
+            <label>CO</label><input aria-label="CO" type="number" id="eqResCO" value="5.0" step="0.1" oninput="calcResistance()">
           </div>
           <div class="mc-row">
-            <label>mPAP</label><input type="number" id="eqResPAP" value="15" step="1" oninput="calcResistance()">
-            <label>PCWP</label><input type="number" id="eqResPCWP" value="10" step="1" oninput="calcResistance()">
+            <label>mPAP</label><input aria-label="mPAP" type="number" id="eqResPAP" value="15" step="1" oninput="calcResistance()">
+            <label>PCWP</label><input aria-label="PCWP" type="number" id="eqResPCWP" value="10" step="1" oninput="calcResistance()">
           </div>
           <div class="mc-result" id="eqResResult">SVR = — &nbsp; PVR = —</div>
         </div>
         <div class="eq-interp">
-          <strong>SVR normal:</strong> <span class="eq-norm">800–1200 dynes</span> (10–15 WU) &nbsp;|&nbsp; <strong>PVR normal:</strong> <span class="eq-norm">&lt;240 dynes</span> (&lt;3 WU)<br>
+          <strong>SVR normal:</strong> <span class="eq-norm">800–1200 dynes</span> (10–15 WU) &nbsp;|&nbsp; <strong>PVR normal:</strong> <span class="eq-norm" id="eqPvrNormText">&lt;160 dynes</span> (&lt;2 WU)<br>
           PVR >2 WU with mPAP >20 = pre-capillary PH (2022 ESC/ERS).
         </div>
       </div>
@@ -2103,20 +2742,20 @@ function buildEquationsPanel() {
           <strong>"How much diastolic driving gradient remains."</strong><br>
           In severe AR, LVEDP rises toward AoDBP, shrinking the gradient that drives coronary perfusion.<br>
           The index normalizes this to systolic pressure.<br>
-          <span class="eq-tip">Measured at end-diastole. A low ARI predicts need for surgery.</span>
+          <span class="eq-tip">Measured at end-diastole, immediately after valve implant (Sinning, JACC 2012).</span>
         </div>
         <div class="eq-mini-calc">
           <div class="mc-title">Quick Calculator</div>
           <div class="mc-row">
-            <label>AoDBP</label><input type="number" id="eqARIdbp" value="60" step="1" oninput="calcARI()">
-            <label>LVEDP</label><input type="number" id="eqARIlvedp" value="15" step="1" oninput="calcARI()">
-            <label>AoSBP</label><input type="number" id="eqARIsbp" value="140" step="1" oninput="calcARI()">
+            <label>AoDBP</label><input aria-label="AoDBP" type="number" id="eqARIdbp" value="60" step="1" oninput="calcARI()">
+            <label>LVEDP</label><input aria-label="LVEDP" type="number" id="eqARIlvedp" value="15" step="1" oninput="calcARI()">
+            <label>AoSBP</label><input aria-label="AoSBP" type="number" id="eqARIsbp" value="140" step="1" oninput="calcARI()">
           </div>
           <div class="mc-result" id="eqARIResult">ARI = —</div>
         </div>
         <div class="eq-interp">
-          ARI <strong class="eq-norm">>0.25</strong> = mild–moderate &nbsp;|&nbsp; <strong class="eq-alert">≤0.25</strong> = severe AR (surgery indicated)<br>
-          Correlates with angiographic grade. Low ARI = equalization → impaired coronary flow.
+          <strong>Post-TAVR measure</strong> (Sinning et al., JACC 2012). ARI <strong class="eq-norm">≥25%</strong> = no significant paravalvular leak &nbsp;|&nbsp; <strong class="eq-alert">&lt;25%</strong> = significant leak, associated with higher 1-year mortality.<br>
+          It is <strong>not</strong> a severity grade for native chronic AR and <strong>not</strong> a surgical indication — neither the 2020 ACC/AHA nor the 2025 ESC valvular guideline contains it. Native AR is graded by echo (vena contracta, EROA, regurgitant volume, holodiastolic flow reversal) plus LV size and EF.
         </div>
       </div>
 
@@ -2157,85 +2796,141 @@ function buildEquationsPanel() {
 }
 
 // ── Equation mini-calculators ────────────────────────────────────
+//
+// INPUT DISCIPLINE. `parseFloat(el.value) || 0` substitutes a hidden zero for a blank field,
+// and every calculator in this panel then computed from a number the user never supplied:
+// clearing CO printed "AVA = 0.00 cm²" in alert-red, and clearing MAP printed a confident
+// "SVR = -160 dynes". num() returns null for anything non-finite, and each calculator refuses
+// rather than prints. This is CathMath's own convention — guard the inputs, not the outputs.
+function num(id) {
+  const el = document.getElementById(id);
+  if (!el) return null;
+  const v = parseFloat(el.value);
+  return Number.isFinite(v) ? v : null;
+}
+const allGiven = (...vals) => vals.every(v => v !== null);
+const allPositive = (...vals) => vals.every(v => v !== null && v > 0);
+
+// ── Gorlin, written ONCE ─────────────────────────────────────────
+// There were two implementations of this equation in this one file (plus rhc_calculator.html
+// and worksheets/gorlin_worksheet.html), and only one of them had been hardened. Both cards
+// now call this function; each renders the result into its own node with its own vocabulary.
+//
+// `period` is the flow period in seconds PER BEAT — SEP for the aortic valve, DFP for the
+// mitral valve. Every cath lab and echo machine reports ejection time in MILLISECONDS, and
+// entering 320 instead of 0.32 used to produce a confident critical valve area.
+const GORLIN_PERIOD_MAX = 1.0;   // s/beat — anything above this is a unit error, not a patient
+function gorlinValveArea(co, hr, period, meanGrad, constant) {
+  if (!allGiven(co, hr, period, meanGrad)) {
+    return { ok: false, refusal: 'enter CO, HR, period and mean gradient' };
+  }
+  if (!allPositive(co, hr, period, meanGrad)) {
+    return { ok: false, refusal: 'CO, HR, period and mean gradient must all be greater than zero' };
+  }
+  if (period > GORLIN_PERIOD_MAX) {
+    return { ok: false, refusal: 'period is SECONDS per beat (about 0.25–0.45 s) — that looks like milliseconds' };
+  }
+  if (period * hr > 60) {
+    return { ok: false, refusal: 'period × HR exceeds 60 s/min — the valve cannot be open longer than the minute' };
+  }
+  return { ok: true, value: (co * 1000) / (constant * hr * period * Math.sqrt(meanGrad)) };
+}
+// Hakki is CO / sqrt(PEAK-TO-PEAK gradient), and is only valid at HR 60–100.
+function hakkiValveArea(co, peakGrad) {
+  if (!allPositive(co, peakGrad)) return null;
+  return co / Math.sqrt(peakGrad);
+}
 
 function calcFick() {
-  const hb = parseFloat(document.getElementById('eqFickHb').value) || 0;
-  const bsa = parseFloat(document.getElementById('eqFickBSA').value) || 0;
-  const saO2 = parseFloat(document.getElementById('eqFickSaO2').value) || 0;
-  const svO2 = parseFloat(document.getElementById('eqFickSvO2').value) || 0;
-  const vo2 = 125 * bsa;
-  const caO2 = 1.36 * hb * saO2 / 100;
-  const cvO2 = 1.36 * hb * svO2 / 100;
+  const hb = num('eqFickHb'), bsa = num('eqFickBSA'), saO2 = num('eqFickSaO2'), svO2 = num('eqFickSvO2');
+  const out = document.getElementById('eqFickResult');
+  if (!allPositive(hb, bsa) || !allGiven(saO2, svO2)) { out.innerHTML = 'CO = — &nbsp; CI = — <span style="font-size:10px;color:var(--text-dim)">enter Hb, BSA, SaO₂ and SvO₂</span>'; return; }
+  const vo2 = CM.FICK_VO2_NOT_ASSUMED * bsa;
+  const caO2 = CM.HB_O2_CAPACITY * hb * saO2 / 100;
+  const cvO2 = CM.HB_O2_CAPACITY * hb * svO2 / 100;
   const avDiff = caO2 - cvO2;
-  if (avDiff <= 0 || bsa <= 0) { document.getElementById('eqFickResult').innerHTML = 'CO = — &nbsp; CI = —'; return; }
+  if (avDiff <= 0) { out.innerHTML = 'CO = — &nbsp; CI = — <span style="font-size:10px;color:var(--text-dim)">SaO₂ must exceed SvO₂</span>'; return; }
   const co = vo2 / (avDiff * 10);
   const ci = co / bsa;
   let cls = ci >= 2.5 ? 'eq-norm' : ci >= 2.2 ? 'eq-warn' : 'eq-alert';
-  document.getElementById('eqFickResult').innerHTML =
+  out.innerHTML =
     `CO = <strong>${co.toFixed(1)}</strong> L/min &nbsp;|&nbsp; CI = <strong class="${cls}">${ci.toFixed(1)}</strong> L/min/m² &nbsp;<span style="font-size:10px;color:var(--text-dim)">(VO₂ assumed ${Math.round(vo2)})</span>`;
 }
 
 function calcQpQs() {
-  const saO2 = parseFloat(document.getElementById('eqQpSaO2').value) || 0;
-  const svO2 = parseFloat(document.getElementById('eqQpSvO2').value) || 0;
-  const spvO2 = parseFloat(document.getElementById('eqQpSpvO2').value) || 0;
-  const spaO2 = parseFloat(document.getElementById('eqQpSpaO2').value) || 0;
+  const saO2 = num('eqQpSaO2'), svO2 = num('eqQpSvO2'), spvO2 = num('eqQpSpvO2'), spaO2 = num('eqQpSpaO2');
+  const out = document.getElementById('eqQpQsResult');
+  if (!allGiven(saO2, svO2, spvO2, spaO2)) { out.innerHTML = 'Qp/Qs = — <span style="font-size:10px;color:var(--text-dim)">enter all four saturations</span>'; return; }
   const den = spvO2 - spaO2;
-  if (den <= 0) { document.getElementById('eqQpQsResult').innerHTML = 'Qp/Qs = —'; return; }
+  if (den <= 0) { out.innerHTML = 'Qp/Qs = — <span style="font-size:10px;color:var(--text-dim)">pulmonary vein sat must exceed PA sat</span>'; return; }
   const ratio = (saO2 - svO2) / den;
   let interp, cls;
   // Same bands as the RHC calculator and Echo Calc — one Qp/Qs scale across the site.
-  if (ratio < 1.0)       { interp = 'R→L shunt'; cls = 'eq-alert'; }
-  else if (ratio < 1.5)  { interp = 'No significant shunt'; cls = 'eq-norm'; }
-  else if (ratio < 2.0)  { interp = 'Significant L→R shunt'; cls = 'eq-warn'; }
-  else                   { interp = 'Large L→R shunt — surgical threshold'; cls = 'eq-alert'; }
-  document.getElementById('eqQpQsResult').innerHTML =
+  if (ratio < CM.QPQS_BALANCED)        { interp = 'R→L shunt'; cls = 'eq-alert'; }
+  else if (ratio < CM.QPQS_SIGNIFICANT){ interp = 'No significant shunt'; cls = 'eq-norm'; }
+  else if (ratio < CM.QPQS_LARGE)      { interp = 'Significant L→R shunt'; cls = 'eq-warn'; }
+  else                                 { interp = 'Large L→R shunt — surgical threshold'; cls = 'eq-alert'; }
+  out.innerHTML =
     `Qp/Qs = <strong>${ratio.toFixed(2)}</strong> &nbsp;<span class="${cls}" style="font-size:11px">${interp}</span>`;
 }
 
 function calcGorlin() {
-  const co = (parseFloat(document.getElementById('eqGorCO').value) || 0) * 1000; // mL/min
-  const hr = parseFloat(document.getElementById('eqGorHR').value) || 0;
-  const sep = parseFloat(document.getElementById('eqGorSEP').value) || 0;
-  const grad = parseFloat(document.getElementById('eqGorGrad').value) || 0;   // MEAN — Gorlin
-  const peak = parseFloat(document.getElementById('eqGorPeak').value) || 0;   // PEAK-TO-PEAK — Hakki
-  if (hr <= 0 || sep <= 0 || grad <= 0) { document.getElementById('eqGorlinResult').innerHTML = 'AVA = —'; return; }
-  const ava = co / (44.3 * hr * sep * Math.sqrt(grad));
-  // Hakki is CO / sqrt(peak-to-peak gradient). It used to be handed the mean, which is why
-  // this card and the AS lesson's calculator printed different areas for the same patient.
-  const hakki = peak > 0 ? (co / 1000) / Math.sqrt(peak) : null;
-  let cls = ava < 1.0 ? 'eq-alert' : ava < 1.5 ? 'eq-warn' : 'eq-norm';
-  document.getElementById('eqGorlinResult').innerHTML =
+  const co = num('eqGorCO'), hr = num('eqGorHR'), sep = num('eqGorSEP'), grad = num('eqGorGrad'), peak = num('eqGorPeak');
+  const out = document.getElementById('eqGorlinResult');
+  const r = gorlinValveArea(co, hr, sep, grad, CM.GORLIN_CONST_AORTIC);
+  if (!r.ok) { out.innerHTML = `AVA = — <span style="font-size:10px;color:var(--text-dim)">${r.refusal}</span>`; return; }
+  const hakki = hakkiValveArea(co, peak);
+  // Grade the printed number, with the shared block's comparator (AS_SEVERE_AVA is "<=1.0 cm2").
+  const ava = Number(r.value.toFixed(2));
+  const cls = ava <= CM.AS_SEVERE_AVA ? 'eq-alert' : ava < 1.5 ? 'eq-warn' : 'eq-norm';
+  out.innerHTML =
     `AVA = <strong class="${cls}">${ava.toFixed(2)}</strong> cm² (Gorlin, mean ΔP) &nbsp;|&nbsp; Hakki = <strong>${hakki !== null ? hakki.toFixed(2) : '—'}</strong> cm² (peak-to-peak ΔP)`;
 }
 
 function calcResistance() {
-  const map = parseFloat(document.getElementById('eqResMAP').value) || 0;
-  const rap = parseFloat(document.getElementById('eqResRAP').value) || 0;
-  const co = parseFloat(document.getElementById('eqResCO').value) || 0;
-  const mpap = parseFloat(document.getElementById('eqResPAP').value) || 0;
-  const pcwp = parseFloat(document.getElementById('eqResPCWP').value) || 0;
-  if (co <= 0) { document.getElementById('eqResResult').innerHTML = 'SVR = — &nbsp; PVR = —'; return; }
-  const svr = ((map - rap) / co) * 80;
-  const pvr = ((mpap - pcwp) / co) * 80;
+  const map = num('eqResMAP'), rap = num('eqResRAP'), co = num('eqResCO'), mpap = num('eqResPAP'), pcwp = num('eqResPCWP');
+  const out = document.getElementById('eqResResult');
+  if (!allGiven(map, rap, mpap, pcwp) || !allPositive(co)) {
+    out.innerHTML = 'SVR = — &nbsp; PVR = — <span style="font-size:10px;color:var(--text-dim)">enter MAP, RAP, CO, mPAP and PCWP</span>';
+    return;
+  }
+  if (map <= rap || mpap <= pcwp) {
+    out.innerHTML = 'SVR = — &nbsp; PVR = — <span style="font-size:10px;color:var(--text-dim)">inflow pressure must exceed outflow pressure — a negative resistance is not a result</span>';
+    return;
+  }
+  const svr = ((map - rap) / co) * CM.WOOD_UNIT_TO_DYNES;
+  const pvr = ((mpap - pcwp) / co) * CM.WOOD_UNIT_TO_DYNES;
   const svrWU = (map - rap) / co;
   const pvrWU = (mpap - pcwp) / co;
-  let svrCls = svr >= 800 && svr <= 1200 ? 'eq-norm' : svr > 1200 ? 'eq-warn' : 'eq-alert';
-  let pvrCls = pvr < 240 ? 'eq-norm' : 'eq-alert';
-  document.getElementById('eqResResult').innerHTML =
+  let svrCls = svr >= CM.SVR_NORMAL_LOW && svr <= CM.SVR_NORMAL_HIGH ? 'eq-norm' : svr > CM.SVR_NORMAL_HIGH ? 'eq-warn' : 'eq-alert';
+  // One number per quantity: PVR upper limit of normal is 2 WU = 160 dynes (2022
+  // ESC/ERS). The old 240-dyne (3 WU) test graded 2.5 WU green directly beneath a
+  // line declaring >2 WU abnormal. Fixed 2026-09-20.
+  let pvrCls = pvr <= CM.PVR_ULN_DYNES ? 'eq-norm' : 'eq-alert';
+  out.innerHTML =
     `SVR = <strong class="${svrCls}">${Math.round(svr)}</strong> dynes (${svrWU.toFixed(1)} WU) &nbsp;|&nbsp; PVR = <strong class="${pvrCls}">${Math.round(pvr)}</strong> dynes (${pvrWU.toFixed(1)} WU)`;
 }
 
+// The AR index is Sinning et al. (JACC 2012): a POST-TAVR paravalvular-leak and prognostic
+// measure, where ARI <25% marks significant regurgitation and predicts 1-year mortality. It
+// is not a severity grade for native chronic AR and it is not a surgical indication — it
+// appears in neither the 2020 ACC/AHA nor the 2025 ESC valvular guideline. The card used to
+// print "Severe AR — surgery indicated".
 function calcARI() {
-  const dbp = parseFloat(document.getElementById('eqARIdbp').value) || 0;
-  const lvedp = parseFloat(document.getElementById('eqARIlvedp').value) || 0;
-  const sbp = parseFloat(document.getElementById('eqARIsbp').value) || 0;
-  if (sbp <= 0) { document.getElementById('eqARIResult').innerHTML = 'ARI = —'; return; }
-  const ari = (dbp - lvedp) / sbp;
-  let cls = ari > 0.25 ? 'eq-norm' : 'eq-alert';
-  let interp = ari > 0.25 ? 'Mild–moderate AR' : 'Severe AR — surgery indicated';
-  document.getElementById('eqARIResult').innerHTML =
-    `ARI = <strong class="${cls}">${ari.toFixed(2)}</strong> &nbsp;<span class="${cls}" style="font-size:11px">${interp}</span>`;
+  const dbp = num('eqARIdbp'), lvedp = num('eqARIlvedp'), sbp = num('eqARIsbp');
+  const out = document.getElementById('eqARIResult');
+  if (!allGiven(dbp, lvedp) || !allPositive(sbp)) {
+    out.innerHTML = 'ARI = — <span style="font-size:10px;color:var(--text-dim)">enter AoDBP, LVEDP and AoSBP</span>';
+    return;
+  }
+  // Round ONCE, here, where the index becomes text, and grade the rounded percent. Grading
+  // the raw ratio printed "24%" beside "≥ 25%" and "25%" beside "&lt;25%": Sinning's cut-off
+  // is ARI <25%, so an index of exactly 25% is NOT the high-mortality group.
+  const ariPct = Number(((dbp - lvedp) / sbp * 100).toFixed(0));
+  const cls = ariPct >= 25 ? 'eq-norm' : 'eq-alert';
+  const interp = ariPct >= 25 ? 'ARI ≥25% — no significant post-TAVR AR' : 'ARI &lt;25% — significant post-TAVR AR, higher 1-year mortality';
+  out.innerHTML =
+    `ARI = <strong class="${cls}">${ariPct}%</strong> &nbsp;<span class="${cls}" style="font-size:11px">${interp}</span>`;
 }
 
 // ════════════════════════════════════════════════════════════════════
@@ -2246,37 +2941,36 @@ function getGorlinCalcHTML() {
   return `
     <div class="calc-panel">
       <h4>Gorlin & Hakki AVA Calculator</h4>
-      <div class="calc-row"><label>CO (L/min)</label><input type="number" id="calcCO" value="5.0" step="0.1" oninput="calcGorlinAVA()"></div>
-      <div class="calc-row"><label>HR (bpm)</label><input type="number" id="calcHR" value="72" oninput="calcGorlinAVA()"></div>
-      <div class="calc-row"><label>SEP (sec)</label><input type="number" id="calcSEP" value="0.32" step="0.01" oninput="calcGorlinAVA()"></div>
-      <div class="calc-row"><label>Mean Grad</label><input type="number" id="calcGrad" value="45" step="1" oninput="calcGorlinAVA()"></div>
-      <div class="calc-row"><label>Peak Grad</label><input type="number" id="calcPeak" value="70" step="1" oninput="calcGorlinAVA()"></div>
+      <div class="calc-row"><label>CO (L/min)</label><input aria-label="CO (L/min)" type="number" id="calcCO" value="5.0" step="0.1" oninput="calcGorlinAVA()"></div>
+      <div class="calc-row"><label>HR (bpm)</label><input aria-label="HR (bpm)" type="number" id="calcHR" value="72" oninput="calcGorlinAVA()"></div>
+      <div class="calc-row"><label>SEP (sec)</label><input aria-label="SEP (sec)" type="number" id="calcSEP" value="0.32" step="0.01" oninput="calcGorlinAVA()"></div>
+      <div class="calc-row"><label>Mean Grad</label><input aria-label="Mean Grad" type="number" id="calcGrad" value="45" step="1" oninput="calcGorlinAVA()"></div>
+      <div class="calc-row"><label>Peak Grad</label><input aria-label="Peak Grad" type="number" id="calcPeak" value="70" step="1" oninput="calcGorlinAVA()"></div>
       <div class="calc-result" id="gorlinResult">AVA = —</div>
     </div>`;
 }
 
 function calcGorlinAVA() {
-  // Read the fields as entered. `|| default` silently substituted a hidden value for a blank
-  // or zero input and still printed a confident valve area from numbers the user never gave.
-  const num = id => { const v = parseFloat(document.getElementById(id)?.value); return Number.isFinite(v) ? v : null; };
+  // One Gorlin, one guard set — see gorlinValveArea(). This card keeps its own severity
+  // vocabulary and its own result node; only the arithmetic and the refusals are shared.
   const co = num('calcCO'), hr = num('calcHR'), sep = num('calcSEP'), grad = num('calcGrad'), peak = num('calcPeak');
-  const el0 = document.getElementById('gorlinResult');
-  if (co === null || hr === null || sep === null || grad === null || co <= 0 || hr <= 0 || sep <= 0 || grad <= 0) {
-    if (el0) el0.innerHTML = 'Gorlin AVA = — <span class="hint">enter CO, HR, SEP and mean gradient</span>';
-    return;
-  }
-  const coMl = co * 1000;
-  const gorlin = coMl / (44.3 * hr * sep * Math.sqrt(grad));
-  const hakki = (peak !== null && peak > 0) ? co / Math.sqrt(peak) : null;
+  const el = document.getElementById('gorlinResult');
+  if (!el) return;
+  const r = gorlinValveArea(co, hr, sep, grad, CM.GORLIN_CONST_AORTIC);
+  if (!r.ok) { el.innerHTML = `Gorlin AVA = — <span class="hint">${r.refusal}</span>`; return; }
+  // Round ONCE, where the area becomes text, and grade what is printed (the calcARI rule). The
+  // operators are the RHC calculator's: critical ≤0.6 (cath convention), severe ≤1.0 (the shared
+  // block's comparator for AS_SEVERE_AVA; 2020 ACC/AHA stages D2/D3), moderate below 1.5.
+  const gorlin = Number(r.value.toFixed(2));
+  const hakki = hakkiValveArea(co, peak);
 
   let sev = '', cls = '';
-  if (gorlin < 0.6) { sev = 'Critical'; cls = 'sev-crit'; }
-  else if (gorlin < 1.0) { sev = 'Severe'; cls = 'sev-sev'; }
+  if (gorlin <= 0.6) { sev = 'Critical'; cls = 'sev-crit'; }
+  else if (gorlin <= CM.AS_SEVERE_AVA) { sev = 'Severe'; cls = 'sev-sev'; }
   else if (gorlin < 1.5) { sev = 'Moderate'; cls = 'sev-mod'; }
   else { sev = 'Mild'; cls = 'sev-mild'; }
 
-  const el = document.getElementById('gorlinResult');
-  if (el) el.innerHTML = `Gorlin AVA = <span class="val">${gorlin.toFixed(2)} cm²</span> <span class="sev ${cls}">${sev}</span>`
+  el.innerHTML = `Gorlin AVA = <span class="val">${gorlin.toFixed(2)} cm²</span> <span class="sev ${cls}">${sev}</span>`
     + (hakki !== null ? ` &nbsp;|&nbsp; Hakki AVA = <span class="val">${hakki.toFixed(2)} cm²</span>` : '');
 }
 
@@ -2284,38 +2978,44 @@ function getGorlinMVACalcHTML() {
   return `
     <div class="calc-panel">
       <h4>Gorlin MVA Calculator</h4>
-      <div class="calc-row"><label>CO (L/min)</label><input type="number" id="calcMCO" value="5.0" step="0.1" oninput="calcGorlinMVA()"></div>
-      <div class="calc-row"><label>HR (bpm)</label><input type="number" id="calcMHR" value="72" oninput="calcGorlinMVA()"></div>
-      <div class="calc-row"><label>DFP (sec)</label><input type="number" id="calcDFP" value="0.42" step="0.01" oninput="calcGorlinMVA()"></div>
-      <div class="calc-row"><label>Mean Grad</label><input type="number" id="calcMGrad" value="12" step="1" oninput="calcGorlinMVA()"></div>
+      <div class="calc-row"><label>CO (L/min)</label><input aria-label="CO (L/min)" type="number" id="calcMCO" value="5.0" step="0.1" oninput="calcGorlinMVA()"></div>
+      <div class="calc-row"><label>HR (bpm)</label><input aria-label="HR (bpm)" type="number" id="calcMHR" value="72" oninput="calcGorlinMVA()"></div>
+      <div class="calc-row"><label>DFP (sec)</label><input aria-label="DFP (sec)" type="number" id="calcDFP" value="0.42" step="0.01" oninput="calcGorlinMVA()"></div>
+      <div class="calc-row"><label>Mean Grad</label><input aria-label="Mean Grad" type="number" id="calcMGrad" value="12" step="1" oninput="calcGorlinMVA()"></div>
       <div class="calc-result" id="gorlinMVAResult">MVA = —</div>
     </div>`;
 }
 
 function calcGorlinMVA() {
-  // Read as entered — see calcGorlinAVA; hidden defaults printed a valve area from numbers
-  // the user never supplied.
-  const num = id => { const v = parseFloat(document.getElementById(id)?.value); return Number.isFinite(v) ? v : null; };
+  // Same shared Gorlin core as the AVA card, with the mitral constant and DFP in place of SEP.
+  // The DFP field had no plausibility bound either, so a DFP typed in milliseconds produced a
+  // confident valve area here too.
   const co = num('calcMCO'), hr = num('calcMHR'), dfp = num('calcDFP'), grad = num('calcMGrad');
-  const elM0 = document.getElementById('gorlinMVAResult');
-  if (co === null || hr === null || dfp === null || grad === null || co <= 0 || hr <= 0 || dfp <= 0 || grad <= 0) {
-    if (elM0) elM0.innerHTML = 'Gorlin MVA = — <span class="hint">enter CO, HR, DFP and mean gradient</span>';
-    return;
-  }
-  const coMl = co * 1000;
-  const mva = coMl / (37.7 * hr * dfp * Math.sqrt(grad));
+  const el = document.getElementById('gorlinMVAResult');
+  if (!el) return;
+  const r = gorlinValveArea(co, hr, dfp, grad, CM.GORLIN_CONST_MITRAL);
+  if (!r.ok) { el.innerHTML = `Gorlin MVA = — <span class="hint">${r.refusal}</span>`; return; }
+  // Round ONCE, where the area becomes text, and grade what is printed — the calcARI rule.
+  // Grading the raw value printed "1.50 cm² Progressive" under a pearl reading "MVA ≤1.5 = severe".
+  const mva = Number(r.value.toFixed(2));
 
-  // 2020 ACC/AHA VHD: MVA <= 1.5 cm2 IS severe (Stage C/D); <= 1.0 is very severe. The old
-  // bands called a 1.27 cm2 valve -- what this lesson's own demo produces -- "Moderate",
-  // and contradicted the equations panel below, which already said "Severe MS: MVA <1.5".
+  // 2020 ACC/AHA VHD: MVA <= 1.5 cm2 IS severe (Stage C/D). The old bands called a 1.27 cm2
+  // valve -- what this lesson's own demo produces -- "Moderate", and contradicted the
+  // equations panel below, which said "Severe MS: MVA <1.5" (now ≤1.5, the guideline's operator).
+  //
+  // There is NO "very severe" MS tier, and this card no longer grades one. Table 16 of the
+  // 2020 ACC/AHA VHD guideline ("Stages of MS") has four stages, A/B/C/D, and 1.5 cm2 is the
+  // only valve-area threshold in it; 1.0 cm2 appears nowhere in MS staging. "Very severe" is
+  // an AORTIC term in that document (aortic velocity >=5 m/s). echocalc retired the tier for
+  // the same reason. MS_VERY_SEVERE_MVA was removed from shared/clinical-constants.json on
+  // 2026-09-21 (it was UNSOURCED in the local library), so the generated block below no longer
+  // carries it; rhc_calculator retired its ≤ 1.0 row the same day.
   let sev = '', cls = '';
-  if (mva <= 1.0) { sev = 'Very severe'; cls = 'sev-sev'; }
-  else if (mva <= 1.5) { sev = 'Severe'; cls = 'sev-sev'; }
+  if (mva <= CM.MS_SEVERE_MVA) { sev = 'Severe'; cls = 'sev-sev'; }
   else if (mva <= 2.0) { sev = 'Progressive'; cls = 'sev-mod'; }
   else { sev = 'Mild / none'; cls = 'sev-mild'; }
 
-  const el = document.getElementById('gorlinMVAResult');
-  if (el) el.innerHTML = `Gorlin MVA = <span class="val">${mva.toFixed(2)} cm²</span> <span class="sev ${cls}">${sev}</span>`;
+  el.innerHTML = `Gorlin MVA = <span class="val">${mva.toFixed(2)} cm²</span> <span class="sev ${cls}">${sev}</span>`;
 }
 
 // ════════════════════════════════════════════════════════════════════
@@ -2411,9 +3111,12 @@ function rebuildTraceToggles() {
     btn.className = 'trace-tog' + (traceVis[tr.id] ? ' on' : '');
     btn.textContent = tr.label;
     btn.style.color = getComputedColor(tr.color);
+    btn.setAttribute('aria-pressed', traceVis[tr.id] ? 'true' : 'false');
+    btn.setAttribute('aria-label', 'Show ' + tr.label + ' tracing');
     btn.onclick = () => {
       traceVis[tr.id] = !traceVis[tr.id];
       btn.classList.toggle('on');
+      btn.setAttribute('aria-pressed', traceVis[tr.id] ? 'true' : 'false');
       redrawNeeded = true;
     };
     container.appendChild(btn);
@@ -2423,7 +3126,11 @@ function rebuildTraceToggles() {
 function getComputedColor(c) {
   if (!c.startsWith('var(')) return c;
   const prop = c.replace('var(','').replace(')','');
-  return getComputedStyle(document.documentElement).getPropertyValue(prop).trim() || c;
+  // Read from BODY, not documentElement. The shared token block puts the dark theme on
+  // :root and the light overrides on body.light, so reading documentElement returned the
+  // dark palette even in light mode and the canvas never changed theme. body inherits
+  // :root, so this is correct in both themes.
+  return getComputedStyle(document.body).getPropertyValue(prop).trim() || c;
 }
 
 function updateTeaching() {
@@ -2442,6 +3149,11 @@ function updateHR(val) {
   HR = parseInt(val);
   document.getElementById('hrVal').textContent = val;
   if (bufferActive) clearWaveBuffer(); // HR changes beatFrac mapping
+  // The MS lesson is the one lesson whose teaching text is a function of HR, and its pearl
+  // tells the reader to drag this slider. Refresh those two spans in place rather than
+  // calling updateTeaching(), which rebuilds the whole panel and would clear the Gorlin MVA
+  // inputs on every input event of the drag.
+  if (currentLesson === 'ms') refreshMSRateText();
   redrawNeeded = true;
 }
 
@@ -2457,8 +3169,13 @@ function updateSeverity(val) {
 
 function setSpeed(s) {
   speed = s;
-  document.getElementById('speed25').classList.toggle('on', s === 25);
-  document.getElementById('speed50').classList.toggle('on', s === 50);
+  // Toggle state lived only in a CSS class, so a screen reader could not tell which sweep
+  // speed was active. aria-pressed carries it.
+  const b25 = document.getElementById('speed25'), b50 = document.getElementById('speed50');
+  b25.classList.toggle('on', s === 25);
+  b50.classList.toggle('on', s === 50);
+  b25.setAttribute('aria-pressed', s === 25 ? 'true' : 'false');
+  b50.setAttribute('aria-pressed', s === 50 ? 'true' : 'false');
   if (bufferActive) clearWaveBuffer(); // speed changes px/beat mapping
   redrawNeeded = true;
 }
@@ -2505,14 +3222,19 @@ function setAcute(isAcute) {
 
 function togglePause() {
   paused = !paused;
-  document.getElementById('pauseBtn').textContent = paused ? '▶' : '⏸';
-  document.getElementById('pauseBtn').classList.toggle('on', !paused);
+  const btn = document.getElementById('pauseBtn');
+  btn.textContent = paused ? '▶' : '⏸';
+  btn.classList.toggle('on', !paused);
+  btn.setAttribute('aria-pressed', paused ? 'true' : 'false');
+  btn.setAttribute('aria-label', paused ? 'Play' : 'Pause');
+  redrawNeeded = true;
 }
 
 function toggleResp() {
   respEnabled = !respEnabled;
   const btn = document.getElementById('respBtn');
   btn.classList.toggle('on', respEnabled);
+  btn.setAttribute('aria-pressed', respEnabled ? 'true' : 'false');
   btn.textContent = respEnabled ? 'Respiration ON' : 'Respiration';
   if (respEnabled) {
     respPhase = 0;
@@ -2531,7 +3253,10 @@ function toggleResp() {
 function toggleMode() {
   isDark = !isDark;
   document.body.classList.toggle('light', !isDark);
-  document.getElementById('modeToggle').textContent = isDark ? 'Light Mode' : 'Dark Mode';
+  const mt = document.getElementById('modeToggle');
+  mt.textContent = isDark ? 'Light Mode' : 'Dark Mode';
+  mt.setAttribute('aria-pressed', isDark ? 'false' : 'true');
+  mt.setAttribute('aria-label', isDark ? 'Switch to light mode' : 'Switch to dark mode');
   // Share the site-wide theme key so the choice survives navigating between tools.
   try { localStorage.setItem('cathmath_dark', isDark ? '1' : '0'); } catch (e) {}
   rebuildTraceToggles();
@@ -2544,7 +3269,11 @@ try {
     isDark = false;
     document.body.classList.add('light');
     const _mt = document.getElementById('modeToggle');
-    if (_mt) _mt.textContent = 'Dark Mode';
+    if (_mt) {
+      _mt.textContent = 'Dark Mode';
+      _mt.setAttribute('aria-pressed', 'true');
+      _mt.setAttribute('aria-label', 'Switch to dark mode');
+    }
   }
 } catch (e) {}
 
@@ -2556,18 +3285,34 @@ const ECG_HEIGHT = 50;
 
 function sizeCanvases() {
   const area = canvasArea;
+  DPR = window.devicePixelRatio || 1;
   const w = area.clientWidth;
   const h = area.clientHeight - ECG_HEIGHT;
+  // iOS Safari fires `resize` continuously while the address bar collapses. Reallocating two
+  // canvas backing stores on every one of those events is pure jank, so bail when nothing
+  // actually changed.
+  // Compare AND assign the same rounded integers. Assigning canvas.width truncates, so
+  // comparing a rounded want against a truncated actual never matched at a fractional DPR
+  // (1.25 or 1.5 — browser zoom, which is the accommodation the DPR re-read exists for)
+  // and the throttle never fired.
+  const waveH = Math.max(200, h);
+  const wantW = Math.round(w * DPR);
+  const wantH = Math.round(waveH * DPR);
+  const wantEcgH = Math.round(ECG_HEIGHT * DPR);
+  if (waveCanvas.width === wantW && waveCanvas.height === wantH &&
+      ecgCanvas.width === wantW && ecgCanvas.height === wantEcgH) {
+    return;
+  }
 
-  ecgCanvas.width = w * DPR;
-  ecgCanvas.height = ECG_HEIGHT * DPR;
+  ecgCanvas.width = wantW;
+  ecgCanvas.height = wantEcgH;
   ecgCanvas.style.width = w + 'px';
   ecgCanvas.style.height = ECG_HEIGHT + 'px';
 
-  waveCanvas.width = w * DPR;
-  waveCanvas.height = Math.max(200, h) * DPR;
+  waveCanvas.width = wantW;
+  waveCanvas.height = wantH;
   waveCanvas.style.width = w + 'px';
-  waveCanvas.style.height = Math.max(200, h) + 'px';
+  waveCanvas.style.height = waveH + 'px';
 
   redrawNeeded = true;
 }
@@ -2738,6 +3483,8 @@ function drawWaveforms(ctx, w, h) {
 
   // Draw gradient shading first
   if (lesson.gradient) {
+    // Build the severity-interpolated parameter objects ONCE per frame, not once per pixel.
+    const gp = lesson.gradientParams ? lesson.gradientParams() : null;
     ctx.save();
     ctx.fillStyle = getComputedColor('var(--gradient-fill)');
     ctx.beginPath();
@@ -2753,12 +3500,12 @@ function drawWaveforms(ctx, w, h) {
         const bufEntry = waveBuffer.get(worldXInt) || waveBuffer.get(worldXInt - 1) || waveBuffer.get(worldXInt + 1);
         if (bufEntry && bufEntry.lv != null && bufEntry.ao != null) {
           const lvP = bufEntry.lv, aoP = bufEntry.ao;
-          if (beatFrac > 0.05 && beatFrac < 0.32 && lvP > aoP) {
+          if (beatFrac > AV_OPEN && beatFrac < AV_CLOSE && lvP > aoP) {
             g = { top: aoP, bottom: lvP };
           } else { g = null; }
-        } else { g = lesson.gradient(beatFrac); }
+        } else { g = lesson.gradient(beatFrac, gp); }
       } else {
-        g = lesson.gradient(beatFrac);
+        g = lesson.gradient(beatFrac, gp);
       }
       if (g) {
         topPts.push({ x: px, y: mmHgToY(g.bottom, scale, h) });
@@ -2915,7 +3662,8 @@ function drawWaveforms(ctx, w, h) {
     function getPCWPAnnotations() {
       const p = getAnnotationParams('pcwp');
       if (!p) return [];
-      const delay = p.timeDelay || 0.06;
+      // Same transmission delay generatePCWP applies, read the same way — in milliseconds.
+      const delay = msToBeat(p.timeDelayMs != null ? p.timeDelayMs : PCWP_DELAY_MS);
       return [
         { ch: 'a', hint: (p.aCenter || 0.08) + delay, dir: 1 },
         { ch: 'x', hint: (p.xCenter || 0.20) + delay, dir: -1 },
@@ -2994,28 +3742,35 @@ function drawWaveforms(ctx, w, h) {
     const mod = getRespMod(); // -1 insp, +1 exp
     const barW = 80 * DPR, barH = 14 * DPR;
     const bx = w - barW - 12 * DPR, by = 10 * DPR;
+    // Every colour here is read from the design tokens at draw time. They used to be six
+    // hard-coded rgba() literals tuned for the dark theme, so in light mode this indicator
+    // painted a black panel with white-on-white labels.
     ctx.save();
-    ctx.fillStyle = 'rgba(0,0,0,0.5)';
+    ctx.globalAlpha = 0.85;
+    ctx.fillStyle = getComputedColor('var(--panel-bg)');
     ctx.fillRect(bx - 4 * DPR, by - 2 * DPR, barW + 8 * DPR, barH + 12 * DPR);
     // Bar background
-    ctx.fillStyle = 'rgba(255,255,255,0.1)';
+    ctx.globalAlpha = 1;
+    ctx.fillStyle = getComputedColor('var(--bg2)');
     ctx.fillRect(bx, by, barW, barH);
     // Fill: green for inspiration, amber for expiration
     const fillW = Math.abs(mod) * barW / 2;
+    ctx.globalAlpha = 0.75;
     if (mod < 0) {
-      ctx.fillStyle = 'rgba(102,187,106,0.6)';
+      ctx.fillStyle = getComputedColor('var(--green)');
       ctx.fillRect(bx + barW / 2 - fillW, by, fillW, barH);
     } else {
-      ctx.fillStyle = 'rgba(255,183,77,0.6)';
+      ctx.fillStyle = getComputedColor('var(--amber)');
       ctx.fillRect(bx + barW / 2, by, fillW, barH);
     }
     // Center tick
-    ctx.strokeStyle = 'rgba(255,255,255,0.3)';
+    ctx.globalAlpha = 1;
+    ctx.strokeStyle = getComputedColor('var(--border2)');
     ctx.lineWidth = 1;
     ctx.beginPath(); ctx.moveTo(bx + barW / 2, by); ctx.lineTo(bx + barW / 2, by + barH); ctx.stroke();
     // Labels
     ctx.font = `${7 * DPR}px -apple-system, Helvetica Neue, sans-serif`;
-    ctx.fillStyle = 'rgba(255,255,255,0.6)';
+    ctx.fillStyle = getComputedColor('var(--text-dim)');
     ctx.textAlign = 'left';
     ctx.fillText('INSP', bx, by + barH + 9 * DPR);
     ctx.textAlign = 'right';
@@ -3082,39 +3837,63 @@ function animate(timestamp) {
     }
   }
 
-  // Always draw (needed after resize, lesson switch, etc.)
-  drawECG(ecgCtx, ecgCanvas.width, ecgCanvas.height);
-  drawWaveforms(waveCtx, waveCanvas.width, waveCanvas.height);
+  // While running, every frame is new. While paused, repaint only when something asked for
+  // it — that is what the redrawNeeded flag was declared for. It had 15 writers and no
+  // readers, so pausing saved no CPU at all.
+  if (!paused || redrawNeeded) {
+    drawECG(ecgCtx, ecgCanvas.width, ecgCanvas.height);
+    drawWaveforms(waveCtx, waveCanvas.width, waveCanvas.height);
+    redrawNeeded = false;
+  }
 }
 
 // ════════════════════════════════════════════════════════════════════
 // RESIZE HANDLE (teaching panel)
 // ════════════════════════════════════════════════════════════════════
+//
+// POINTER events, not mouse events: on a phone neither of this tool's two interactions did
+// anything at all, because both were bound to mousedown/mousemove/mouseup and there was no
+// touch fallback anywhere in the file. Pointer capture keeps a drag tracking after the finger
+// leaves the element, which the old document-level listeners were doing by hand.
 
 (function() {
   const handle = document.getElementById('resizeHandle');
-  let dragging = false, startY = 0, startH = 0;
-  handle.addEventListener('mousedown', e => {
-    dragging = true; startY = e.clientY; startH = teachingPanel.offsetHeight;
+  let dragging = false, startY = 0, startH = 0, pid = null;
+  handle.addEventListener('pointerdown', e => {
+    dragging = true; startY = e.clientY; startH = teachingPanel.offsetHeight; pid = e.pointerId;
+    try { handle.setPointerCapture(pid); } catch (err) {}
     document.body.style.cursor = 'ns-resize';
     e.preventDefault();
   });
-  document.addEventListener('mousemove', e => {
-    if (!dragging) return;
+  handle.addEventListener('pointermove', e => {
+    if (!dragging || e.pointerId !== pid) return;
     const diff = startY - e.clientY;
     teachingPanel.style.height = Math.max(80, startH + diff) + 'px';
     sizeCanvases();
+    e.preventDefault();
   });
-  document.addEventListener('mouseup', () => {
-    if (dragging) { dragging = false; document.body.style.cursor = ''; }
-  });
+  const endDrag = () => {
+    if (!dragging) return;
+    dragging = false; document.body.style.cursor = '';
+    try { if (pid !== null) handle.releasePointerCapture(pid); } catch (err) {}
+    pid = null;
+  };
+  handle.addEventListener('pointerup', endDrag);
+  handle.addEventListener('pointercancel', endDrag);
 })();
 
 // ════════════════════════════════════════════════════════════════════
 // INIT
 // ════════════════════════════════════════════════════════════════════
 
-window.addEventListener('resize', sizeCanvases);
+// Coalesce resize storms into one repaint per frame (iOS Safari fires resize continuously
+// while the address bar collapses).
+let resizePending = false;
+window.addEventListener('resize', () => {
+  if (resizePending) return;
+  resizePending = true;
+  requestAnimationFrame(() => { resizePending = false; sizeCanvases(); });
+});
 // Keyboard: Space=pause, Left/Right=scrub
 window.addEventListener('keydown', e => {
   // Don't capture when typing in inputs
@@ -3136,33 +3915,57 @@ window.addEventListener('keydown', e => {
   }
 });
 
-// Mouse drag on canvas to scrub
+// Drag on the canvas to scrub back through the strip — mouse, pen or finger.
 (function() {
-  let dragging = false, dragStartX = 0, scrollStart = 0;
+  let dragging = false, dragStartX = 0, scrollStart = 0, pid = null;
   const area = document.getElementById('canvasArea');
   area.style.cursor = 'grab';
-  area.addEventListener('mousedown', e => {
+  area.addEventListener('pointerdown', e => {
     if (e.target.closest('.resize-handle')) return;
+    // The equations lesson renders inside .canvas-area. Scrubbing it makes no sense (the
+    // tracings are hidden), and the preventDefault below would swallow taps on its inputs
+    // and block the inner scroller.
+    if (e.target.closest('#equationsPanel')) return;
     dragging = true;
     dragStartX = e.clientX;
     scrollStart = scrollX;
+    pid = e.pointerId;
+    try { area.setPointerCapture(pid); } catch (err) {}
     area.style.cursor = 'grabbing';
     e.preventDefault();
   });
-  window.addEventListener('mousemove', e => {
-    if (!dragging) return;
+  area.addEventListener('pointermove', e => {
+    if (!dragging || e.pointerId !== pid) return;
     const dx = dragStartX - e.clientX;
     scrollX = Math.max(0, scrollStart + dx * (DPR));
     if (bufferActive) advanceWaveBuffer();
     redrawNeeded = true;
+    e.preventDefault();
   });
-  window.addEventListener('mouseup', () => {
-    if (dragging) { dragging = false; area.style.cursor = 'grab'; }
-  });
+  const endDrag = () => {
+    if (!dragging) return;
+    dragging = false; area.style.cursor = 'grab';
+    try { if (pid !== null) area.releasePointerCapture(pid); } catch (err) {}
+    pid = null;
+  };
+  area.addEventListener('pointerup', endDrag);
+  area.addEventListener('pointercancel', endDrag);
 })();
 
 sizeCanvases();
 switchLesson('normal');
+// prefers-reduced-motion: draw one static strip instead of scrolling it forever. The tool is
+// still fully usable — the scrub drag and the arrow keys move the trace on demand.
+if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+  paused = true;
+  const pb = document.getElementById('pauseBtn');
+  if (pb) {
+    pb.textContent = '▶';
+    pb.classList.remove('on');
+    pb.setAttribute('aria-pressed', 'true');
+    pb.setAttribute('aria-label', 'Play');
+  }
+}
 animate(0);
 
 // Brief pulse on resize handle to hint it's draggable
@@ -3177,7 +3980,7 @@ setTimeout(() => document.getElementById('resizeHandle').classList.remove('pulse
           <h3>What the simulator draws</h3>
           <p>The simulator animates invasive pressure tracings on a scrolling cath lab canvas, with an ECG strip above them on the same time base for referencing wave timing to the P wave and QRS. Six tracings are modelled — right atrial, right ventricular, pulmonary artery, pulmonary capillary wedge, left ventricular and aortic — and each lesson turns on the relevant ones. Wave labels (a, c, v, x, y) toggle on and off, heart rate runs from 40 to 140 bpm, sweep speed is 25 or 50 mm/s, and Compare Normal ghosts the normal tracing behind the abnormal one. Twelve lessons sit in four groups: valvular, myopathic, pericardial and other.</p>
           <h3>Valvular lessons</h3>
-          <p>Aortic stenosis shades the systolic LV-to-aortic gradient and teaches the parvus et tardus upstroke and the late systolic peak; severe disease is a mean gradient of 40 mmHg or more or a valve area of 1.0 cm² or less, plus a note on low-flow, low-gradient AS. Mitral stenosis shades the diastolic PCWP-to-LV gradient and covers the prominent a wave and slow y descent; 1.5 cm² or less is severe, 1.0 cm² or less very severe, and the mean gradient is rate-dependent rather than a severity criterion. Mitral regurgitation has an acute versus chronic toggle showing how left atrial compliance sets V wave height, and stresses that giant V waves are neither sensitive nor specific for severe MR. Aortic regurgitation covers wide pulse pressure, diastolic equalization and the AR index, (AoDBP − LVEDP) / AoSBP, below 25% marking significant regurgitation after TAVR. Tricuspid regurgitation shows the giant CV wave, loss of the x descent and ventricularization of the RA tracing.</p>
+          <p>Aortic stenosis shades the systolic LV-to-aortic gradient and teaches the parvus et tardus upstroke and the late systolic peak; severe disease is a mean gradient of 40 mmHg or more or a valve area of 1.0 cm² or less, plus a note on low-flow, low-gradient AS. Mitral stenosis shades the diastolic PCWP-to-LV gradient and covers the prominent a wave and slow y descent; 1.5 cm² or less is severe, which is stage C or D of the 2020 ACC/AHA staging table, and the mean gradient is rate-dependent rather than a severity criterion. Mitral regurgitation has an acute versus chronic toggle showing how left atrial compliance sets V wave height, and stresses that giant V waves are neither sensitive nor specific for severe MR. Aortic regurgitation covers wide pulse pressure, diastolic equalization and the AR index, (AoDBP − LVEDP) / AoSBP, below 25% marking significant regurgitation after TAVR. Tricuspid regurgitation shows the giant CV wave, loss of the x descent and ventricularization of the RA tracing.</p>
           <h3>HOCM, constriction, restriction and tamponade</h3>
           <p>HOCM reproduces the spike-and-dome aortic contour of dynamic LVOT obstruction, with a PVC trigger for the Brockenbrough-Braunwald-Morrow sign — pulse pressure falls after the extrasystole instead of rising as in fixed AS — and a provocation slider from Valsalva to phenylephrine; 30 mmHg at rest defines obstruction, 50 mmHg rest or provoked the septal reduction threshold. The three pericardial lessons share a respiration toggle: constriction shows dip-and-plateau filling, ventricular discordance and a systolic area index above 1.1; restrictive cardiomyopathy shows concordance, LVEDP exceeding RVEDP by more than 5 mmHg and PASP above 55; tamponade shows a blunted y descent with pulsus paradoxus.</p>
           <h3>Pulmonary hypertension</h3>

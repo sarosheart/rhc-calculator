@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>RHC Calculator — Fick Cardiac Output, Gorlin AVA/MVA, PVR/SVR | CathMath</title>
-<meta name="description" content="Free right heart catheterization calculator. Fick cardiac output, cardiac index, Gorlin aortic & mitral valve area, PVR, SVR, PAPi, RVSWI, shunt calculations. Instant hemodynamic report for the cath lab.">
+<meta name="description" content="Free right heart catheterization calculator: Fick cardiac output, Gorlin aortic and mitral valve area, PVR, SVR, PAPi, shunts, and a copy-paste cath lab report.">
 <meta name="keywords" content="RHC calculator, right heart catheterization, Fick equation, cardiac output, cardiac index, Gorlin equation, aortic valve area, mitral valve area, PVR, SVR, pulmonary vascular resistance, systemic vascular resistance, PAPi, RVSWI, CPO, CPI, hemodynamics, cath lab, Fick vs thermodilution">
 <meta name="author" content="Dr. Saro Avedikian, MD, MPH">
 <meta name="robots" content="index, follow">
@@ -82,7 +82,6 @@
   .nav-tab:hover { color: rgba(255,255,255,0.85); }
   .nav-tab.active { color: #fff; border-bottom-color: #4a90d9; }
   .nav-right { margin-left: auto; display: flex; align-items: center; gap: 16px; }
-  .nav-credit { font-size: 11px; opacity: 0.5; font-weight: 400; }
   .nav-right button {
     background: rgba(255,255,255,0.1); color: #fff; border: 1px solid rgba(255,255,255,0.2);
     padding: 4px 12px; border-radius: 4px; cursor: pointer; font-size: 11px; font-weight: 600; transition: background 0.2s;
@@ -97,7 +96,6 @@
   }
   .page-controls .page-title { display: flex; align-items: baseline; gap: 12px; }
   .page-controls h1 { font-size: 16px; font-weight: 700; letter-spacing: 0.3px; }
-  .page-controls .page-sub { font-size: 11px; opacity: 0.6; }
   .header-btns { display: flex; gap: 8px; }
   .header-btns button {
     background: rgba(255,255,255,0.12);
@@ -181,13 +179,15 @@
     gap: 3px;
   }
   .input-group .sep {
-    color: #999;
+    color: #6b7280;
     font-weight: 700;
     font-size: 16px;
   }
   .input-group .label-sm {
     font-size: 11px;
-    color: #777;
+    /* Light mode is the unexercised path here: #777 on white is 4.48:1 at 11px,
+       under the 4.5:1 AA floor. #6b7280 is 4.95:1 and reads the same. */
+    color: #6b7280;
     min-width: 32px;
   }
   input[type="number"] {
@@ -207,11 +207,19 @@
     box-shadow: 0 0 0 3px rgba(21,101,192,0.12);
     background: #fff;
   }
+  /* THE POINT OF min/max IS THIS RULE, and it is `:not(:focus)` on purpose. On a type=number
+     input the attributes block nothing — the value is still read and still computed from, so
+     the JS refusals in `buildQualityChecks` remain the whole net — but an out-of-domain entry
+     can at least be marked AT THE FIELD instead of only in a list further down. Marked when
+     the operator leaves the box, because `:invalid` while focused turns the field red at the
+     "1" of a "14" that is still being typed. */
+  input[type="number"]:invalid:not(:focus) { border-color: var(--red); background: #fff5f5; }
+  body.dark input[type="number"]:invalid:not(:focus) { border-color: #c62828; background: #2e2020; }
   input[type="number"]::placeholder { color: #c0c0c0; font-size: 11px; }
   input[type="number"]::-webkit-inner-spin-button,
   input[type="number"]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
   input[type="number"] { -moz-appearance: textfield; }
-  .unit { font-size: 11px; color: #888; margin-left: 2px; }
+  .unit { font-size: 11px; color: #6b7280; margin-left: 2px; }
 
   /* SELECTS & CHECKBOXES */
   select {
@@ -243,7 +251,7 @@
   .radio-row label { min-width: auto; font-weight: 600; cursor: pointer; }
   .radio-row input[type="radio"] { cursor: pointer; }
 
-  .subsection { font-size: 11px; color: #888; text-transform: uppercase; letter-spacing: 0.5px; margin: 8px 0 4px 0; font-weight: 700; border-bottom: 1px solid #eee; padding-bottom: 2px; }
+  .subsection { font-size: 11px; color: #6b7280; text-transform: uppercase; letter-spacing: 0.5px; margin: 8px 0 4px 0; font-weight: 700; border-bottom: 1px solid #eee; padding-bottom: 2px; }
 
   /* RESULTS */
   .result-row {
@@ -270,8 +278,10 @@
     font-weight: 700;
     min-width: 100px;
   }
-  .result-unit { font-size: 12px; color: #888; }
-  .result-range { font-size: 11px; color: #aaa; font-style: italic; }
+  .result-unit { font-size: 12px; color: #6b7280; }
+  /* #aaa on white is 2.32:1 — the reference range beside every result was the least
+     legible text on the light page. */
+  .result-range { font-size: 11px; color: #6b7280; font-style: italic; }
   .result-flag {
     font-size: 11px;
     font-weight: 700;
@@ -281,14 +291,11 @@
     transition: all 0.2s;
   }
   .flag-low { background: #fce4ec; color: var(--red); }
-  .flag-high { background: #fff3e0; color: var(--amber); }
+  /* var(--amber) on #fff3e0 renders "HIGH" at 2.81:1. The token itself is left alone —
+     it is also the warning-box border — so only the badge text moves, to 4.61:1. */
+  .flag-high { background: #fff3e0; color: #b45309; }
   .flag-severe { background: #ffcdd2; color: #b71c1c; }
   .flag-normal { background: #e8f5e9; color: var(--green); }
-
-  .val-normal { color: var(--green); }
-  .val-abnormal { color: var(--red); }
-  .val-borderline { color: var(--amber); }
-  .val-na { color: #bbb; }
 
   /* WARNINGS */
   .warning-box {
@@ -336,7 +343,9 @@
     justify-content: space-between;
   }
   .copy-btn {
-    background: #43a047;
+    /* #fff on #43a047 is 3.30:1 at 12px — under the AA floor, on the button the whole report
+       exists to press. #2e7d32 is 5.48:1 and is already the file's darker green. */
+    background: #2e7d32;
     color: #fff;
     border: none;
     padding: 5px 18px;
@@ -346,7 +355,7 @@
     font-weight: 700;
     transition: background 0.2s, transform 0.1s;
   }
-  .copy-btn:hover { background: #388e3c; }
+  .copy-btn:hover { background: #1b5e20; }
   .copy-btn:active { transform: scale(0.97); }
   .copy-btn.copied { background: #1565c0; }
   .copy-section textarea {
@@ -363,10 +372,13 @@
   }
 
   /* HELPERS */
-  .hint { font-size: 11px; color: #999; margin-top: 2px; }
+  .hint { font-size: 11px; color: #6b7280; margin-top: 2px; }
   .divider { border-top: 1px solid #e0e0e0; margin: 8px 0; }
-  .flex-gap { display: flex; gap: 12px; flex-wrap: wrap; }
-  .bold { font-weight: 700; }
+  /* Two grey notes that used to be inline styles, which cannot be themed: an inline colour
+     outranks every `body.dark` rule without !important, so both rendered a light-mode grey
+     on the dark page. */
+  .derive-arrow { margin: 0 6px; color: #6b7280; }
+  .sub-note { font-weight: 400; font-size: 10px; color: #6b7280; }
 
   /* TD RUNS */
   .td-runs { display: flex; gap: 4px; align-items: center; flex-wrap: wrap; }
@@ -434,8 +446,9 @@
   body.dark .result-unit { color: #8890a0; }
   body.dark .result-row { border-bottom-color: #2e323c; }
   body.dark .hint { color: #8890a0; }
+  body.dark .derive-arrow, body.dark .sub-note { color: #9aa3b2; }
   body.dark .label-sm { color: #9098a8; }
-  body.dark .sep { color: #788; }
+  body.dark .input-group .sep { color: #9aa3b2; }
   body.dark .unit { color: #8890a0; }
   body.dark .subsection { color: #9098a8; border-bottom-color: #3a3f4b; }
   body.dark .divider { border-top-color: #333; }
@@ -446,17 +459,14 @@
   body.dark .copy-section textarea { background: #1e2128; color: #d0d4dc; border-top: 1px solid #333; }
   body.dark .flag-low { background: #3d1f2a; color: #ef9a9a; }
   body.dark .flag-high { background: #3d2f1f; color: #ffcc80; }
-  body.dark .flag-severe { background: #4a1a1a; color: #ef5350; }
+  body.dark .flag-severe { background: #4a1a1a; color: #ff8a80; }
   body.dark .flag-normal { background: #1f3d2a; color: #81c784; }
-  body.dark .val-normal { color: #66bb6a; }
-  body.dark .val-abnormal { color: #ef5350; }
-  body.dark .val-borderline { color: #ffa726; }
   body.dark .tab-bar { background: #0d1117; border-top: 1px solid rgba(255,255,255,0.04); }
   body.dark .tab-btn.active { border-bottom-color: #4a90d9; }
   body.dark .section-head.collapsible::after { opacity: 0.4; }
   body.dark table.vals th { color: #8ab4f8; border-bottom-color: #3a3f4b; }
   body.dark table.vals td { border-bottom-color: #2e323c; }
-  body.dark table.vals tr.severe td { color: #ef5350; }
+  body.dark table.vals tr.severe td { color: #ff8a80; }
 
   /* AFIB GORLIN */
   .afib-toggle {
@@ -508,23 +518,6 @@
     color: var(--navy);
     min-width: 50px;
   }
-  .afib-avg-row {
-    background: #e8f5e9;
-    border: 1px solid #43a047;
-    border-radius: 6px;
-    padding: 6px 10px;
-    margin: 6px 0;
-    font-size: 13px;
-    font-weight: 700;
-    color: #2e7d32;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-  }
-  .afib-avg-row .avg-value {
-    font-family: "SF Mono", "Menlo", monospace;
-    font-size: 16px;
-  }
   .afib-detail {
     background: #f5f5f5;
     border: 1px solid #ddd;
@@ -542,7 +535,6 @@
   body.dark .afib-beats-table td { border-bottom-color: #3a3f4b; }
   body.dark .afib-beats-table td:first-child { color: #9098a8; }
   body.dark .afib-beats-table .af-result { color: #8ab4f8; }
-  body.dark .afib-avg-row { background: #1f3d2a; border-color: #43a047; color: #81c784; }
   body.dark .afib-detail { background: #2a2e37; border-color: #3a3f4b; color: #b0b8c4; }
 
   /* SEP/DFP PRESSURE TRACING DIAGRAM */
@@ -554,23 +546,49 @@
   body.dark .sep-dfp-diagram .dg-tick { stroke: #666; }
   body.dark .sep-dfp-diagram .dg-lbl { fill: #999; }
   body.dark .sep-dfp-diagram .dg-land { stroke: #555; }
-  body.dark .sep-dfp-diagram .dg-ecg { stroke: #ef9a9a; }
-  body.dark .sep-dfp-diagram .dg-ecg-lbl { fill: #ef9a9a; }
+
+  /* SUBSTITUTED WORKING LINES — the reason `decRound`/`q`/`vq` exist is that a reader can
+     check this arithmetic by eye, so it must be legible in BOTH themes. These carried an
+     inline `color:#666`, which outranks any selector without !important: the `body.dark`
+     rule below had never once applied, and the file's signature feature rendered at 2.61:1
+     in the default theme. #5a6270 on white is 6.1:1. */
+  #ava_math, #mva_math, #mvo2_math, #qpqs_math, #shunt_flow_math {
+    font-size: 11px;
+    color: #5a6270;
+  }
+  body.dark #ava_math, body.dark #mva_math,
+  body.dark #mvo2_math, body.dark #qpqs_math, body.dark #shunt_flow_math { color: #9aa3b2; }
 
   /* Gorlin results headings */
   .gorlin-heading { font-weight:700; font-size:12px; color:var(--navy); }
   body.dark .gorlin-heading { color: #8ab4f8; }
   body.dark #mvaResults > .gorlin-heading { border-top-color: #3a3f4b; }
-  body.dark #ava_math, body.dark #mva_math { color: #8890a0; }
 
-  /* ═══ MOBILE NAV — horizontally scrollable tab bar (7 tabs need to fit on phone) ═══ */
+  /* ═══ MOBILE NAV — horizontally scrollable tab bar (9 tabs need to fit on phone) ═══ */
   @media (max-width: 800px) {
     .site-nav { overflow-x: auto; overflow-y: hidden; -webkit-overflow-scrolling: touch; padding: 0 12px; }
     .site-nav::-webkit-scrollbar { display: none; }
     .nav-brand { flex-shrink: 0; margin-right: 14px; font-size: 14px; }
     .nav-tabs { flex-shrink: 0; gap: 0; }
     .nav-tab { flex-shrink: 0; white-space: nowrap; padding: 0 10px; font-size: 11px; }
-    .nav-right { display: none; }
+    /* THE THEME TOGGLE STAYS REACHABLE ON A PHONE. This rule used to be `display: none`,
+       and `.nav-right`'s only child is the toggle — so a phone-only reader was locked into
+       whichever theme a desktop session last wrote to `cathmath_dark`, with no control to
+       undo it. Pinned to the trailing edge of the scrolling strip instead of hidden. */
+    .nav-right { position: sticky; right: 0; flex-shrink: 0; margin-left: 8px; gap: 8px;
+                 background: #0a1628; padding-left: 10px; height: 100%; }
+    /* iOS Safari zooms the viewport whenever a focused text control computes below 16px and
+       does not zoom back out — on a form you tab through 20–40 fields of. The boxes widen to
+       keep three of them plus their separators on one pressure row. */
+    input[type="number"] { font-size: 16px; width: 64px; padding: 5px 4px; }
+    select, textarea { font-size: 16px; }
+    .td-runs input { width: 58px; }
+    /* 16px digits are wider than 14px ones, so the space comes back out of the chrome around
+       them rather than out of the row: three boxes, two separators and three sub-labels have
+       to stay on one line on a 390px phone. */
+    .input-group { gap: 2px; }
+    .input-group .label-sm { min-width: 24px; }
+    .input-group .sep { font-size: 14px; }
   }
 </style>
 </head>
@@ -606,9 +624,9 @@
   </div>
 </div>
 
-<div class="tab-bar">
-  <button class="tab-btn active" id="tabRhc" onclick="switchTab('rhc')">RHC Hemodynamics</button>
-  <button class="tab-btn" id="tabShunt" onclick="switchTab('shunt')">Shunts</button>
+<div class="tab-bar" role="tablist" aria-label="Calculator sections">
+  <button class="tab-btn active" id="tabRhc" role="tab" aria-selected="true" aria-controls="rhcResults" onclick="switchTab('rhc')">RHC Hemodynamics</button>
+  <button class="tab-btn" id="tabShunt" role="tab" aria-selected="false" aria-controls="shuntResults" onclick="switchTab('shunt')">Shunts</button>
 </div>
 
 <div class="container">
@@ -622,36 +640,43 @@
     <div class="section-body">
       <div class="input-row">
         <label>Age</label>
-        <input type="number" id="age" step="1" placeholder="yrs" oninput="calc()">
+        <input type="number" id="age" aria-label="Age, years" min="0" max="120" inputmode="decimal" step="1" placeholder="yrs" oninput="calc()">
         <span class="unit">years</span>
         &nbsp;&nbsp;
         <label>Sex</label>
-        <select id="sex" onchange="calc()">
+        <select id="sex" aria-label="Sex" onchange="calc()">
           <option value="male">Male</option>
           <option value="female">Female</option>
         </select>
         &nbsp;&nbsp;
         <label>BSA</label>
-        <input type="number" id="bsa" step="0.01" placeholder="m²" oninput="calc()">
+        <input type="number" id="bsa" aria-label="Body surface area, m²" min="0.1" max="3.5" inputmode="decimal" step="0.01" placeholder="m²" oninput="calc()">
         <span class="unit">m²</span>
       </div>
       <div class="input-row">
         <label>Hb<sub>CBC</sub></label>
-        <input type="number" id="hb" step="0.1" placeholder="g/dL" oninput="calc()">
+        <!-- min/max ARE THE REFUSAL DOMAIN, NOT THE PLAUSIBLE BAND. `:invalid` paints this box
+             red, so the bounds have to mean the same thing the code means: HB_MAX is 30 and the
+             floor is "above 0" (calc() withholds every Fick flow outside that). They read 1 and
+             25 — the PLAUSIBILITY band — so Hb 28 went red while still computing, and Hb 1.5, the
+             exact decimal slip the guard exists for, went green. 0.1 is the closest HTML can
+             come to an exclusive 0 at this step. The 3–25 plausibility band withholds nothing
+             and is said in words in the quality checks, where a sentence can explain itself. -->
+        <input type="number" id="hb" aria-label="Hemoglobin from CBC, g/dL" min="0.1" max="30" inputmode="decimal" step="0.1" placeholder="g/dL" oninput="calc()">
         <span class="unit">g/dL</span>
         &nbsp;&nbsp;
         <label>HR</label>
-        <input type="number" id="hr" step="1" placeholder="bpm" oninput="calc()">
+        <input type="number" id="hr" aria-label="Heart rate, bpm" min="1" max="300" inputmode="decimal" step="1" placeholder="bpm" oninput="calc()">
         <span class="unit">bpm</span>
       </div>
       <div class="input-row">
         <label>O₂ const</label>
-        <select id="o2const" onchange="calc()">
+        <select id="o2const" aria-label="Oxygen binding constant of hemoglobin" onchange="calc()">
           <option value="1.36" selected>1.36 mL O₂/g Hb</option>
           <option value="1.34">1.34 mL O₂/g Hb</option>
         </select>
         <div class="check-row" style="margin-left:12px;">
-          <input type="checkbox" id="useDissolvedO2" onchange="calc()">
+          <input type="checkbox" id="useDissolvedO2" aria-label="Include dissolved oxygen in the content equations" onchange="calc()">
           <label for="useDissolvedO2" style="font-weight:400; min-width:auto; cursor:pointer;">Include dissolved O₂</label>
         </div>
       </div>
@@ -664,7 +689,7 @@
     <div class="section-body">
       <div class="input-row">
         <label>Venous sheath</label>
-        <select id="venous_sheath" onchange="calc()">
+        <select id="venous_sheath" aria-label="Venous sheath size, French" onchange="calc()">
           <option value="">—</option>
           <option value="6">6 Fr</option>
           <option value="7">7 Fr</option>
@@ -674,7 +699,7 @@
         </select>
         &nbsp;&nbsp;
         <label>PA catheter</label>
-        <select id="pa_catheter" onchange="calc()">
+        <select id="pa_catheter" aria-label="PA catheter size, French" onchange="calc()">
           <option value="">—</option>
           <option value="5">5 Fr (pediatric)</option>
           <option value="7">7 Fr</option>
@@ -684,7 +709,7 @@
       </div>
       <div class="input-row">
         <label>TD injectate</label>
-        <select id="td_injectate" onchange="calc()">
+        <select id="td_injectate" aria-label="Thermodilution injectate volume and temperature" onchange="calc()">
           <option value="room_10" selected>10 mL room temp</option>
           <option value="iced_10">10 mL iced</option>
           <option value="room_5">5 mL room temp</option>
@@ -707,13 +732,13 @@
         <label>RA</label>
         <div class="input-group">
           <span class="label-sm">a</span>
-          <input type="number" id="ra_a" step="1" oninput="calc()">
+          <input type="number" id="ra_a" aria-label="RA a wave pressure, mmHg" min="-20" max="300" inputmode="decimal" step="1" oninput="calc()">
           <span class="sep">/</span>
           <span class="label-sm">v</span>
-          <input type="number" id="ra_v" step="1" oninput="calc()">
+          <input type="number" id="ra_v" aria-label="RA v wave pressure, mmHg" min="-20" max="300" inputmode="decimal" step="1" oninput="calc()">
           <span class="sep">/</span>
           <span class="label-sm">mean</span>
-          <input type="number" id="ra_mean" step="1" oninput="calc()">
+          <input type="number" id="ra_mean" aria-label="RA mean pressure, mmHg" min="-20" max="300" inputmode="decimal" step="1" oninput="calc()">
         </div>
       </div>
 
@@ -721,13 +746,13 @@
         <label>RV</label>
         <div class="input-group">
           <span class="label-sm">sys</span>
-          <input type="number" id="rv_sys" step="1" oninput="calc()">
+          <input type="number" id="rv_sys" aria-label="RV systolic pressure, mmHg" min="-20" max="300" inputmode="decimal" step="1" oninput="calc()">
           <span class="sep">/</span>
           <span class="label-sm">dia</span>
-          <input type="number" id="rv_dia" step="1" oninput="calc()">
+          <input type="number" id="rv_dia" aria-label="RV diastolic pressure, mmHg" min="-20" max="300" inputmode="decimal" step="1" oninput="calc()">
           <span class="sep">/</span>
           <span class="label-sm">EDP</span>
-          <input type="number" id="rv_edp" step="1" oninput="calc()">
+          <input type="number" id="rv_edp" aria-label="RV end-diastolic pressure, mmHg" min="-20" max="300" inputmode="decimal" step="1" oninput="calc()">
         </div>
       </div>
 
@@ -735,13 +760,13 @@
         <label>PA</label>
         <div class="input-group">
           <span class="label-sm">sys</span>
-          <input type="number" id="pa_sys" step="1" oninput="calc()">
+          <input type="number" id="pa_sys" aria-label="PA systolic pressure, mmHg" min="-20" max="300" inputmode="decimal" step="1" oninput="calc()">
           <span class="sep">/</span>
           <span class="label-sm">dia</span>
-          <input type="number" id="pa_dia" step="1" oninput="calc()">
+          <input type="number" id="pa_dia" aria-label="PA diastolic pressure, mmHg" min="-20" max="300" inputmode="decimal" step="1" oninput="calc()">
           <span class="sep">/</span>
           <span class="label-sm">mean</span>
-          <input type="number" id="pa_mean" step="1" oninput="calc()">
+          <input type="number" id="pa_mean" aria-label="PA mean pressure, mmHg" min="-20" max="300" inputmode="decimal" step="1" oninput="calc()">
         </div>
       </div>
 
@@ -749,13 +774,13 @@
         <label>PCWP</label>
         <div class="input-group">
           <span class="label-sm">a</span>
-          <input type="number" id="pcwp_a" step="1" oninput="calc()">
+          <input type="number" id="pcwp_a" aria-label="PCWP a wave pressure, mmHg" min="-20" max="300" inputmode="decimal" step="1" oninput="calc()">
           <span class="sep">/</span>
           <span class="label-sm">v</span>
-          <input type="number" id="pcwp_v" step="1" oninput="calc()">
+          <input type="number" id="pcwp_v" aria-label="PCWP v wave pressure, mmHg" min="-20" max="300" inputmode="decimal" step="1" oninput="calc()">
           <span class="sep">/</span>
           <span class="label-sm">mean</span>
-          <input type="number" id="pcwp_mean" step="1" oninput="calc()">
+          <input type="number" id="pcwp_mean" aria-label="PCWP mean pressure, mmHg" min="-20" max="300" inputmode="decimal" step="1" oninput="calc()">
         </div>
       </div>
 
@@ -763,13 +788,13 @@
         <label>LV</label>
         <div class="input-group">
           <span class="label-sm">sys</span>
-          <input type="number" id="lv_sys" step="1" oninput="calc()">
+          <input type="number" id="lv_sys" aria-label="LV systolic pressure, mmHg" min="-20" max="400" inputmode="decimal" step="1" oninput="calc()">
           <span class="sep">/</span>
           <span class="label-sm">dia</span>
-          <input type="number" id="lv_dia" step="1" oninput="calc()">
+          <input type="number" id="lv_dia" aria-label="LV diastolic pressure, mmHg" min="-20" max="400" inputmode="decimal" step="1" oninput="calc()">
           <span class="sep">/</span>
           <span class="label-sm">EDP</span>
-          <input type="number" id="lv_edp" step="1" oninput="calc()">
+          <input type="number" id="lv_edp" aria-label="LV end-diastolic pressure, mmHg" min="-20" max="400" inputmode="decimal" step="1" oninput="calc()">
         </div>
       </div>
 
@@ -777,13 +802,13 @@
         <label>Aorta</label>
         <div class="input-group">
           <span class="label-sm">sys</span>
-          <input type="number" id="ao_sys" step="1" oninput="calc()">
+          <input type="number" id="ao_sys" aria-label="Aortic systolic pressure, mmHg" min="-20" max="400" inputmode="decimal" step="1" oninput="calc()">
           <span class="sep">/</span>
           <span class="label-sm">dia</span>
-          <input type="number" id="ao_dia" step="1" oninput="calc()">
+          <input type="number" id="ao_dia" aria-label="Aortic diastolic pressure, mmHg" min="-20" max="400" inputmode="decimal" step="1" oninput="calc()">
           <span class="sep">/</span>
           <span class="label-sm">mean</span>
-          <input type="number" id="ao_mean" step="1" oninput="calc()">
+          <input type="number" id="ao_mean" aria-label="Aortic mean pressure, mmHg" min="-20" max="400" inputmode="decimal" step="1" oninput="calc()">
         </div>
       </div>
 
@@ -796,20 +821,20 @@
     <div class="section-body">
       <div class="input-row">
         <label>SaO₂</label>
-        <input type="number" id="sao2" step="0.1" placeholder="%" oninput="calc()">
+        <input type="number" id="sao2" aria-label="Arterial oxygen saturation SaO₂, percent" min="0" max="100" inputmode="decimal" step="0.1" placeholder="%" oninput="calc()">
         <span class="unit">%</span>
         &nbsp;&nbsp;
         <label>SvO₂</label>
-        <input type="number" id="svo2" step="0.1" placeholder="%" oninput="calc()">
+        <input type="number" id="svo2" aria-label="Mixed venous oxygen saturation SvO₂ from the PA, percent" min="0" max="100" inputmode="decimal" step="0.1" placeholder="%" oninput="calc()">
         <span class="unit">% (PA sat)</span>
       </div>
       <div class="input-row" id="dissolvedRow" style="display:none;">
         <label>PaO₂</label>
-        <input type="number" id="pao2" step="1" placeholder="mmHg" oninput="calc()">
+        <input type="number" id="pao2" aria-label="Arterial oxygen tension PaO₂, mmHg" min="0" max="800" inputmode="decimal" step="1" placeholder="mmHg" oninput="calc()">
         <span class="unit">mmHg</span>
         &nbsp;&nbsp;
         <label>PvO₂</label>
-        <input type="number" id="pvo2" step="1" placeholder="mmHg" oninput="calc()">
+        <input type="number" id="pvo2" aria-label="Mixed venous oxygen tension PvO₂, mmHg" min="0" max="800" inputmode="decimal" step="1" placeholder="mmHg" oninput="calc()">
         <span class="unit">mmHg</span>
       </div>
       <div class="hint">Enter saturations as percentages (e.g., 92.8 not 0.928). Calculator converts automatically.</div>
@@ -822,7 +847,7 @@
     <div class="section-body">
       <div class="input-row">
         <label>Source</label>
-        <select id="vo2source" onchange="handleVo2Source(); calc();">
+        <select id="vo2source" aria-label="Oxygen consumption VO₂ source" onchange="handleVo2Source(); calc();">
           <option value="lafarge">LaFarge (auto-calculated)</option>
           <option value="lafarge_manual">LaFarge (enter from cath lab software)</option>
           <option value="measured">Measured (metabolic cart)</option>
@@ -836,7 +861,7 @@
       </div>
       <div class="input-row">
         <label>VO₂</label>
-        <input type="number" id="vo2" step="0.1" placeholder="mL/min" oninput="calc()" style="width:92px;">
+        <input type="number" id="vo2" aria-label="Oxygen consumption VO₂, mL O₂ per minute" min="0" max="2000" inputmode="decimal" step="0.1" placeholder="mL/min" oninput="calc()" style="width:92px;">
         <span class="unit">mL O₂/min</span>
         <span class="hint" style="margin-left:6px;" id="vo2_per_m2"></span>
       </div>
@@ -851,17 +876,17 @@
       <div class="input-row">
         <label>Runs</label>
         <div class="td-runs">
-          <input type="number" id="td1" step="0.01" placeholder="#1" oninput="calcTD(); calc();">
-          <input type="number" id="td2" step="0.01" placeholder="#2" oninput="calcTD(); calc();">
-          <input type="number" id="td3" step="0.01" placeholder="#3" oninput="calcTD(); calc();">
-          <input type="number" id="td4" step="0.01" placeholder="#4" oninput="calcTD(); calc();">
-          <input type="number" id="td5" step="0.01" placeholder="#5" oninput="calcTD(); calc();">
+          <input type="number" id="td1" aria-label="Thermodilution run 1 cardiac output, L/min" min="0" max="20" inputmode="decimal" step="0.01" placeholder="#1" oninput="calcTD(); calc();">
+          <input type="number" id="td2" aria-label="Thermodilution run 2 cardiac output, L/min" min="0" max="20" inputmode="decimal" step="0.01" placeholder="#2" oninput="calcTD(); calc();">
+          <input type="number" id="td3" aria-label="Thermodilution run 3 cardiac output, L/min" min="0" max="20" inputmode="decimal" step="0.01" placeholder="#3" oninput="calcTD(); calc();">
+          <input type="number" id="td4" aria-label="Thermodilution run 4 cardiac output, L/min" min="0" max="20" inputmode="decimal" step="0.01" placeholder="#4" oninput="calcTD(); calc();">
+          <input type="number" id="td5" aria-label="Thermodilution run 5 cardiac output, L/min" min="0" max="20" inputmode="decimal" step="0.01" placeholder="#5" oninput="calcTD(); calc();">
           <span class="unit">L/min each</span>
         </div>
       </div>
       <div class="input-row">
         <label>TD CO</label>
-        <input type="number" id="td_co" step="0.01" placeholder="avg" oninput="calc()">
+        <input type="number" id="td_co" aria-label="Thermodilution cardiac output, average of runs, L/min" min="0" max="20" inputmode="decimal" step="0.01" placeholder="avg" oninput="calc()">
         <span class="unit">L/min (avg)</span>
         <span class="hint" style="margin-left:8px;" id="tdAvgHint"></span>
       </div>
@@ -873,9 +898,9 @@
     <div class="section-head">CO Source for Derived Hemodynamics</div>
     <div class="section-body">
       <div class="radio-row">
-        <input type="radio" name="coSource" id="coFick" value="fick" checked onchange="calc()">
+        <input type="radio" name="coSource" id="coFick" aria-label="Use Fick cardiac output for derived hemodynamics" value="fick" checked onchange="calc()">
         <label for="coFick">Fick CO (recommended)</label>
-        <input type="radio" name="coSource" id="coTD" value="td" onchange="calc()">
+        <input type="radio" name="coSource" id="coTD" aria-label="Use thermodilution cardiac output for derived hemodynamics" value="td" onchange="calc()">
         <label for="coTD">Thermodilution CO</label>
       </div>
     </div>
@@ -887,7 +912,7 @@
     <div class="section-body">
 
       <div class="afib-toggle">
-        <input type="checkbox" id="afibToggle" onchange="toggleAfib()">
+        <input type="checkbox" id="afibToggle" aria-label="AFib mode — beat-by-beat Gorlin averaging" onchange="toggleAfib()">
         <label for="afibToggle">AFib mode — beat-by-beat Gorlin averaging</label>
       </div>
 
@@ -962,16 +987,16 @@
         <div class="subsection">Aortic Valve (AVA)</div>
         <div class="input-row">
           <label>Mean ΔP</label>
-          <input type="number" id="ava_gradient" step="0.1" placeholder="mmHg" oninput="calc()">
+          <input type="number" id="ava_gradient" aria-label="Mean transaortic gradient, mmHg" min="0" max="200" inputmode="decimal" step="0.1" placeholder="mmHg" oninput="calc()">
           <span class="unit">mmHg (transaortic gradient)</span>
         </div>
         <div class="input-row">
           <label>Eject time</label>
-          <input type="number" id="ava_ejtime" step="0.01" placeholder="sec/beat" oninput="calcSEP(); calc();">
+          <input type="number" id="ava_ejtime" aria-label="Systolic ejection time per beat, seconds" min="0" max="2" inputmode="decimal" step="0.01" placeholder="sec/beat" oninput="calcSEP(); calc();">
           <span class="unit">sec/beat</span>
-          <span style="margin:0 6px; color:#999;">→</span>
+          <span class="derive-arrow">→</span>
           <label>SEP</label>
-          <input type="number" id="ava_sep" step="0.1" placeholder="sec/min" oninput="calc()">
+          <input type="number" id="ava_sep" aria-label="Systolic ejection period, seconds per minute" min="0" max="60" inputmode="decimal" step="0.1" placeholder="sec/min" oninput="calc()">
           <span class="unit">sec/min</span>
         </div>
         <div class="hint">SEP = ejection time/beat × HR. Typical: 0.30–0.35 sec/beat → 20–25 sec/min. Measured from AV open to dicrotic notch. <b>Type over the SEP to use a measured value</b> — it is kept, and clearing it hands the box back to the ejection time.</div>
@@ -981,16 +1006,16 @@
         <div class="subsection" style="margin-top:10px;">Mitral Valve (MVA)</div>
         <div class="input-row">
           <label>Mean ΔP</label>
-          <input type="number" id="mva_gradient" step="0.1" placeholder="mmHg" oninput="calc()">
+          <input type="number" id="mva_gradient" aria-label="Mean transmitral gradient, mmHg" min="0" max="200" inputmode="decimal" step="0.1" placeholder="mmHg" oninput="calc()">
           <span class="unit">mmHg (transmitral gradient)</span>
         </div>
         <div class="input-row">
           <label>Fill time</label>
-          <input type="number" id="mva_filltime" step="0.01" placeholder="sec/beat" oninput="calcDFP(); calc();">
+          <input type="number" id="mva_filltime" aria-label="Diastolic filling time per beat, seconds" min="0" max="2" inputmode="decimal" step="0.01" placeholder="sec/beat" oninput="calcDFP(); calc();">
           <span class="unit">sec/beat</span>
-          <span style="margin:0 6px; color:#999;">→</span>
+          <span class="derive-arrow">→</span>
           <label>DFP</label>
-          <input type="number" id="mva_dfp" step="0.1" placeholder="sec/min" oninput="calc()">
+          <input type="number" id="mva_dfp" aria-label="Diastolic filling period, seconds per minute" min="0" max="60" inputmode="decimal" step="0.1" placeholder="sec/min" oninput="calc()">
           <span class="unit">sec/min</span>
         </div>
         <div class="hint">DFP = filling time/beat × HR. Typical: 0.40–0.50 sec/beat → 30–40 sec/min. Shortened in tachycardia. Average ≥5 beats in AFib. <b>Type over the DFP to use a measured value</b> — it is kept, and clearing it hands the box back to the filling time.</div>
@@ -1002,16 +1027,16 @@
         <div class="hint" style="margin-bottom:4px;">Enter gradient and ejection time for each beat. Minimum 5 beats recommended. Empty rows are ignored.</div>
         <table class="afib-beats-table">
           <tr><th>Beat</th><th>ΔP (mmHg)</th><th>Eject time (s)</th><th>AVA (cm²)</th></tr>
-          <tr><td>1</td><td><input type="number" id="ava_af_grad_1" step="0.1" oninput="calc()"></td><td><input type="number" id="ava_af_et_1" step="0.01" oninput="calc()"></td><td class="af-result" id="ava_af_result_1">—</td></tr>
-          <tr><td>2</td><td><input type="number" id="ava_af_grad_2" step="0.1" oninput="calc()"></td><td><input type="number" id="ava_af_et_2" step="0.01" oninput="calc()"></td><td class="af-result" id="ava_af_result_2">—</td></tr>
-          <tr><td>3</td><td><input type="number" id="ava_af_grad_3" step="0.1" oninput="calc()"></td><td><input type="number" id="ava_af_et_3" step="0.01" oninput="calc()"></td><td class="af-result" id="ava_af_result_3">—</td></tr>
-          <tr><td>4</td><td><input type="number" id="ava_af_grad_4" step="0.1" oninput="calc()"></td><td><input type="number" id="ava_af_et_4" step="0.01" oninput="calc()"></td><td class="af-result" id="ava_af_result_4">—</td></tr>
-          <tr><td>5</td><td><input type="number" id="ava_af_grad_5" step="0.1" oninput="calc()"></td><td><input type="number" id="ava_af_et_5" step="0.01" oninput="calc()"></td><td class="af-result" id="ava_af_result_5">—</td></tr>
-          <tr><td>6</td><td><input type="number" id="ava_af_grad_6" step="0.1" oninput="calc()"></td><td><input type="number" id="ava_af_et_6" step="0.01" oninput="calc()"></td><td class="af-result" id="ava_af_result_6">—</td></tr>
-          <tr><td>7</td><td><input type="number" id="ava_af_grad_7" step="0.1" oninput="calc()"></td><td><input type="number" id="ava_af_et_7" step="0.01" oninput="calc()"></td><td class="af-result" id="ava_af_result_7">—</td></tr>
-          <tr><td>8</td><td><input type="number" id="ava_af_grad_8" step="0.1" oninput="calc()"></td><td><input type="number" id="ava_af_et_8" step="0.01" oninput="calc()"></td><td class="af-result" id="ava_af_result_8">—</td></tr>
-          <tr><td>9</td><td><input type="number" id="ava_af_grad_9" step="0.1" oninput="calc()"></td><td><input type="number" id="ava_af_et_9" step="0.01" oninput="calc()"></td><td class="af-result" id="ava_af_result_9">—</td></tr>
-          <tr><td>10</td><td><input type="number" id="ava_af_grad_10" step="0.1" oninput="calc()"></td><td><input type="number" id="ava_af_et_10" step="0.01" oninput="calc()"></td><td class="af-result" id="ava_af_result_10">—</td></tr>
+          <tr><td>1</td><td><input type="number" id="ava_af_grad_1" aria-label="Beat 1 mean transaortic gradient, mmHg" min="0" max="200" inputmode="decimal" step="0.1" oninput="calc()"></td><td><input type="number" id="ava_af_et_1" aria-label="Beat 1 ejection time, seconds" min="0" max="2" inputmode="decimal" step="0.01" oninput="calc()"></td><td class="af-result" id="ava_af_result_1">—</td></tr>
+          <tr><td>2</td><td><input type="number" id="ava_af_grad_2" aria-label="Beat 2 mean transaortic gradient, mmHg" min="0" max="200" inputmode="decimal" step="0.1" oninput="calc()"></td><td><input type="number" id="ava_af_et_2" aria-label="Beat 2 ejection time, seconds" min="0" max="2" inputmode="decimal" step="0.01" oninput="calc()"></td><td class="af-result" id="ava_af_result_2">—</td></tr>
+          <tr><td>3</td><td><input type="number" id="ava_af_grad_3" aria-label="Beat 3 mean transaortic gradient, mmHg" min="0" max="200" inputmode="decimal" step="0.1" oninput="calc()"></td><td><input type="number" id="ava_af_et_3" aria-label="Beat 3 ejection time, seconds" min="0" max="2" inputmode="decimal" step="0.01" oninput="calc()"></td><td class="af-result" id="ava_af_result_3">—</td></tr>
+          <tr><td>4</td><td><input type="number" id="ava_af_grad_4" aria-label="Beat 4 mean transaortic gradient, mmHg" min="0" max="200" inputmode="decimal" step="0.1" oninput="calc()"></td><td><input type="number" id="ava_af_et_4" aria-label="Beat 4 ejection time, seconds" min="0" max="2" inputmode="decimal" step="0.01" oninput="calc()"></td><td class="af-result" id="ava_af_result_4">—</td></tr>
+          <tr><td>5</td><td><input type="number" id="ava_af_grad_5" aria-label="Beat 5 mean transaortic gradient, mmHg" min="0" max="200" inputmode="decimal" step="0.1" oninput="calc()"></td><td><input type="number" id="ava_af_et_5" aria-label="Beat 5 ejection time, seconds" min="0" max="2" inputmode="decimal" step="0.01" oninput="calc()"></td><td class="af-result" id="ava_af_result_5">—</td></tr>
+          <tr><td>6</td><td><input type="number" id="ava_af_grad_6" aria-label="Beat 6 mean transaortic gradient, mmHg" min="0" max="200" inputmode="decimal" step="0.1" oninput="calc()"></td><td><input type="number" id="ava_af_et_6" aria-label="Beat 6 ejection time, seconds" min="0" max="2" inputmode="decimal" step="0.01" oninput="calc()"></td><td class="af-result" id="ava_af_result_6">—</td></tr>
+          <tr><td>7</td><td><input type="number" id="ava_af_grad_7" aria-label="Beat 7 mean transaortic gradient, mmHg" min="0" max="200" inputmode="decimal" step="0.1" oninput="calc()"></td><td><input type="number" id="ava_af_et_7" aria-label="Beat 7 ejection time, seconds" min="0" max="2" inputmode="decimal" step="0.01" oninput="calc()"></td><td class="af-result" id="ava_af_result_7">—</td></tr>
+          <tr><td>8</td><td><input type="number" id="ava_af_grad_8" aria-label="Beat 8 mean transaortic gradient, mmHg" min="0" max="200" inputmode="decimal" step="0.1" oninput="calc()"></td><td><input type="number" id="ava_af_et_8" aria-label="Beat 8 ejection time, seconds" min="0" max="2" inputmode="decimal" step="0.01" oninput="calc()"></td><td class="af-result" id="ava_af_result_8">—</td></tr>
+          <tr><td>9</td><td><input type="number" id="ava_af_grad_9" aria-label="Beat 9 mean transaortic gradient, mmHg" min="0" max="200" inputmode="decimal" step="0.1" oninput="calc()"></td><td><input type="number" id="ava_af_et_9" aria-label="Beat 9 ejection time, seconds" min="0" max="2" inputmode="decimal" step="0.01" oninput="calc()"></td><td class="af-result" id="ava_af_result_9">—</td></tr>
+          <tr><td>10</td><td><input type="number" id="ava_af_grad_10" aria-label="Beat 10 mean transaortic gradient, mmHg" min="0" max="200" inputmode="decimal" step="0.1" oninput="calc()"></td><td><input type="number" id="ava_af_et_10" aria-label="Beat 10 ejection time, seconds" min="0" max="2" inputmode="decimal" step="0.01" oninput="calc()"></td><td class="af-result" id="ava_af_result_10">—</td></tr>
         </table>
       </div>
 
@@ -1020,16 +1045,16 @@
         <div class="hint" style="margin-bottom:4px;">Enter gradient and filling time for each beat. Minimum 5 beats recommended. Empty rows are ignored.</div>
         <table class="afib-beats-table">
           <tr><th>Beat</th><th>ΔP (mmHg)</th><th>Fill time (s)</th><th>MVA (cm²)</th></tr>
-          <tr><td>1</td><td><input type="number" id="mva_af_grad_1" step="0.1" oninput="calc()"></td><td><input type="number" id="mva_af_ft_1" step="0.01" oninput="calc()"></td><td class="af-result" id="mva_af_result_1">—</td></tr>
-          <tr><td>2</td><td><input type="number" id="mva_af_grad_2" step="0.1" oninput="calc()"></td><td><input type="number" id="mva_af_ft_2" step="0.01" oninput="calc()"></td><td class="af-result" id="mva_af_result_2">—</td></tr>
-          <tr><td>3</td><td><input type="number" id="mva_af_grad_3" step="0.1" oninput="calc()"></td><td><input type="number" id="mva_af_ft_3" step="0.01" oninput="calc()"></td><td class="af-result" id="mva_af_result_3">—</td></tr>
-          <tr><td>4</td><td><input type="number" id="mva_af_grad_4" step="0.1" oninput="calc()"></td><td><input type="number" id="mva_af_ft_4" step="0.01" oninput="calc()"></td><td class="af-result" id="mva_af_result_4">—</td></tr>
-          <tr><td>5</td><td><input type="number" id="mva_af_grad_5" step="0.1" oninput="calc()"></td><td><input type="number" id="mva_af_ft_5" step="0.01" oninput="calc()"></td><td class="af-result" id="mva_af_result_5">—</td></tr>
-          <tr><td>6</td><td><input type="number" id="mva_af_grad_6" step="0.1" oninput="calc()"></td><td><input type="number" id="mva_af_ft_6" step="0.01" oninput="calc()"></td><td class="af-result" id="mva_af_result_6">—</td></tr>
-          <tr><td>7</td><td><input type="number" id="mva_af_grad_7" step="0.1" oninput="calc()"></td><td><input type="number" id="mva_af_ft_7" step="0.01" oninput="calc()"></td><td class="af-result" id="mva_af_result_7">—</td></tr>
-          <tr><td>8</td><td><input type="number" id="mva_af_grad_8" step="0.1" oninput="calc()"></td><td><input type="number" id="mva_af_ft_8" step="0.01" oninput="calc()"></td><td class="af-result" id="mva_af_result_8">—</td></tr>
-          <tr><td>9</td><td><input type="number" id="mva_af_grad_9" step="0.1" oninput="calc()"></td><td><input type="number" id="mva_af_ft_9" step="0.01" oninput="calc()"></td><td class="af-result" id="mva_af_result_9">—</td></tr>
-          <tr><td>10</td><td><input type="number" id="mva_af_grad_10" step="0.1" oninput="calc()"></td><td><input type="number" id="mva_af_ft_10" step="0.01" oninput="calc()"></td><td class="af-result" id="mva_af_result_10">—</td></tr>
+          <tr><td>1</td><td><input type="number" id="mva_af_grad_1" aria-label="Beat 1 mean transmitral gradient, mmHg" min="0" max="200" inputmode="decimal" step="0.1" oninput="calc()"></td><td><input type="number" id="mva_af_ft_1" aria-label="Beat 1 filling time, seconds" min="0" max="2" inputmode="decimal" step="0.01" oninput="calc()"></td><td class="af-result" id="mva_af_result_1">—</td></tr>
+          <tr><td>2</td><td><input type="number" id="mva_af_grad_2" aria-label="Beat 2 mean transmitral gradient, mmHg" min="0" max="200" inputmode="decimal" step="0.1" oninput="calc()"></td><td><input type="number" id="mva_af_ft_2" aria-label="Beat 2 filling time, seconds" min="0" max="2" inputmode="decimal" step="0.01" oninput="calc()"></td><td class="af-result" id="mva_af_result_2">—</td></tr>
+          <tr><td>3</td><td><input type="number" id="mva_af_grad_3" aria-label="Beat 3 mean transmitral gradient, mmHg" min="0" max="200" inputmode="decimal" step="0.1" oninput="calc()"></td><td><input type="number" id="mva_af_ft_3" aria-label="Beat 3 filling time, seconds" min="0" max="2" inputmode="decimal" step="0.01" oninput="calc()"></td><td class="af-result" id="mva_af_result_3">—</td></tr>
+          <tr><td>4</td><td><input type="number" id="mva_af_grad_4" aria-label="Beat 4 mean transmitral gradient, mmHg" min="0" max="200" inputmode="decimal" step="0.1" oninput="calc()"></td><td><input type="number" id="mva_af_ft_4" aria-label="Beat 4 filling time, seconds" min="0" max="2" inputmode="decimal" step="0.01" oninput="calc()"></td><td class="af-result" id="mva_af_result_4">—</td></tr>
+          <tr><td>5</td><td><input type="number" id="mva_af_grad_5" aria-label="Beat 5 mean transmitral gradient, mmHg" min="0" max="200" inputmode="decimal" step="0.1" oninput="calc()"></td><td><input type="number" id="mva_af_ft_5" aria-label="Beat 5 filling time, seconds" min="0" max="2" inputmode="decimal" step="0.01" oninput="calc()"></td><td class="af-result" id="mva_af_result_5">—</td></tr>
+          <tr><td>6</td><td><input type="number" id="mva_af_grad_6" aria-label="Beat 6 mean transmitral gradient, mmHg" min="0" max="200" inputmode="decimal" step="0.1" oninput="calc()"></td><td><input type="number" id="mva_af_ft_6" aria-label="Beat 6 filling time, seconds" min="0" max="2" inputmode="decimal" step="0.01" oninput="calc()"></td><td class="af-result" id="mva_af_result_6">—</td></tr>
+          <tr><td>7</td><td><input type="number" id="mva_af_grad_7" aria-label="Beat 7 mean transmitral gradient, mmHg" min="0" max="200" inputmode="decimal" step="0.1" oninput="calc()"></td><td><input type="number" id="mva_af_ft_7" aria-label="Beat 7 filling time, seconds" min="0" max="2" inputmode="decimal" step="0.01" oninput="calc()"></td><td class="af-result" id="mva_af_result_7">—</td></tr>
+          <tr><td>8</td><td><input type="number" id="mva_af_grad_8" aria-label="Beat 8 mean transmitral gradient, mmHg" min="0" max="200" inputmode="decimal" step="0.1" oninput="calc()"></td><td><input type="number" id="mva_af_ft_8" aria-label="Beat 8 filling time, seconds" min="0" max="2" inputmode="decimal" step="0.01" oninput="calc()"></td><td class="af-result" id="mva_af_result_8">—</td></tr>
+          <tr><td>9</td><td><input type="number" id="mva_af_grad_9" aria-label="Beat 9 mean transmitral gradient, mmHg" min="0" max="200" inputmode="decimal" step="0.1" oninput="calc()"></td><td><input type="number" id="mva_af_ft_9" aria-label="Beat 9 filling time, seconds" min="0" max="2" inputmode="decimal" step="0.01" oninput="calc()"></td><td class="af-result" id="mva_af_result_9">—</td></tr>
+          <tr><td>10</td><td><input type="number" id="mva_af_grad_10" aria-label="Beat 10 mean transmitral gradient, mmHg" min="0" max="200" inputmode="decimal" step="0.1" oninput="calc()"></td><td><input type="number" id="mva_af_ft_10" aria-label="Beat 10 filling time, seconds" min="0" max="2" inputmode="decimal" step="0.01" oninput="calc()"></td><td class="af-result" id="mva_af_result_10">—</td></tr>
         </table>
       </div>
 
@@ -1053,11 +1078,11 @@
       <div class="subsection">Screening (minimum required)</div>
       <div class="input-row">
         <label>High SVC</label>
-        <input type="number" id="svc_high" step="0.1" placeholder="%" oninput="calc()">
+        <input type="number" id="svc_high" aria-label="High SVC oxygen saturation, percent" min="0" max="100" inputmode="decimal" step="0.1" placeholder="%" oninput="calc()">
         <span class="unit">%</span>
         &nbsp;&nbsp;
         <label>PA main</label>
-        <input type="number" id="pa_main_sat" step="0.1" placeholder="%" oninput="calc()">
+        <input type="number" id="pa_main_sat" aria-label="Main PA oxygen saturation, percent" min="0" max="100" inputmode="decimal" step="0.1" placeholder="%" oninput="calc()">
         <span class="unit">%</span>
       </div>
       <div class="hint">These two samples alone detect most L→R shunts (≥ 8% step-up = significant).</div>
@@ -1070,56 +1095,56 @@
       <div class="subsection" style="color:var(--blue); border-bottom-color:var(--blue);">SVC</div>
       <div class="input-row">
         <label>Low SVC</label>
-        <input type="number" id="svc_low" step="0.1" placeholder="%" oninput="calc()">
+        <input type="number" id="svc_low" aria-label="Low SVC oxygen saturation, percent" min="0" max="100" inputmode="decimal" step="0.1" placeholder="%" oninput="calc()">
         <span class="unit">%</span>
         <span class="hint" style="margin-left:6px;">High SVC entered above</span>
       </div>
 
-      <div class="subsection" style="color:var(--blue); border-bottom-color:var(--blue);">IVC <span style="font-weight:400; font-size:10px; color:#999;">(needed for MV O₂)</span></div>
+      <div class="subsection" style="color:var(--blue); border-bottom-color:var(--blue);">IVC <span class="sub-note">(needed for MV O₂)</span></div>
       <div class="input-row">
         <label>IVC</label>
-        <input type="number" id="ivc_sat" step="0.1" placeholder="%" oninput="calc()">
+        <input type="number" id="ivc_sat" aria-label="IVC oxygen saturation, percent" min="0" max="100" inputmode="decimal" step="0.1" placeholder="%" oninput="calc()">
         <span class="unit">%</span>
         <span class="hint" style="margin-left:6px;">At level of diaphragm, beyond renal veins</span>
       </div>
 
-      <div class="subsection" style="color:var(--blue); border-bottom-color:var(--blue);">Right Atrium <span style="font-weight:400; font-size:10px; color:#999;">(step-up here → ASD)</span></div>
+      <div class="subsection" style="color:var(--blue); border-bottom-color:var(--blue);">Right Atrium <span class="sub-note">(step-up here → ASD)</span></div>
       <div class="input-row">
         <label>RA high</label>
-        <input type="number" id="ra_high_sat" step="0.1" placeholder="%" oninput="calc()">
+        <input type="number" id="ra_high_sat" aria-label="High RA oxygen saturation, percent" min="0" max="100" inputmode="decimal" step="0.1" placeholder="%" oninput="calc()">
         <span class="unit">%</span>
         &nbsp;&nbsp;
         <label>RA mid</label>
-        <input type="number" id="ra_mid_sat" step="0.1" placeholder="%" oninput="calc()">
+        <input type="number" id="ra_mid_sat" aria-label="Mid RA oxygen saturation, percent" min="0" max="100" inputmode="decimal" step="0.1" placeholder="%" oninput="calc()">
         <span class="unit">%</span>
         &nbsp;&nbsp;
         <label>RA low</label>
-        <input type="number" id="ra_low_sat" step="0.1" placeholder="%" oninput="calc()">
+        <input type="number" id="ra_low_sat" aria-label="Low RA oxygen saturation, percent" min="0" max="100" inputmode="decimal" step="0.1" placeholder="%" oninput="calc()">
         <span class="unit">%</span>
       </div>
       <div class="hint">Mid-RA least affected by IVC/coronary sinus streaming. Multiple samples preferred.</div>
 
-      <div class="subsection" style="color:var(--blue); border-bottom-color:var(--blue);">Right Ventricle <span style="font-weight:400; font-size:10px; color:#999;">(step-up here → VSD)</span></div>
+      <div class="subsection" style="color:var(--blue); border-bottom-color:var(--blue);">Right Ventricle <span class="sub-note">(step-up here → VSD)</span></div>
       <div class="input-row">
         <label>RV mid</label>
-        <input type="number" id="rv_mid_sat" step="0.1" placeholder="%" oninput="calc()">
+        <input type="number" id="rv_mid_sat" aria-label="Mid RV oxygen saturation, percent" min="0" max="100" inputmode="decimal" step="0.1" placeholder="%" oninput="calc()">
         <span class="unit">%</span>
         &nbsp;&nbsp;
         <label>RVOT</label>
-        <input type="number" id="rvot_sat" step="0.1" placeholder="%" oninput="calc()">
+        <input type="number" id="rvot_sat" aria-label="RVOT oxygen saturation, percent" min="0" max="100" inputmode="decimal" step="0.1" placeholder="%" oninput="calc()">
         <span class="unit">%</span>
       </div>
 
-      <div class="subsection" style="color:var(--blue); border-bottom-color:var(--blue);">Pulmonary Artery <span style="font-weight:400; font-size:10px; color:#999;">(step-up here → PDA)</span></div>
+      <div class="subsection" style="color:var(--blue); border-bottom-color:var(--blue);">Pulmonary Artery <span class="sub-note">(step-up here → PDA)</span></div>
       <div class="input-row">
         <span class="hint">PA main entered above in screening</span>
         &nbsp;&nbsp;
         <label>PA left</label>
-        <input type="number" id="pa_left_sat" step="0.1" placeholder="%" oninput="calc()">
+        <input type="number" id="pa_left_sat" aria-label="Left PA oxygen saturation, percent" min="0" max="100" inputmode="decimal" step="0.1" placeholder="%" oninput="calc()">
         <span class="unit">%</span>
         &nbsp;&nbsp;
         <label>PA right</label>
-        <input type="number" id="pa_right_sat" step="0.1" placeholder="%" oninput="calc()">
+        <input type="number" id="pa_right_sat" aria-label="Right PA oxygen saturation, percent" min="0" max="100" inputmode="decimal" step="0.1" placeholder="%" oninput="calc()">
         <span class="unit">%</span>
       </div>
 
@@ -1128,7 +1153,7 @@
       <div class="subsection">PV O₂ &amp; FiO₂</div>
       <div class="input-row">
         <label>PV O₂</label>
-        <select id="pvo2_source" onchange="handlePvO2Source(); calc();">
+        <select id="pvo2_source" aria-label="Pulmonary vein oxygen saturation source" onchange="handlePvO2Source(); calc();">
           <option value="assume_sa">SaO₂ (assumes no R→L shunt)</option>
           <option value="assume_98">98% (room air assumption)</option>
           <option value="manual">Manual entry (wedge PA sample)</option>
@@ -1136,13 +1161,13 @@
       </div>
       <div class="input-row" id="pvO2ManualRow" style="display:none;">
         <label>PV O₂</label>
-        <input type="number" id="pv_o2_manual" step="0.1" placeholder="%" oninput="calc()">
+        <input type="number" id="pv_o2_manual" aria-label="Pulmonary vein oxygen saturation, percent" min="0" max="100" inputmode="decimal" step="0.1" placeholder="%" oninput="calc()">
         <span class="unit">%</span>
       </div>
       <div class="hint">If SaO₂ ≥ 95% on room air → no significant R→L shunt → PV O₂ ≈ SaO₂. If R→L shunt suspected, use wedge PA sample or assume 98%.</div>
       <div class="input-row" style="margin-top:4px;">
         <label>FiO₂</label>
-        <input type="number" id="fio2" step="1" placeholder="21" value="21" oninput="calc()">
+        <input type="number" id="fio2" aria-label="Inspired oxygen fraction FiO₂, percent" min="21" max="100" inputmode="decimal" step="1" placeholder="21" value="21" oninput="calc()">
         <span class="unit">%</span>
         <span class="hint" style="margin-left:8px;">Room air = 21%. If &gt; 30%, simplified Qp/Qs is inaccurate — must use full O₂ content with dissolved O₂.</span>
       </div>
@@ -1156,7 +1181,7 @@
 <!-- ==================== RIGHT PANEL: RESULTS ==================== -->
 <div class="panel panel-right">
 
-<div id="rhcResults">
+<div id="rhcResults" role="tabpanel" aria-labelledby="tabRhc">
 
   <!-- O2 CONTENT -->
   <div class="section">
@@ -1370,16 +1395,17 @@
           <span class="result-range">normal: &gt; 2.0</span>
           <span class="result-flag" id="f_ava"></span>
         </div>
-        <div style="font-size:11px; color:#666; margin:2px 0;" id="ava_math"></div>
+        <div style="margin:2px 0;" id="ava_math"></div>
         <div id="avaAfibDetail" class="afib-detail" style="display:none;"></div>
         <table class="vals" style="font-size:7.5pt; margin:4px 0;">
           <tr><th>Severity</th><th>AVA (cm²)</th></tr>
           <tr><td>Normal</td><td>&gt; 2.0</td></tr>
           <tr><td>Mild AS</td><td>1.5 – 2.0</td></tr>
           <tr><td>Moderate AS</td><td>1.0 – 1.5</td></tr>
-          <tr class="severe"><td>Severe AS</td><td>&lt; 1.0</td></tr>
+          <tr class="severe"><td>Severe AS</td><td>0.6 – 1.0</td></tr>
           <tr class="severe"><td>Critical AS</td><td>≤ 0.6</td></tr>
         </table>
+        <div class="hint">2020 ACC/AHA VHD Table 13: severe AS is V<sub>max</sub> ≥ 4 m/s or mean ΔP ≥ 40 mmHg. An aortic valve area ≤ 1.0 cm² is typical but not required in stages C and D1, and is a defining criterion in low-flow, low-gradient severe AS (D2, D3). An area of exactly 1.00 cm² therefore belongs in the severe band — this ladder is inclusive at 1.0 exactly as the mitral ladder is inclusive at 1.5. Only that boundary comes from the guideline: Table 13 grades mild and moderate AS by velocity and gradient and prints no valve-area bands for them, and it defines no critical-AS stage, so the ≤ 0.6, 1.0–1.5, 1.5–2.0 and &gt; 2.0 rows are catheterization convention.</div>
       </div>
 
       <div id="mvaResults" style="display:none;">
@@ -1391,15 +1417,16 @@
           <span class="result-range">normal: 4 – 6</span>
           <span class="result-flag" id="f_mva"></span>
         </div>
-        <div style="font-size:11px; color:#666; margin:2px 0;" id="mva_math"></div>
+        <div style="margin:2px 0;" id="mva_math"></div>
         <div id="mvaAfibDetail" class="afib-detail" style="display:none;"></div>
         <table class="vals" style="font-size:7.5pt; margin:4px 0;">
           <tr><th>Severity</th><th>MVA (cm²)</th></tr>
           <tr><td>Normal</td><td>4 – 6</td></tr>
-          <tr><td>Mild MS</td><td>&gt; 1.5</td></tr>
-          <tr><td>Moderate MS</td><td>1.0 – 1.5</td></tr>
-          <tr class="severe"><td>Severe MS</td><td>&lt; 1.0</td></tr>
+          <tr><td>No mitral stenosis</td><td>2.5 – 4</td></tr>
+          <tr><td>Progressive MS</td><td>1.5 – 2.5</td></tr>
+          <tr class="severe"><td>Severe MS</td><td>≤ 1.5</td></tr>
         </table>
+        <div class="hint">2020 ACC/AHA VHD: severe MS is a valve area ≤ 1.5 cm² (Stage C/D) — the threshold every Class 1 PMBC recommendation is keyed to. That boundary is the only row here the 2020 document defines. The others are catheterization convention and are printed as such: the guideline puts no ceiling on Stage B progressive MS (it is any area above 1.5) and has no “no MS” band. A “very severe MS (≤ 1.0)” sub-tier appears in pre-2020 texts only; Table 16 has no such row, so this page no longer prints one (retired 2026-09-21, after Echo Calc and the waveform tool). They exist so that the label printed beside a number is true across the whole reportable range (0.4–6 cm²), not because the guideline draws them.</div>
       </div>
 
       <div class="info-box" style="font-size:11px; margin-top:4px;">
@@ -1412,7 +1439,10 @@
   <!-- QUALITY CHECKS -->
   <div class="section">
     <div class="section-head">Quality Checks</div>
-    <div class="section-body" id="qualityChecks">
+    <!-- The results column repaints on every keystroke of 92 fields, so the live region is
+         on the refusals rather than on the numbers: a screen reader announces what the page
+         DECLINED to report and why, not every digit as it is typed. -->
+    <div class="section-body" id="qualityChecks" role="status" aria-live="polite" aria-atomic="false">
       <div class="info-box">Enter values to see quality checks.</div>
     </div>
   </div>
@@ -1431,19 +1461,19 @@
       <span>EVALUATION REPORT</span>
       <div style="display:flex; align-items:center; gap:12px;">
         <label style="display:flex; align-items:center; gap:5px; font-weight:400; font-size:11px; cursor:pointer; min-width:auto; color:#ccc;">
-          <input type="checkbox" id="plainTextToggle" onchange="calc()" style="width:14px; height:14px; cursor:pointer;">
+          <input type="checkbox" id="plainTextToggle" aria-label="Plain text output for the EHR" onchange="calc()" style="width:14px; height:14px; cursor:pointer;">
           Plain text (EHR)
         </label>
         <button class="copy-btn" id="copyBtn" onclick="copyResults()">Copy to Clipboard</button>
       </div>
     </div>
-    <textarea id="copyText" readonly></textarea>
+    <textarea id="copyText" aria-label="RHC report, ready to copy" readonly></textarea>
   </div>
 
 </div><!-- end rhcResults -->
 
 <!-- ==================== SHUNT RESULTS ==================== -->
-<div id="shuntResults" style="display:none;">
+<div id="shuntResults" role="tabpanel" aria-labelledby="tabShunt" style="display:none;">
 
   <!-- MIXED VENOUS O2 -->
   <div class="section">
@@ -1455,7 +1485,7 @@
         <span class="result-unit">%</span>
         <span class="result-range">Flamm formula</span>
       </div>
-      <div style="font-size:11px; color:#666; margin-top:4px;" id="mvo2_math"></div>
+      <div style="margin-top:4px;" id="mvo2_math"></div>
     </div>
   </div>
 
@@ -1477,7 +1507,7 @@
         <span class="result-unit">(ratio)</span>
         <span class="result-flag" id="f_qpqs"></span>
       </div>
-      <div style="font-size:11px; color:#666; margin-top:2px;" id="qpqs_math"></div>
+      <div style="margin-top:2px;" id="qpqs_math"></div>
       <div class="divider"></div>
       <div class="result-row">
         <span class="result-label">Qp</span>
@@ -1508,7 +1538,7 @@
         <span class="result-value" id="r_rl_shunt">—</span>
         <span class="result-unit">L/min</span>
       </div>
-      <div style="font-size:11px; color:#666; margin-top:4px;" id="shunt_flow_math"></div>
+      <div style="margin-top:4px;" id="shunt_flow_math"></div>
       <div class="divider"></div>
       <table class="vals" style="margin-top:4px;">
         <tr><th>Qp/Qs</th><th>Interpretation</th></tr>
@@ -1554,7 +1584,7 @@
   <!-- SHUNT QUALITY CHECKS -->
   <div class="section">
     <div class="section-head">Shunt Quality Checks</div>
-    <div class="section-body" id="shuntQualityChecks">
+    <div class="section-body" id="shuntQualityChecks" role="status" aria-live="polite" aria-atomic="false">
       <div class="info-box">Enter oximetry run values to see quality checks.</div>
     </div>
   </div>
@@ -1573,13 +1603,13 @@
       <span>EVALUATION REPORT</span>
       <div style="display:flex; align-items:center; gap:12px;">
         <label style="display:flex; align-items:center; gap:5px; font-weight:400; font-size:11px; cursor:pointer; min-width:auto; color:#ccc;">
-          <input type="checkbox" id="shuntPlainTextToggle" onchange="calc()" style="width:14px; height:14px; cursor:pointer;">
+          <input type="checkbox" id="shuntPlainTextToggle" aria-label="Plain text shunt output for the EHR" onchange="calc()" style="width:14px; height:14px; cursor:pointer;">
           Plain text (EHR)
         </label>
         <button class="copy-btn" id="shuntCopyBtn" onclick="copyShuntResults()">Copy to Clipboard</button>
       </div>
     </div>
-    <textarea id="shuntCopyText" readonly></textarea>
+    <textarea id="shuntCopyText" aria-label="Shunt report, ready to copy" readonly></textarea>
   </div>
 
 </div><!-- end shuntResults -->
@@ -1589,12 +1619,86 @@
 </div>
 
 <script>
+// <shared:analytics v1>
+// GENERATED FROM shared/analytics.js BY scripts/sync-shared.mjs — DO NOT EDIT HERE.
+// Edit shared/analytics.js, then run: node scripts/sync-shared.mjs --write
+// CathMath analytics — GA4, property 555096463, stream G-ZME4G2EYJS.
+// Design and the reasons for every choice: plans/2026-09-21-analytics-design.md
+//
+// THIS BLOCK MUST NEVER BE ABLE TO BREAK A TOOL. It runs first, so it is wrapped whole, and
+// cmTrack() exists as a no-op before anything that can throw is attempted.
+//
+// HOST GUARD. Unless the page is being served from cathmath.org, nothing loads and nothing is
+// sent: not from file://, not from localhost, not in the node vm harness, not in CardioDoc's
+// fixture capture, not from a copy of this page hosted somewhere else. That is what keeps the
+// house rule true — every tool works with zero runtime dependencies and no network. Analytics is
+// an enhancement that exists only on the production host.
+//
+// NOTHING A USER TYPES IS EVER SENT. Parameters are fixed id strings that already exist in the
+// source (module ids, preset ids, drug ids). cmTrack drops any parameter that is not a short
+// string, so a number read from an input cannot leave even if a caller passes one by mistake.
+(function () {
+  var TOOL = 'rhc';
+  var ID = 'G-ZME4G2EYJS';
+  window.cmTrack = function () {};
+  try {
+    var host = String((window.location && window.location.hostname) || '');
+    if (host !== 'cathmath.org' && host !== 'www.cathmath.org') return;
+
+    // Own-traffic flag, as on CardioQFlow: visit once with ?internal=1 (clear with ?internal=0)
+    // and every event from this browser carries traffic_type=internal for a GA4 data filter.
+    var internal = false;
+    try {
+      var q = new URLSearchParams(window.location.search).get('internal');
+      if (q === '1' || q === 'on') window.localStorage.setItem('cathmath_internal', '1');
+      else if (q === '0' || q === 'off') window.localStorage.removeItem('cathmath_internal');
+      internal = window.localStorage.getItem('cathmath_internal') === '1';
+    } catch (e) { internal = false; }
+
+    window.dataLayer = window.dataLayer || [];
+    window.gtag = window.gtag || function () { window.dataLayer.push(arguments); };
+    var base = { tool: TOOL };
+    if (internal) base.traffic_type = 'internal';
+    window.gtag('js', new Date());
+    window.gtag('config', ID, base);           // parameters in config ride on every event, page_view included
+
+    // Injected, never a static <script src>: gtag.js is regenerated by Google constantly, so an
+    // integrity= hash cannot be pinned to it. scripts/lint.mjs DEP-1 allow-lists this one origin
+    // by name rather than failing to notice it.
+    var s = document.createElement('script');
+    s.async = true;
+    s.src = 'https://www.googletagmanager.com/gtag/js?id=' + ID;
+    document.head.appendChild(s);
+
+    var once = {};
+    // cmTrack(name, params, onceKey) — fire-and-forget. onceKey, when given, sends the event at
+    // most once per page load for that key (calc_used: once per module).
+    window.cmTrack = function (name, params, onceKey) {
+      try {
+        if (onceKey) { if (once[onceKey]) return; once[onceKey] = 1; }
+        var p = { tool: TOOL };
+        if (internal) p.traffic_type = 'internal';
+        for (var k in (params || {})) {
+          var v = params[k];
+          if (typeof v === 'string' && v.length > 0 && v.length <= 64) p[k] = v;   // enum ids only
+        }
+        window.gtag('event', String(name), p);
+      } catch (e) { /* analytics must never throw into a tool */ }
+    };
+  } catch (e) { /* blocked, offline, private mode — the tool carries on */ }
+})();
+// </shared:analytics>
+
 // ===================== TAB SWITCHING =====================
 let currentTab = 'rhc';
 function switchTab(tab) {
   currentTab = tab;
   document.getElementById('tabRhc').classList.toggle('active', tab === 'rhc');
   document.getElementById('tabShunt').classList.toggle('active', tab === 'shunt');
+  // The class is what a sighted reader sees; `aria-selected` is the same fact for everyone
+  // else, and the tab bar used to carry only the class.
+  document.getElementById('tabRhc').setAttribute('aria-selected', String(tab === 'rhc'));
+  document.getElementById('tabShunt').setAttribute('aria-selected', String(tab === 'shunt'));
   document.getElementById('rhcResults').style.display = tab === 'rhc' ? 'block' : 'none';
   document.getElementById('shuntResults').style.display = tab === 'shunt' ? 'block' : 'none';
   document.getElementById('gorlinInputSection').style.display = tab === 'rhc' ? 'block' : 'none';
@@ -1825,7 +1929,7 @@ function calcLaFarge() {
     const bsaAny = vq('bsa', 2), vo2Any = vq('vo2', 1);
     document.getElementById('vo2_per_m2').textContent =
       (vo2Any !== null && bsaAny !== null && bsaAny > 0)
-        ? `(${fmt(vo2Any / bsaAny, 1)} mL/min/m²)` : '';
+        ? `(${fmt(vo2Any / bsaAny, 2)} mL/min/m²)` : '';
     return;
   }
 
@@ -1854,7 +1958,13 @@ function calcLaFarge() {
   const vo2_total = decRound(vo2_per_m2 * bsa, 1);
 
   document.getElementById('vo2').value = vo2_total.toFixed(1);
-  perM2.textContent = `(${decRound(vo2_per_m2, 1).toFixed(1)} mL/min/m²)`;
+  // TWO DECIMALS, AND THE TOTAL IS NOT DERIVED FROM IT. The parenthetical index is not an
+  // operand in any printed equation — the report's LaFarge line substitutes the bracket, not
+  // the index — so deriving `vo2_total` from the rounded index would break THAT equation in
+  // the same 431,588 states it would repair this one, and move golden-fixture bytes as well.
+  // At one decimal, printed_index × printed_BSA missed printed_total in 45.9% of the
+  // age × HR × BSA grid; at two it is 4.66%, with nothing else in the file moved.
+  perM2.textContent = `(${fmt(vo2_per_m2, 2)} mL/min/m²)`;
 
   const sexLabel = sex === 'female' ? 'F' : 'M';
   detail.innerHTML = `<b>LaFarge (${sexLabel}):</b> [138.1 − (${k} × ln(${age})) + (0.378 × ${hr})] × ${bsa} = <b>${vo2_total.toFixed(1)} mL/min</b>`;
@@ -1909,6 +2019,28 @@ document.getElementById('useDissolvedO2').addEventListener('change', function() 
  */
 const AVA_GRAD_MIN = 5;
 const MVA_GRAD_MIN = 3;
+/**
+ * HAEMOGLOBIN HAS A DOMAIN TOO, and it was the one leveraged operand on the page without one.
+ * Hb is in CaO₂, in CvO₂, in the Fick denominator and in Qp, Qs and Q effective, so a decimal
+ * slip scales every flow on BOTH tabs by the same factor. Measured: the shipped example at Hb
+ * 14.3 gives a Fick CO of 2.44 L/min; retyped as 1.43 it gives 24.96 L/min, CI 16.53, CPO
+ * 5.31 W — and the quality list named three downstream symptoms (narrow a-vO₂, Fick–TD
+ * discordance, an out-of-range MVA) and never the cause.
+ *
+ * TWO BOUNDS, AND THEY DO DIFFERENT WORK.
+ *
+ *   HB_MAX 30 / at-or-below-zero is the REFUSAL, and it is deliberately the same domain
+ *   `src/lib/rhc.js` in CardioDoc already carries ("a haemoglobin above 30 g/dL is not a
+ *   measurement"), because a number this page withholds and the ported one computes is the
+ *   divergence the shared-constant rule exists to prevent.
+ *
+ *   HB_LOW 3 / HB_HIGH 25 is a PLAUSIBILITY band. It names the decimal slip and withholds
+ *   nothing: 1.43 g/dL is incompatible with life, but so is refusing to show a value the
+ *   operator can see is wrong, and profound anaemia at 3.0 g/dL and polycythaemia at 22 g/dL
+ *   must still report. The sentence is the fix; the arithmetic is unchanged.
+ */
+const HB_MAX = 30;
+const HB_LOW = 3, HB_HIGH = 25;
 const AVA_MAX = 4, AVA_MIN = 0.3;
 const MVA_MAX = 6, MVA_MIN = 0.4;
 
@@ -1961,7 +2093,10 @@ function calc() {
   // precision under a rounded printout is what made `TPG = 32 - 16 = 16` sit above a PVR
   // computed from 16.8.
   const bsa = vq('bsa', 2);
-  const hb = vq('hb', 1);
+  // Refused AT THE OPERAND, not at the result; `buildQualityChecks` says why, either way.
+  const hbTyped = vq('hb', 1);
+  const hbRefused = hbTyped !== null && (hbTyped <= 0 || hbTyped > HB_MAX);
+  const hb = hbRefused ? null : hbTyped;
   const hr = vq('hr', 0);
   const o2k = parseFloat(document.getElementById('o2const').value);
   const useDissolved = document.getElementById('useDissolvedO2').checked;
@@ -2034,9 +2169,19 @@ function calc() {
   setText('r_td_ci', fmt(tdCI));
 
   // Fick vs TD warning
+  //
+  // ONE DISCORDANCE, COMPUTED ONCE. The same expression used to appear three times — banner,
+  // quality check and interpretation — and the third rendered it through a bare `toFixed(0)`
+  // while the other two used `fmt`. At Fick 1.12 / TD 1.54 the raw value is
+  // 37.499999999999986, so the banner read 38% and the interpretation 37% on one screen;
+  // 596 pairs over Fick × TD 1.00–9.00 disagreed that way. It is also ROUNDED BEFORE IT IS
+  // GATED, so the 20% threshold is applied to the number the page prints: a raw 20.4 printed
+  // "20%" under the word "discordance" while the rule beside it says discordance is above 20.
   const tdWarn = document.getElementById('tdFickWarning');
-  if (fickCO !== null && td_co !== null && fickCO > 0 && td_co > 0) {
-    const diff = Math.abs(fickCO - td_co) / fickCO * 100;
+  const fickTdDiff = (fickCO !== null && td_co !== null && fickCO > 0 && td_co > 0)
+    ? q(Math.abs(fickCO - td_co) / fickCO * 100, 0) : null;
+  if (fickTdDiff !== null) {
+    const diff = fickTdDiff;
     if (diff > 20) {
       tdWarn.innerHTML = `<div class="warning-box"><b>Fick–TD discordance: ${fmt(diff,0)}%.</b> Consider: VO₂ estimated vs measured? Severe TR? Low-output state? Use Fick for derived hemodynamics.</div>`;
     } else {
@@ -2094,11 +2239,8 @@ function calc() {
   const phDiv = document.getElementById('phClassification');
   if (pa_mean !== null && pcwp_mean !== null && pvr !== null) {
     if (pa_mean > 20) {
-      let phType = '';
-      if (pcwp_mean <= 15 && pvr > 2) phType = 'Pre-capillary PH';
-      else if (pcwp_mean > 15 && pvr <= 2) phType = 'Isolated post-capillary PH (IpcPH)';
-      else if (pcwp_mean > 15 && pvr > 2) phType = 'Combined pre & post-capillary PH (CpcPH)';
-      else phType = 'Unclassified PH (2022 ESC/ERS): mPAP > 20 with PAWP ≤ 15 and PVR ≤ 2 — consider a high-output state (anemia, thyrotoxicosis, liver disease, systemic shunt) or borderline/technical values. Exercise PH is a separate entity defined by an mPAP/CO slope > 3 mmHg/L/min and cannot be diagnosed from resting values';
+      const ph = classifyPH(pcwp_mean, pvr);
+      const phType = ph.short + (ph.note ? ': ' + ph.note : '');
       phDiv.innerHTML = `<div class="warning-box"><b>PH Classification (2022 ESC/ERS):</b> ${phType}</div>`;
     } else {
       phDiv.innerHTML = `<div class="info-box">mPAP ≤ 20 — no pulmonary hypertension by hemodynamic criteria.</div>`;
@@ -2414,11 +2556,16 @@ function calc() {
   gorlinSection.style.display = showGorlin ? 'block' : 'none';
 
   // --- Quality Checks ---
-  buildQualityChecks(hb, sao2, svo2, avo2, fickCO, td_co, vo2, ra_mean, papi,
-    sao2_pct, svo2_pct, pa_sys, pa_dia, pcwp_mean, ao_mean, lv_edp, lv_sys, ao_sys, G);
+  buildQualityChecks({
+    hb, sao2, svo2, avo2, fickCO, vo2, ra_mean, papi, sao2_pct, svo2_pct, pa_sys, pa_dia,
+    pcwp_mean, ao_mean, G, hbTyped, hbRefused, fickTdDiff
+  });
 
   // --- Interpretation ---
-  buildRhcInterpretation(ci, fickCI, tdCI, useFick, ra_mean, pcwp_mean, pa_mean, pvr, papi, rvswi, cpo, cpi, avo2, fickCO, td_co, ava, mva, lv_edp, lv_sys, ao_sys, lv_ao_gradient);
+  buildRhcInterpretation({
+    fickCI, tdCI, useFick, ra_mean, pcwp_mean, pa_mean, pvr, papi, rvswi, cpo, cpi, avo2, fickCO,
+    td_co, ava, mva, lv_edp, lv_ao_gradient, fickTdDiff
+  });
 
 
   // --- Copy text ---
@@ -2430,15 +2577,14 @@ function calc() {
   const _ava_sep = isAfib ? null : vq('ava_sep', 1);
   const _mva_gradient = isAfib ? null : vq('mva_gradient', 1);
   const _mva_dfp = isAfib ? null : vq('mva_dfp', 1);
-  buildCopyText(bsa, hb, hr, o2k, useDissolved,
-    ra_a, ra_v, ra_mean, rv_sys, rv_dia, rv_edp,
-    pa_sys, pa_dia, pa_mean, pcwp_a, pcwp_v, pcwp_mean,
-    ao_sys, ao_dia, ao_mean, sao2_pct, svo2_pct,
-    cao2, cvo2, avo2, vo2, fickCO, fickCI, sv, svi,
-    td_co, tdCI, tpg, dpg, pvr, pvrDyn, pvri, svr, svrDyn, svri,
-    papi, rvswi, cpo, cpi, useFick,
-    ava, mva, _ava_gradient, _ava_sep, _mva_gradient, _mva_dfp, isAfib,
-    lv_sys, lv_dia, lv_edp, lv_ao_gradient, G);
+  buildCopyText({
+    bsa, hb, hr, o2k, useDissolved, ra_a, ra_v, ra_mean, rv_sys, rv_dia, rv_edp, pa_sys, pa_dia,
+    pa_mean, pcwp_a, pcwp_v, pcwp_mean, ao_sys, ao_dia, ao_mean, sao2_pct, svo2_pct, cao2, cvo2,
+    avo2, vo2, fickCO, fickCI, sv, svi, td_co, tdCI, tpg, dpg, pvr, pvrDyn, pvri, svr, svrDyn,
+    svri, papi, rvswi, cpo, cpi, useFick, ava, mva, ava_gradient: _ava_gradient,
+    ava_sep: _ava_sep, mva_gradient: _mva_gradient, mva_dfp: _mva_dfp, isAfib, lv_sys, lv_dia,
+    lv_edp, lv_ao_gradient, G
+  });
 
   if (currentTab === 'shunt') {
     calcShunt();
@@ -2452,12 +2598,66 @@ function flagValue(id, val, lo, hi, label) {
   else if (val > hi) setFlag(id, 'HIGH', 'flag-high');
   else setFlag(id, 'Normal', 'flag-normal');
 }
+/**
+ * ONE LADDER PER QUANTITY, READ BY EVERY RENDER SITE.
+ *
+ * Three severity ladders on this page were each written twice — once for the badge beside the
+ * number and once for the prose in the interpretation panel — and by the time the 2026-09
+ * audit ran, all three copies had drifted from their twin:
+ *
+ *   PVR at exactly 3.00 WU: badge `Borderline` (`<= 3`) beside the bullet `moderately
+ *     elevated (3–5 WU)` (`< 3`). Two severity classes for one number, on one screen.
+ *   PH at mPAP 24 / PAWP 14 / PVR 1.67: the banner said exercise PH "cannot be diagnosed from
+ *     resting values" while the bullet under it diagnosed the "borderline/exercise pattern".
+ *     ESC/ERS 2022 Table 5 defines exercise PH ONLY by an mPAP/CO slope > 3 mmHg/L/min; the
+ *     resting profile is the Table 5 footnote's "unclassified PH".
+ *   MVA: see `gradeMVA`.
+ *
+ * So the ladder is the function and the render sites hold no thresholds of their own. The
+ * PRINTED BAND travels with the branch that produced it, which is the other half of the rule —
+ * a band written `3–5` under an operator of `> 3` is a printed range that excludes its own
+ * number, the defect `MVA_MAX` was introduced to close.
+ */
+function gradePVR(val) {
+  // 2022 ESC/ERS puts the upper limit of normal at 2 WU. Nothing in Table 5 makes 3.00 a class
+  // boundary, so the file's badge reading (`<= 3` is still borderline) wins and the prose is
+  // written to it rather than the other way round.
+  if (val < 2) return { badge: 'Normal', klass: 'flag-normal', prose: 'normal (< 2 WU)', type: 'info' };
+  if (val <= 3) return { badge: 'Borderline', klass: 'flag-high', prose: 'borderline elevated (2\u20133 WU)', type: 'warn' };
+  if (val <= 5) return { badge: 'Moderate', klass: 'flag-high', prose: 'moderately elevated (> 3, up to 5 WU)', type: 'warn' };
+  return { badge: 'SEVERE', klass: 'flag-severe', prose: 'severely elevated (> 5 WU)', type: 'error' };
+}
 function flagPVR(id, val) {
   if (val === null) { clearFlag(id); return; }
-  if (val < 2) setFlag(id, 'Normal', 'flag-normal');
-  else if (val <= 3) setFlag(id, 'Borderline', 'flag-high');
-  else if (val <= 5) setFlag(id, 'Moderate', 'flag-high');
-  else setFlag(id, 'SEVERE', 'flag-severe');
+  const g = gradePVR(val);
+  setFlag(id, g.badge, g.klass);
+}
+
+/**
+ * PULMONARY HYPERTENSION, 2022 ESC/ERS Table 5 — one classification, two render sites.
+ *
+ * `short` is the banner's wording and `long` the interpretation's; `note` is the sentence that
+ * only the unclassified profile carries. The fall-through branch is NOT exercise PH: exercise
+ * PH is defined by an mPAP/CO slope > 3 mmHg/L/min and cannot be read off a resting study at
+ * all, which is what the banner already said and what the interpretation panel used to
+ * contradict on the same screen.
+ */
+function classifyPH(pawp, pvr) {
+  if (pawp <= 15 && pvr > 2) {
+    return { key: 'pre', short: 'Pre-capillary PH', long: 'Pre-capillary pulmonary hypertension', note: '' };
+  }
+  if (pawp > 15 && pvr <= 2) {
+    return { key: 'ipc', short: 'Isolated post-capillary PH (IpcPH)', long: 'Isolated post-capillary pulmonary hypertension (IpcPH)', note: '' };
+  }
+  if (pawp > 15 && pvr > 2) {
+    return { key: 'cpc', short: 'Combined pre & post-capillary PH (CpcPH)', long: 'Combined pre- and post-capillary pulmonary hypertension (CpcPH)', note: '' };
+  }
+  return {
+    key: 'unclassified',
+    short: 'Unclassified PH (2022 ESC/ERS)',
+    long: 'Unclassified PH (2022 ESC/ERS)',
+    note: 'mPAP > 20 with PAWP \u2264 15 and PVR \u2264 2 \u2014 consider a high-output state (anemia, thyrotoxicosis, liver disease, systemic shunt) or borderline/technical values. Exercise PH is a separate entity defined by an mPAP/CO slope > 3 mmHg/L/min and cannot be diagnosed from resting values',
+  };
 }
 function flagSVR(id, val) {
   if (val === null) { clearFlag(id); return; }
@@ -2486,39 +2686,107 @@ function flagCPI(id, val) {
   else setFlag(id, 'Normal', 'flag-normal');
 }
 
+/**
+ * AORTIC VALVE AREA — badge, printed label and prose from ONE ladder, the way `gradeMVA`
+ * already worked. The ladder used to be written three times (this flagger, `avaLabel`, and a
+ * four-way ternary inside `buildRhcInterpretation`), and the on-screen reference table was a
+ * fourth hand-typed copy, so a boundary could be — and was — moved on the mitral side and left
+ * behind on the aortic one.
+ *
+ * THE BOUNDARY. It was `val < 1.0` for severe, so an area of exactly 1.00 cm² printed
+ * `Moderate AS (1.0–1.5)` — the same defect that had just been closed on the mitral side, in a
+ * file that cites the same document. 2020 ACC/AHA VHD Table 13 makes an area ≤ 1.0 cm² a hard
+ * criterion in stages D2 and D3 ("AVA ≤1.0 cm²"); in C1, C2 and D1 it is "typically ≤1.0 cm²"
+ * and explicitly "not required to define severe AS". Either way 1.00 is on the severe side.
+ * Both valve ladders on this page are now INCLUSIVE at their severe boundary — mitral at ≤ 1.5,
+ * aortic at ≤ 1.0 — and the printed band on each says so.
+ *
+ * THE OTHER BOUNDARY DID NOT MOVE, and must not move by accident. Moderate/mild is `val < 1.5`,
+ * so exactly 1.50 cm² is `Mild AS (1.5–2.0)`. The first draft of this unification wrote `<= 1.5`
+ * without saying so; CardioDoc's `verify/rhc-fixtures.mjs` (~:542) carries a DECLARED divergence
+ * that records this file grading 1.50 as mild, and `test-rhc-divergence.mjs` reads it. Table 13
+ * cannot arbitrate: it stages progressive AS by V_max and mean gradient and prints no AVA bands
+ * below severe, so 1.0–1.5, 1.5–2.0 and > 2.0 are catheterization convention, like ≤ 0.6.
+ *
+ * TWO-REPO CONTRACT, AORTIC SIDE. No golden fixture reaches the severe band, so the byte
+ * contract is blind to this: the severe label is now `Severe AS (0.6–1.0)` where CardioDoc's
+ * `avaLabel` (`web/src/lib/rhc.js` ~:3941) still prints `Severe AS (< 1.0)`, and an area of
+ * exactly 1.00 is severe here and moderate there. Over 0.30–4.00 cm² in 0.01 steps that is 40 of
+ * 371 printed areas with different text — 39 wording, 1 the intended 1.00 move. rhc.js follows
+ * this file when the mitral ladder is re-banded; it is the same deliberate step.
+ *
+ * `Critical AS (≤ 0.6)` is retained because the copied report has printed it for a year and the
+ * five golden fixtures that reach it contain that exact string, but it is catheterization
+ * convention and the reference table says so rather than attributing it to the guideline.
+ * The top band stays open (`> 2.0`) — `AVA_MAX` (4) refuses anything above it, so unlike the
+ * old `Normal (4–6)` mitral bug an open bound here cannot be false of the number beside it.
+ */
+function gradeAVA(val) {
+  if (val <= 0.6) return { badge: 'Critical AS', klass: 'flag-severe', label: 'Critical AS (≤ 0.6)', prose: 'critical aortic stenosis (≤ 0.6)', type: 'error' };
+  if (val <= 1.0) return { badge: 'Severe AS', klass: 'flag-severe', label: 'Severe AS (0.6–1.0)', prose: 'severe aortic stenosis (0.6–1.0)', type: 'error' };
+  if (val < 1.5) return { badge: 'Moderate AS', klass: 'flag-high', label: 'Moderate AS (1.0–1.5)', prose: 'moderate aortic stenosis (1.0–1.5)', type: 'warn' };
+  if (val <= 2.0) return { badge: 'Mild AS', klass: 'flag-high', label: 'Mild AS (1.5–2.0)', prose: 'mild aortic stenosis (1.5–2.0)', type: 'warn' };
+  return { badge: 'Normal', klass: 'flag-normal', label: 'Normal (> 2.0)', prose: 'normal aortic valve area (> 2.0)', type: 'info' };
+}
 function flagAVA(id, val) {
   if (val === null) { clearFlag(id); return; }
-  if (val <= 0.6) setFlag(id, 'Critical AS', 'flag-severe');
-  else if (val < 1.0) setFlag(id, 'Severe AS', 'flag-severe');
-  else if (val < 1.5) setFlag(id, 'Moderate AS', 'flag-high');
-  else if (val <= 2.0) setFlag(id, 'Mild AS', 'flag-high');
-  else setFlag(id, 'Normal', 'flag-normal');
+  const g = gradeAVA(val);
+  setFlag(id, g.badge, g.klass);
+}
+/**
+ * MITRAL VALVE AREA, 2020 ACC/AHA VHD — badge, printed label and prose from one ladder.
+ *
+ * The bands used to be the pre-2020 catheterization ones: severe below 1.0, moderate 1.0–1.5.
+ * The 2020 guideline is explicit — "a mitral valve area ≤1.5 cm2 is considered severe"
+ * (Table 16, Stages C and D), and every Class 1 PMBC recommendation in it is keyed to
+ * ≤ 1.5. So an area of 1.05 cm² was a Class 1 indication for balloon valvuloplasty in a
+ * symptomatic patient and this page called it MODERATE — while Echo Calc, one tab over on the
+ * same site, called the same number severe. CLAUDE.md names it as a site-wide constant:
+ * "severe MS MVA ≤ 1.5 cm² with PHT ≥ 150 ms (2020 ACC/AHA — NOT ≤ 1.0)".
+ *
+ * THE ≤ 1.0 "VERY SEVERE" ROW WAS RETIRED 2026-09-21. The guideline defines no very-severe MS
+ * stage; the label traced to pre-2020 texts and was UNSOURCED in the local library, so
+ * `MS_VERY_SEVERE_MVA` was removed from `shared/clinical-constants.json` and this page — the last
+ * one still printing it, after Echo Calc and the waveform tool — now grades one closed severe band,
+ * ≤ 1.5. This is a deliberate fixture move (see below), taken with Saro's standing approval to fix
+ * contract files and re-capture.
+ *
+ * NOR ARE 1.5–2.5 AND 2.5–4.0 guideline stages: Stage B progressive MS is any area above 1.5
+ * with no ceiling, and there is no "no MS" band in the document. They are printed because the
+ * ladder has to label every area the page will still report — `MVA_MIN` 0.4 to `MVA_MAX` 6 — and
+ * 2.5 is the classical top of mild mitral stenosis, 4.0 the bottom of a normal orifice, so
+ * between them there is neither. The top of the ladder is `MVA_MAX` (6), so `Normal (4–6)` is
+ * still true of every area that can reach it. CardioDoc's `interpret()` records the same
+ * decision in its own words, and the on-screen note under the table says all of this to the
+ * reader instead of naming only the ≤ 1.0 row.
+ *
+ * TWO-REPO CONTRACT: THIS LADDER MOVES PRINTED TEXT. `~/Desktop/Claude/Apps/CardioDoc/web/
+ * verify/golden-rhc/` holds 18 byte-exact fixtures captured from this file. Re-banding moves
+ * exactly one line in five of them — gorlin.txt:80, gorlin_sep.txt:80, plain_gorlin.txt:80,
+ * afib.txt:84 and plain_afib.txt:84, each "  Interpretation: Severe MS (< 1.0)" becoming
+ * "  Interpretation: Severe MS (≤ 1.5)". The other 13 are untouched. CardioDoc's
+ * `web/src/lib/rhc.js` still carries the pre-2020 ladder in BOTH of its copies (`mvaLabel`
+ * ~:3947 and `interpret()`'s prose ~:5447), so until those are re-banded the two products
+ * disagree on a Class 1 PMBC threshold. rhc.js is the one that is wrong; do not edit a fixture
+ * to paper over it. Re-capture plus test-rhc-report and test-rhc-divergence is a separate,
+ * deliberate step in the other repo — it is not done by this file.
+ */
+function gradeMVA(val) {
+  if (val <= 1.5) return { badge: 'Severe MS', klass: 'flag-severe', label: 'Severe MS (≤ 1.5)', prose: 'severe mitral stenosis (≤ 1.5)', type: 'error' };
+  if (val <= 2.5) return { badge: 'Progressive MS', klass: 'flag-high', label: 'Progressive MS (1.5–2.5)', prose: 'progressive mitral stenosis (1.5–2.5)', type: 'warn' };
+  if (val <= 4.0) return { badge: 'No MS', klass: 'flag-normal', label: 'No mitral stenosis (2.5–4.0)', prose: 'above the mitral stenosis range (2.5–4.0)', type: 'info' };
+  return { badge: 'Normal', klass: 'flag-normal', label: 'Normal (4–6)', prose: 'normal mitral valve area (4–6)', type: 'info' };
 }
 function flagMVA(id, val) {
   if (val === null) { clearFlag(id); return; }
-  if (val < 1.0) setFlag(id, 'Severe MS', 'flag-severe');
-  else if (val <= 1.5) setFlag(id, 'Moderate MS', 'flag-high');
-  else if (val <= 4.0) setFlag(id, 'Mild MS', 'flag-high');
-  else setFlag(id, 'Normal', 'flag-normal');
+  const g = gradeMVA(val);
+  setFlag(id, g.badge, g.klass);
 }
-function avaLabel(val) {
-  if (val <= 0.6) return 'Critical AS (≤ 0.6)';
-  if (val < 1.0) return 'Severe AS (< 1.0)';
-  if (val < 1.5) return 'Moderate AS (1.0–1.5)';
-  if (val <= 2.0) return 'Mild AS (1.5–2.0)';
-  return 'Normal (> 2.0)';
-}
-function mvaLabel(val) {
-  if (val < 1.0) return 'Severe MS (< 1.0)';
-  if (val <= 1.5) return 'Moderate MS (1.0–1.5)';
-  if (val <= 4.0) return 'Mild MS (> 1.5)';
-  // `Normal (4–6)` IS A CLOSED RANGE, and it used to be an unbounded catch-all: an area of
-  // 6.68 cm² printed under a range that excludes it — a printed bound that is false of its own
-  // number, in an artifact pasted into a chart. 15.3% of mitral areas above 6 carried it.
-  // `MVA_MAX` is 6 for exactly this reason, so nothing above the range can reach this line;
-  // the refusal and the printed bound meet, and no wording had to change.
-  return 'Normal (4–6)';
-}
+function avaLabel(val) { return gradeAVA(val).label; }
+// Every printed band is closed and none overlaps, which is the whole of the `MVA_MAX` lesson:
+// an area of 6.68 cm² used to print under `Normal (4–6)`, a printed bound false of its own
+// number, in the artifact that is pasted into a chart.
+function mvaLabel(val) { return gradeMVA(val).label; }
 function flagQpQs(id, val) {
   if (val === null) { clearFlag(id); return; }
   if (val < 1.0) setFlag(id, 'Net R\u2192L', 'flag-severe');
@@ -2528,34 +2796,76 @@ function flagQpQs(id, val) {
 }
 
 // ===================== SHUNT CALCULATION =====================
+/**
+ * EVERY SATURATION ON THIS PAGE THROUGH ONE DOMAIN: 0–100%, at the tenth it prints at.
+ *
+ * `calc()` has refused a Fick saturation above 100 for a year; none of the eleven run samples
+ * was checked at all. Driven on the shipped shunt demo with High SVC typed as 110: MV O₂
+ * printed 101.0%, Qp/Qs −0.93 badged "Net R→L", Qs −11.48 L/min, and the interpretation
+ * stated "Net right-to-left shunt … check for an R→L shunt lesion or Eisenmenger physiology" —
+ * a named lesion off two negative flows. CardioDoc's `computeShunt` already routes all eleven
+ * samples through one saturation domain; this is the same guard on this side of the port.
+ * The refused field is NAMED in the shunt quality checks, never dropped in silence.
+ */
+function vsat(id) {
+  const x = vq(id, 1);
+  return (x !== null && x >= 0 && x <= 100) ? x : null;
+}
+const SAT_FIELDS = {
+  svc_high: 'High SVC', svc_low: 'Low SVC', ivc_sat: 'IVC',
+  ra_high_sat: 'RA high', ra_mid_sat: 'RA mid', ra_low_sat: 'RA low',
+  rv_mid_sat: 'RV mid', rvot_sat: 'RVOT',
+  pa_main_sat: 'PA main', pa_left_sat: 'PA left', pa_right_sat: 'PA right',
+  pv_o2_manual: 'PV O₂ (manual)',
+};
+// The four step-up thresholds, once. They were written out three times — the on-screen table,
+// the copied report and the interpretation — which is the same shape as every drift finding
+// in this file.
+const STEPUP_SCREEN = 8, STEPUP_ATRIAL = 7, STEPUP_VENT = 5, STEPUP_GV = 5;
+
 function calcShunt() {
-  const hb = v('hb');
-  const bsa = v('bsa');
-  const vo2 = v('vo2');
+  // EVERY OPERAND AT THE PRECISION IT IS PRINTED AT. The RHC tab was brought under that rule
+  // on 2026-08-13; this tab is a second, older implementation of the same contract and was
+  // not. It read all 21 fields through raw `v()` and rounded only inside the template
+  // literal, so the working printed on the shipped demo —
+  //
+  //     Qp = VO₂/[(Hb×1.36×(PV−PA))×10] = 183/[(14.3×1.36×8.8%)×10] = 10.70 L/min
+  //
+  // — substituted a VO₂ of 183 (the line three rows above it prints 183.1) into a quotient
+  // computed from neither. The Qp/Qs line disagreed with its own substituted operands at
+  // 280,081 grid points and the shunt PVR line at 61,433.
+  const hbTyped = vq('hb', 1);
+  const hb = (hbTyped !== null && hbTyped > 0 && hbTyped <= HB_MAX) ? hbTyped : null;
+  const vo2 = vq('vo2', 1);
   const o2k = parseFloat(document.getElementById('o2const').value);
-  const sao2_pct = v('sao2');
-  // Same >100% guard calc() applies — an impossible saturation must not silently drive Qp/Qs.
-  const sao2 = (sao2_pct !== null && sao2_pct <= 100) ? sao2_pct / 100 : null;
-  const pa_mean = v('pa_mean');
-  const pcwp_mean = v('pcwp_mean');
-  const ao_mean = v('ao_mean');
-  const ra_mean = v('ra_mean');
+  const sao2_pct = vsat('sao2');
+  const sao2 = sao2_pct !== null ? sao2_pct / 100 : null;
+  const pa_mean = vq('pa_mean', 0);
+  const pcwp_mean = vq('pcwp_mean', 0);
+  const ao_mean = vq('ao_mean', 0);
+  const ra_mean = vq('ra_mean', 0);
 
   // Shunt oximetry inputs
-  const svc_high = v('svc_high');
-  const svc_low = v('svc_low');
-  const ivc_sat = v('ivc_sat');
-  const ra_high_sat = v('ra_high_sat');
-  const ra_mid_sat = v('ra_mid_sat');
-  const ra_low_sat = v('ra_low_sat');
-  const rv_mid_sat = v('rv_mid_sat');
-  const rvot_sat = v('rvot_sat');
-  const pa_main_sat = v('pa_main_sat');
-  const pa_left_sat = v('pa_left_sat');
-  const pa_right_sat = v('pa_right_sat');
-  const fio2 = v('fio2') || 21;
+  const svc_high = vsat('svc_high');
+  const svc_low = vsat('svc_low');
+  const ivc_sat = vsat('ivc_sat');
+  const ra_high_sat = vsat('ra_high_sat');
+  const ra_mid_sat = vsat('ra_mid_sat');
+  const ra_low_sat = vsat('ra_low_sat');
+  const rv_mid_sat = vsat('rv_mid_sat');
+  const rvot_sat = vsat('rvot_sat');
+  const pa_main_sat = vsat('pa_main_sat');
+  const pa_left_sat = vsat('pa_left_sat');
+  const pa_right_sat = vsat('pa_right_sat');
+  const fio2 = vq('fio2', 0) || 21;
   const pvo2_src = document.getElementById('pvo2_source').value;
-  const pv_o2_manual = v('pv_o2_manual');
+  const pv_o2_manual = vsat('pv_o2_manual');
+
+  // Every saturation the domain refused, by the name the form gives it.
+  const satRefused = [];
+  for (const id of Object.keys(SAT_FIELDS)) {
+    if (v(id) !== null && vsat(id) === null) satRefused.push({ id: id, name: SAT_FIELDS[id], typed: v(id) });
+  }
 
   // `fmt`, so that one rounding convention serves the panel and the copied report alike.
   const n = (val, dec) => fmt(val, dec);
@@ -2564,7 +2874,8 @@ function calcShunt() {
   let mvo2 = null;
   let mvo2_math = '';
   if (svc_high !== null && ivc_sat !== null) {
-    mvo2 = (3 * svc_high + ivc_sat) / 4;
+    // The mixed venous the line SUBSTITUTES, at the tenth both the line and the report print.
+    mvo2 = q((3 * svc_high + ivc_sat) / 4, 1);
     mvo2_math = `MV O₂ = (3 × ${n(svc_high,1)} [high SVC] + ${n(ivc_sat,1)} [IVC]) / 4 = ${n(mvo2,1)}%`;
   } else if (svc_high !== null) {
     // fallback: use only SVC
@@ -2579,13 +2890,14 @@ function calcShunt() {
   // SVC: use high SVC as primary reference
   const svc_ref = svc_high;
 
-  // Mean RA
+  // Mean RA — at the tenth the report prints it at, because the atrial step-up is the
+  // difference of the two numbers on the page and not of the pair behind them.
   const ra_vals = [ra_high_sat, ra_mid_sat, ra_low_sat].filter(x => x !== null);
-  const ra_mean_sat = ra_vals.length > 0 ? ra_vals.reduce((a,b)=>a+b,0)/ra_vals.length : null;
+  const ra_mean_sat = ra_vals.length > 0 ? q(ra_vals.reduce((a,b)=>a+b,0)/ra_vals.length, 1) : null;
 
   // Mean RV
   const rv_vals = [rv_mid_sat, rvot_sat].filter(x => x !== null);
-  const rv_mean_sat = rv_vals.length > 0 ? rv_vals.reduce((a,b)=>a+b,0)/rv_vals.length : null;
+  const rv_mean_sat = rv_vals.length > 0 ? q(rv_vals.reduce((a,b)=>a+b,0)/rv_vals.length, 1) : null;
 
   // PA sat: prefer PA main, else average branch PAs
   let pa_sat = null;
@@ -2593,7 +2905,7 @@ function calcShunt() {
     pa_sat = pa_main_sat;
   } else {
     const pa_vals = [pa_left_sat, pa_right_sat].filter(x => x !== null);
-    if (pa_vals.length > 0) pa_sat = pa_vals.reduce((a,b)=>a+b,0)/pa_vals.length;
+    if (pa_vals.length > 0) pa_sat = q(pa_vals.reduce((a,b)=>a+b,0)/pa_vals.length, 1);
   }
 
   // --- O2 Step-Up Detection ---
@@ -2601,15 +2913,26 @@ function calcShunt() {
   let stepUpHtml = '';
   let anyData = false;
 
+  // ONE STEP-UP TABLE, computed here and handed to the copied report. `buildShuntCopyText`
+  // used to re-derive the RA and RV means and all four deltas a second time — the second
+  // implementation the Gorlin comment warns about by name, in the one section with no fixture
+  // coverage to catch it when the copies part.
+  const stepUps = {
+    screening: (svc_ref !== null && pa_sat !== null) ? q(pa_sat - svc_ref, 1) : null,
+    atrial:    (svc_ref !== null && ra_mean_sat !== null) ? q(ra_mean_sat - svc_ref, 1) : null,
+    ventricular: (ra_mean_sat !== null && rv_mean_sat !== null) ? q(rv_mean_sat - ra_mean_sat, 1) : null,
+    greatVessel: (rv_mean_sat !== null && pa_sat !== null) ? q(pa_sat - rv_mean_sat, 1) : null,
+  };
+
   // Screening: SVC → PA (threshold ≥ 8%)
-  if (svc_ref !== null && pa_sat !== null) {
+  if (stepUps.screening !== null) {
     anyData = true;
-    const screeningStepUp = pa_sat - svc_ref;
-    const screeningSig = screeningStepUp >= 8;
+    const screeningStepUp = stepUps.screening;
+    const screeningSig = screeningStepUp >= STEPUP_SCREEN;
     stepUpHtml += `<div class="result-row">
       <span class="result-label" style="min-width:160px;">Screening (SVC→PA)</span>
       <span class="result-value" style="${screeningSig ? 'color:var(--red)' : ''}">${n(screeningStepUp,1)}%</span>
-      <span class="result-range">${screeningSig ? '≥ 8% — <b>significant</b>' : '< 8% — no significant shunt'}</span>
+      <span class="result-range">${screeningSig ? `≥ ${STEPUP_SCREEN}% — <b>significant</b>` : `< ${STEPUP_SCREEN}% — no significant shunt`}</span>
     </div>`;
     if (screeningSig) {
       stepUpHtml += `<div class="info-box" style="margin:4px 0;">Significant screening step-up detected. Localizing...</div>`;
@@ -2617,38 +2940,38 @@ function calcShunt() {
   }
 
   // Atrial: SVC → mean RA (threshold ≥ 7%)
-  if (svc_ref !== null && ra_mean_sat !== null) {
+  if (stepUps.atrial !== null) {
     anyData = true;
-    const atrialStepUp = ra_mean_sat - svc_ref;
-    const atrialSig = atrialStepUp >= 7;
+    const atrialStepUp = stepUps.atrial;
+    const atrialSig = atrialStepUp >= STEPUP_ATRIAL;
     stepUpHtml += `<div class="result-row">
       <span class="result-label" style="min-width:160px;">Atrial (SVC→RA)</span>
       <span class="result-value" style="${atrialSig ? 'color:var(--red)' : ''}">${n(atrialStepUp,1)}%</span>
-      <span class="result-range">${atrialSig ? '≥ 7% — <b>atrial-level shunt</b> (ASD, PAPVR, sinus venosus, coronary fistula to RA)' : '< 7% — no atrial step-up'}</span>
+      <span class="result-range">${atrialSig ? `≥ ${STEPUP_ATRIAL}% — <b>atrial-level shunt</b> (ASD, PAPVR, sinus venosus, coronary fistula to RA)` : `< ${STEPUP_ATRIAL}% — no atrial step-up`}</span>
     </div>`;
   }
 
   // Ventricular: mean RA → mean RV (threshold ≥ 5%)
-  if (ra_mean_sat !== null && rv_mean_sat !== null) {
+  if (stepUps.ventricular !== null) {
     anyData = true;
-    const ventriclStepUp = rv_mean_sat - ra_mean_sat;
-    const ventriclSig = ventriclStepUp >= 5;
+    const ventriclStepUp = stepUps.ventricular;
+    const ventriclSig = ventriclStepUp >= STEPUP_VENT;
     stepUpHtml += `<div class="result-row">
       <span class="result-label" style="min-width:160px;">Ventricular (RA→RV)</span>
       <span class="result-value" style="${ventriclSig ? 'color:var(--red)' : ''}">${n(ventriclStepUp,1)}%</span>
-      <span class="result-range">${ventriclSig ? '≥ 5% — <b>ventricular-level shunt</b> (VSD, coronary fistula to RV)' : '< 5% — no ventricular step-up'}</span>
+      <span class="result-range">${ventriclSig ? `≥ ${STEPUP_VENT}% — <b>ventricular-level shunt</b> (VSD, coronary fistula to RV)` : `< ${STEPUP_VENT}% — no ventricular step-up`}</span>
     </div>`;
   }
 
   // Great vessel: mean RV → PA (threshold ≥ 5%)
-  if (rv_mean_sat !== null && pa_sat !== null) {
+  if (stepUps.greatVessel !== null) {
     anyData = true;
-    const gvStepUp = pa_sat - rv_mean_sat;
-    const gvSig = gvStepUp >= 5;
+    const gvStepUp = stepUps.greatVessel;
+    const gvSig = gvStepUp >= STEPUP_GV;
     stepUpHtml += `<div class="result-row">
       <span class="result-label" style="min-width:160px;">Great vessel (RV→PA)</span>
       <span class="result-value" style="${gvSig ? 'color:var(--red)' : ''}">${n(gvStepUp,1)}%</span>
-      <span class="result-range">${gvSig ? '≥ 5% — <b>great vessel-level shunt</b> (PDA, aortopulmonary window, coronary fistula to PA)' : '< 5% — no great vessel step-up'}</span>
+      <span class="result-range">${gvSig ? `≥ ${STEPUP_GV}% — <b>great vessel-level shunt</b> (PDA, aortopulmonary window, coronary fistula to PA)` : `< ${STEPUP_GV}% — no great vessel step-up`}</span>
     </div>`;
   }
 
@@ -2663,7 +2986,7 @@ function calcShunt() {
   const pvo2SrcEl = document.getElementById('pvo2_source');
   const pvo2SrcText = pvo2SrcEl.options[pvo2SrcEl.selectedIndex].text;
   if (pvo2_src === 'assume_sa') {
-    pvo2_pct = (sao2_pct !== null && sao2_pct <= 100) ? sao2_pct : null;
+    pvo2_pct = sao2_pct;
     pvo2_label = 'Assumed = SaO₂';
   } else if (pvo2_src === 'assume_98') {
     pvo2_pct = 98;
@@ -2672,20 +2995,19 @@ function calcShunt() {
     pvo2_pct = pv_o2_manual;
     pvo2_label = 'Manual entry';
   }
-  const pvo2 = pvo2_pct !== null ? pvo2_pct / 100 : null;
-  const pa_sat_dec = pa_sat !== null ? pa_sat / 100 : null;
-  const mvo2_dec = mvo2 !== null ? mvo2 / 100 : null;
+  // The two differences the report SUBSTITUTES, each at the tenth its operands print at.
+  // Everything below is built from these two numbers rather than from the raw pairs, which is
+  // why the printed quotient now follows from the printed difference.
+  const sa_mv = (sao2_pct !== null && mvo2 !== null) ? q(sao2_pct - mvo2, 1) : null;
+  const pv_pa = (pvo2_pct !== null && pa_sat !== null) ? q(pvo2_pct - pa_sat, 1) : null;
+  const pv_mv = (pvo2_pct !== null && mvo2 !== null) ? q(pvo2_pct - mvo2, 1) : null;
 
   // --- Qp/Qs ---
   let qpqs = null;
   let qpqs_math = '';
-  if (sao2 !== null && mvo2_dec !== null && pvo2 !== null && pa_sat_dec !== null) {
-    const num = sao2 - mvo2_dec;
-    const den = pvo2 - pa_sat_dec;
-    if (Math.abs(den) > 0.001) {
-      qpqs = num / den;
-      qpqs_math = `Qp/Qs = (SA O₂ − MV O₂) / (PV O₂ − PA O₂)\n      = (${n(sao2_pct,1)}% − ${n(mvo2,1)}%) / (${n(pvo2_pct,1)}% − ${n(pa_sat,1)}%)\n      = ${n(qpqs,2)}`;
-    }
+  if (sa_mv !== null && pv_pa !== null && Math.abs(pv_pa) > 0.001) {
+    qpqs = q(sa_mv / pv_pa, 2);
+    qpqs_math = `Qp/Qs = (SA O₂ − MV O₂) / (PV O₂ − PA O₂)\n      = (${n(sao2_pct,1)}% − ${n(mvo2,1)}%) / (${n(pvo2_pct,1)}% − ${n(pa_sat,1)}%)\n      = ${n(qpqs,2)}`;
   }
   setText('r_qpqs', qpqs !== null ? n(qpqs,2) : '—');
   flagQpQs('f_qpqs', qpqs);
@@ -2694,29 +3016,19 @@ function calcShunt() {
   // --- Absolute flows (Fick-based) ---
   let qp = null, qs = null, qeff = null, lr_shunt = null, rl_shunt = null;
   let flow_math = '';
-  if (vo2 !== null && hb !== null && o2k !== null && pvo2 !== null && pa_sat_dec !== null) {
-    const pv_pa_diff = pvo2 - pa_sat_dec;
-    if (Math.abs(pv_pa_diff) > 0.001) {
-      qp = vo2 / (hb * o2k * pv_pa_diff * 10);
-    }
-  }
-  if (vo2 !== null && hb !== null && o2k !== null && sao2 !== null && mvo2_dec !== null) {
-    const sa_mv_diff = sao2 - mvo2_dec;
-    if (Math.abs(sa_mv_diff) > 0.001) {
-      qs = vo2 / (hb * o2k * sa_mv_diff * 10);
-    }
-  }
-  if (vo2 !== null && hb !== null && o2k !== null && pvo2 !== null && mvo2_dec !== null) {
-    const pv_mv_diff = pvo2 - mvo2_dec;
-    if (Math.abs(pv_mv_diff) > 0.001) {
-      qeff = vo2 / (hb * o2k * pv_mv_diff * 10);
-    }
-  }
-  if (qp !== null && qeff !== null) lr_shunt = qp - qeff;
-  if (qs !== null && qeff !== null) rl_shunt = qs - qeff;
+  // Each flow divides the VO₂ it prints by a denominator built from the Hb and the saturation
+  // DIFFERENCE it prints. The percentage is written `/100` exactly where the line writes `%`.
+  const fickFlow = (diff) => (vo2 !== null && hb !== null && o2k && diff !== null && Math.abs(diff) > 0.001)
+    ? q(vo2 / (hb * o2k * (diff / 100) * 10), 2) : null;
+  qp = fickFlow(pv_pa);
+  qs = fickFlow(sa_mv);
+  qeff = fickFlow(pv_mv);
+  // The shunt flows are the difference of the two flows printed above them.
+  if (qp !== null && qeff !== null) lr_shunt = q(qp - qeff, 2);
+  if (qs !== null && qeff !== null) rl_shunt = q(qs - qeff, 2);
 
   if (qp !== null && qs !== null && qeff !== null) {
-    flow_math = `Hb: ${n(hb,1)} g/dL, O₂ binding: ${o2k}, VO₂: ${n(vo2,1)} mL/min\nQp = VO₂/[(Hb×${o2k}×(PV−PA))×10] = ${n(vo2,0)}/[(${n(hb,1)}×${o2k}×${n((pvo2!==null&&pa_sat_dec!==null)?(pvo2-pa_sat_dec)*100:null,1)}%)×10] = ${n(qp,2)} L/min\nQs = VO₂/[(Hb×${o2k}×(SA−MV))×10] = ${n(qs,2)} L/min\nQ eff = ${n(qeff,2)} L/min`;
+    flow_math = `Hb: ${n(hb,1)} g/dL, O₂ binding: ${o2k}, VO₂: ${n(vo2,1)} mL/min\nQp = VO₂/[(Hb×${o2k}×(PV−PA))×10] = ${n(vo2,1)}/[(${n(hb,1)}×${o2k}×${n(pv_pa,1)}%)×10] = ${n(qp,2)} L/min\nQs = VO₂/[(Hb×${o2k}×(SA−MV))×10] = ${n(vo2,1)}/[(${n(hb,1)}×${o2k}×${n(sa_mv,1)}%)×10] = ${n(qs,2)} L/min\nQ eff = VO₂/[(Hb×${o2k}×(PV−MV))×10] = ${n(vo2,1)}/[(${n(hb,1)}×${o2k}×${n(pv_mv,1)}%)×10] = ${n(qeff,2)} L/min`;
   }
 
   setText('r_qp', qp !== null ? n(qp,2) : '—');
@@ -2728,14 +3040,16 @@ function calcShunt() {
 
   // --- Shunt-adjusted vascular resistance ---
   let pvr_shunt = null, svr_shunt = null, pvr_svr_ratio = null;
+  // Divided by the flow PRINTED on the line above, at the two decimals it is printed at:
+  // `PVR = (32 − 15) / 10.70 = 1.59 WU` is the quotient of its own substituted operands.
   if (pa_mean !== null && pcwp_mean !== null && qp !== null && qp > 0) {
-    pvr_shunt = (pa_mean - pcwp_mean) / qp;
+    pvr_shunt = q((pa_mean - pcwp_mean) / qp, 2);
   }
   if (ao_mean !== null && ra_mean !== null && qs !== null && qs > 0) {
-    svr_shunt = (ao_mean - ra_mean) / qs;
+    svr_shunt = q((ao_mean - ra_mean) / qs, 2);
   }
   if (pvr_shunt !== null && svr_shunt !== null && svr_shunt > 0) {
-    pvr_svr_ratio = pvr_shunt / svr_shunt;
+    pvr_svr_ratio = q(pvr_shunt / svr_shunt, 2);
   }
 
   setText('r_pvr_shunt', pvr_shunt !== null ? n(pvr_shunt,2) : '—');
@@ -2762,10 +3076,12 @@ function calcShunt() {
   }
 
   // --- Shunt Quality Checks ---
-  buildShuntQualityChecks(fio2, sao2_pct, qpqs, pvr_shunt, pvr_svr_ratio, mvo2, vo2, svc_high, pa_sat);
+  buildShuntQualityChecks(fio2, sao2_pct, qpqs, pvr_shunt, pvr_svr_ratio, mvo2, vo2, svc_high, pa_sat, satRefused);
 
   // --- Shunt Interpretation ---
-  buildShuntInterpretation(svc_ref, pa_sat, ra_mean_sat, rv_mean_sat, qpqs, qp, qs, qeff, lr_shunt, rl_shunt, pvr_shunt, svr_shunt, pvr_svr_ratio);
+  buildShuntInterpretation({
+    svc_ref, pa_sat, qpqs, qp, qeff, lr_shunt, pvr_shunt, pvr_svr_ratio, stepUps
+  });
 
 
   // --- Shunt Copy Text ---
@@ -2776,32 +3092,38 @@ function calcShunt() {
     mvo2, sao2_pct, pvo2_pct, pa_sat,
     qpqs, qp, qs, qeff, lr_shunt, rl_shunt,
     hb, o2k, vo2, pvr_shunt, svr_shunt, pvr_svr_ratio,
-    pa_mean, pcwp_mean, ao_mean, ra_mean, n
+    pa_mean, pcwp_mean, ao_mean, ra_mean,
+    ra_mean_sat, rv_mean_sat, stepUps, sa_mv, pv_pa, pv_mv, n
   });
 }
 
 // ===================== SHUNT QUALITY CHECKS =====================
-function buildShuntQualityChecks(fio2, sao2_pct, qpqs, pvr_shunt, pvr_svr_ratio, mvo2, vo2, svc_high, pa_sat) {
+function buildShuntQualityChecks(fio2, sao2_pct, qpqs, pvr_shunt, pvr_svr_ratio, mvo2, vo2, svc_high, pa_sat, satRefused) {
   const el = document.getElementById('shuntQualityChecks');
   const checks = [];
+
+  // A refused saturation, NAMED — the field, what was typed, and what it takes with it.
+  for (const r of (satRefused || [])) {
+    checks.push({type:'error', msg:`${r.name} saturation entered as ${fmt(r.typed,1)}% — a saturation lies between 0 and 100%. That sample is excluded from the mixed venous, the step-ups and Qp/Qs rather than carried into them.`});
+  }
 
   if (fio2 > 30) {
     checks.push({type:'warn', msg:`FiO₂ ${fio2}% > 30%: simplified Qp/Qs ratio is inaccurate at high FiO₂. Full O₂ content equation required.`});
   }
   if (sao2_pct !== null && sao2_pct < 95) {
-    checks.push({type:'warn', msg:`SaO₂ ${sao2_pct}% < 95% on room air — suggests R→L shunt or underlying lung disease. Check PV O₂ source.`});
+    checks.push({type:'warn', msg:`SaO₂ ${fmt(sao2_pct,1)}% < 95% on room air — suggests R→L shunt or underlying lung disease. Check PV O₂ source.`});
   }
-  if (svc_high !== null && pa_sat !== null && (pa_sat - svc_high) >= 8 && qpqs !== null && qpqs >= 1.0 && qpqs < 1.5) {
-    checks.push({type:'warn', msg:`Screening step-up ≥ 8% but Qp/Qs 1.0–1.5 — consider bidirectional shunting or sampling variability.`});
+  if (svc_high !== null && pa_sat !== null && (pa_sat - svc_high) >= STEPUP_SCREEN && qpqs !== null && qpqs >= 1.0 && qpqs < 1.5) {
+    checks.push({type:'warn', msg:`Screening step-up ≥ ${STEPUP_SCREEN}% but Qp/Qs 1.0–1.5 — consider bidirectional shunting or sampling variability.`});
   }
   if (pvr_shunt !== null && pvr_shunt > 6) {
-    checks.push({type:'error', msg:`PVR ${pvr_shunt.toFixed(2)} WU > 6: Eisenmenger physiology. Shunt closure likely contraindicated.`});
+    checks.push({type:'error', msg:`PVR ${fmt(pvr_shunt)} WU > 6: Eisenmenger physiology. Shunt closure likely contraindicated.`});
   }
   if (pvr_svr_ratio !== null && pvr_svr_ratio > 0.67) {
-    checks.push({type:'warn', msg:`PVR/SVR > 0.67 (${pvr_svr_ratio.toFixed(2)}): Eisenmenger concern. Evaluate carefully before intervention.`});
+    checks.push({type:'warn', msg:`PVR/SVR > 0.67 (${fmt(pvr_svr_ratio)}): Eisenmenger concern. Evaluate carefully before intervention.`});
   }
   if (mvo2 !== null && mvo2 > 80) {
-    checks.push({type:'warn', msg:`MV O₂ ${mvo2.toFixed(1)}% > 80%: very high mixed venous sat — consider high output state, incomplete mixing, or sampling error.`});
+    checks.push({type:'warn', msg:`MV O₂ ${fmt(mvo2,1)}% > 80%: very high mixed venous sat — consider high output state, incomplete mixing, or sampling error.`});
   }
   if (vo2 !== null && document.getElementById('vo2source').value === 'estimated') {
     checks.push({type:'warn', msg:'VO₂ estimated at 125 mL/min/m². Absolute flow calculations (Qp, Qs) may have ±25% error. Use LaFarge or measured VO₂ when possible.'});
@@ -2826,7 +3148,8 @@ function buildShuntCopyText(d) {
     mvo2, sao2_pct, pvo2_pct, pa_sat,
     qpqs, qp, qs, qeff, lr_shunt, rl_shunt,
     hb, o2k, vo2, pvr_shunt, svr_shunt, pvr_svr_ratio,
-    pa_mean, pcwp_mean, ao_mean, ra_mean, n} = d;
+    pa_mean, pcwp_mean, ao_mean, ra_mean,
+    ra_mean_sat, rv_mean_sat, stepUps, sa_mv, pv_pa, pv_mv, n} = d;
 
   let t = '';
   t += 'SHUNT EVALUATION\n';
@@ -2856,29 +3179,25 @@ function buildShuntCopyText(d) {
   }
 
   t += '\nO₂ STEP-UP ANALYSIS\n';
-  // Screening
-  if (svc_high !== null && pa_sat !== null) {
-    const su = pa_sat - svc_high;
-    t += `  Screening (SVC → PA): ${n(su,1)}% ${su >= 8 ? '(≥ 8%, significant)' : '(< 8%, no significant shunt)'}\n`;
+  // THE MEANS AND THE DELTAS ARE `calcShunt()`'s, never recomputed here. This block used to
+  // average the RA and the RV samples a second time and re-derive all four step-ups and their
+  // thresholds — a second implementation of arithmetic the panel had already done, in the one
+  // section of this file with no fixture coverage to catch the two copies parting.
+  if (stepUps.screening !== null) {
+    const su = stepUps.screening;
+    t += `  Screening (SVC → PA): ${n(su,1)}% ${su >= STEPUP_SCREEN ? `(≥ ${STEPUP_SCREEN}%, significant)` : `(< ${STEPUP_SCREEN}%, no significant shunt)`}\n`;
   }
-  // Atrial
-  const ra_vals_t = [ra_high_sat, ra_mid_sat, ra_low_sat].filter(x => x !== null);
-  const ra_mean_t = ra_vals_t.length > 0 ? ra_vals_t.reduce((a,b)=>a+b,0)/ra_vals_t.length : null;
-  if (svc_high !== null && ra_mean_t !== null) {
-    const su = ra_mean_t - svc_high;
-    t += `  Atrial (SVC → RA mean ${n(ra_mean_t,1)}%): ${n(su,1)}% ${su >= 7 ? '(≥ 7%, atrial-level shunt)' : '(< 7%)'}\n`;
+  if (stepUps.atrial !== null) {
+    const su = stepUps.atrial;
+    t += `  Atrial (SVC → RA mean ${n(ra_mean_sat,1)}%): ${n(su,1)}% ${su >= STEPUP_ATRIAL ? `(≥ ${STEPUP_ATRIAL}%, atrial-level shunt)` : `(< ${STEPUP_ATRIAL}%)`}\n`;
   }
-  // Ventricular
-  const rv_vals_t = [rv_mid_sat, rvot_sat].filter(x => x !== null);
-  const rv_mean_t = rv_vals_t.length > 0 ? rv_vals_t.reduce((a,b)=>a+b,0)/rv_vals_t.length : null;
-  if (ra_mean_t !== null && rv_mean_t !== null) {
-    const su = rv_mean_t - ra_mean_t;
-    t += `  Ventricular (RA → RV mean ${n(rv_mean_t,1)}%): ${n(su,1)}% ${su >= 5 ? '(≥ 5%, ventricular-level shunt)' : '(< 5%)'}\n`;
+  if (stepUps.ventricular !== null) {
+    const su = stepUps.ventricular;
+    t += `  Ventricular (RA → RV mean ${n(rv_mean_sat,1)}%): ${n(su,1)}% ${su >= STEPUP_VENT ? `(≥ ${STEPUP_VENT}%, ventricular-level shunt)` : `(< ${STEPUP_VENT}%)`}\n`;
   }
-  // Great vessel
-  if (rv_mean_t !== null && pa_sat !== null) {
-    const su = pa_sat - rv_mean_t;
-    t += `  Great vessel (RV → PA ${n(pa_sat,1)}%): ${n(su,1)}% ${su >= 5 ? '(≥ 5%, great vessel-level shunt)' : '(< 5%)'}\n`;
+  if (stepUps.greatVessel !== null) {
+    const su = stepUps.greatVessel;
+    t += `  Great vessel (RV → PA ${n(pa_sat,1)}%): ${n(su,1)}% ${su >= STEPUP_GV ? `(≥ ${STEPUP_GV}%, great vessel-level shunt)` : `(< ${STEPUP_GV}%)`}\n`;
   }
 
   t += '\nSHUNT QUANTIFICATION\n';
@@ -2893,18 +3212,21 @@ function buildShuntCopyText(d) {
   t += '\nABSOLUTE FLOWS (Fick-based)\n';
   if (hb !== null) t += `  Hb (CBC): ${n(hb,1)} g/dL, O₂ binding constant: ${o2k}\n`;
   if (vo2 !== null) t += `  VO₂: ${n(vo2,1)} mL/min\n`;
+  // SUBSTITUTED, like every other equation in the two reports. The clipboard is the artifact
+  // that reaches a chart and it was the one printing a formula with no numbers in it, while
+  // the screen — which nobody pastes — showed the working. `pv_pa` was even computed here for
+  // exactly this and then never used.
   if (qp !== null) {
-    const pv_pa = (pvo2_pct !== null && pa_sat !== null) ? (pvo2_pct - pa_sat).toFixed(1) : '—';
-    t += `  Qp = VO₂ / [(Hb × ${o2k} × (PV O₂ − PA O₂)) × 10] = ${n(qp,2)} L/min\n`;
+    t += `  Qp = VO₂ / [(Hb × ${o2k} × (PV O₂ − PA O₂)) × 10] = ${n(vo2,1)} / [(${n(hb,1)} × ${o2k} × ${n(pv_pa,1)}%) × 10] = ${n(qp,2)} L/min\n`;
   } else {
     t += '  Qp: insufficient data\n';
   }
   if (qs !== null) {
-    t += `  Qs = VO₂ / [(Hb × ${o2k} × (SA O₂ − MV O₂)) × 10] = ${n(qs,2)} L/min\n`;
+    t += `  Qs = VO₂ / [(Hb × ${o2k} × (SA O₂ − MV O₂)) × 10] = ${n(vo2,1)} / [(${n(hb,1)} × ${o2k} × ${n(sa_mv,1)}%) × 10] = ${n(qs,2)} L/min\n`;
   } else {
     t += '  Qs: insufficient data\n';
   }
-  if (qeff !== null) t += `  Q effective = ${n(qeff,2)} L/min\n`;
+  if (qeff !== null) t += `  Q effective = VO₂ / [(Hb × ${o2k} × (PV O₂ − MV O₂)) × 10] = ${n(vo2,1)} / [(${n(hb,1)} × ${o2k} × ${n(pv_mv,1)}%) × 10] = ${n(qeff,2)} L/min\n`;
   if (lr_shunt !== null) t += `  L→R shunt = Qp − Q effective = ${n(Math.max(0,lr_shunt),2)} L/min\n`;
   if (rl_shunt !== null) t += `  R→L shunt = Qs − Q effective = ${n(Math.max(0,rl_shunt),2)} L/min\n`;
 
@@ -2941,10 +3263,26 @@ function copyShuntResults() {
 }
 
 // ===================== QUALITY CHECKS =====================
-function buildQualityChecks(hb, sao2, svo2, avo2, fickCO, td_co, vo2, ra_mean, papi,
-    sao2_pct, svo2_pct, pa_sys, pa_dia, pcwp_mean, ao_mean, lv_edp, lv_sys, ao_sys, G) {
+function buildQualityChecks(d) {
+  /* ONE DESTRUCTURED ARGUMENT, NOT A POSITIONAL LIST. buildQualityChecks read 4 of its 22 positional arguments nowhere.
+     Any two adjacent same-typed arguments — `ra_a, ra_v, ra_mean`, `pvr, pvrDyn, pvri`,
+     `cpo, cpi` — transpose into a wrong clinical report with no error anywhere, and the
+     golden fixtures cover a subset of states: all four defects fixed on 2026-08-13 were in
+     a state no fixture reached. `buildShuntCopyText(d)` was already this shape. */
+  const {
+    hb, sao2, svo2, avo2, fickCO, vo2, ra_mean, papi, sao2_pct, svo2_pct, pa_sys, pa_dia,
+    pcwp_mean, ao_mean, G, hbTyped, hbRefused, fickTdDiff
+  } = d;
   const el = document.getElementById('qualityChecks');
   const checks = [];
+
+  // THE OPERAND THE PAGE REFUSED, AND WHY. `hb` was parameter #1 of this function and was
+  // read nowhere in its body; the cause of a 24.96 L/min cardiac output was never named.
+  if (hbRefused) {
+    checks.push({type:'error', msg:`Hb ${fmt(hbTyped,1)} g/dL is not a measurement (the reportable domain is above 0 and no more than ${HB_MAX} g/dL). The O₂ contents and every Fick-derived flow are withheld until it is corrected.`});
+  } else if (hbTyped !== null && (hbTyped < HB_LOW || hbTyped > HB_HIGH)) {
+    checks.push({type:'error', msg:`Hb ${fmt(hbTyped,1)} g/dL is outside the plausible range (${HB_LOW}–${HB_HIGH} g/dL) — the usual cause is a decimal slip (1.43 typed for 14.3). Hb is in CaO₂, in CvO₂, in the Fick denominator and in Qp, Qs and Q effective, so every flow below is scaled by the same factor. The numbers are still shown; check the CBC before using any of them.`});
+  }
 
   // EVERY VALVE AREA THIS PAGE DECLINED TO REPORT, AND WHY. `calc()` decides; this states it.
   // A value dropped is worse than a value refused — the Gorlin section simply disappearing is
@@ -2957,8 +3295,8 @@ function buildQualityChecks(hb, sao2, svo2, avo2, fickCO, td_co, vo2, ra_mean, p
   // the equation is the DEFAULT VO2 source here, so an adult study silently extrapolates.
   const lfAge = v('age');
   if (document.getElementById('vo2source').value === 'lafarge' && lfAge !== null) {
-    if (lfAge > 40) checks.push({type:'warn', msg:`LaFarge was derived in patients aged 3–40 y; at age ${lfAge.toFixed(0)} the estimate is extrapolated. Prefer a measured VO₂ (metabolic cart) when cardiac output drives management.`});
-    else if (lfAge < 3) checks.push({type:'error', msg:`LaFarge is not valid below age 3 (entered ${lfAge.toFixed(0)}). Use a measured VO₂.`});
+    if (lfAge > 40) checks.push({type:'warn', msg:`LaFarge was derived in patients aged 3–40 y; at age ${fmt(lfAge,0)} the estimate is extrapolated. Prefer a measured VO₂ (metabolic cart) when cardiac output drives management.`});
+    else if (lfAge < 3) checks.push({type:'error', msg:`LaFarge is not valid below age 3 (entered ${fmt(lfAge,0)}). Use a measured VO₂.`});
   }
 
   // Systole + diastole cannot exceed the minute. A SEP + DFP above 60 sec/min means an ejection
@@ -2967,15 +3305,15 @@ function buildQualityChecks(hb, sao2, svo2, avo2, fickCO, td_co, vo2, ra_mean, p
   // Through the same reader the arithmetic uses: a check that quotes a number the report
   // prints differently is a check the operator cannot act on.
   const sepQ = vq('ava_sep', 1), dfpQ = vq('mva_dfp', 1);
-  if (sepQ !== null && sepQ > 60) checks.push({type:'error', msg:`SEP ${sepQ.toFixed(1)} sec/min exceeds 60 — impossible. Ejection time is entered per BEAT in seconds (e.g. 0.32), not milliseconds. Gorlin AVA is invalid.`});
-  if (dfpQ !== null && dfpQ > 60) checks.push({type:'error', msg:`DFP ${dfpQ.toFixed(1)} sec/min exceeds 60 — impossible. Filling time is entered per BEAT in seconds (e.g. 0.32), not milliseconds. Gorlin MVA is invalid.`});
-  if (sepQ !== null && dfpQ !== null && sepQ + dfpQ > 60) checks.push({type:'error', msg:`SEP + DFP = ${(sepQ+dfpQ).toFixed(1)} sec/min. Systole and diastole together cannot exceed 60 sec/min — check the ejection and filling times against the cycle length (60/HR).`});
+  if (sepQ !== null && sepQ > 60) checks.push({type:'error', msg:`SEP ${fmt(sepQ,1)} sec/min exceeds 60 — impossible. Ejection time is entered per BEAT in seconds (e.g. 0.32), not milliseconds. Gorlin AVA is invalid.`});
+  if (dfpQ !== null && dfpQ > 60) checks.push({type:'error', msg:`DFP ${fmt(dfpQ,1)} sec/min exceeds 60 — impossible. Filling time is entered per BEAT in seconds (e.g. 0.32), not milliseconds. Gorlin MVA is invalid.`});
+  if (sepQ !== null && dfpQ !== null && sepQ + dfpQ > 60) checks.push({type:'error', msg:`SEP + DFP = ${fmt(sepQ+dfpQ,1)} sec/min. Systole and diastole together cannot exceed 60 sec/min — check the ejection and filling times against the cycle length (60/HR).`});
 
   // The RHC tab treats the PA saturation as mixed venous. That is only true without a
   // left-to-right shunt: with one, VO2 / (CaO2 - CpaO2) is Qp, not systemic cardiac output.
   const svcQ = v('svc_high'), paQ = v('pa_main_sat');
   if (svcQ !== null && paQ !== null && (paQ - svcQ) >= 8) {
-    checks.push({type:'error', msg:`SVC ${svcQ.toFixed(1)}% → PA ${paQ.toFixed(1)}% is a ${(paQ-svcQ).toFixed(1)}% step-up (≥ 8%). With a left-to-right shunt the PA saturation is NOT mixed venous — the Fick value above is pulmonary blood flow (Qp), not systemic output. Use the Shunts tab and a Flamm mixed venous.`});
+    checks.push({type:'error', msg:`SVC ${fmt(svcQ,1)}% → PA ${fmt(paQ,1)}% is a ${fmt(paQ-svcQ,1)}% step-up (≥ 8%). With a left-to-right shunt the PA saturation is NOT mixed venous — the Fick value above is pulmonary blood flow (Qp), not systemic output. PVR is unaffected (it divides by Qp by definition), but SVR, CI, SV, CPO and the Fick–TD comparison on this tab all divide by Qp and are therefore NOT systemic quantities. Use the Shunts tab, which computes Qs from a Flamm mixed venous and divides SVR by it.`});
   }
 
   // Decimal entry detection (Bug 1)
@@ -3021,17 +3359,22 @@ function buildQualityChecks(hb, sao2, svo2, avo2, fickCO, td_co, vo2, ra_mean, p
     else if (avo2 < 3.5) checks.push({type:'warn', msg:`Narrow a-vO₂ difference (${fmt(avo2)}) — high output state, shunt, or sampling error?`});
     else checks.push({type:'ok', msg:`a-vO₂ difference (${fmt(avo2)}) is in normal range.`});
   }
-  if (fickCO !== null && td_co !== null && fickCO > 0 && td_co > 0) {
-    const diff = Math.abs(fickCO - td_co) / fickCO * 100;
-    if (diff > 20) {
-      checks.push({type:'warn', msg:`Fick–TD discordance ${fmt(diff,0)}%. Checklist: VO₂ estimated vs measured? TD accurate (TR, low output, shunt)? Mixed venous truly from PA?`});
-    }
+  if (fickTdDiff !== null && fickTdDiff > 20) {
+    checks.push({type:'warn', msg:`Fick–TD discordance ${fmt(fickTdDiff,0)}%. Checklist: VO₂ estimated vs measured? TD accurate (TR, low output, shunt)? Mixed venous truly from PA?`});
   }
   if (vo2 !== null && document.getElementById('vo2source').value === 'estimated') {
     checks.push({type:'warn', msg:'VO₂ estimated at 125 mL/min/m². ±25% error common. Use LaFarge if available.'});
   }
   if (ra_mean !== null && ra_mean < 3 && papi !== null) {
     checks.push({type:'warn', msg:'RAP < 3 mmHg — PAPi may be unreliable (denominator artifact).'});
+  }
+  // PAPi WITHHELD, AND SAID. At a mean RAP of 0 or below, `calc()` leaves PAPi null — so the
+  // value showed "—", the badge cleared, and the PAPi line vanished from the copied report
+  // with nothing to distinguish it from PA pressures nobody entered. A mean RAP of 0 is a real
+  // chartable measurement and a negative one is a levelling error; both deserve the sentence
+  // every other refusal on this page gets.
+  if (pa_sys !== null && pa_dia !== null && ra_mean !== null && ra_mean <= 0) {
+    checks.push({type:'warn', msg:`PAPi divides the PA pulse pressure by the mean RA pressure; at a mean RAP of ${fmt(ra_mean,0)} mmHg the ratio has no denominator — confirm the transducer zero and the levelling. PAPi is withheld.`});
   }
   if (fickCO !== null && fickCO < 2.5) {
     checks.push({type:'warn', msg:`Very low Fick CO (${fmt(fickCO)}). Confirm: is VO₂ reasonable? Are sats from correct sites?`});
@@ -3050,15 +3393,19 @@ function buildQualityChecks(hb, sao2, svo2, avo2, fickCO, td_co, vo2, ra_mean, p
 }
 
 // ===================== COPY TEXT =====================
-function buildCopyText(bsa, hb, hr, o2k, useDissolved,
-  ra_a, ra_v, ra_mean, rv_sys, rv_dia, rv_edp,
-  pa_sys, pa_dia, pa_mean, pcwp_a, pcwp_v, pcwp_mean,
-  ao_sys, ao_dia, ao_mean, sao2_pct, svo2_pct,
-  cao2, cvo2, avo2, vo2, fickCO, fickCI, sv, svi,
-  td_co, tdCI, tpg, dpg, pvr, pvrDyn, pvri, svr, svrDyn, svri,
-  papi, rvswi, cpo, cpi, useFick,
-  ava, mva, ava_gradient, ava_sep, mva_gradient, mva_dfp, isAfib,
-  lv_sys, lv_dia, lv_edp, lv_ao_gradient, G) {
+function buildCopyText(d) {
+  /* ONE DESTRUCTURED ARGUMENT, NOT A POSITIONAL LIST. buildCopyText took 57 positional arguments across 9 source lines.
+     Any two adjacent same-typed arguments — `ra_a, ra_v, ra_mean`, `pvr, pvrDyn, pvri`,
+     `cpo, cpi` — transpose into a wrong clinical report with no error anywhere, and the
+     golden fixtures cover a subset of states: all four defects fixed on 2026-08-13 were in
+     a state no fixture reached. `buildShuntCopyText(d)` was already this shape. */
+  const {
+    bsa, hb, hr, o2k, useDissolved, ra_a, ra_v, ra_mean, rv_sys, rv_dia, rv_edp, pa_sys,
+    pa_dia, pa_mean, pcwp_a, pcwp_v, pcwp_mean, ao_sys, ao_dia, ao_mean, sao2_pct, svo2_pct,
+    cao2, cvo2, avo2, vo2, fickCO, fickCI, sv, svi, td_co, tdCI, tpg, dpg, pvr, pvrDyn, pvri,
+    svr, svrDyn, svri, papi, rvswi, cpo, cpi, useFick, ava, mva, ava_gradient, ava_sep,
+    mva_gradient, mva_dfp, isAfib, lv_sys, lv_dia, lv_edp, lv_ao_gradient, G
+  } = d;
 
   const vo2src = document.getElementById('vo2source');
   const vo2label = vo2src.options[vo2src.selectedIndex].text;
@@ -3299,8 +3646,39 @@ function copyResults() {
   });
 }
 
+// ===================== RESET INPUTS =====================
+/**
+ * EVERY FIELD THAT DESCRIBES A PATIENT, AND NOTHING THAT DESCRIBES THE OPERATOR.
+ *
+ * Both example loaders used to overwrite only the fields their own case names, so the form
+ * could hold two patients at once. Load RHC Example then Load Shunt Example printed, in one
+ * clipboard artifact meant for a chart:
+ *
+ *     PVR = (mPAP − PCWP) / Qp = (32 − 15) / 10.70 = 1.59 WU
+ *
+ * — 32 and 15 from the 65-year-old man, 10.70 from the 34-year-old woman. Load RHC Example
+ * with AFib mode still on was the same defect in the other direction: the example's own
+ * aortic gradient went into a field the page was no longer reading, the beat grid still held
+ * the previous beats, and the demo's headline finding never appeared.
+ *
+ * `clearAll()` is NOT the tool for that. It also resets the CO source to Fick and turns the
+ * "Plain text (EHR)" output off — those are the operator's settings, not the patient's, and a
+ * loader that silently changes them mid-session is a second defect in place of the first.
+ */
+function resetInputs() {
+  document.querySelectorAll('input[type="number"]').forEach(el => {
+    el.value = '';
+    delete el.dataset.derived;   // a period is derived again once its interval comes back
+  });
+  document.getElementById('fio2').value = '21';
+  document.getElementById('tdAvgHint').textContent = '';
+  const afib = document.getElementById('afibToggle');
+  if (afib.checked) { afib.checked = false; toggleAfib(); }
+}
+
 // ===================== LOAD EXAMPLE =====================
 function loadExample() {
+  resetInputs();
   document.getElementById('age').value = '65';
   document.getElementById('sex').value = 'male';
   document.getElementById('bsa').value = '1.51';
@@ -3336,15 +3714,10 @@ function loadExample() {
   document.getElementById('td3').value = '1.45';
   calcTD();
 
-  // The shunt oximetry run is a DIFFERENT patient and is no longer loaded here — see
-  // loadShuntExample(). Loading both left one dataset describing two people: this case's
-  // PA saturation is 53.6% (SvO2 field) while the ASD run's PA main sat is 84%, so the same
-  // form computed pulmonary blood flow as both 2.44 and 10.89 L/min depending on the tab.
-  ['svc_high','svc_low','ivc_sat','ra_high_sat','ra_mid_sat','ra_low_sat',
-   'rv_mid_sat','rvot_sat','pa_main_sat','pa_left_sat','pa_right_sat'].forEach(id => {
-    const el = document.getElementById(id); if (el) el.value = '';
-  });
-  document.getElementById('fio2').value = '21';
+  // The shunt oximetry run is a DIFFERENT patient and is not loaded here — `resetInputs()`
+  // above has already cleared it. Loading both left one dataset describing two people: this
+  // case's PA saturation is 53.6% (SvO2 field) while the ASD run's PA main sat is 84%, so the
+  // same form computed pulmonary blood flow as both 2.44 and 10.89 L/min depending on the tab.
 
   // Gorlin valve area example (low-flow low-gradient severe AS, severe MS)
   document.getElementById('ava_gradient').value = '25';
@@ -3364,6 +3737,7 @@ function loadExample() {
 // main sat of 84%. That makes the RHC tab's Fick flow and the Shunts tab's Qp the same
 // number for the same patient, which is the whole point.
 function loadShuntExample() {
+  resetInputs();
   document.getElementById('age').value = '34';
   document.getElementById('sex').value = 'female';
   document.getElementById('bsa').value = '1.68';
@@ -3374,6 +3748,34 @@ function loadShuntExample() {
 
   document.getElementById('sao2').value = '92.8';
   document.getElementById('svo2').value = '84';   // = PA main sat: post-shunt pulmonary artery
+
+  // THE PRESSURES THE DEMO USED TO OMIT. Without them the shunt report ended in
+  // "PVR: insufficient data / SVR: insufficient data" — the SHUNT-ADJUSTED VASCULAR RESISTANCE
+  // block, the one thing this tab computes that the RHC tab cannot, had no demonstration on
+  // either loader, while the comment above described the case as an ASD with pulmonary
+  // hypertension. (Before the loader was fixed the block only filled because the OTHER
+  // patient's pressures were still in the form.) These are supplied here, not read off the
+  // source oximetry table, and they are internally consistent: mean PA (62+2×26)/3 = 38,
+  // mean Ao (112+2×70)/3 = 84, RVEDP = mean RA, RV systolic = PA systolic (no pulmonic
+  // stenosis). They give PVR = (38 − 10) / Qp 10.70 = 2.62 WU and SVR = (84 − 8) / Qs 4.32 =
+  // 17.59 WU, a PVR/SVR ratio of 0.15 — an ASD with a Qp/Qs near 2.5 and pulmonary
+  // hypertension that is still flow-driven and operable, which is the case worth teaching,
+  // and it is deliberately NOT an Eisenmenger ratio so the 0.67 warning stays a warning.
+  document.getElementById('ra_a').value = '9';
+  document.getElementById('ra_v').value = '8';
+  document.getElementById('ra_mean').value = '8';
+  document.getElementById('rv_sys').value = '62';
+  document.getElementById('rv_dia').value = '4';
+  document.getElementById('rv_edp').value = '8';
+  document.getElementById('pa_sys').value = '62';
+  document.getElementById('pa_dia').value = '26';
+  document.getElementById('pa_mean').value = '38';
+  document.getElementById('pcwp_a').value = '12';
+  document.getElementById('pcwp_v').value = '11';
+  document.getElementById('pcwp_mean').value = '10';
+  document.getElementById('ao_sys').value = '112';
+  document.getElementById('ao_dia').value = '70';
+  document.getElementById('ao_mean').value = '84';
 
   document.getElementById('svc_high').value = '70';
   document.getElementById('svc_low').value = '83';
@@ -3396,7 +3798,9 @@ function loadShuntExample() {
 
 // ===================== CLEAR ALL =====================
 function clearAll() {
-  document.querySelectorAll('input[type="number"]').forEach(el => el.value = '');
+  // Patient data first, then the preferences — this is the ONE entry point that is allowed to
+  // reset both, because the operator asked for it by name.
+  resetInputs();
   document.getElementById('sex').value = 'male';
   document.getElementById('vo2source').value = 'lafarge';
   document.getElementById('o2const').value = '1.36';
@@ -3406,15 +3810,9 @@ function clearAll() {
   document.getElementById('venous_sheath').value = '8';
   document.getElementById('pa_catheter').value = '7.5';
   document.getElementById('td_injectate').value = 'room_10';
-  document.getElementById('tdAvgHint').textContent = '';
-  // Reset shunt-specific fields
-  document.getElementById('fio2').value = '21';
   document.getElementById('pvo2_source').value = 'assume_sa';
   document.getElementById('pvO2ManualRow').style.display = 'none';
   document.getElementById('shuntPlainTextToggle').checked = false;
-  // Reset AFib toggle
-  document.getElementById('afibToggle').checked = false;
-  toggleAfib();
   handleVo2Source();
   calc();
 }
@@ -3470,7 +3868,16 @@ function updateReportHeight() {
 }
 
 // ===================== RHC INTERPRETATION =====================
-function buildRhcInterpretation(ci, fickCI, tdCI, useFick, ra_mean, pcwp_mean, pa_mean, pvr, papi, rvswi, cpo, cpi, avo2, fickCO, td_co, ava, mva, lv_edp, lv_sys, ao_sys, lv_ao_gradient) {
+function buildRhcInterpretation(d) {
+  /* ONE DESTRUCTURED ARGUMENT, NOT A POSITIONAL LIST. buildRhcInterpretation read 3 of its 22 positional arguments nowhere.
+     Any two adjacent same-typed arguments — `ra_a, ra_v, ra_mean`, `pvr, pvrDyn, pvri`,
+     `cpo, cpi` — transpose into a wrong clinical report with no error anywhere, and the
+     golden fixtures cover a subset of states: all four defects fixed on 2026-08-13 were in
+     a state no fixture reached. `buildShuntCopyText(d)` was already this shape. */
+  const {
+    fickCI, tdCI, useFick, ra_mean, pcwp_mean, pa_mean, pvr, papi, rvswi, cpo, cpi, avo2,
+    fickCO, td_co, ava, mva, lv_edp, lv_ao_gradient, fickTdDiff
+  } = d;
   const el = document.getElementById('rhcInterpretation');
   const bullets = [];
 
@@ -3486,11 +3893,11 @@ function buildRhcInterpretation(ci, fickCI, tdCI, useFick, ra_mean, pcwp_mean, p
   // 1. Hemodynamic profile (CI-based)
   if (ci_val !== null) {
     if (ci_val < 2.2) {
-      bullets.push({type:'error', text:`Low cardiac output state: CI ${ci_val.toFixed(2)} L/min/m\xB2 (< 2.2). Consistent with impaired cardiac function or cardiogenic shock spectrum.`});
+      bullets.push({type:'error', text:`Low cardiac output state: CI ${fmt(ci_val)} L/min/m\xB2 (< 2.2). Consistent with impaired cardiac function or cardiogenic shock spectrum.`});
     } else if (ci_val <= 4.0) {
-      bullets.push({type:'info', text:`Normal cardiac output: CI ${ci_val.toFixed(2)} L/min/m\xB2.`});
+      bullets.push({type:'info', text:`Normal cardiac output: CI ${fmt(ci_val)} L/min/m\xB2.`});
     } else {
-      bullets.push({type:'warn', text:`High output state: CI ${ci_val.toFixed(2)} L/min/m\xB2 (> 4.0). Consider anemia, sepsis, AV fistula, liver disease, or hyperthyroidism.`});
+      bullets.push({type:'warn', text:`High output state: CI ${fmt(ci_val)} L/min/m\xB2 (> 4.0). Consider anemia, sepsis, AV fistula, liver disease, or hyperthyroidism.`});
     }
   }
 
@@ -3510,12 +3917,8 @@ function buildRhcInterpretation(ci, fickCI, tdCI, useFick, ra_mean, pcwp_mean, p
   // 3. PH assessment
   if (pa_mean !== null && pcwp_mean !== null && pvr !== null) {
     if (pa_mean > 20) {
-      let phType = '';
-      if (pcwp_mean <= 15 && pvr > 2) phType = 'Pre-capillary pulmonary hypertension';
-      else if (pcwp_mean > 15 && pvr <= 2) phType = 'Isolated post-capillary pulmonary hypertension (IpcPH)';
-      else if (pcwp_mean > 15 && pvr > 2) phType = 'Combined pre- and post-capillary pulmonary hypertension (CpcPH)';
-      else phType = 'Pulmonary hypertension, borderline/exercise pattern (elevated mPAP, PCWP \u2264 15, PVR \u2264 2)';
-      bullets.push({type:'warn', text:`${phType}: mPAP ${pa_mean} mmHg, PCWP ${pcwp_mean} mmHg, PVR ${pvr.toFixed(2)} WU.`});
+      const ph = classifyPH(pcwp_mean, pvr);
+      bullets.push({type:'warn', text:`${ph.long}: mPAP ${pa_mean} mmHg, PCWP ${pcwp_mean} mmHg, PVR ${fmt(pvr)} WU.${ph.note ? ' ' + ph.note + '.' : ''}`});
     } else {
       bullets.push({type:'info', text:`No pulmonary hypertension by hemodynamic criteria: mPAP ${pa_mean} mmHg (\u2264 20).`});
     }
@@ -3523,13 +3926,8 @@ function buildRhcInterpretation(ci, fickCI, tdCI, useFick, ra_mean, pcwp_mean, p
 
   // 4. PVR severity
   if (pvr !== null) {
-    let pvr_sev = '';
-    let pvr_type = 'info';
-    if (pvr < 2) { pvr_sev = 'normal (< 2 WU)'; pvr_type = 'info'; }
-    else if (pvr < 3) { pvr_sev = 'borderline elevated (2\u20133 WU)'; pvr_type = 'warn'; }
-    else if (pvr <= 5) { pvr_sev = 'moderately elevated (3\u20135 WU)'; pvr_type = 'warn'; }
-    else { pvr_sev = 'severely elevated (> 5 WU)'; pvr_type = 'error'; }
-    bullets.push({type: pvr_type, text:`PVR ${pvr.toFixed(2)} WU \u2014 ${pvr_sev}.`});
+    const g = gradePVR(pvr);
+    bullets.push({type: g.type, text:`PVR ${fmt(pvr)} WU \u2014 ${g.prose}.`});
   }
 
   // 5. RV function (PAPi)
@@ -3538,15 +3936,15 @@ function buildRhcInterpretation(ci, fickCI, tdCI, useFick, ra_mean, pcwp_mean, p
     let rv_text = '';
     if (papi >= 1.0) {
       rv_type = 'info';
-      rv_text = `Adequate RV function: PAPi ${papi.toFixed(2)} (\u2265 1.0).`;
+      rv_text = `Adequate RV function: PAPi ${fmt(papi)} (\u2265 1.0).`;
     } else if (papi >= 0.9) {
       rv_type = 'warn';
-      rv_text = `Borderline RV function: PAPi ${papi.toFixed(2)} (0.9\u20131.0). Monitor closely.`;
+      rv_text = `Borderline RV function: PAPi ${fmt(papi)} (0.9\u20131.0). Monitor closely.`;
     } else {
       rv_type = 'error';
-      rv_text = `RV dysfunction: PAPi ${papi.toFixed(2)} (< 0.9). Elevated risk of RV failure.`;
+      rv_text = `RV dysfunction: PAPi ${fmt(papi)} (< 0.9). Elevated risk of RV failure.`;
     }
-    if (rvswi !== null) rv_text += ` RVSWI ${rvswi.toFixed(2)} g\u00B7m/m\xB2/beat.`;
+    if (rvswi !== null) rv_text += ` RVSWI ${fmt(rvswi)} g\u00B7m/m\xB2/beat.`;
     bullets.push({type: rv_type, text: rv_text});
   }
 
@@ -3555,38 +3953,33 @@ function buildRhcInterpretation(ci, fickCI, tdCI, useFick, ra_mean, pcwp_mean, p
   const shock_cpi = cpi !== null && cpi < 0.33;
   if (shock_cpo || shock_cpi) {
     let shockText = 'Cardiogenic shock profile:';
-    if (shock_cpo) shockText += ` CPO ${cpo.toFixed(2)} W (< 0.6 W indicates poor prognosis).`;
-    if (shock_cpi) shockText += ` CPI ${cpi.toFixed(2)} W/m\xB2 (< 0.33 W/m\xB2 is strongest predictor of in-hospital mortality).`;
+    if (shock_cpo) shockText += ` CPO ${fmt(cpo)} W (< 0.6 W indicates poor prognosis).`;
+    if (shock_cpi) shockText += ` CPI ${fmt(cpi)} W/m\xB2 (< 0.33 W/m\xB2 is strongest predictor of in-hospital mortality).`;
     bullets.push({type:'error', text: shockText});
   } else if (cpo !== null && cpi !== null) {
-    bullets.push({type:'info', text:`Cardiac power output: CPO ${cpo.toFixed(2)} W, CPI ${cpi.toFixed(2)} W/m\xB2 \u2014 above shock thresholds.`});
+    bullets.push({type:'info', text:`Cardiac power output: CPO ${fmt(cpo)} W, CPI ${fmt(cpi)} W/m\xB2 \u2014 above shock thresholds.`});
   }
 
   // 7. a-vO2 difference
   if (avo2 !== null) {
     if (avo2 > 5.5) {
-      bullets.push({type:'warn', text:`Wide a-vO\u2082 difference: ${avo2.toFixed(2)} mL O\u2082/dL (> 5.5) \u2014 consistent with low cardiac output and increased peripheral O\u2082 extraction.`});
+      bullets.push({type:'warn', text:`Wide a-vO\u2082 difference: ${fmt(avo2)} mL O\u2082/dL (> 5.5) \u2014 consistent with low cardiac output and increased peripheral O\u2082 extraction.`});
     }
   }
 
-  // 8. Fick vs TD discordance
-  if (fickCO !== null && td_co !== null && fickCO > 0 && td_co > 0) {
-    const diff = Math.abs(fickCO - td_co) / fickCO * 100;
-    if (diff > 20) {
-      bullets.push({type:'warn', text:`Fick\u2013TD discordance: ${diff.toFixed(0)}% (Fick ${fickCO.toFixed(2)} vs TD ${td_co.toFixed(2)} L/min). Investigate: estimated VO\u2082? Tricuspid regurgitation? Low-output state?`});
-    }
+  // 8. Fick vs TD discordance — the value `calc()` computed, not a third implementation of it.
+  if (fickTdDiff !== null && fickTdDiff > 20) {
+    bullets.push({type:'warn', text:`Fick\u2013TD discordance: ${fmt(fickTdDiff,0)}% (Fick ${fmt(fickCO)} vs TD ${fmt(td_co)} L/min). Investigate: estimated VO\u2082? Tricuspid regurgitation? Low-output state?`});
   }
 
   // 9. Valve disease
   if (ava !== null) {
-    let ava_sev = ava <= 0.6 ? 'critical aortic stenosis' : ava < 1.0 ? 'severe aortic stenosis' : ava < 1.5 ? 'moderate aortic stenosis' : ava <= 2.0 ? 'mild aortic stenosis' : 'normal aortic valve area';
-    const ava_type = ava < 1.0 ? 'error' : ava <= 2.0 ? 'warn' : 'info';
-    bullets.push({type: ava_type, text:`AVA ${ava.toFixed(2)} cm\xB2 \u2014 ${ava_sev}.`});
+    const ga = gradeAVA(ava);
+    bullets.push({type: ga.type, text:`AVA ${fmt(ava)} cm\xB2 \u2014 ${ga.prose}.`});
   }
   if (mva !== null) {
-    let mva_sev = mva < 1.0 ? 'severe mitral stenosis' : mva <= 1.5 ? 'moderate mitral stenosis' : mva <= 4.0 ? 'mild mitral stenosis' : 'normal mitral valve area';
-    const mva_type = mva < 1.0 ? 'error' : mva <= 1.5 ? 'warn' : 'info';
-    bullets.push({type: mva_type, text:`MVA ${mva.toFixed(2)} cm\xB2 \u2014 ${mva_sev}.`});
+    const g = gradeMVA(mva);
+    bullets.push({type: g.type, text:`MVA ${fmt(mva)} cm\xB2 \u2014 ${g.prose}.`});
   }
 
   // 10. LV pressures
@@ -3633,7 +4026,15 @@ function buildRhcInterpretation(ci, fickCI, tdCI, useFick, ra_mean, pcwp_mean, p
 }
 
 // ===================== SHUNT INTERPRETATION =====================
-function buildShuntInterpretation(svc_ref, pa_sat, ra_mean_sat, rv_mean_sat, qpqs, qp, qs, qeff, lr_shunt, rl_shunt, pvr_shunt, svr_shunt, pvr_svr_ratio) {
+function buildShuntInterpretation(d) {
+  /* ONE DESTRUCTURED ARGUMENT, NOT A POSITIONAL LIST. buildShuntInterpretation read 5 of its 14 positional arguments nowhere.
+     Any two adjacent same-typed arguments — `ra_a, ra_v, ra_mean`, `pvr, pvrDyn, pvri`,
+     `cpo, cpi` — transpose into a wrong clinical report with no error anywhere, and the
+     golden fixtures cover a subset of states: all four defects fixed on 2026-08-13 were in
+     a state no fixture reached. `buildShuntCopyText(d)` was already this shape. */
+  const {
+    svc_ref, pa_sat, qpqs, qp, qeff, lr_shunt, pvr_shunt, pvr_svr_ratio, stepUps
+  } = d;
   const el = document.getElementById('shuntInterpretation');
   const bullets = [];
   const n = (val, dec) => fmt(val, dec);
@@ -3643,25 +4044,26 @@ function buildShuntInterpretation(svc_ref, pa_sat, ra_mean_sat, rv_mean_sat, qpq
     return;
   }
 
-  // 1. Screening
-  if (svc_ref !== null && pa_sat !== null) {
-    const su = pa_sat - svc_ref;
-    if (su >= 8) {
-      bullets.push({type:'warn', text:`Significant O\u2082 step-up detected: ${su.toFixed(1)}% from SVC (${n(svc_ref,1)}%) to PA (${n(pa_sat,1)}%). Threshold \u2265 8% — left-to-right shunt likely.`});
+  // 1. Screening — the step-up table `calcShunt()` built, not a third derivation of it.
+  const su0 = stepUps || {};
+  if (su0.screening !== null && su0.screening !== undefined) {
+    const su = su0.screening;
+    if (su >= STEPUP_SCREEN) {
+      bullets.push({type:'warn', text:`Significant O\u2082 step-up detected: ${n(su,1)}% from SVC (${n(svc_ref,1)}%) to PA (${n(pa_sat,1)}%). Threshold \u2265 ${STEPUP_SCREEN}% — left-to-right shunt likely.`});
     } else {
-      bullets.push({type:'info', text:`No significant screening step-up: ${su.toFixed(1)}% from SVC to PA (threshold < 8%). No major L\u2192R shunt on screening.`});
+      bullets.push({type:'info', text:`No significant screening step-up: ${n(su,1)}% from SVC to PA (threshold < ${STEPUP_SCREEN}%). No major L\u2192R shunt on screening.`});
     }
   }
 
   // 2. Localization
-  const atrialSU = (svc_ref !== null && ra_mean_sat !== null) ? ra_mean_sat - svc_ref : null;
-  const ventSU = (ra_mean_sat !== null && rv_mean_sat !== null) ? rv_mean_sat - ra_mean_sat : null;
-  const gvSU = (rv_mean_sat !== null && pa_sat !== null) ? pa_sat - rv_mean_sat : null;
+  const atrialSU = su0.atrial === undefined ? null : su0.atrial;
+  const ventSU = su0.ventricular === undefined ? null : su0.ventricular;
+  const gvSU = su0.greatVessel === undefined ? null : su0.greatVessel;
 
   const localHits = [];
-  if (atrialSU !== null && atrialSU >= 7) localHits.push(`atrial level (${n(atrialSU,1)}% step-up SVC\u2192RA \u2014 ASD, PAPVR, sinus venosus defect)`);
-  if (ventSU !== null && ventSU >= 5) localHits.push(`ventricular level (${n(ventSU,1)}% step-up RA\u2192RV \u2014 VSD)`);
-  if (gvSU !== null && gvSU >= 5) localHits.push(`great vessel level (${n(gvSU,1)}% step-up RV\u2192PA \u2014 PDA, aortopulmonary window)`);
+  if (atrialSU !== null && atrialSU >= STEPUP_ATRIAL) localHits.push(`atrial level (${n(atrialSU,1)}% step-up SVC\u2192RA \u2014 ASD, PAPVR, sinus venosus defect)`);
+  if (ventSU !== null && ventSU >= STEPUP_VENT) localHits.push(`ventricular level (${n(ventSU,1)}% step-up RA\u2192RV \u2014 VSD)`);
+  if (gvSU !== null && gvSU >= STEPUP_GV) localHits.push(`great vessel level (${n(gvSU,1)}% step-up RV\u2192PA \u2014 PDA, aortopulmonary window)`);
 
   if (localHits.length > 0) {
     bullets.push({type:'warn', text:`Shunt localization: Step-up detected at ${localHits.join('; ')}.`});
@@ -3696,7 +4098,7 @@ function buildShuntInterpretation(svc_ref, pa_sat, ra_mean_sat, rv_mean_sat, qpq
   if (qeff !== null) {
     let qeff_text = `Q effective ${n(qeff,2)} L/min represents the theoretical forward (non-shunted) flow.`;
     if (lr_shunt !== null && lr_shunt > 0 && qp !== null) {
-      const pct = (lr_shunt / qp * 100).toFixed(0);
+      const pct = fmt(lr_shunt / qp * 100, 0);
       qeff_text += ` L\u2192R shunt flow = ${n(Math.max(0,lr_shunt),2)} L/min (${pct}% of pulmonary blood flow).`;
     }
     bullets.push({type:'info', text: qeff_text});

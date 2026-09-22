@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Cardiac Action Potential Simulator — Antiarrhythmics & Vaughan Williams Classes | CathMath</title>
-<meta name="description" content="Interactive cardiac action potential simulator. Visualize how Class I, II, III, IV antiarrhythmics reshape the ventricular and pacemaker action potential. Free cardiology teaching tool.">
+<meta name="description" content="Interactive cardiac action potential simulator: see how Vaughan-Williams Class I-IV antiarrhythmics reshape the ventricular and pacemaker AP. Free tool.">
 <meta name="keywords" content="action potential, cardiac action potential, Vaughan Williams, antiarrhythmic, Class IA, Class IB, Class IC, Class III, amiodarone, lidocaine, flecainide, sotalol, verapamil, adenosine, sodium channel blocker, potassium channel blocker, pacemaker, SA node, AV node, refractory period">
 <meta name="author" content="Dr. Saro Avedikian, MD, MPH">
 <meta name="robots" content="index, follow">
@@ -30,7 +30,7 @@
   "description": "Interactive simulator showing how Vaughan-Williams antiarrhythmic classes reshape the cardiac action potential in ventricular myocytes and pacemaker cells.",
   "applicationCategory": "EducationalApplication",
   "operatingSystem": "Web",
-  "offers": {"@type": "Offer", "price": "0"},
+  "offers": {"@type": "Offer", "price": "0", "priceCurrency": "USD"},
   "author": {"@type": "Person", "name": "Dr. Saro Avedikian", "jobTitle": "Cardiology Fellow"}
 }
 </script>
@@ -61,6 +61,21 @@
 
   --slider-track: #e3e7ee;
   --slider-thumb: var(--navy);
+
+  /* ── CANVAS TOKENS ──────────────────────────────────────────────────────
+     Read at draw time by getStyles(); never hard-coded in canvas code.
+     Light values are a SEPARATE palette, not an alpha tweak of the dark one:
+     every label token below clears 4.5:1 on --panel-bg #ffffff. */
+  --erp-shade: rgba(190, 18, 60, 0.09);
+  --erp-label: #b91c1c;            /* 6.47:1 on white */
+  --ghost-trace: rgba(71, 85, 105, 0.85);   /* 5.10:1 on white */
+  --ecg-baseline: rgba(100, 116, 139, 0.55);
+  --ph0-label: #0f766e;  /* 5.47 */
+  --ph1-label: #b45309;  /* 5.02 */
+  --ph2-label: #0e7490;  /* 5.36 */
+  --ph3-label: #be123c;  /* 6.29 */
+  --ph4-label: #475569;  /* 7.58 */
+  --phase-text: #1a1a2e;
 }
 body.dark {
   --bg: #0a1220;
@@ -74,6 +89,18 @@ body.dark {
   --slider-thumb: #4a90d9;
   --navy: #4a90d9;
   --navy-deep: #1e2740;
+
+  /* Dark canvas palette — every label token clears 4.5:1 on --panel-bg #131a26 */
+  --erp-shade: rgba(239, 68, 68, 0.07);   /* unchanged from the pre-fix dark value */
+  --erp-label: #fca5a5;            /* 9.19:1 on #131a26 */
+  --ghost-trace: rgba(148, 163, 184, 0.85);  /* 5.26:1 on #131a26 */
+  --ecg-baseline: rgba(148, 163, 184, 0.45);
+  --ph0-label: #10b981;  /* 6.88 */
+  --ph1-label: #f59e0b;  /* 8.13 */
+  --ph2-label: #06b6d4;  /* 7.19 */
+  --ph3-label: #f43f5e;  /* 4.75 */
+  --ph4-label: #94a3b8;  /* 6.81 */
+  --phase-text: #e8ecf2;
 }
 * { box-sizing: border-box; margin: 0; padding: 0; }
 html, body { height: 100%; }
@@ -253,10 +280,12 @@ body.dark .seg-btn.active { color: #6eb0f7; }
   border-bottom: 1px dotted transparent;
   transition: border-color 0.15s, color 0.15s;
 }
-.slider-label[data-tip]:hover {
+.slider-label[data-tip]:hover,
+.slider-label[data-tip]:focus-visible {
   color: var(--accent);
   border-bottom-color: var(--accent);
 }
+.slider-label[data-tip]:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 3px; }
 .slider-label[data-tip]::after {
   content: attr(data-tip);
   position: absolute;
@@ -278,21 +307,48 @@ body.dark .seg-btn.active { color: #6eb0f7; }
   box-shadow: 0 4px 14px rgba(0,0,0,0.2);
   z-index: 200;
 }
-.slider-label[data-tip]:hover::after { opacity: 1; }
+.slider-label[data-tip]:hover::after,
+.slider-label[data-tip]:focus::after { opacity: 1; }
 body.dark .slider-label[data-tip]::after { background: #2a3548; }
+/* The input's own box IS the touch target, so it is 28px tall (WCAG 2.5.8 wants
+   >= 24x24). The VISIBLE track stays a 4px hairline, drawn by the track pseudo-
+   element in both engines — Firefox ignores the -webkit- pseudos, so ::-moz- rules
+   are mandatory or the whole 28px box renders as a fat grey bar. Once the track is
+   styled the thumb no longer auto-centres, hence the explicit margin-top. */
 .slider-row input[type=range] {
   -webkit-appearance: none;
   appearance: none;
   flex: 1;
-  height: 4px;
-  background: var(--slider-track);
+  height: 28px;
+  background: transparent;
   border-radius: 2px;
   outline: none;
   cursor: pointer;
 }
+.slider-row input[type=range]::-webkit-slider-runnable-track {
+  height: 4px;
+  background: var(--slider-track);
+  border-radius: 2px;
+}
+.slider-row input[type=range]::-moz-range-track {
+  height: 4px;
+  background: var(--slider-track);
+  border-radius: 2px;
+  border: none;
+}
 .slider-row input[type=range]::-webkit-slider-thumb {
   -webkit-appearance: none;
   appearance: none;
+  width: 18px;
+  height: 18px;
+  margin-top: -7px;          /* (4px track - 18px thumb) / 2 */
+  border-radius: 50%;
+  background: var(--slider-thumb);
+  cursor: pointer;
+  border: 2px solid var(--panel-bg);
+  box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+}
+.slider-row input[type=range]::-moz-range-thumb {
   width: 14px;
   height: 14px;
   border-radius: 50%;
@@ -300,6 +356,11 @@ body.dark .slider-label[data-tip]::after { background: #2a3548; }
   cursor: pointer;
   border: 2px solid var(--panel-bg);
   box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+}
+/* outline:none above removes the UA focus ring; restore a visible one (WCAG 2.4.7) */
+.slider-row input[type=range]:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
 }
 .slider-val {
   font-family: "SF Mono", Menlo, Consolas, monospace;
@@ -354,13 +415,22 @@ body.dark .slider-val { color: #6eb0f7; }
   border-color: var(--class-color);
   color: var(--class-color);
 }
+/* Same contrast decision the .active-pill comment records, applied to the buttons that set
+   the pills: #fff on the class colours fails AA on six of the seven (measured in the page,
+   light mode: IA 4.47, IB 2.49, IC 2.15, II 3.76, III 3.96, IV 2.54 — only Class V's slate
+   #64748b clears at 4.76). Black clears 4.5:1 on all six, so black is the default and Class V
+   alone opts back into white via --class-fg on its .drug-group. */
 .drug-btn.active {
   background: var(--class-color);
-  color: #fff;
+  color: var(--class-fg, #000);
   border-color: var(--class-color);
   box-shadow: 0 1px 4px rgba(0,0,0,0.12);
 }
+/* This rule out-specifies the active background above, so in dark mode an active button keeps
+   the dark panel behind it rather than the class colour — which is why its text stays white
+   there (18.0:1) instead of following --class-fg onto a background it never gets. */
 body.dark .drug-btn { background: var(--panel-bg-2); }
+body.dark .drug-btn.active { color: #fff; }
 
 .btn-clear {
   width: 100%;
@@ -424,9 +494,17 @@ body.dark .preset-tab.active { color: #6eb0f7; }
 }
 body.dark .preset-btn { background: var(--panel-bg-2); }
 .preset-btn:hover { border-color: var(--accent); color: var(--accent); }
-.preset-btn.active { background: var(--accent); color: #fff; border-color: var(--accent); }
+/* #fff on --accent measures 3.68:1 and on --threshold 3.76:1 at this size (light mode, headless
+   Chrome) — both fail AA, the same failure the drug buttons were fixed for. Black clears 4.5:1 on
+   both, so the active text is black wherever the class colour is actually painted behind it. */
+.preset-btn.active { background: var(--accent); color: #000; border-color: var(--accent); }
 .preset-btn.warn:hover { border-color: var(--threshold); color: var(--threshold); }
-.preset-btn.warn.active { background: var(--threshold); border-color: var(--threshold); }
+.preset-btn.warn.active { background: var(--threshold); border-color: var(--threshold); color: #000; }
+/* body.dark .preset-btn (0,2,1) out-specifies .preset-btn.active (0,2,0), so a non-warn active
+   preset keeps the dark panel behind it in dark mode and its text must stay white there (18:1).
+   .preset-btn.warn.active (0,3,0) wins that fight, so warn presets DO get --threshold in dark mode
+   and keep black text on it. */
+body.dark .preset-btn.active:not(.warn) { color: #fff; }
 .preset-note {
   font-size: 11.5px;
   color: var(--text-dim);
@@ -539,6 +617,35 @@ body.dark .float-collapse:hover { background: rgba(255,255,255,0.08); }
 }
 .drug-btn.dimmed:hover { border-color: var(--border); color: var(--text); }
 
+/* Refusal + guideline banners above the measurement grid. A refused combination
+   prints no number at all (CLAUDE.md: "impossible inputs must be refused loudly,
+   not computed from"); a flagged one prints the number with the guideline it crosses. */
+.measure-banner {
+  margin: 10px 12px 0;
+  padding: 7px 10px;
+  border-radius: 6px;
+  font-size: 11px;
+  line-height: 1.45;
+  border: 1px solid;
+}
+.measure-banner.refuse {
+  background: rgba(190, 18, 60, 0.10);
+  border-color: rgba(190, 18, 60, 0.45);
+  color: #9f1239;
+}
+body.dark .measure-banner.refuse { color: #fda4af; }
+.measure-banner.flag {
+  background: rgba(180, 83, 9, 0.10);
+  border-color: rgba(180, 83, 9, 0.40);
+  color: #92400e;
+}
+body.dark .measure-banner.flag { color: #fcd34d; }
+.measure-banner b { font-weight: 700; }
+.vh {
+  position: absolute; width: 1px; height: 1px;
+  margin: -1px; padding: 0; overflow: hidden;
+  clip: rect(0 0 0 0); clip-path: inset(50%); white-space: nowrap; border: 0;
+}
 .measurements {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(110px, 1fr));
@@ -617,22 +724,41 @@ body.dark .measure-value { color: #6eb0f7; }
   gap: 6px;
   min-height: 24px;
 }
+/* Pill text colour is set INLINE per class (see PILL_FG): white on the class
+   colours fails AA 6/7 (Class IC #f59e0b = 2.15:1). Black clears 4.5:1 on six of
+   the seven; Class V #64748b keeps white at 4.76:1. */
 .active-pill {
   font-size: 11px;
   font-weight: 600;
   padding: 3px 10px;
   border-radius: 12px;
-  color: #fff;
+  color: #000;
   display: inline-flex;
   align-items: center;
   gap: 6px;
 }
 .active-pill .x {
   cursor: pointer;
-  opacity: 0.7;
+  opacity: 0.85;
   font-size: 14px;
   line-height: 1;
+  background: none;
+  border: 0;
+  color: inherit;
+  padding: 0 0 0 2px;
+  font-family: inherit;
 }
+.active-pill .x:hover, .active-pill .x:focus-visible { opacity: 1; }
+/* Mechanism text for the active drugs — rendered inline so it is reachable on a
+   touchscreen (there is no hover on a phone) and crawlable. */
+.active-mech {
+  font-size: 11px;
+  line-height: 1.45;
+  color: var(--text-dim);
+  padding: 6px 12px 0;
+}
+.active-mech b { color: var(--text); font-weight: 700; }
+.active-mech div { margin-bottom: 3px; }
 .active-pill .x:hover { opacity: 1; }
 
 /* ═══ GLOBAL FIXED TOOLTIP (drug hover) ═══
@@ -750,11 +876,26 @@ body.dark .seo-content-body h3 { color: #e8ecf2; }
   color: var(--accent);
 }
 
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+  }
+}
+
 /* ═══ MOBILE ═══ */
 @media (max-width: 800px) {
   .main { flex-direction: column; }
-  .left { width: 100%; max-height: 50vh; border-right: none; border-bottom: 1px solid var(--border); }
+  /* 38vh (not 50vh) so the canvas AND the measurement strip it drives fit on one
+     phone screen — the readouts are what the drug toggles change, and at 50vh they
+     started below the fold on a 390x844 viewport. */
+  .left { width: 100%; max-height: 38vh; border-right: none; border-bottom: 1px solid var(--border); }
   .canvas-wrap { min-height: 240px; }
+  /* The Display panel is 156px wide over a ~364px canvas (43% of the plot, on top
+     of phase 3 and the ERP band), so it starts collapsed on a phone. */
+  .float-panel { min-width: 0; font-size: 10.5px; }
+  .measurements { grid-template-columns: repeat(auto-fit, minmax(96px, 1fr)); gap: 6px; padding: 8px; }
   .seo-content { padding: 24px 16px 40px; font-size: 14px; }
   .seo-content h2 { font-size: 19px; }
 
@@ -765,104 +906,6 @@ body.dark .seo-content-body h3 { color: #e8ecf2; }
   .nav-tabs { flex-shrink: 0; gap: 0; }
   .nav-tab { flex-shrink: 0; white-space: nowrap; padding: 0 10px; font-size: 11px; }
   .nav-right { display: none; }
-}
-
-/* ═══ SEO "About" POPOVER — small trigger in the nav that opens a modal-style
-   panel. Content stays in the DOM for indexing but doesn't clutter the canvas. ═══ */
-.seo-popover { display: inline-block; position: relative; }
-.seo-trigger {
-  list-style: none;
-  cursor: pointer;
-  background: rgba(255, 255, 255, 0.1);
-  color: rgba(255, 255, 255, 0.78);
-  border: 1px solid transparent;
-  border-radius: 4px;
-  padding: 5px 10px;
-  font-size: 11px;
-  font-weight: 600;
-  letter-spacing: 0.02em;
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
-  transition: all 0.15s;
-}
-.seo-trigger::-webkit-details-marker { display: none; }
-.seo-trigger:hover {
-  background: rgba(255, 255, 255, 0.2);
-  color: #fff;
-  border-color: rgba(255, 255, 255, 0.22);
-}
-.seo-popover[open] .seo-trigger {
-  background: rgba(253, 204, 77, 0.18);
-  color: #fdcc4d;
-  border-color: rgba(253, 204, 77, 0.42);
-}
-.seo-popover-body { display: none; }
-.seo-popover[open] .seo-popover-body {
-  display: block;
-  position: fixed;
-  top: 54px;
-  right: 12px;
-  width: min(640px, calc(100vw - 24px));
-  max-height: calc(100vh - 70px);
-  overflow-y: auto;
-  background: var(--panel-bg, #fff);
-  color: var(--text, #1a1a2e);
-  border: 1px solid var(--border, #d8dfe8);
-  border-radius: 10px;
-  padding: 24px 28px;
-  z-index: 1000;
-  box-shadow: 0 14px 44px rgba(0, 0, 0, 0.55);
-  font-size: 13.5px;
-  line-height: 1.6;
-  animation: seoPopoverFadeIn 0.18s ease-out;
-}
-@keyframes seoPopoverFadeIn {
-  from { opacity: 0; transform: translateY(-8px); }
-  to   { opacity: 1; transform: translateY(0); }
-}
-.seo-popover-body h2 {
-  font-size: 17px; font-weight: 700; margin: 0 0 10px;
-  color: var(--text, #1a1a2e); letter-spacing: -0.005em;
-}
-.seo-popover-body h3 {
-  font-size: 13.5px; font-weight: 700; margin: 16px 0 6px;
-  color: var(--text, #1a1a2e);
-}
-.seo-popover-body h3:first-of-type { margin-top: 0; }
-.seo-popover-body p { margin: 0 0 9px; color: var(--text-dim, #5a6478); }
-.seo-popover-body ul { padding-left: 20px; margin-bottom: 9px; }
-.seo-popover-body ul li { margin-bottom: 4px; color: var(--text-dim, #5a6478); }
-.seo-popover-body ul ul { margin-top: 4px; padding-left: 20px; }
-.seo-popover-body strong { color: var(--text, #1a1a2e); font-weight: 600; }
-.seo-popover-body .related-tools {
-  display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px; font-size: 12px;
-}
-.seo-popover-body .related-tools a {
-  display: inline-block; padding: 4px 11px;
-  background: var(--panel-bg-2, #f9fafc);
-  border: 1px solid var(--border, #d8dfe8);
-  border-radius: 12px;
-  color: var(--text, #1a1a2e); text-decoration: none; font-weight: 600;
-  transition: all 0.15s;
-}
-.seo-popover-body .related-tools a:hover {
-  border-color: var(--accent, #3b82f6); color: var(--accent, #3b82f6);
-}
-.seo-popover[open]::before {
-  content: '';
-  position: fixed; inset: 0;
-  background: rgba(0, 0, 0, 0.30);
-  z-index: 999;
-  pointer-events: none;
-}
-@media (max-width: 800px) {
-  .seo-trigger { padding: 4px 7px; font-size: 10.5px; }
-  .seo-trigger-text { display: none; }
-  .seo-popover[open] .seo-popover-body {
-    top: 50px; right: 8px; left: 8px; width: auto;
-    max-height: calc(100vh - 64px); padding: 18px 20px;
-  }
 }
 
 </style>
@@ -943,23 +986,23 @@ body.dark .seo-content-body h3 { color: #e8ecf2; }
     <div class="card" id="ventSliders">
       <div class="card-title">Parameters</div>
       <div class="slider-row">
-        <span class="slider-label" data-tip="Slope of phase 0 upstroke. Reflects fast Na⁺ influx. Class I drugs reduce this — Class IC most strongly.">Phase 0 (I_Na)</span>
-        <input type="range" id="slPhase0" min="0.1" max="1.5" step="0.05" value="1.0">
+        <span class="slider-label" tabindex="0" data-tip="Slope of phase 0 upstroke. Reflects fast Na⁺ influx. Class I drugs reduce this — Class IC most strongly.">Phase 0 (I_Na)</span><span class="vh" id="tip-slPhase0">Slope of phase 0 upstroke. Reflects fast Na⁺ influx. Class I drugs reduce this — Class IC most strongly.</span>
+        <input type="range" aria-label="Phase 0 (I_Na)" id="slPhase0" aria-describedby="tip-slPhase0" min="0.1" max="1.5" step="0.05" value="1.0">
         <span class="slider-val" id="slPhase0Val">1.00×</span>
       </div>
       <div class="slider-row">
-        <span class="slider-label" data-tip="Action potential duration multiplier. Reflects K⁺ efflux timing. Class III drugs (amiodarone, sotalol, dofetilide) prolong this; Class IB shortens it.">APD (I_K)</span>
-        <input type="range" id="slApd" min="0.5" max="2.0" step="0.05" value="1.0">
+        <span class="slider-label" tabindex="0" data-tip="Action potential duration multiplier. Reflects K⁺ efflux timing. Class III drugs (amiodarone, sotalol, dofetilide) prolong this; Class IB shortens it.">APD (I_K)</span><span class="vh" id="tip-slApd">Action potential duration multiplier. Reflects K⁺ efflux timing. Class III drugs (amiodarone, sotalol, dofetilide) prolong this; Class IB shortens it.</span>
+        <input type="range" aria-label="APD (I_K)" id="slApd" aria-describedby="tip-slApd" min="0.5" max="2.0" step="0.05" value="1.0">
         <span class="slider-val" id="slApdVal">1.00×</span>
       </div>
       <div class="slider-row">
-        <span class="slider-label" data-tip="Effective refractory period as a fraction of APD. The portion during which another stimulus cannot trigger a new AP.">ERP fraction</span>
-        <input type="range" id="slErp" min="0.6" max="1.0" step="0.01" value="0.85">
+        <span class="slider-label" tabindex="0" data-tip="Effective refractory period as a fraction of APD. The portion during which another stimulus cannot trigger a new AP.">ERP fraction</span><span class="vh" id="tip-slErp">Effective refractory period as a fraction of APD. The portion during which another stimulus cannot trigger a new AP.</span>
+        <input type="range" aria-label="ERP fraction" id="slErp" aria-describedby="tip-slErp" min="0.6" max="1.0" step="0.01" value="0.85">
         <span class="slider-val" id="slErpVal">0.85</span>
       </div>
       <div class="slider-row">
-        <span class="slider-label" data-tip="Resting membrane potential. Less negative values mimic ischemia — fewer Na channels available, slower phase 0. Why Class IB drugs are ischemia-selective.">Resting</span>
-        <input type="range" id="slRest" min="-95" max="-65" step="1" value="-85">
+        <span class="slider-label" tabindex="0" data-tip="Resting membrane potential. Less negative values mimic ischemia — fewer Na channels available, slower phase 0. Why Class IB drugs are ischemia-selective.">Resting</span><span class="vh" id="tip-slRest">Resting membrane potential. Less negative values mimic ischemia — fewer Na channels available, slower phase 0. Why Class IB drugs are ischemia-selective.</span>
+        <input type="range" aria-label="Resting" id="slRest" aria-describedby="tip-slRest" min="-95" max="-65" step="1" value="-85">
         <span class="slider-val" id="slRestVal">-85 mV</span>
       </div>
     </div>
@@ -967,28 +1010,28 @@ body.dark .seo-content-body h3 { color: #e8ecf2; }
     <div class="card" id="paceSliders" style="display:none;">
       <div class="card-title">Parameters</div>
       <div class="slider-row">
-        <span class="slider-label" data-tip="Rate of spontaneous diastolic depolarization. Sets pacemaker firing rate. Slowed by β-blockers, CCBs, adenosine, digoxin.">Phase 4 slope</span>
-        <input type="range" id="slP4" min="0.005" max="0.15" step="0.005" value="0.05">
+        <span class="slider-label" tabindex="0" data-tip="Rate of spontaneous diastolic depolarization. Sets pacemaker firing rate. Slowed by β-blockers, CCBs, adenosine, digoxin.">Phase 4 slope</span><span class="vh" id="tip-slP4">Rate of spontaneous diastolic depolarization. Sets pacemaker firing rate. Slowed by β-blockers, CCBs, adenosine, digoxin.</span>
+        <input type="range" aria-label="Phase 4 slope" id="slP4" aria-describedby="tip-slP4" min="0.005" max="0.15" step="0.005" value="0.05">
         <span class="slider-val" id="slP4Val">0.050</span>
       </div>
       <div class="slider-row">
-        <span class="slider-label" data-tip="Slope of phase 0 in pacemaker cells. Calcium-dependent (not Na). Verapamil and diltiazem slow this — that's why they slow AV nodal conduction.">Phase 0 (I_Ca)</span>
-        <input type="range" id="slP0p" min="0.2" max="1.5" step="0.05" value="1.0">
+        <span class="slider-label" tabindex="0" data-tip="Slope of phase 0 in pacemaker cells. Calcium-dependent (not Na). Verapamil and diltiazem slow this — that's why they slow AV nodal conduction.">Phase 0 (I_Ca)</span><span class="vh" id="tip-slP0p">Slope of phase 0 in pacemaker cells. Calcium-dependent (not Na). Verapamil and diltiazem slow this — that's why they slow AV nodal conduction.</span>
+        <input type="range" aria-label="Phase 0 (I_Ca)" id="slP0p" aria-describedby="tip-slP0p" min="0.2" max="1.5" step="0.05" value="1.0">
         <span class="slider-val" id="slP0pVal">1.00×</span>
       </div>
       <div class="slider-row">
-        <span class="slider-label" data-tip="Action potential duration of the firing pacemaker cell. Prolonged AV nodal AP slows conduction.">APD</span>
-        <input type="range" id="slApdp" min="0.5" max="1.8" step="0.05" value="1.0">
+        <span class="slider-label" tabindex="0" data-tip="Action potential duration of the firing pacemaker cell. Prolonged AV nodal AP slows conduction.">APD</span><span class="vh" id="tip-slApdp">Action potential duration of the firing pacemaker cell. Prolonged AV nodal AP slows conduction.</span>
+        <input type="range" aria-label="APD" id="slApdp" aria-describedby="tip-slApdp" min="0.5" max="1.8" step="0.05" value="1.0">
         <span class="slider-val" id="slApdpVal">1.00×</span>
       </div>
       <div class="slider-row">
-        <span class="slider-label" data-tip="Maximum diastolic potential — the most negative voltage reached after repolarization, before phase 4 begins. Adenosine hyperpolarizes via I_KAch.">MDP</span>
-        <input type="range" id="slMdp" min="-80" max="-55" step="1" value="-65">
+        <span class="slider-label" tabindex="0" data-tip="Maximum diastolic potential — the most negative voltage reached after repolarization, before phase 4 begins. Adenosine hyperpolarizes via I_KAch.">MDP</span><span class="vh" id="tip-slMdp">Maximum diastolic potential — the most negative voltage reached after repolarization, before phase 4 begins. Adenosine hyperpolarizes via I_KAch.</span>
+        <input type="range" aria-label="MDP" id="slMdp" aria-describedby="tip-slMdp" min="-80" max="-55" step="1" value="-65">
         <span class="slider-val" id="slMdpVal">-65 mV</span>
       </div>
       <div class="slider-row">
-        <span class="slider-label" data-tip="Voltage at which the cell fires phase 0. Reaching it from MDP triggers the upstroke. Longer time to threshold = slower heart rate.">Threshold</span>
-        <input type="range" id="slThr" min="-45" max="-30" step="1" value="-40">
+        <span class="slider-label" tabindex="0" data-tip="Voltage at which the cell fires phase 0. Reaching it from MDP triggers the upstroke. Longer time to threshold = slower heart rate.">Threshold</span><span class="vh" id="tip-slThr">Voltage at which the cell fires phase 0. Reaching it from MDP triggers the upstroke. Longer time to threshold = slower heart rate.</span>
+        <input type="range" aria-label="Threshold" id="slThr" aria-describedby="tip-slThr" min="-45" max="-30" step="1" value="-40">
         <span class="slider-val" id="slThrVal">-40 mV</span>
       </div>
     </div>
@@ -1052,7 +1095,7 @@ body.dark .seo-content-body h3 { color: #e8ecf2; }
         </div>
       </div>
 
-      <div class="drug-group" style="--class-color: var(--c-V);">
+      <div class="drug-group" style="--class-color: var(--c-V); --class-fg: #fff;">
         <div class="drug-group-label">Other · AV nodal / membrane</div>
         <div class="drug-row">
           <button class="drug-btn" data-drug="adenosine">Adenosine</button>
@@ -1069,7 +1112,7 @@ body.dark .seo-content-body h3 { color: #e8ecf2; }
   <!-- RIGHT PANEL -->
   <main class="right">
     <div class="canvas-wrap">
-      <canvas id="canvas"></canvas>
+      <canvas id="canvas" role="img" aria-label="Action potential trace. Voltage in millivolts against time in milliseconds for the selected cell type, with the untreated baseline drawn behind it. The numbers it encodes are printed in the measurement strip below."></canvas>
       <div class="float-panel" id="floatPanel">
         <div class="float-handle" id="floatHandle">
           <span>Display</span>
@@ -1087,6 +1130,8 @@ body.dark .seo-content-body h3 { color: #e8ecf2; }
           <label class="overlay-row trigger" title="Early afterdepolarization — phase 2/3 bump. Mechanism of torsades on prolonged-QT substrates."><input type="checkbox" id="ovEad"> EAD trigger</label>
           <label class="overlay-row trigger" title="Delayed afterdepolarization — diastolic bump after full repolarization. Classic for digoxin toxicity, catecholamine excess."><input type="checkbox" id="ovDad"> DAD trigger</label>
           <div class="float-divider"></div>
+          <label class="overlay-row"><input type="checkbox" id="ovPause"> Pause sweep</label>
+          <div class="float-divider"></div>
           <div class="legend-row"><span class="legend-line"></span> Current</div>
           <div class="legend-row"><span class="legend-line ghost"></span> Baseline</div>
         </div>
@@ -1094,16 +1139,19 @@ body.dark .seo-content-body h3 { color: #e8ecf2; }
     </div>
 
     <div class="active-strip" id="activeStrip"></div>
+    <div class="active-mech" id="activeMech"></div>
 
+    <div class="measure-banner refuse" id="measureRefuse" style="display:none;"></div>
+    <div class="measure-banner flag" id="measureFlag" style="display:none;"></div>
     <div class="measurements" id="measurements"></div>
 
     <!-- Surface ECG correlate — translates the molecular AP to the bedside trace -->
     <div class="ecg-panel">
       <div class="ecg-label">
         <span>Surface ECG (one beat)</span>
-        <span class="ecg-sub">QRS width tracks phase 0 dV/dt · QT tracks APD</span>
+        <span class="ecg-sub" id="ecgSub">QRS width tracks phase 0 dV/dt · QT tracks APD</span>
       </div>
-      <canvas id="ecgCanvas"></canvas>
+      <canvas id="ecgCanvas" role="img" aria-label="Surface ECG correlate: one synthesized beat. QRS width tracks phase 0 dV/dt and QT tracks APD (ventricular mode)."></canvas>
     </div>
   
       <details class="seo-section">
@@ -1113,12 +1161,14 @@ body.dark .seo-content-body h3 { color: #e8ecf2; }
           <p>The simulator plots one cardiac action potential on a voltage-versus-time axis and redraws it as parameters change. A ghost trace of the selected cell's untreated baseline sits behind the live curve, so every drug effect reads as a difference rather than an absolute. Phase shading labels each phase with its dominant current, from I_Na in phase 0 through I_Ca-L, I_Kr and I_K1, with I_f and I_Ca-T in pacemaker phase 4; the brief phase 1 notch is tinted but not labeled. Refractory period shading is on by default; a threshold line is optional. A measurement strip reports action potential duration, ERP, phase 0 dV/dt, and estimated QRS and QT; in pacemaker mode, heart rate, cycle length, APD, phase 4 slope, and maximum diastolic potential.</p>
           <h3>The four cell types</h3>
           <p>Four baselines are modeled. The ventricular myocyte rests near -85 mV with a phase 2 plateau of about 180 ms. The atrial myocyte rests near -80 mV with a shorter plateau and an action potential duration near 200 ms, part of why Class IC sodium blockade works well in atrial fibrillation. The Purkinje fiber rests near -90 mV and carries the longest action potential in the conduction system. The nodal cell has no stable resting potential: it drifts from a maximum diastolic potential of -65 mV up to a threshold of -40 mV, and its phase 0 is calcium-dependent.</p>
+          <h3>What the numbers are, and what they are not</h3>
+          <p>Each drug carries a set of multipliers on the cellular model: a fraction of phase 0 sodium current removed, a multiplier on action potential duration, a shift in the refractory fraction. Sodium and calcium block compose multiplicatively, so stacking two blockers reduces what is left rather than subtracting past zero, and a combination that leaves less than about 13% of phase 0 is refused rather than printed. The QRS estimate follows cable theory, where conduction velocity scales with the square root of upstroke velocity, so QRS scales as one over the square root of the phase 0 multiplier. These are illustrative magnitudes for teaching the shape of each class effect; they are not a dose-response model, no agent carries a sourced per-dose change in QRS or QTc, and there is no pacing rate, so use-dependent and reverse use-dependent block are described in the mechanism notes rather than produced by the model. Printed estimates that cross a guideline threshold are flagged with the guideline that names them.</p>
           <h3>Antiarrhythmic drugs by Vaughan-Williams class</h3>
           <p>Twenty-two agents can be switched on alone or combined: Class IA (quinidine, procainamide, disopyramide), Class IB (lidocaine, mexiletine, phenytoin), Class IC (flecainide, propafenone), Class II beta-blockers, Class III potassium blockers (amiodarone, sotalol, dofetilide, ibutilide, dronedarone), Class IV non-dihydropyridine calcium channel blockers, and adenosine, digoxin and magnesium. Each carries a short mechanism note, including use-dependent block for lidocaine, the CAST caution for flecainide, and inpatient initiation for sotalol and dofetilide. Agents with no meaningful nodal effect are disabled while the pacemaker cell is displayed.</p>
           <h3>Disease substrates and triggered activity</h3>
           <p>Four substrates, long QT, short QT, Brugada and ischemia, sit underneath any drug, so agents stack on a diseased baseline instead of replacing it. Adding sotalol to the long QT substrate carries the tool's QT estimate to 722 ms. The ischemia substrate sets resting potential to -65 mV, the depolarized state in which Class IB agents preferentially bind. Overlays add triggered activity: an early afterdepolarization during phase 3, whose amplitude grows as the action potential lengthens, and a delayed afterdepolarization in diastole after full repolarization.</p>
           <h3>Clinical scenarios and the surface ECG correlate</h3>
-          <p>Eight one-click scenarios set cell type, drug and substrate together: lidocaine for VT, amiodarone for AF, flecainide pill-in-pocket, metoprolol for sinus tachycardia, adenosine for SVT, verapamil for AVNRT, plus two warning cases, sotalol driving torsades and quinidine syncope. Below the trace, a surface ECG panel redraws a single beat from the same parameters. In fast-response modes, QRS width tracks phase 0 upstroke velocity and QT tracks action potential duration; in pacemaker mode the strip holds a normal ventricular complex and only the cycle length changes.</p>
+          <p>Eight one-click scenarios set cell type, drug and substrate together: lidocaine for VT, amiodarone for AF, flecainide pill-in-pocket, metoprolol for sinus tachycardia, adenosine for SVT, verapamil for AVNRT, plus two warning cases, sotalol driving torsades and quinidine syncope. Below the trace, a surface ECG panel redraws a single beat from the same parameters. In ventricular mode, QRS width tracks phase 0 upstroke velocity and QT tracks action potential duration. In Purkinje mode the strip is a ventricular reference whose QRS widens with the Purkinje upstroke while the QT holds, and in atrial mode it is a fixed ventricular reference throughout, because an atrial action potential contributes only the P wave. In pacemaker mode the strip holds a normal ventricular complex and only the cycle length changes.</p>
         </div>
       </details>
   </main>
@@ -1132,6 +1182,76 @@ body.dark .seo-content-body h3 { color: #e8ecf2; }
 <div id="globalTip" class="global-tip" role="tooltip" aria-hidden="true"></div>
 
 <script>
+// <shared:analytics v1>
+// GENERATED FROM shared/analytics.js BY scripts/sync-shared.mjs — DO NOT EDIT HERE.
+// Edit shared/analytics.js, then run: node scripts/sync-shared.mjs --write
+// CathMath analytics — GA4, property 555096463, stream G-ZME4G2EYJS.
+// Design and the reasons for every choice: plans/2026-09-21-analytics-design.md
+//
+// THIS BLOCK MUST NEVER BE ABLE TO BREAK A TOOL. It runs first, so it is wrapped whole, and
+// cmTrack() exists as a no-op before anything that can throw is attempted.
+//
+// HOST GUARD. Unless the page is being served from cathmath.org, nothing loads and nothing is
+// sent: not from file://, not from localhost, not in the node vm harness, not in CardioDoc's
+// fixture capture, not from a copy of this page hosted somewhere else. That is what keeps the
+// house rule true — every tool works with zero runtime dependencies and no network. Analytics is
+// an enhancement that exists only on the production host.
+//
+// NOTHING A USER TYPES IS EVER SENT. Parameters are fixed id strings that already exist in the
+// source (module ids, preset ids, drug ids). cmTrack drops any parameter that is not a short
+// string, so a number read from an input cannot leave even if a caller passes one by mistake.
+(function () {
+  var TOOL = 'ap';
+  var ID = 'G-ZME4G2EYJS';
+  window.cmTrack = function () {};
+  try {
+    var host = String((window.location && window.location.hostname) || '');
+    if (host !== 'cathmath.org' && host !== 'www.cathmath.org') return;
+
+    // Own-traffic flag, as on CardioQFlow: visit once with ?internal=1 (clear with ?internal=0)
+    // and every event from this browser carries traffic_type=internal for a GA4 data filter.
+    var internal = false;
+    try {
+      var q = new URLSearchParams(window.location.search).get('internal');
+      if (q === '1' || q === 'on') window.localStorage.setItem('cathmath_internal', '1');
+      else if (q === '0' || q === 'off') window.localStorage.removeItem('cathmath_internal');
+      internal = window.localStorage.getItem('cathmath_internal') === '1';
+    } catch (e) { internal = false; }
+
+    window.dataLayer = window.dataLayer || [];
+    window.gtag = window.gtag || function () { window.dataLayer.push(arguments); };
+    var base = { tool: TOOL };
+    if (internal) base.traffic_type = 'internal';
+    window.gtag('js', new Date());
+    window.gtag('config', ID, base);           // parameters in config ride on every event, page_view included
+
+    // Injected, never a static <script src>: gtag.js is regenerated by Google constantly, so an
+    // integrity= hash cannot be pinned to it. scripts/lint.mjs DEP-1 allow-lists this one origin
+    // by name rather than failing to notice it.
+    var s = document.createElement('script');
+    s.async = true;
+    s.src = 'https://www.googletagmanager.com/gtag/js?id=' + ID;
+    document.head.appendChild(s);
+
+    var once = {};
+    // cmTrack(name, params, onceKey) — fire-and-forget. onceKey, when given, sends the event at
+    // most once per page load for that key (calc_used: once per module).
+    window.cmTrack = function (name, params, onceKey) {
+      try {
+        if (onceKey) { if (once[onceKey]) return; once[onceKey] = 1; }
+        var p = { tool: TOOL };
+        if (internal) p.traffic_type = 'internal';
+        for (var k in (params || {})) {
+          var v = params[k];
+          if (typeof v === 'string' && v.length > 0 && v.length <= 64) p[k] = v;   // enum ids only
+        }
+        window.gtag('event', String(name), p);
+      } catch (e) { /* analytics must never throw into a tool */ }
+    };
+  } catch (e) { /* blocked, offline, private mode — the tool carries on */ }
+})();
+// </shared:analytics>
+
 'use strict';
 
 // ═══════════════════════════════════════════════════════════
@@ -1187,7 +1307,7 @@ const SCENARIOS = {
     cell: 'vent',
     drugs: ['lidocaine'],
     overrides: { vRest: -65 },
-    note: 'Class IB on ischemic substrate (Vrest set to −65 mV) — fast off-kinetics give use-dependent Na block.',
+    note: 'Class IB on an ischemic substrate (Vrest set to −65 mV). What you see is the smaller voltage excursion of a depolarised cell — this model has no pacing rate, so use-dependent block is described, not demonstrated.',
   },
   amiodarone_af: {
     name: 'Amiodarone for AF',
@@ -1274,8 +1394,13 @@ let activePreset = null; // {kind:'scenario'|'disease', id:string} | null
 // ═══════════════════════════════════════════════════════════
 // STATE
 // ═══════════════════════════════════════════════════════════
+// plateauDroop is how far (mV) the plateau falls across phase 2 before phase 3 begins.
+// It used to be written `vPlateau * 0.6` — a scalar on an ABSOLUTE membrane potential,
+// which only behaves because every vPlateau here happens to be positive and none is
+// exposed to a control. The per-cell constants below reproduce the old curves exactly
+// (12x0.4=4.8, 10x0.4=4.0, 14x0.4=5.6) while making the sign error impossible.
 const BASELINE_VENT = {
-  vRest: -85, vPeak: 30, vNotch: -2, vPlateau: 12,
+  vRest: -85, vPeak: 30, vNotch: -2, vPlateau: 12, plateauDroop: 4.8,
   phase0Dur: 2, phase1Dur: 7, phase2Dur: 180, phase3Dur: 100,
   phase0Mult: 1.0, apdMult: 1.0, erpFraction: 0.85,
 };
@@ -1283,7 +1408,7 @@ const BASELINE_VENT = {
 // Less prominent phase 1 notch. Why Class IC drugs are effective in AF — atrial APs
 // recover Na channels faster, so use-dependent strong Na block has bigger relative effect.
 const BASELINE_ATRIAL = {
-  vRest: -80, vPeak: 25, vNotch: 4, vPlateau: 10,
+  vRest: -80, vPeak: 25, vNotch: 4, vPlateau: 10, plateauDroop: 4.0,
   phase0Dur: 2, phase1Dur: 4, phase2Dur: 120, phase3Dur: 80,
   phase0Mult: 1.0, apdMult: 1.0, erpFraction: 0.80,
 };
@@ -1291,7 +1416,7 @@ const BASELINE_ATRIAL = {
 // drift (subthreshold), prominent phase 1 notch. Why Class IB drugs are selective at high
 // HR — Purkinje recovery from inactivation is slow at fast pacing rates.
 const BASELINE_PURKINJE = {
-  vRest: -90, vPeak: 35, vNotch: -8, vPlateau: 14,
+  vRest: -90, vPeak: 35, vNotch: -8, vPlateau: 14, plateauDroop: 5.6,
   phase0Dur: 2, phase1Dur: 9, phase2Dur: 240, phase3Dur: 130,
   phase0Mult: 1.0, apdMult: 1.0, erpFraction: 0.88,
 };
@@ -1317,8 +1442,19 @@ let cellType = 'vent';
 let activeDrugs = new Set();
 let params = { ...BASELINE_VENT };
 let paceParams = { ...BASELINE_PACE };
-let userOverrides = {}; // sliders manually moved (final say — replaces)
+// Slider overrides are held PER CELL TYPE. They used to live in one shared object, so a
+// resting potential of -85 mV set while in Ventricular mode silently followed the user into
+// Purkinje mode and overwrote its -90 mV baseline — which defeats the one thing Purkinje
+// mode exists to show (longest APD, most negative resting potential).
+let userOverridesByCell = { vent: {}, atrial: {}, purkinje: {} };
 let userOverridesPace = {};
+function overridesFor(c) {
+  if (c === 'pace') return userOverridesPace;
+  if (!userOverridesByCell[c]) userOverridesByCell[c] = {};
+  return userOverridesByCell[c];
+}
+function clearFastOverrides() { userOverridesByCell = { vent: {}, atrial: {}, purkinje: {} }; }
+function clearAllOverrides() { clearFastOverrides(); userOverridesPace = {}; }
 let diseaseOverrides = {}; // disease substrate for vent (sits below drug deltas)
 let diseaseOverridesPace = {};
 
@@ -1341,9 +1477,34 @@ function easeInQuad(t) { return t*t; }
 //  • Phase 2a smooth cubic recovery from vNotch up to vPlateau (the "scoop")
 //  • Phase 2b slow drift downward through the plateau
 //  • Phase 3  S-curve (cubic ease) repolarization back to vRest
+// ═══════════════════════════════════════════════════════════
+// CELL -> SURFACE ECG MAPPING
+// ═══════════════════════════════════════════════════════════
+// QRS duration is NOT inversely proportional to upstroke velocity. Linear cable theory
+// gives conduction velocity theta proportional to sqrt(dV/dt_max), and QRS duration goes
+// as 1/theta, so QRS scales as 1 / sqrt(phase0Mult). The old 80 / phase0Mult map printed
+// 'QRS estimate 229 ms' for flecainide alone — a +186% widening, seven times the ">25%
+// QRS widening" infusion-stop criterion in ESC_Atrial-Fibrillation_2024.pdf. The sqrt
+// map gives 135 ms (+69%) for the same cellular block, which the guideline flag below
+// still calls out, and it keeps two stacked Class IC agents inside a drawable strip.
+const QRS_BASE_MS = 80;    // normal ventricular QRS
+const P_BASE_MS   = 100;   // normal P-wave duration (upper limit of normal ~120 ms)
+const QT_BASE_MS  = 380;   // normal QT at this tool's 60 bpm reference, so QT == QTc
+const QRS_MAX_MS  = 220;   // shared by the strip (drawing clamp) and the panel (refusal)
+// Below this phase 0 availability the model is in the conduction-failure regime: the
+// panel refuses to print a QRS instead of clamping and printing a number the strip
+// cannot draw. (80/220)^2 — chosen so the refusal and the drawing clamp are ONE number.
+const PHASE0_MULT_FLOOR = Math.pow(QRS_BASE_MS / QRS_MAX_MS, 2);
+function qrsFromPhase0(mult)  { return QRS_BASE_MS / Math.sqrt(Math.max(1e-6, mult)); }
+function pWidthFromPhase0(m)  { return P_BASE_MS  / Math.sqrt(Math.max(1e-6, m)); }
+
+function plateauDroopOf(p) {
+  return p.plateauDroop !== undefined ? p.plateauDroop : 4.8;
+}
+
 function ventAP(t, p) {
   if (t < 0) return p.vRest;
-  const d0 = p.phase0Dur / Math.max(0.05, p.phase0Mult);
+  const d0 = p.phase0Dur / Math.max(PHASE0_MULT_FLOOR, p.phase0Mult);
   const d1 = p.phase1Dur * p.apdMult;
   const d2 = p.phase2Dur * p.apdMult;
   const d3 = p.phase3Dur * p.apdMult;
@@ -1361,9 +1522,13 @@ function ventAP(t, p) {
   if (t < t1) return p.vRest + (p.vPeak - p.vRest) * easeInOutCubic(t / t1);
 
   if (t < t2) {
-    // Phase 1: exponential decay from vPeak toward vNotch (I_to kinetics)
+    // Phase 1: exponential decay from vPeak toward vNotch (I_to kinetics).
+    // NORMALISED so it hits vPeak exactly at u=0 and vNotch exactly at u=1. The bare
+    // exp(-3.2u) stops at vNotch + (vPeak-vNotch)*0.0408, leaving a 1.3 mV step into
+    // phase 2a. Subtract-then-divide: dividing alone just moves the same step to u=0.
     const u = (t - t1) / d1;
-    return p.vNotch + (p.vPeak - p.vNotch) * Math.exp(-3.2 * u);
+    const E = Math.exp(-3.2);
+    return p.vNotch + (p.vPeak - p.vNotch) * (Math.exp(-3.2 * u) - E) / (1 - E);
   }
 
   if (t < t2m) {
@@ -1373,23 +1538,22 @@ function ventAP(t, p) {
   }
 
   if (t < t3) {
-    // Phase 2b: gentle linear drift downward across the plateau, ending ~40% closer to 0
+    // Phase 2b: gentle linear drift downward across the plateau
     const u = (t - t2m) / d2b;
-    const plateauEnd = p.vPlateau * 0.6;
-    return p.vPlateau + (plateauEnd - p.vPlateau) * u;
+    return p.vPlateau - plateauDroopOf(p) * u;
   }
 
   if (t < t4) {
     // Phase 3: smooth S-curve descent
     const u = (t - t3) / d3;
-    const startV = p.vPlateau * 0.6;
+    const startV = p.vPlateau - plateauDroopOf(p);
     return startV + (p.vRest - startV) * easeInOutCubic(u);
   }
   return p.vRest;
 }
 
 function ventAPDuration(p) {
-  return p.phase0Dur / Math.max(0.05, p.phase0Mult)
+  return p.phase0Dur / Math.max(PHASE0_MULT_FLOOR, p.phase0Mult)
     + (p.phase1Dur + p.phase2Dur + p.phase3Dur) * p.apdMult;
 }
 
@@ -1400,22 +1564,82 @@ function ventAPDuration(p) {
 // prolonged AP. The cellular mechanism behind torsades-de-pointes when stacked
 // on a Long-QT substrate. Amplitude scales with apdMult so longer APD = bigger
 // EAD risk (matches the clinical reality that QT prolongation drives torsades).
-function eadBump(t, p) {
-  const d0 = p.phase0Dur / Math.max(0.05, p.phase0Mult);
-  const d1 = p.phase1Dur * p.apdMult;
-  const d2 = p.phase2Dur * p.apdMult;
+const EAD_WIDTH_MS = 28;
+function eadGeometry(p) {
+  const d0 = p.phase0Dur / Math.max(PHASE0_MULT_FLOOR, p.phase0Mult);
   const d3 = p.phase3Dur * p.apdMult;
-  const t3 = d0 + d1 + d2;            // start of phase 3
-  const center = t3 + d3 * 0.45;       // ~45% into phase 3
-  const width = 28;
+  const t3 = d0 + (p.phase1Dur + p.phase2Dur) * p.apdMult;   // start of phase 3
+  return { t3, d3, center: t3 + d3 * 0.45 };                 // bump sits ~45% into phase 3
+}
+// THE CEILING IS ON THE CURVE THAT IS DRAWN, NOT ON THE GAUSSIAN'S CENTRE SAMPLE.
+// The earlier cap subtracted ventAP at the bump's centre only. But the drawn trace is
+// ventAP(t) + bump(t), and ventAP is still falling steeply through phase 3, so their sum
+// peaks ~14 ms EARLIER than the centre and much higher: Long QT + sotalol still reached
+// +11.23 mV against a 7.20 mV plateau, i.e. the cap was verified at a point the tool does
+// not draw. So find the EAD's own turning point — the trace falls away from the plateau,
+// and if the bump is big enough it turns and climbs again — and hold THAT at the plateau
+// the cell just left. Solved numerically (a Gaussian added to a cubic-ease descent has no
+// closed form) by repeatedly re-pinning the amplitude at the current turning point; each
+// pass moves the turning point a little, and it settles in 2-3 passes.
+let _eadCache = { key: '', prof: null };
+function eadProfile(p) {
+  const key = [p.vRest, p.vPeak, p.vNotch, p.vPlateau, plateauDroopOf(p),
+               p.phase0Dur, p.phase1Dur, p.phase2Dur, p.phase3Dur,
+               p.phase0Mult, p.apdMult].join(',');
+  if (_eadCache.key === key) return _eadCache.prof;
+  const g = eadGeometry(p);
+  const gauss = t => { const d = (t - g.center) / EAD_WIDTH_MS; return Math.exp(-(d * d)); };
   // EADs need a PROLONGED action potential — they are the phase-2/3 consequence of repolarisation
   // reserve failing. On a normal or shortened AP (Class IB, short-QT) they should not appear, so
   // the amplitude ramps in from apdMult 1.1 and is zero below it rather than being drawn always.
   const lengthening = Math.max(0, Math.min(2, p.apdMult) - 1.1) / 0.9;
-  const amp = 18 * Math.min(2, p.apdMult) * lengthening;
-  const dt = (t - center) / width;
-  return amp * Math.exp(-(dt * dt));
+  let amp = Math.max(0, 18 * Math.min(2, p.apdMult) * lengthening);
+  const ceiling = p.vPlateau - plateauDroopOf(p);
+  const tEnd = g.t3 + g.d3 + 3 * EAD_WIDTH_MS;
+  // The EAD's peak is the TURNING POINT the bump puts inside phase 3: the largest interior
+  // local maximum of the drawn trace. It lands well before the Gaussian's centre because
+  // ventAP keeps falling underneath it — that offset, ~17 ms at Long QT + sotalol, is the
+  // whole reason a centre-sampled cap did not hold. With no bump the trace only falls, there
+  // is no interior maximum, and there is nothing to cap or to trigger on.
+  const turn = (a) => {
+    const f = t => ventAP(t, p) + a * gauss(t);
+    let tMax = g.t3, vMax = -Infinity, rises = false;
+    let prev = f(g.t3), cur = f(g.t3 + 1);
+    for (let t = g.t3 + 1; t < tEnd; t += 1) {
+      const next = f(t + 1);
+      if (cur > prev && cur >= next && cur > vMax) { vMax = cur; tMax = t; rises = true; }
+      prev = cur; cur = next;
+    }
+    return rises ? { t: tMax, v: vMax, rises: true } : { t: g.t3, v: f(g.t3), rises: false };
+  };
+  let h = turn(amp);
+  // When the bump is narrow relative to phase 3 the window can still start at the plateau edge,
+  // where phase 3 opens AT the ceiling with zero slope (easeInOutCubic) and the trace is the
+  // ceiling plus the Gaussian's tail. The solve is therefore held to a quarter of a millivolt,
+  // under one canvas pixel (the y-axis spans 140 mV in ~330 px), so that boundary crumb cannot
+  // drive the amplitude to zero.
+  const CEILING_TOL_MV = 0.25;
+  for (let i = 0; i < 6 && amp > 0 && h.rises && h.v > ceiling + CEILING_TOL_MV; i++) {
+    const gz = gauss(h.t);
+    if (gz <= 1e-9) break;
+    const next = Math.max(0, (ceiling - ventAP(h.t, p)) / gz);
+    if (!(next < amp)) break;
+    amp = next;
+    h = turn(amp);
+  }
+  const prof = { amp, center: g.center, peakT: h.t, peakV: h.v, rises: h.rises };
+  _eadCache = { key, prof };
+  return prof;
 }
+function eadBump(t, p) {
+  const prof = eadProfile(p);
+  if (prof.amp <= 0) return 0;
+  const dt = (t - prof.center) / EAD_WIDTH_MS;
+  return prof.amp * Math.exp(-(dt * dt));
+}
+// The peak voltage of the DRAWN phase-3 trace lives on the profile as `peakV` (the turning
+// point, not the Gaussian's centre sample). triggerState reads it from eadProfile directly;
+// the old eadPeak() wrapper is gone rather than left behind with no caller.
 
 // DAD = delayed afterdepolarization. A diastolic voltage bump AFTER the AP
 // has returned to vRest. Classic for Ca-overload states: digoxin toxicity,
@@ -1428,13 +1652,70 @@ function dadBump(t, p) {
   // it rather than being a fixed 12 mV bump: digoxin (Na/K-ATPase block -> Na/Ca exchange ->
   // Ca loading) and fast rates (less time for Ca reuptake). Both are exactly the conditions in
   // which DADs are taught to appear, and neither moved the overlay before.
+  // The rate term that used to live here read pacemakerCycleLen(paceParams) while dadBump
+  // only ever renders in fast-response mode, where paceParams is never recomputed — it sat
+  // at the baseline 700 ms (85.7 bpm) forever, so the `hrNow > 90` branch was unreachable.
+  // Rate-dependence is real (DADs are tachycardia-dependent) but this file has no pacing
+  // cycle length for fast-response cells, so the honest thing is to model only what exists.
   let caLoad = 1;
   if (activeDrugs.has('digoxin')) caLoad += 1.1;
-  const hrNow = 60000 / Math.max(1, pacemakerCycleLen(paceParams));
-  if (hrNow > 90) caLoad += Math.min(1.0, (hrNow - 90) / 60);
   const amp = 12 * caLoad;
   const dt = (t - center) / width;
   return amp * Math.exp(-(dt * dt));
+}
+
+// ═══════════════════════════════════════════════════════════
+// TRIGGERED ACTIVITY
+// ═══════════════════════════════════════════════════════════
+// The bumps above used to be decoration: a DAD with digoxin peaks at -59.8 mV against the
+// -70 mV threshold this tool draws, 10 mV suprathreshold, and nothing fired. A trigger that
+// crosses threshold now produces a real extra beat.
+const FAST_THRESHOLD_MV = -70;   // same value drawTrace's threshold line uses
+function triggerState(p, ead, dad) {
+  // A DAD triggers by CROSSING threshold from rest, which presupposes a cell sitting below
+  // threshold with recovered Na channels. Testing only `vRest + bump >= threshold` fired on
+  // the resting potential alone: the Ischemia substrate rests at -65 mV, already 5 mV above
+  // the line, so the tool drew a 'DAD -> beat' row and a banner with no DAD present and the
+  // crossing search exited on its first step — a triggered beat at a zero coupling interval.
+  // A cell resting above -70 mV in this model is chronically depolarised, its fast Na current
+  // inactivated, so there is no threshold to cross and no fast upstroke to trigger.
+  if (dad && p.vRest < FAST_THRESHOLD_MV) {
+    const apdDur = ventAPDuration(p);
+    const center = apdDur + 90;
+    if (p.vRest + dadBump(center, p) >= FAST_THRESHOLD_MV) {
+      // Upstroke starts where the DAD first crosses threshold, not at its peak.
+      let t = apdDur;
+      while (t < center && p.vRest + dadBump(t, p) < FAST_THRESHOLD_MV) t += 1;
+      return { t, kind: 'DAD' };
+    }
+  }
+  if (ead) {
+    // An EAD triggers by reactivating I_Ca-L, which needs the membrane carried back above
+    // roughly -30 mV during phase 3 — not by crossing the -70 mV fast-response threshold,
+    // which the cell has not yet reached. Both halves of the test read the curve that is
+    // drawn: its turning point must exist and must clear -30 mV.
+    const prof = eadProfile(p);
+    if (prof.rises && prof.peakV >= -30 && prof.amp >= 12) return { t: prof.peakT, kind: 'EAD' };
+  }
+  return null;
+}
+function triggersEnabled() {
+  return {
+    ead: !!document.getElementById('ovEad')?.checked,
+    dad: !!document.getElementById('ovDad')?.checked,
+  };
+}
+// Voltage of the fast-response trace at t ms after the sweep origin, including overlays and
+// any triggered beat. The triggered beat is drawn from the bare AP model and carries NO
+// bumps of its own, so one suprathreshold DAD cannot cascade into an endless train.
+function fastResponseV(tAp, p, ead, dad, trig) {
+  let v = tAp < 0 ? p.vRest : ventAP(tAp, p);
+  if (tAp >= 0) {
+    if (ead) v += eadBump(tAp, p);
+    if (dad) v += dadBump(tAp, p);
+  }
+  if (trig && tAp >= trig.t) v = Math.max(v, ventAP(tAp - trig.t, p));
+  return v;
 }
 
 // Pacemaker AP — auto-firing loop
@@ -1457,7 +1738,7 @@ function pacemakerAP(t, p) {
   }
   // AP fires
   const tAp = tMod - phase4Time;
-  const d0 = p.phase0Dur / Math.max(0.05, p.phase0Mult); // slow with Ca block
+  const d0 = p.phase0Dur / Math.max(PHASE0_MULT_FLOOR, p.phase0Mult); // slow with Ca block
   const d3 = apdTime - d0;
   if (tAp < d0) {
     // Phase 0: rise from threshold to peak
@@ -1474,6 +1755,15 @@ function pacemakerAP(t, p) {
 // ═══════════════════════════════════════════════════════════
 function applyDrugDeltas(baseline, key) {
   const out = { ...baseline };
+  // CHANNEL BLOCK COMPOSES MULTIPLICATIVELY. Each blocker removes a fraction of the
+  // channels still available, so availability is a product of (1 - block) and can never
+  // go negative. Additive stacking did: flecainide (-0.65) + propafenone (-0.55) gave
+  // phase0Mult -0.20, which the old clamp quietly turned into 0.05 and the panel printed
+  // as 'QRS estimate 1600 ms'. Brugada (0.55) + flecainide alone did the same.
+  // K block (apdMult) stays ADDITIVE on purpose: its deltas are POSITIVE (sotalol +0.30
+  // LENGTHENS the AP), so a product-of-(1 - block) form would shorten the AP and invert
+  // the entire Class III teaching point.
+  let phase0Avail = 1;
   for (const id of activeDrugs) {
     const drug = DRUGS[id];
     const deltas = drug[key] || {};
@@ -1484,11 +1774,15 @@ function applyDrugDeltas(baseline, key) {
       if (k.endsWith('Factor')) {
         const baseKey = k.slice(0, -6);
         if (out[baseKey] !== undefined) out[baseKey] *= v;
+      } else if (k === 'phase0Mult' && out.phase0Mult !== undefined) {
+        if (v < 0) phase0Avail *= Math.max(0, 1 + v);
+        else out.phase0Mult += v;
       } else if (out[k] !== undefined) {
         out[k] += v;
       }
     }
   }
+  if (out.phase0Mult !== undefined) out.phase0Mult *= phase0Avail;
   return out;
 }
 
@@ -1503,13 +1797,22 @@ function calcParams(forCellType) {
   const key = isPace ? 'pace' : 'vent';
   const out = applyDrugDeltas(baseline, key);
   // User slider overrides win over everything — final say.
-  const uovr = isPace ? userOverridesPace : userOverrides;
+  const uovr = overridesFor(forCellType);
   for (const [k, v] of Object.entries(uovr)) {
     if (v !== undefined) out[k] = v;
   }
-  // Clamp safety
-  if (out.phase0Mult !== undefined) out.phase0Mult = Math.max(0.05, out.phase0Mult);
+  // Clamp safety + REFUSAL. The floor is the same number the ECG strip clamps to, so the
+  // panel can never print a QRS the strip does not draw; anything below it is flagged and
+  // the QRS row prints nothing at all rather than a computed-from-impossible number.
+  if (out.phase0Mult !== undefined) {
+    out.phase0Refused = !isPace && out.phase0Mult < PHASE0_MULT_FLOOR;
+    out.phase0Mult = Math.max(isPace ? 0.05 : PHASE0_MULT_FLOOR, out.phase0Mult);
+  }
   if (out.apdMult !== undefined) out.apdMult = Math.max(0.3, out.apdMult);
+  // ERP cannot exceed 100% of APD by this tool's own definition, and the slider that
+  // nominally controls it runs 0.60-1.00. Additive stacking drifted to 1.23, painting the
+  // 'ERP' band past the trace's return to rest and into phase 4.
+  if (out.erpFraction !== undefined) out.erpFraction = Math.min(1.0, Math.max(0.6, out.erpFraction));
   if (out.phase4Slope !== undefined) out.phase4Slope = Math.max(0.001, out.phase4Slope);
   return out;
 }
@@ -1519,10 +1822,14 @@ function calcParams(forCellType) {
 // ═══════════════════════════════════════════════════════════
 const canvas = document.getElementById('canvas');
 const ctx = canvas.getContext('2d');
+// devicePixelRatio changes on browser zoom and when a window moves between displays of
+// different density, so it is re-read on every resize instead of captured once at parse
+// time (which left the backing store over- or under-sampled until a reload).
 let DPR = window.devicePixelRatio || 1;
 let W = 0, H = 0;
 
 function resizeCanvas() {
+  DPR = window.devicePixelRatio || 1;
   const rect = canvas.parentElement.getBoundingClientRect();
   W = rect.width;
   H = rect.height;
@@ -1532,17 +1839,43 @@ function resizeCanvas() {
   ctx.scale(DPR, DPR);
 }
 
+// The canvas labels used to ask for 'DM Sans', which is not loaded anywhere in the repo
+// (no @font-face, no font link — and adding one would put a network dependency in a file
+// whose whole point is being self-contained). Use the same stack the DOM chrome uses.
+const CANVAS_FONT = '-apple-system, "Helvetica Neue", Helvetica, Arial, sans-serif';
+
+// getComputedStyle is a forced style resolution. It used to run seven property reads six
+// times per frame, i.e. ~360 times a second on a 120 Hz display, for values that only
+// change when the theme toggles — so the result is cached and invalidated on toggle.
+let _styleCache = null;
+function invalidateStyles() { _styleCache = null; }
 function getStyles() {
+  if (_styleCache) return _styleCache;
   const s = getComputedStyle(document.body);
-  return {
-    text: s.getPropertyValue('--text').trim() || '#1a1a2e',
-    textDim: s.getPropertyValue('--text-dim').trim(),
-    border: s.getPropertyValue('--border').trim(),
-    panelBg: s.getPropertyValue('--panel-bg').trim(),
-    threshold: s.getPropertyValue('--threshold').trim(),
-    rest: s.getPropertyValue('--rest').trim(),
-    navy: s.getPropertyValue('--navy').trim() || '#0d2240',
+  const v = (n, d) => s.getPropertyValue(n).trim() || d;
+  _styleCache = {
+    text: v('--text', '#1a1a2e'),
+    textDim: v('--text-dim', '#5a6478'),
+    border: v('--border', '#d8dfe8'),
+    panelBg: v('--panel-bg', '#ffffff'),
+    threshold: v('--threshold', '#ef4444'),
+    rest: v('--rest', '#6b7280'),
+    navy: v('--navy', '#0d2240'),
+    erpShade: v('--erp-shade', 'rgba(190,18,60,0.09)'),
+    erpLabel: v('--erp-label', '#b91c1c'),
+    ghost: v('--ghost-trace', 'rgba(71,85,105,0.85)'),
+    ecgBaseline: v('--ecg-baseline', 'rgba(100,116,139,0.55)'),
+    phaseText: v('--phase-text', '#1a1a2e'),
+    phase: {
+      '0':  v('--ph0-label', '#0f766e'),
+      '1':  v('--ph1-label', '#b45309'),
+      '2':  v('--ph2-label', '#0e7490'),
+      '3':  v('--ph3-label', '#be123c'),
+      '4':  v('--ph4-label', '#475569'),
+      '4p': v('--ph0-label', '#0f766e'),
+    },
   };
+  return _styleCache;
 }
 
 function drawAxes(margin, vMin, vMax, tMax, isPace) {
@@ -1553,7 +1886,7 @@ function drawAxes(margin, vMin, vMax, tMax, isPace) {
   // Grid lines
   ctx.strokeStyle = styles.border;
   ctx.lineWidth = 0.5;
-  ctx.font = '10px -apple-system, sans-serif';
+  ctx.font = '10px ' + CANVAS_FONT;
   ctx.fillStyle = styles.textDim;
 
   // Y-axis (mV)
@@ -1595,7 +1928,11 @@ function drawAxes(margin, vMin, vMax, tMax, isPace) {
 // get clipped at the right edge.
 function computeTMax(p, isPace) {
   if (isPace) return Math.max(800, pacemakerCycleLen(p) + 100);
-  return Math.max(600, Math.ceil((ventAPDuration(p) + 80) / 100) * 100);
+  const tg = triggersEnabled();
+  const trig = triggerState(p, tg.ead, tg.dad);
+  // Leave room for a triggered beat so it is not drawn off the right edge.
+  const end = (trig ? trig.t : 0) + ventAPDuration(p) + 80;
+  return Math.max(600, Math.ceil(end / 100) * 100);
 }
 
 function drawTrace(p, isPace, color, width, t0, sweepMs, tMaxAxis, applyTriggers) {
@@ -1606,8 +1943,10 @@ function drawTrace(p, isPace, color, width, t0, sweepMs, tMaxAxis, applyTriggers
   const vMin = -100, vMax = 40;
   const tMax = tMaxAxis ?? computeTMax(p, isPace);
   // Trigger overlays (EAD / DAD) — only on the live trace, not the ghost.
-  const ead = applyTriggers && document.getElementById('ovEad')?.checked;
-  const dad = applyTriggers && document.getElementById('ovDad')?.checked;
+  const tg = triggersEnabled();
+  const ead = applyTriggers && tg.ead;
+  const dad = applyTriggers && tg.dad;
+  const trig = (!isPace && applyTriggers) ? triggerState(p, ead, dad) : null;
 
   ctx.strokeStyle = color;
   ctx.lineWidth = width;
@@ -1626,11 +1965,7 @@ function drawTrace(p, isPace, color, width, t0, sweepMs, tMaxAxis, applyTriggers
       v = pacemakerAP(t, p);
     } else {
       // Single AP starting at t=20 (small phase 4 baseline before)
-      const tAp = t - 20;
-      v = tAp < 0 ? p.vRest : ventAP(tAp, p);
-      // Trigger overlays only on live trace and only in vent/atrial/Purkinje mode.
-      if (ead && tAp >= 0) v += eadBump(tAp, p);
-      if (dad && tAp >= 0) v += dadBump(tAp, p);
+      v = fastResponseV(t - 20, p, ead, dad, trig);
     }
     const x = margin.l + plotW * (t / tMax);
     const y = margin.t + plotH * (1 - (v - vMin) / (vMax - vMin));
@@ -1644,12 +1979,7 @@ function drawTrace(p, isPace, color, width, t0, sweepMs, tMaxAxis, applyTriggers
     const t = drawUntil;
     let v;
     if (isPace) v = pacemakerAP(t, p);
-    else {
-      const tAp = t - 20;
-      v = tAp < 0 ? p.vRest : ventAP(tAp, p);
-      if (ead && tAp >= 0) v += eadBump(tAp, p);
-      if (dad && tAp >= 0) v += dadBump(tAp, p);
-    }
+    else v = fastResponseV(t - 20, p, ead, dad, trig);
     const x = margin.l + plotW * (t / tMax);
     const y = margin.t + plotH * (1 - (v - vMin) / (vMax - vMin));
     ctx.fillStyle = color;
@@ -1659,6 +1989,15 @@ function drawTrace(p, isPace, color, width, t0, sweepMs, tMaxAxis, applyTriggers
     ctx.arc(x, y, 3, 0, Math.PI * 2);
     ctx.fill();
     ctx.shadowBlur = 0;
+  }
+
+  // Name the triggered beat on the plot so the overlay is not just a shape.
+  if (trig && drawUntil >= trig.t + 20) {
+    const x = margin.l + plotW * ((trig.t + 20) / tMax);
+    ctx.fillStyle = styles.erpLabel;
+    ctx.font = '600 10px ' + CANVAS_FONT;
+    ctx.textAlign = 'left';
+    ctx.fillText(trig.kind + ' \u2192 triggered beat', Math.min(x + 4, margin.l + plotW - 130), margin.t + plotH - 8);
   }
 }
 
@@ -1674,11 +2013,11 @@ function drawErpShading(p, isPace) {
   const erp = apd * p.erpFraction;
   const x1 = margin.l + plotW * Math.min(20 / tMax, 1);
   const x2 = margin.l + plotW * Math.min((20 + erp) / tMax, 1);
-  ctx.fillStyle = 'rgba(239, 68, 68, 0.07)';
+  ctx.fillStyle = styles.erpShade;
   ctx.fillRect(x1, margin.t, x2 - x1, plotH);
-  // Label
-  ctx.fillStyle = 'rgba(239, 68, 68, 0.6)';
-  ctx.font = '10px -apple-system, sans-serif';
+  // Label — was rgba(239,68,68,0.6): 2.28:1 on light, 2.37:1 on dark, failing in BOTH themes.
+  ctx.fillStyle = styles.erpLabel;
+  ctx.font = '600 10px ' + CANVAS_FONT;
   ctx.textAlign = 'center';
   ctx.fillText('ERP', (x1 + x2) / 2, margin.t + 12);
 }
@@ -1708,32 +2047,32 @@ function drawPhaseRegions(p, isPace) {
   if (isPace) {
     const phase4 = (p.threshold - p.MDP) / Math.max(0.001, p.phase4Slope);
     const apdTime = p.apDuration * p.apdMult;
-    const d0 = p.phase0Dur / Math.max(0.05, p.phase0Mult);
-    regions.push({ x1: 0, x2: phase4, color: PHASE_COLORS['4p'], label: '4', ion: 'I_f · I_Ca-T' });
-    regions.push({ x1: phase4, x2: phase4 + d0, color: PHASE_COLORS['0'], label: '0', ion: 'I_Ca-L' });
-    regions.push({ x1: phase4 + d0, x2: phase4 + apdTime, color: PHASE_COLORS['3'], label: '3', ion: 'I_K' });
+    const d0 = p.phase0Dur / Math.max(PHASE0_MULT_FLOOR, p.phase0Mult);
+    regions.push({ x1: 0, x2: phase4, key: '4p', color: PHASE_COLORS['4p'], label: '4', ion: 'I_f · I_Ca-T' });
+    regions.push({ x1: phase4, x2: phase4 + d0, key: '0', color: PHASE_COLORS['0'], label: '0', ion: 'I_Ca-L' });
+    regions.push({ x1: phase4 + d0, x2: phase4 + apdTime, key: '3', color: PHASE_COLORS['3'], label: '3', ion: 'I_K' });
     if (phase4 + apdTime < tMax - 20) {
-      regions.push({ x1: phase4 + apdTime, x2: tMax, color: PHASE_COLORS['4p'], label: '4', ion: 'I_f' });
+      regions.push({ x1: phase4 + apdTime, x2: tMax, key: '4p', color: PHASE_COLORS['4p'], label: '4', ion: 'I_f' });
     }
   } else {
     const off = 20;
-    const d0 = p.phase0Dur / Math.max(0.05, p.phase0Mult);
+    const d0 = p.phase0Dur / Math.max(PHASE0_MULT_FLOOR, p.phase0Mult);
     const d1 = p.phase1Dur * p.apdMult;
     const d2 = p.phase2Dur * p.apdMult;
     const d3 = p.phase3Dur * p.apdMult;
     // Phase 4 (resting baseline before upstroke) — only if there's room
     if (off > 12) {
-      regions.push({ x1: 0, x2: off, color: PHASE_COLORS['4'], label: '4', ion: 'I_K1' });
+      regions.push({ x1: 0, x2: off, key: '4', color: PHASE_COLORS['4'], label: '4', ion: 'I_K1' });
     }
     // Phase 0 + 1 are too narrow to label individually (~10ms total).
     // Show as separate-coloured tints, label only phase 0 with I_Na.
-    regions.push({ x1: off, x2: off + d0, color: PHASE_COLORS['0'], label: '0', ion: 'I_Na' });
-    regions.push({ x1: off + d0, x2: off + d0 + d1, color: PHASE_COLORS['1'], label: '', ion: '' });
-    regions.push({ x1: off + d0 + d1, x2: off + d0 + d1 + d2, color: PHASE_COLORS['2'], label: '2', ion: 'I_Ca-L' });
-    regions.push({ x1: off + d0 + d1 + d2, x2: off + d0 + d1 + d2 + d3, color: PHASE_COLORS['3'], label: '3', ion: 'I_Kr' });
+    regions.push({ x1: off, x2: off + d0, key: '0', color: PHASE_COLORS['0'], label: '0', ion: 'I_Na' });
+    regions.push({ x1: off + d0, x2: off + d0 + d1, key: '1', color: PHASE_COLORS['1'], label: '', ion: '' });
+    regions.push({ x1: off + d0 + d1, x2: off + d0 + d1 + d2, key: '2', color: PHASE_COLORS['2'], label: '2', ion: 'I_Ca-L' });
+    regions.push({ x1: off + d0 + d1 + d2, x2: off + d0 + d1 + d2 + d3, key: '3', color: PHASE_COLORS['3'], label: '3', ion: 'I_Kr' });
     const restEnd = off + d0 + d1 + d2 + d3;
     if (restEnd + 30 < tMax) {
-      regions.push({ x1: restEnd, x2: tMax, color: PHASE_COLORS['4'], label: '4', ion: 'I_K1' });
+      regions.push({ x1: restEnd, x2: tMax, key: '4', color: PHASE_COLORS['4'], label: '4', ion: 'I_K1' });
     }
   }
 
@@ -1745,10 +2084,14 @@ function drawPhaseRegions(p, isPace) {
   }
   ctx.restore();
 
-  // Labels in top margin (y above the plot top edge — trace can never reach here)
+  // Labels in top margin (y above the plot top edge — trace can never reach here).
+  // The phase NUMBER is drawn on --panel-bg, not on the tinted region, so it needs the
+  // light-mode palette: the dark hues fail AA on white (phase 1 #f59e0b = 2.15:1). The
+  // region TINT keeps the saturated hue — swapping it for the darker label colour would
+  // muddy the background wash.
   ctx.textAlign = 'center';
-  const isLight = !document.body.classList.contains('dark');
-  const labelTextColor = isLight ? '#1a1a2e' : '#e8ecf2';
+  const styles = getStyles();
+  const labelTextColor = styles.phaseText;
   for (const r of regions) {
     if (!r.label) continue;
     const xLeft = px(r.x1);
@@ -1757,12 +2100,12 @@ function drawPhaseRegions(p, isPace) {
     if (w < 24) continue; // not enough room
     const cx = (xLeft + xRight) / 2;
     // Phase number — bold, in phase color (high contrast against background)
-    ctx.fillStyle = r.color;
-    ctx.font = '700 13px DM Sans, -apple-system, sans-serif';
+    ctx.fillStyle = styles.phase[r.key] || labelTextColor;
+    ctx.font = '700 13px ' + CANVAS_FONT;
     ctx.fillText(r.label, cx, margin.t - 12);
     // Ion current — bright neutral (NOT phase color, which fades into the tinted background)
     if (r.ion && w >= 50) {
-      ctx.font = '600 11px DM Sans, -apple-system, sans-serif';
+      ctx.font = '600 11px ' + CANVAS_FONT;
       ctx.fillStyle = labelTextColor;
       ctx.fillText(r.ion, cx, margin.t - 1);
     }
@@ -1791,21 +2134,30 @@ function drawThreshold(p, isPace) {
   ctx.stroke();
   ctx.setLineDash([]);
   ctx.fillStyle = styles.threshold;
-  ctx.font = '10px -apple-system, sans-serif';
+  ctx.font = '10px ' + CANVAS_FONT;
   ctx.textAlign = 'left';
   ctx.fillText('Threshold ' + thr + ' mV', margin.l + 4, y - 3);
 }
 
 let sweepMs = 0;
-const SWEEP_SPEED = 220; // ms of AP-time per render second (slow enough to see)
+// ms of AP-time advanced per ms of wall clock. (The old SWEEP_SPEED = 220 constant did
+// not govern anything — render() has advanced the sweep by dt * 0.6 for a long time.)
+const SWEEP_MS_PER_MS = 0.6;
 let lastFrameTime = 0;
 
 // ═══════════════════════════════════════════════════════════
 // SURFACE ECG SYNTHESIS
 // ═══════════════════════════════════════════════════════════
 // Generates a single-beat surface ECG that maps from the molecular AP:
-//   QRS width  = 80 / phase0Mult  (matches the QRS estimate measurement)
-//   QT         = 380 * apdMult    (matches the QT estimate measurement)
+//   QRS width  = qrsFromPhase0(phase0Mult)  (the same number the panel prints)
+//   QT         = 380 * apdMult              (the same number the panel prints)
+// ecgIntervals() below is the single place those two are decided, including which cells are
+// allowed to move them (only a ventricular myocyte sets a surface QT) and the one geometric
+// limit left on the QT, which the strip announces on itself when it bites.
+// The geometry below is anchored so the DRAWN complex measures what the panel PRINTS:
+// QRS onset is fixed, QRS offset lands at onset + qrsWidthMs, and the T wave's terminal
+// 0.02 mV crossing lands at onset + qtMs. Before this, a claimed 220 ms QRS drew 178 ms
+// and a claimed 80 ms drew 62 ms.
 // In pacemaker mode the cycle length tracks live HR so the TP segment
 // visibly stretches/compresses as the user adds rate-control drugs.
 const ecgCanvas = document.getElementById('ecgCanvas');
@@ -1813,6 +2165,7 @@ const ecgCtx = ecgCanvas.getContext('2d');
 let ecgW = 0, ecgH = 0;
 
 function resizeEcgCanvas() {
+  DPR = window.devicePixelRatio || 1;
   const r = ecgCanvas.getBoundingClientRect();
   ecgW = r.width; ecgH = r.height;
   ecgCanvas.width = ecgW * DPR;
@@ -1821,20 +2174,72 @@ function resizeEcgCanvas() {
   ecgCtx.scale(DPR, DPR);
 }
 
+// Caliper for "where does the complex start and stop" — the same 0.02 mV threshold used
+// to verify the drawn widths. For a Gaussian A*exp(-x^2) the visible half-width at this
+// threshold is sigma*sqrt(ln(A/theta)), which is how the constants below were solved.
+const ECG_CALIPER_MV = 0.02;
+const ECG_QRS_ONSET = 270;   // fixed QRS onset in the beat's reference frame (PR ~170 ms)
+// Shape constants, expressed as fractions of the QRS's internal timebase wg:
+//   Q trough 0.15, R peak 0.40 (a real R sits ~40% into the complex, not in the middle),
+//   S trough 0.72, sigmas 0.06 / 0.11 / 0.10.
+// With those, the measured 0.02 mV width is 0.7791*wg and the leading crossing is at
+// 0.0926*wg, so setting wg = qrsWidthMs / 0.7791 makes the drawn width equal the printed
+// width and the onset stay put at ECG_QRS_ONSET for every width.
+const ECG_QRS_WIDTH_K = 0.7791;
+const ECG_QRS_ONSET_K = 0.0926;
+const ECG_T_SIG_DOWN = 60;
+// T end = tT + sigTdown*sqrt(ln(aT/theta)); solved so the T's terminal crossing lands on
+// the printed QT. ECG_T_K is that sqrt: one T-sigma buys 1.6456 ms of tail.
+const ECG_T_K = Math.sqrt(Math.log(0.30 / ECG_CALIPER_MV));
+// A SHORT QT USED TO BE DRAWN LONG, BECAUSE THE T's WIDTH WAS A CONSTANT.
+// With sigTdown pinned at 60 the T carries a fixed 98.7 ms tail, so the T peak could not be
+// placed closer to the QRS than that, and `ecgIntervals` papered over it by flooring the
+// drawn QT at 220 ms and at qrs+140 while the panel printed 380*apdMult with no floor. The
+// two then disagreed in 15 of the 115 disease x drug states: Short QT printed 209 and drew
+// 220, Short QT + flecainide printed 228 and drew 275, Short QT + lidocaine printed 171 and
+// drew 224 — a 53 ms gap between the number on the panel and the strip beside it, which is
+// exactly what this repo's printed-number law forbids. The fix is to let the T narrow: the
+// only real constraint is that the T's peak has to clear the S, so solve sigTdown from the
+// room the QT actually leaves and keep the floor only where the geometry genuinely runs out.
+const ECG_T_SIG_MIN = 22;     // narrowest T this generator will draw (a 36 ms tail)
+const ECG_ST_MIN_MS = 20;     // minimum gap from the S back at baseline to the T's peak
+// The S is back on the baseline about 2 sigma past its trough: origin + (0.72 + 2*0.10)*wg.
+// Measured from the fixed QRS onset that is (0.92 - ECG_QRS_ONSET_K)*wg.
+const ECG_S_END_K = 0.92 - ECG_QRS_ONSET_K;
+// The T sigma that lands the T's terminal 0.02 mV crossing exactly on qtMs, narrowed no
+// further than ECG_T_SIG_MIN and never wider than the default. At the normal 80 ms / 380 ms
+// beat this returns 60 — the previous constant — so nothing about a normal strip moves.
+function ecgTSigma(qrsWidthMs, qtMs) {
+  const wg = qrsWidthMs / ECG_QRS_WIDTH_K;
+  const room = qtMs - ECG_S_END_K * wg - ECG_ST_MIN_MS;
+  return Math.max(ECG_T_SIG_MIN, Math.min(ECG_T_SIG_DOWN, room / ECG_T_K));
+}
+// The shortest QT this geometry can draw with the T still clear of the S. Below it the strip
+// draws this floor and SAYS SO on the strip, rather than silently showing a longer QT than
+// the panel printed.
+function ecgQtFloor(qrsWidthMs) {
+  return ECG_S_END_K * (qrsWidthMs / ECG_QRS_WIDTH_K) + ECG_ST_MIN_MS + ECG_T_SIG_MIN * ECG_T_K;
+}
+
 function ecgWaveform(t, qrsWidthMs, qtMs) {
-  // Component centers — fixed in the cardiac cycle relative to a reference frame.
-  const tP = 130;          // P-wave peak
-  const tR = 310;          // R-wave peak (PR interval ~180 ms)
-  const tQ = tR - 14;
-  const tS = tR + 22 + (qrsWidthMs - 80) * 0.5; // S shifts later as QRS widens
-  const tT = tR + qtMs - qrsWidthMs * 0.5 - 60; // T centered late in QT segment
+  const wg = qrsWidthMs / ECG_QRS_WIDTH_K;       // QRS internal timebase
+  const origin = ECG_QRS_ONSET - ECG_QRS_ONSET_K * wg;
+
+  // Component centers
+  const tP = 130;                    // P-wave peak
+  const tQ = origin + 0.15 * wg;
+  const tR = origin + 0.40 * wg;     // R peak ~40% into the complex
+  const tS = origin + 0.72 * wg;
+  // Asymmetric T, narrowed only as far as a short QT requires.
+  const sigTdown = ecgTSigma(qrsWidthMs, qtMs);
+  const sigTup = Math.min(30, sigTdown * 0.5);
+  const tT = ECG_QRS_ONSET + qtMs - sigTdown * ECG_T_K;  // T ends exactly at QRS onset + QT
 
   // Component widths
   const sigP = 22;
-  const sigQ = 5;
-  const sigR = Math.max(7, qrsWidthMs / 6); // R fattens as QRS widens
-  const sigS = 9;
-  const sigTup = 30, sigTdown = 60; // asymmetric T
+  const sigQ = 0.06 * wg;
+  const sigR = 0.11 * wg;
+  const sigS = 0.10 * wg;
 
   // Component amplitudes (mV)
   const aP = 0.12, aQ = -0.05, aR = 1.0, aS = -0.20, aT = 0.30;
@@ -1851,23 +2256,66 @@ function ecgWaveform(t, qrsWidthMs, qtMs) {
   return v;
 }
 
+// The widths the strip actually draws, given the live parameters. Exported as one function
+// so the panel and the strip can never disagree about them.
+//
+// THE STRIP IS A VENTRICULAR REFERENCE IN EVERY MODE, AND THE GEOMETRY HAS TO AGREE WITH THE
+// CAPTION THAT SAYS SO. Both the caption under the strip and the label drawn on it announce
+// 'ventricular reference' for atrial and Purkinje cells, but the QRS and QT were still being
+// computed from THAT cell's phase0Mult and apdMult: in atrial mode with Phase 0 at 0.20 and
+// APD at 1.80 the strip drew a 178.9 ms QRS and a 684.0 ms QT under a caption reading 'the
+// atrial AP contributes the P wave, not the QRS or QT'. Only a ventricular myocyte's own
+// phase 0 and APD produce a surface QRS and QT, so those are the only sliders allowed to move
+// them. Purkinje is the single exception the caption itself names — its phase 0 IS a QRS
+// contribution, and `qrsFromPhase0` of it is exactly the number the panel prints in that mode
+// under 'QRS contribution', so the strip follows the panel there. Neither non-ventricular cell
+// gets a QT: the panel deliberately refuses to print one, and the strip now holds the 380 ms
+// reference instead of inventing one from the wrong cell's APD.
+// The operands are rounded ONCE, here, to the millisecond the panel prints, and the strip is
+// drawn from those rounded operands — the repo's printed-number law. Drawing from the
+// unrounded values left the drawn QRS up to 0.2 ms off the printed one (135 printed, 134.89
+// drawn); now the two are the same number by construction.
+function ecgIntervals(live, isPace) {
+  if (isPace) return { qrs: QRS_BASE_MS, qt: QT_BASE_MS, qtPrinted: QT_BASE_MS, qtFloored: false, refused: false };
+  const qrsFromCell = cellType === 'vent' || cellType === 'purkinje';
+  const refused = qrsFromCell && !!live.phase0Refused;
+  const qrs = qrsFromCell
+    ? Math.round(Math.max(60, Math.min(QRS_MAX_MS, qrsFromPhase0(live.phase0Mult))))
+    : QRS_BASE_MS;
+  // Only a ventricular myocyte's APD sets a QT (see the note on this function above).
+  const qtPrinted = cellType === 'vent' ? Math.round(QT_BASE_MS * live.apdMult) : QT_BASE_MS;
+  // No 220 ms and no qrs+140 floor any more: the T narrows instead. What is left is the
+  // geometric limit — the point at which the T would have to sit on top of the S — and when
+  // that bites the strip says so instead of quietly drawing a longer QT than was printed.
+  // Compared AFTER rounding, so a floor that rounds to the printed millisecond is not
+  // announced as a deviation the viewer cannot see.
+  const floor = Math.round(ecgQtFloor(qrs));
+  const qtFloored = floor > qtPrinted;
+  const qt = qtFloored ? floor : qtPrinted;
+  return { qrs, qt, qtPrinted, qtFloored, refused };
+}
+
 function drawECG(live, isPace) {
   if (!ecgCanvas || !ecgW) return;
   const styles = getStyles();
 
-  // Cycle length sets the x-axis span. Vent mode = fixed 1000ms (HR 60).
-  // Pace mode = live cycle length so TP segment shows HR change.
-  // Clamped for DRAWING only — a 4 s cycle would leave the strip mostly blank. The label
-  // below always reports the true rate so the strip cannot contradict the measurement panel.
-  const trueCycleLen = isPace ? pacemakerCycleLen(live) : 1000;
-  const cycleLen = isPace ? Math.max(400, Math.min(2400, trueCycleLen)) : 1000;
-  const ecgIsClamped = isPace && Math.abs(trueCycleLen - cycleLen) > 1;
+  // Map measurement formulas to ECG component widths. ONE function computes them for the
+  // strip and the panel, so the two cannot disagree. In pace mode the AP being modeled is
+  // the SA/AV node, not the ventricle, so the strip holds a normal ventricular complex.
+  const iv = ecgIntervals(live, isPace);
+  const qrsWidthMs = iv.qrs;
+  const qtMs = iv.qt;
 
-  // Map measurement formulas to ECG component widths.
-  // In pace mode, the AP being modeled is the SA/AV node, not the ventricle —
-  // so use a normal ventricular response (clamp to baseline).
-  const qrsWidthMs = isPace ? 80 : Math.max(60, Math.min(220, 80 / Math.max(0.05, live.phase0Mult)));
-  const qtMs       = isPace ? 380 : Math.max(220, Math.min(700, 380 * Math.max(0.3, live.apdMult)));
+  // Cycle length sets the x-axis span. Vent mode = a 60 bpm reference beat, LENGTHENED
+  // when the QT needs the room: at the old fixed 1000 ms the T wave of a Long QT + Class
+  // III combination ran off the right edge mid-downstroke — the exact torsades case the
+  // tool exists to demonstrate. Pace mode = live cycle length so the TP segment shows the
+  // HR change, clamped for drawing only so a 4 s cycle does not leave the strip blank.
+  const trueCycleLen = isPace ? pacemakerCycleLen(live) : 1000;
+  const cycleLen = isPace
+    ? Math.max(400, Math.min(2400, trueCycleLen))
+    : Math.max(1000, Math.ceil((ECG_QRS_ONSET + qtMs + 120) / 100) * 100);
+  const ecgIsClamped = isPace && Math.abs(trueCycleLen - cycleLen) > 1;
 
   const padL = 14, padR = 10, padT = 6, padB = 6;
   const plotW = ecgW - padL - padR;
@@ -1895,7 +2343,7 @@ function drawECG(live, isPace) {
   }
 
   // Zero-mV baseline reference (subtle)
-  ecgCtx.strokeStyle = 'rgba(148, 163, 184, 0.35)';
+  ecgCtx.strokeStyle = styles.ecgBaseline;
   ecgCtx.lineWidth = 0.6;
   ecgCtx.setLineDash([3, 3]);
   ecgCtx.beginPath();
@@ -1922,15 +2370,39 @@ function drawECG(live, isPace) {
 
   // Annotation: cycle length label in upper-right
   ecgCtx.fillStyle = styles.textDim;
-  ecgCtx.font = '10px -apple-system, sans-serif';
+  ecgCtx.font = '10px ' + CANVAS_FONT;
   ecgCtx.textAlign = 'right';
   // Report the TRUE rate, not the clamped drawing cycle — the clamp exists so the strip stays
   // legible at very slow or very fast rates, and it used to make this label disagree with the
   // Heart Rate row in the measurement panel (16 bpm shown as 25).
   const hrStr = isPace
     ? `${Math.round(60000 / trueCycleLen)} bpm${ecgIsClamped ? ' (strip time-compressed)' : ''}`
-    : '60 bpm reference';
+    : (cycleLen > 1000 ? `60 bpm reference \u00b7 window ${cycleLen} ms to fit QT` : '60 bpm reference');
   ecgCtx.fillText(hrStr, padL + plotW - 2, padT + 11);
+
+  // The strip is a VENTRICULAR reference. Say so when the selected cell is not ventricular,
+  // instead of silently computing a QRS and a QT from atrial or Purkinje parameters under a
+  // caption that claims 'QRS width tracks phase 0 dV/dt'.
+  if (!isPace && cellType !== 'vent') {
+    ecgCtx.textAlign = 'left';
+    ecgCtx.fillStyle = styles.erpLabel;
+    ecgCtx.fillText('Ventricular reference \u2014 not the ' + (cellType === 'atrial' ? 'atrial' : 'Purkinje') + ' cell', padL + 2, padT + 11);
+  }
+  // Bottom-left note, ONE line so it cannot collide with the S wave on a 90 px strip. Both
+  // conditions can hold at once \u2014 a refused phase 0 makes the strip draw its 220 ms QRS
+  // limit, and that wide QRS is itself what pushes the QT floor above the printed QT \u2014 so
+  // the combined case names both rather than hiding one behind the other.
+  const qtNote = 'QT drawn ' + iv.qt + ' ms, not ' + iv.qtPrinted + ' ms';
+  const note = iv.refused
+    ? (iv.qtFloored ? 'QRS not estimable \u00b7 ' + qtNote : 'QRS not estimable \u2014 see panel above')
+    : iv.qtFloored
+      ? qtNote + ' \u2014 strip minimum'
+      : '';
+  if (note) {
+    ecgCtx.textAlign = 'left';
+    ecgCtx.fillStyle = styles.erpLabel;
+    ecgCtx.fillText(note, padL + 2, padT + plotH - 2);
+  }
 }
 
 function render(now) {
@@ -1945,8 +2417,15 @@ function render(now) {
   // NaN tMax, breaks the wrap check, and kills the trace draw loop.
   const tMaxParams = isPace ? paceParams : params;
   const tMax = computeTMax(tMaxParams, isPace);
-  sweepMs += dt * 0.6; // 0.6 ms AP-time per ms wall (~1.7s sweep)
-  if (sweepMs > tMax + 60) sweepMs = 0;
+  // WCAG 2.2.2: the sweep is auto-starting motion that lasts longer than five seconds, so
+  // it needs a pause mechanism — the Display panel's "Pause sweep" box, plus an automatic
+  // honour of prefers-reduced-motion. Paused means "draw the whole trace, do not animate".
+  if (sweepPaused()) {
+    sweepMs = tMax;
+  } else {
+    sweepMs += dt * SWEEP_MS_PER_MS;
+    if (sweepMs > tMax + 60) sweepMs = 0;
+  }
 
   // Animate param transition
   if (animating) {
@@ -1978,8 +2457,10 @@ function render(now) {
   // Pass the SAME tMax as the live trace so the time axes align (matters at
   // long-APD substrates like Purkinje + Long QT).
   // Ghost never gets EAD/DAD overlays — those are live-only by design.
+  // The ghost was rgba(148,163,184,0.55): 1.62:1 on the light panel — below even the 3:1
+  // non-text minimum, on the one element that makes every drug effect read as a difference.
   if (document.getElementById('ovGhost').checked) {
-    drawTrace(baselineParams, isPace, 'rgba(148, 163, 184, 0.55)', 1.6, 0, tMax, tMax, false);
+    drawTrace(baselineParams, isPace, styles.ghost, 1.6, 0, tMax, tMax, false);
   }
 
   // Live — applyTriggers=true so EAD/DAD bumps render when checkboxes are on.
@@ -1987,8 +2468,55 @@ function render(now) {
 
   updateMeasurements(live, baselineParams, isPace);
   drawECG(live, isPace);
+  updateEcgCaption(isPace);
 
-  requestAnimationFrame(render);
+  // Nothing moves when the sweep is paused and no parameter transition is running, so the
+  // loop stops instead of burning a full redraw plus a style resolution 60-120x a second
+  // forever. Every state change calls kick() to restart it.
+  if (sweepPaused() && !animating) { rafId = null; return; }
+  rafId = requestAnimationFrame(render);
+}
+
+// ═══════════════════════════════════════════════════════════
+// ANIMATION LOOP CONTROL
+// ═══════════════════════════════════════════════════════════
+let rafId = null;
+const reduceMotionMQ = window.matchMedia ? window.matchMedia('(prefers-reduced-motion: reduce)') : null;
+function sweepPaused() {
+  const box = document.getElementById('ovPause');
+  return (box && box.checked) || !!(reduceMotionMQ && reduceMotionMQ.matches);
+}
+function kick() {
+  if (rafId === null && !document.hidden) { lastFrameTime = 0; rafId = requestAnimationFrame(render); }
+}
+function halt() {
+  if (rafId !== null) { cancelAnimationFrame(rafId); rafId = null; }
+}
+document.addEventListener('visibilitychange', () => { if (document.hidden) halt(); else kick(); });
+if (reduceMotionMQ && reduceMotionMQ.addEventListener) reduceMotionMQ.addEventListener('change', kick);
+
+// The ECG strip is a VENTRICULAR correlate; the caption used to assert 'QRS width tracks
+// phase 0 dV/dt · QT tracks APD' unconditionally, including for atrial and Purkinje cells.
+let lastEcgSub = '';
+function updateEcgCaption(isPace) {
+  const el = document.getElementById('ecgSub');
+  if (!el) return;
+  // The canvas's accessible name is rewritten with the caption, so a screen-reader user is
+  // never told the strip tracks a parameter the current cell type does not drive.
+  const ecgEl = document.getElementById('ecgCanvas');
+  const txt = isPace
+    ? 'Pacemaker mode \u2014 normal ventricular complex; only the cycle length changes'
+    : cellType === 'vent'
+      ? 'QRS width tracks phase 0 dV/dt \u00b7 QT tracks APD'
+      // These two say what the strip DOES, not only what the physiology is. The atrial caption
+      // used to read 'contributes the P wave, not the QRS or QT' while the atrial sliders drove
+      // both; now that they drive neither, it says so, because the strip's P wave is a fixed
+      // reference too and a caption should not promise motion the strip has no way to show.
+      : cellType === 'atrial'
+        ? 'Ventricular reference strip \u2014 an atrial AP contributes only the P wave, so this QRS and QT hold'
+        : 'Ventricular reference strip \u2014 the Purkinje AP widens the QRS, not the QT';
+  if (ecgEl) ecgEl.setAttribute('aria-label', 'Surface ECG correlate: one synthesized beat. ' + txt + '.');
+  if (txt !== lastEcgSub) { el.textContent = txt; lastEcgSub = txt; }
 }
 
 // ═══════════════════════════════════════════════════════════
@@ -1998,6 +2526,7 @@ function updateMeasurements(live, baseline, isPace) {
   const wrap = document.getElementById('measurements');
   let m = [];
   if (isPace) {
+    setBanners(live, false, null);
     const cl = pacemakerCycleLen(live);
     const clBase = pacemakerCycleLen(baseline);
     const hr = 60000 / cl;
@@ -2014,29 +2543,105 @@ function updateMeasurements(live, baseline, isPace) {
     const apdBase = ventAPDuration(baseline);
     const erp = apd * live.erpFraction;
     const erpBase = apdBase * baseline.erpFraction;
-    const dvdt = (live.vPeak - live.vRest) / (live.phase0Dur / Math.max(0.05, live.phase0Mult));
+    const dvdt = (live.vPeak - live.vRest) / (live.phase0Dur / Math.max(PHASE0_MULT_FLOOR, live.phase0Mult));
     const dvdtBase = (baseline.vPeak - baseline.vRest) / baseline.phase0Dur;
+    const refused = !!live.phase0Refused;
+    const tg = triggersEnabled();
+    const trig = triggerState(live, tg.ead, tg.dad);
     m = [
       { label: 'APD', value: Math.round(apd) + ' ms', delta: apd - apdBase, unit: 'ms' },
       { label: 'ERP', value: Math.round(erp) + ' ms', delta: erp - erpBase, unit: 'ms' },
       { label: 'Phase 0 dV/dt', value: Math.round(dvdt) + ' mV/ms', delta: dvdt - dvdtBase, unit: 'mV/ms' },
       // Only the ventricular myocyte produces a QRS and a QT. An atrial AP contributes the P
       // wave; a Purkinje AP contributes to the QRS but its repolarisation is not the QT.
+      // Neither gets the ventricular QT constant relabelled — the 'Atrial ERP contribution'
+      // row used to print 380 ms beside an ERP row printing 165 ms for the same cell.
       ...(cellType === 'atrial'
-        ? [{ label: 'P-wave width estimate', value: Math.round(80 / live.phase0Mult) + ' ms', delta: 80/live.phase0Mult - 80, unit: 'ms' },
-           { label: 'Atrial ERP contribution', value: Math.round(380 * live.apdMult) + ' ms', delta: 380*live.apdMult - 380, unit: 'ms' }]
+        ? [{ label: 'P-wave width estimate', value: refused ? '\u2014' : Math.round(pWidthFromPhase0(live.phase0Mult)) + ' ms', delta: refused ? 0 : pWidthFromPhase0(live.phase0Mult) - P_BASE_MS, unit: 'ms' }]
         : cellType === 'purkinje'
-        ? [{ label: 'QRS estimate', value: Math.round(80 / live.phase0Mult) + ' ms', delta: 80/live.phase0Mult - 80, unit: 'ms' },
-           { label: 'Contributes to QT', value: Math.round(380 * live.apdMult) + ' ms', delta: 380*live.apdMult - 380, unit: 'ms' }]
-        : [{ label: 'QRS estimate', value: Math.round(80 / live.phase0Mult) + ' ms', delta: 80/live.phase0Mult - 80, unit: 'ms' },
-           { label: 'QT estimate', value: Math.round(380 * live.apdMult) + ' ms', delta: 380*live.apdMult - 380, unit: 'ms' }]),
+        ? [{ label: 'QRS contribution', value: refused ? '\u2014' : Math.round(qrsFromPhase0(live.phase0Mult)) + ' ms', delta: refused ? 0 : qrsFromPhase0(live.phase0Mult) - QRS_BASE_MS, unit: 'ms' }]
+        : [{ label: 'QRS estimate', value: refused ? '\u2014' : Math.round(qrsFromPhase0(live.phase0Mult)) + ' ms', delta: refused ? 0 : qrsFromPhase0(live.phase0Mult) - QRS_BASE_MS, unit: 'ms' },
+           { label: 'QT estimate (60 bpm)', value: Math.round(QT_BASE_MS * live.apdMult) + ' ms', delta: QT_BASE_MS * live.apdMult - QT_BASE_MS, unit: 'ms' }]),
+      ...(trig ? [{ label: 'Triggered activity', value: trig.kind + ' \u2192 beat', delta: 0, unit: '' }]
+        // A DAD is drawn but cannot fire when the cell already rests above the fast-response
+        // threshold (the Ischemia substrate, -65 mV): the fast Na current is inactivated, so
+        // there is no threshold to cross. Silence here read as a bug; say it on the panel.
+        : (tg.dad && live.vRest >= FAST_THRESHOLD_MV)
+          ? [{ label: 'Triggered activity', value: 'DAD drawn, no beat \u2014 rests at ' + Math.round(live.vRest) + ' mV, above the ' + FAST_THRESHOLD_MV + ' mV threshold', delta: 0, unit: '' }]
+          : []),
     ];
+    setBanners(live, refused, trig);
   }
-  wrap.innerHTML = m.map(x => {
+  const html = m.map(x => {
     const dStr = Math.abs(x.delta) < 0.5 ? '' :
       `<span class="measure-delta ${x.delta > 0 ? 'up' : 'down'}">${x.delta > 0 ? '↑' : '↓'} ${Math.abs(x.delta).toFixed(x.unit==='' ? 3 : 0)}</span>`;
     return `<div class="measure"><div class="measure-label">${x.label}</div><div class="measure-value">${x.value}${dStr}</div></div>`;
   }).join('');
+  // render() runs 60-120x a second; the measurement values only move while a parameter
+  // transition is animating. Re-parsing six DOM subtrees per frame for identical markup
+  // was pure waste, so the write is gated on the markup actually changing.
+  if (html !== lastMeasureHtml) {
+    wrap.innerHTML = html;
+    lastMeasureHtml = html;
+    // Keep the canvas's text alternative in step with what the canvas is showing.
+    const names = { vent: 'ventricular myocyte', atrial: 'atrial myocyte', purkinje: 'Purkinje fiber', pace: 'nodal pacemaker cell' };
+    canvas.setAttribute('aria-label',
+      'Action potential of a ' + (names[cellType] || cellType) + ', drawn over its untreated baseline. '
+      + m.map(x => x.label + ' ' + x.value).join('. ') + '.');
+  }
+}
+let lastMeasureHtml = '';
+let lastBannerKey = '';
+
+// ═══════════════════════════════════════════════════════════
+// REFUSAL + GUIDELINE BANNERS
+// ═══════════════════════════════════════════════════════════
+// CLAUDE.md: "Guard the inputs, not just the outputs. Impossible inputs must be refused
+// loudly, not computed from." The old code clamped phase0Mult to 0.05 and printed the
+// result as 'QRS estimate 1600 ms'.
+function setBanners(live, refused, trig) {
+  const rEl = document.getElementById('measureRefuse');
+  const fEl = document.getElementById('measureFlag');
+  if (!rEl || !fEl) return;
+  let rTxt = '';
+  let fTxt = '';
+  if (refused) {
+    rTxt = '<b>Refused \u2014 conduction-failure regime.</b> The combined Na\u207a block leaves less than '
+      + (PHASE0_MULT_FLOOR * 100).toFixed(0) + '% of phase 0 available, which is past the point where a '
+      + 'single-cell model can produce a meaningful QRS. No QRS is printed and the trace is pinned at the model floor, '
+      + 'so the APD and ERP rows include a fixed ' + ((live && live.phase0Dur ? live.phase0Dur : 2) / PHASE0_MULT_FLOOR).toFixed(0) + ' ms of phase 0.';
+  } else if (live && !live.phase0Refused && (cellType === 'vent' || cellType === 'purkinje')) {
+    const qrs = qrsFromPhase0(live.phase0Mult);
+    if (qrs > QRS_BASE_MS * 1.25) {
+      fTxt += '<b>QRS ' + Math.round((qrs / QRS_BASE_MS - 1) * 100) + '% wider than baseline.</b> '
+        + 'ESC 2024 Atrial Fibrillation: "Drug infusion should be discontinued in case of QRS widening &gt;25% '
+        + 'or bundle branch block occurrence."';
+    }
+  }
+  if (live && cellType === 'vent' && !refused) {
+    const qt = QT_BASE_MS * live.apdMult;
+    // The guideline thresholds are stated for QTc. This strip's reference rate is 60 bpm,
+    // where QT and QTc coincide, which is why the comparison is legitimate and why the
+    // banner says so out loud.
+    if (qt > 500) {
+      fTxt += (fTxt ? '<br>' : '') + '<b>QT &gt; 500 ms at the 60 bpm reference, where QT = QTc.</b> '
+        + 'ESC 2024 Atrial Fibrillation: "Pharmacological cardioversion is not recommended for patients with sinus '
+        + 'node dysfunction, atrioventricular conduction disturbances, or prolonged QTc (&gt;500 ms), unless risks for '
+        + 'proarrhythmia and bradycardia have been considered." ACC/AHA 2017 VA/SCD: "High-risk patients with LQTS '
+        + 'include those with QTc &gt;500 ms."';
+    }
+  }
+  if (trig) {
+    fTxt += (fTxt ? '<br>' : '') + '<b>' + trig.kind + ' reaches threshold and triggers a beat.</b> '
+      + (trig.kind === 'DAD'
+          ? 'Diastolic Ca\u00b2\u207a release carries the membrane past \u221270 mV.'
+          : 'Phase-3 depolarisation reactivates I_Ca-L \u2014 the cellular start of torsades.');
+  }
+  const key = rTxt + '\u0000' + fTxt;
+  if (key === lastBannerKey) return;
+  lastBannerKey = key;
+  rEl.innerHTML = rTxt; rEl.style.display = rTxt ? '' : 'none';
+  fEl.innerHTML = fTxt; fEl.style.display = fTxt ? '' : 'none';
 }
 
 // ═══════════════════════════════════════════════════════════
@@ -2048,6 +2653,7 @@ function startTransition() {
   animTo = target;
   animStart = performance.now();
   animating = true;
+  kick();
 }
 
 function toggleDrug(id) {
@@ -2063,6 +2669,8 @@ function toggleDrug(id) {
 // ═══════════════════════════════════════════════════════════
 // SLIDER ↔ STATE SYNC
 // ═══════════════════════════════════════════════════════════
+// `def` is a last-resort fallback only — syncSlidersFromState reads the real default off
+// getBaselineFor(cellType), because vRest and erpFraction differ per fast-response cell.
 const SLIDER_MAP_VENT = {
   phase0Mult:  { id:'slPhase0', valId:'slPhase0Val', def:1.0,  fmt:v => (+v).toFixed(2) + '×' },
   apdMult:     { id:'slApd',    valId:'slApdVal',    def:1.0,  fmt:v => (+v).toFixed(2) + '×' },
@@ -2078,12 +2686,16 @@ const SLIDER_MAP_PACE = {
 };
 
 function syncSlidersFromState() {
-  // Slider shows: user override > disease substrate > default. Drug deltas are NOT
-  // reflected on sliders so the user can see the diseased baseline they're stacking on.
+  // Slider shows: user override > disease substrate > THIS CELL TYPE's baseline. The
+  // defaults used to be hard-coded to the ventricular baseline (-85 mV, ERP 0.85), so on
+  // Atrial and Purkinje the panel stated a resting potential the model was not using.
+  const fastCell = isFastResponse(cellType) ? cellType : 'vent';
+  const fastBase = getBaselineFor(fastCell);
+  const fastOvr = overridesFor(fastCell);
   for (const [key, m] of Object.entries(SLIDER_MAP_VENT)) {
-    let v = m.def;
+    let v = fastBase[key] !== undefined ? fastBase[key] : m.def;
     if (diseaseOverrides[key] !== undefined) v = diseaseOverrides[key];
-    if (userOverrides[key] !== undefined) v = userOverrides[key];
+    if (fastOvr[key] !== undefined) v = fastOvr[key];
     document.getElementById(m.id).value = v;
     document.getElementById(m.valId).textContent = m.fmt(v);
   }
@@ -2114,7 +2726,10 @@ function setCellTypeUI(c) {
     const deltas = drug[deltaKey] || {};
     if (Object.keys(deltas).length === 0) activeDrugs.delete(id);
   }
+  // The sliders describe the cell that is now selected, so they have to be re-read.
+  syncSlidersFromState();
   sweepMs = 0;
+  kick();
 }
 
 // ═══════════════════════════════════════════════════════════
@@ -2125,8 +2740,7 @@ function applyScenario(id) {
   if (!s) return;
   // Scenario = full clean preset. Wipe everything, then load fresh.
   activeDrugs.clear();
-  userOverrides = {};
-  userOverridesPace = {};
+  clearAllOverrides();
   diseaseOverrides = {};
   diseaseOverridesPace = {};
   setCellTypeUI(s.cell);
@@ -2134,10 +2748,10 @@ function applyScenario(id) {
     if (s.cell === 'pace' && DRUGS[d] && !DRUGS[d].paceMajor) continue;
     activeDrugs.add(d);
   }
-  // Scenario overrides go in userOverrides — they're forced parameter values
+  // Scenario overrides go in the selected cell's override bucket — forced parameter values
   // (e.g. ischemic vRest=-65 for "Lidocaine for VT", or apdMult=1.5 for "Sotalol→torsades").
   for (const [k, v] of Object.entries(s.overrides || {})) {
-    if (s.cell === 'vent') userOverrides[k] = v; else userOverridesPace[k] = v;
+    overridesFor(s.cell)[k] = v;
   }
   syncSlidersFromState();
   activePreset = { kind: 'scenario', id };
@@ -2153,7 +2767,7 @@ function applyDisease(id) {
   if (!d) return;
   // Disease = substrate layer. Reset disease + user overrides for the relevant cell,
   // but KEEP active drugs so they stack on the diseased baseline.
-  if (d.cell === 'vent') { diseaseOverrides = {}; userOverrides = {}; }
+  if (d.cell === 'vent') { diseaseOverrides = {}; clearFastOverrides(); }
   else { diseaseOverridesPace = {}; userOverridesPace = {}; }
   setCellTypeUI(d.cell);
   // Disease writes to diseaseOverrides — drug deltas apply on top so e.g.
@@ -2207,6 +2821,11 @@ function updateDrugBtns() {
     btn.dataset.tip = dimmed
       ? 'Minimal effect on pacemaker AP — see Ventricular tab'
       : drug.mech;
+    // The mechanism note used to exist only as a hover tooltip inside an element that is
+    // hardcoded aria-hidden, so a screen-reader user got 22 unlabelled drug names. Folding
+    // it into the button's accessible name is the one place it can be announced from.
+    btn.setAttribute('aria-label', drug.name + ' \u2014 Class ' + drug.cls + '. ' + btn.dataset.tip);
+    btn.setAttribute('aria-pressed', activeDrugs.has(id) ? 'true' : 'false');
   });
 }
 
@@ -2252,18 +2871,34 @@ function updateDrugBtns() {
 })();
 
 const CLASS_COLOR_VAR = { IA:'--c-IA', IB:'--c-IB', IC:'--c-IC', II:'--c-II', III:'--c-III', IV:'--c-IV', V:'--c-V' };
+// White on the class colours fails AA on six of the seven (Class IC #f59e0b = 2.15:1,
+// Class IB 2.49, Class IV 2.54 — below even the 3:1 large-text floor). Black clears 4.5:1
+// on all six; Class V #64748b is dark enough that white (4.76:1) is the passing choice.
+const PILL_FG = { IA:'#000', IB:'#000', IC:'#000', II:'#000', III:'#000', IV:'#000', V:'#fff' };
+const esc = t => String(t).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 
 function updateActiveStrip() {
   const strip = document.getElementById('activeStrip');
+  const mech = document.getElementById('activeMech');
   if (activeDrugs.size === 0) {
     strip.innerHTML = '<span style="font-size:11px; color: var(--text-muted);">No drugs active — start at baseline</span>';
+    if (mech) mech.innerHTML = '';
     return;
   }
   strip.innerHTML = [...activeDrugs].map(id => {
     const d = DRUGS[id];
     const color = `var(${CLASS_COLOR_VAR[d.cls]})`;
-    return `<span class="active-pill" style="background:${color}">${d.name} <span class="x" data-drop="${id}">×</span></span>`;
+    const fg = PILL_FG[d.cls] || '#000';
+    return `<span class="active-pill" style="background:${color}; color:${fg}">${esc(d.name)} <button type="button" class="x" data-drop="${id}" aria-label="Remove ${esc(d.name)}">×</button></span>`;
   }).join('');
+  // The mechanism note used to be hover-only, which means unreachable on every phone and
+  // by keyboard. Rendering it inline also puts the pharmacology on the page as real text.
+  if (mech) {
+    mech.innerHTML = [...activeDrugs].map(id => {
+      const d = DRUGS[id];
+      return `<div><b>${esc(d.name)}</b> (Class ${esc(d.cls)}) — ${esc(d.mech)}</div>`;
+    }).join('');
+  }
   strip.querySelectorAll('.x').forEach(el => {
     el.onclick = () => toggleDrug(el.dataset.drop);
   });
@@ -2278,8 +2913,7 @@ function clearDrugs() {
 
 function resetAll() {
   activeDrugs.clear();
-  userOverrides = {};
-  userOverridesPace = {};
+  clearAllOverrides();
   diseaseOverrides = {};
   diseaseOverridesPace = {};
   syncSlidersFromState();
@@ -2335,7 +2969,16 @@ document.querySelectorAll('[data-disease]').forEach(btn => {
     collapseBtn.title = c ? 'Expand' : 'Collapse';
     try { localStorage.setItem(COLLAPSE_KEY, c ? '1' : '0'); } catch(e) {}
   }
-  try { if (localStorage.getItem(COLLAPSE_KEY) === '1') setCollapsed(true); } catch(e) {}
+  // On a phone the panel is 156px of overlay on a ~364px canvas (43% of the plot, sitting
+  // on phase 3 and the ERP band), so it starts collapsed there unless the user says otherwise.
+  let stored = null;
+  try { stored = localStorage.getItem(COLLAPSE_KEY); } catch(e) {}
+  if (stored === '1') setCollapsed(true);
+  else if (stored === null && window.matchMedia && window.matchMedia('(max-width: 800px)').matches) {
+    panel.classList.add('collapsed');
+    collapseBtn.setAttribute('aria-expanded', 'false');
+    collapseBtn.title = 'Expand';
+  }
   collapseBtn.addEventListener('click', e => { e.stopPropagation(); setCollapsed(!panel.classList.contains('collapsed')); });
   collapseBtn.addEventListener('mousedown', e => e.stopPropagation());
   collapseBtn.addEventListener('touchstart', e => e.stopPropagation(), { passive: true });
@@ -2396,8 +3039,7 @@ function bindSlider(id, valId, key, fmt, isPace) {
   el.addEventListener('input', () => {
     const v = parseFloat(el.value);
     valEl.textContent = fmt(v);
-    if (isPace) userOverridesPace[key] = v;
-    else userOverrides[key] = v;
+    overridesFor(isPace ? 'pace' : cellType)[key] = v;
     clearPreset();
     startTransition();
   });
@@ -2412,9 +3054,10 @@ bindSlider('slApdp', 'slApdpVal', 'apdMult', v => v.toFixed(2) + '×', true);
 bindSlider('slMdp', 'slMdpVal', 'MDP', v => v + ' mV', true);
 bindSlider('slThr', 'slThrVal', 'threshold', v => v + ' mV', true);
 
-// Overlay checkboxes — no rebind needed, render reads them
-['ovGhost','ovPhases','ovErp','ovThreshold','ovEad','ovDad'].forEach(id => {
-  document.getElementById(id).addEventListener('change', () => {});
+// Overlay checkboxes — render reads them; the change just has to wake the loop, because
+// the loop stops while the sweep is paused and nothing is animating.
+['ovGhost','ovPhases','ovErp','ovThreshold','ovEad','ovDad','ovPause'].forEach(id => {
+  document.getElementById(id).addEventListener('change', kick);
 });
 
 // Dark mode
@@ -2423,6 +3066,8 @@ function toggleDark() {
   const isDark = document.body.classList.contains('dark');
   document.getElementById('darkToggle').textContent = isDark ? 'Light Mode' : 'Dark Mode';
   try { localStorage.setItem('cathmath_dark', isDark ? '1' : '0'); } catch(e) {}
+  invalidateStyles();  // the canvas palette is read from CSS custom properties
+  kick();
 }
 try {
   const pref = localStorage.getItem('cathmath_dark');
@@ -2436,16 +3081,22 @@ try {
 window.addEventListener('resize', () => {
   resizeCanvas();
   resizeEcgCanvas();
+  kick();
 });
 
 // INIT
+invalidateStyles();
 resizeCanvas();
 resizeEcgCanvas();
 updateDrugBtns();
 updateActiveStrip();
+// syncSlidersFromState was never called at init, so the pace sliders were only ever right
+// by coincidence of matching HTML value attributes.
+syncSlidersFromState();
 params = calcParams('vent');
 paceParams = calcParams('pace');
-requestAnimationFrame(render);
+updateEcgCaption(false);
+kick();
 
 
 </script>
