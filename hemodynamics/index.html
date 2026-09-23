@@ -2874,7 +2874,13 @@ function calcQpQs() {
     `Qp/Qs = <strong>${ratio.toFixed(2)}</strong> &nbsp;<span class="${cls}" style="font-size:11px">${interp}</span>`;
 }
 
+// analytics: the Gorlin cards are also recomputed programmatically (lesson load, example); only an
+// input event from the user counts as the card being USED. window.event is set for inline oninput=.
+function cmGorlinUsed(target) {
+  if (window.event && window.event.type === 'input') cmTrack('tool_action', { action: 'gorlin', target: target }, 'gorlin:' + target);
+}
 function calcGorlin() {
+  cmGorlinUsed('calcGorlin');
   const co = num('eqGorCO'), hr = num('eqGorHR'), sep = num('eqGorSEP'), grad = num('eqGorGrad'), peak = num('eqGorPeak');
   const out = document.getElementById('eqGorlinResult');
   const r = gorlinValveArea(co, hr, sep, grad, CM.GORLIN_CONST_AORTIC);
@@ -2951,6 +2957,7 @@ function getGorlinCalcHTML() {
 }
 
 function calcGorlinAVA() {
+  cmGorlinUsed('calcGorlinAVA');
   // One Gorlin, one guard set — see gorlinValveArea(). This card keeps its own severity
   // vocabulary and its own result node; only the arithmetic and the refusals are shared.
   const co = num('calcCO'), hr = num('calcHR'), sep = num('calcSEP'), grad = num('calcGrad'), peak = num('calcPeak');
@@ -2987,6 +2994,7 @@ function getGorlinMVACalcHTML() {
 }
 
 function calcGorlinMVA() {
+  cmGorlinUsed('calcGorlinMVA');
   // Same shared Gorlin core as the AVA card, with the mitral constant and DFP in place of SEP.
   // The DFP field had no plausibility bound either, so a DFP typed in milliseconds produced a
   // confident valve area here too.
@@ -3022,9 +3030,11 @@ function calcGorlinMVA() {
 // LESSON SWITCHING
 // ════════════════════════════════════════════════════════════════════
 
+var cmViewed = false;   // analytics: the boot-time switchLesson is the arrival (via: load), later ones are clicks
 function switchLesson(id) {
   if (!LESSONS[id]) return;
   currentLesson = id;
+  cmTrack('module_view', { module_id: id, via: cmViewed ? 'click' : 'load' }); cmViewed = true;
   const lesson = LESSONS[id];
 
   // Update sidebar

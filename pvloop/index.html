@@ -729,6 +729,14 @@
     color: rgba(0,0,0,0.3);
     margin-left: 1px;
   }
+  .idx-row[hidden], .idx-refusal[hidden] { display: none; }
+  .idx-refusal {
+    margin-top: 5px;
+    max-width: 210px;
+    font-size: 10px;
+    line-height: 1.35;
+    color: var(--red);
+  }
   .idx-normal { color: var(--green); }
   .idx-abnormal { color: var(--red); }
   .idx-borderline { color: var(--amber); }
@@ -863,6 +871,7 @@
   body.dark .idx-normal { color: #66bb6a; }
   body.dark .idx-abnormal { color: #ef5350; }
   body.dark .idx-borderline { color: #ffa726; }
+  body.dark .idx-refusal { color: #ef5350; }
   body.dark .state-badge {
     background: rgba(22,26,34,0.88);
     border-color: rgba(255,255,255,0.06);
@@ -1036,21 +1045,21 @@ body.dark .seo-content-body p { color: #c4ccda; }
       </div>
 
       <div class="slider-row">
-        <span class="slider-label">E<sub>a</sub></span>
-        <span class="slider-info" tabindex="0" role="button" aria-label="Parameter definition">ⓘ<span class="tooltip"><b>Arterial Elastance (Afterload)</b><br>Lumped measure of total arterial load on the LV. Integrates SVR, arterial compliance, and heart rate. Higher = more afterload.</span></span>
+        <span class="slider-label">R<sub>s</sub></span>
+        <span class="slider-info" tabindex="0" role="button" aria-label="Parameter definition">ⓘ<span class="tooltip"><b>Systemic Vascular Resistance</b><br>Resistance of the systemic bed between the arterial and venous compartments. 1.07 mmHg·s/mL is 17.8 Wood units, about 1,430 dyn·s/cm⁵ with RAP as the downstream pressure. Arterial elastance E<sub>a</sub> is no longer a slider: it emerges from R<sub>s</sub>, heart rate and arterial compliance and is read out in the panel.</span></span>
         <div class="slider-wrap">
-          <input type="range" id="slEa" aria-label="Arterial elastance Ea (afterload), mmHg per mL" min="0.3" max="6.0" step="0.1" value="1.8" oninput="onParamChange()">
-          <span class="slider-value" id="valEa">1.8</span>
-          <span class="slider-unit">mmHg/mL</span>
+          <input type="range" id="slRs" aria-label="Systemic vascular resistance Rs, mmHg seconds per mL" min="0.3" max="3.0" step="0.01" value="1.07" oninput="onParamChange()">
+          <span class="slider-value" id="valRs">1.07</span>
+          <span class="slider-unit">mmHg·s/mL</span>
         </div>
       </div>
 
       <div class="slider-row">
-        <span class="slider-label">EDV</span>
-        <span class="slider-info" tabindex="0" role="button" aria-label="Parameter definition">ⓘ<span class="tooltip"><b>End-Diastolic Volume (Preload)</b><br>LV volume at end of diastole. Determined by venous return and LV compliance. Higher = more preload (Frank-Starling mechanism).</span></span>
+        <span class="slider-label">V<sub>s</sub></span>
+        <span class="slider-info" tabindex="0" role="button" aria-label="Parameter definition">ⓘ<span class="tooltip"><b>Stressed Blood Volume</b><br>The blood that distends the circulation above its unstressed volume, roughly 15 to 30 percent of total blood volume. Fluids raise it; venodilators and diuretics lower it. End-diastolic volume is no longer a slider: it emerges where venous return meets the EDPVR and is read out in the panel.</span></span>
         <div class="slider-wrap">
-          <input type="range" id="slEDV" aria-label="End-diastolic volume (preload), mL" min="60" max="250" step="1" value="125" oninput="onParamChange()">
-          <span class="slider-value" id="valEDV">125</span>
+          <input type="range" id="slVs" aria-label="Stressed blood volume Vs (preload), mL" min="250" max="2600" step="5" value="810" oninput="onParamChange()">
+          <span class="slider-value" id="valVs">810</span>
           <span class="slider-unit">mL</span>
         </div>
       </div>
@@ -1067,9 +1076,9 @@ body.dark .seo-content-body p { color: #c4ccda; }
 
       <div class="slider-row">
         <span class="slider-label">HR</span>
-        <span class="slider-info" tabindex="0" role="button" aria-label="Parameter definition">ⓘ<span class="tooltip"><b>Heart Rate</b><br>Sets cycle length. Because Ea = R x HR/60 (afterload rises WITH rate at fixed resistance) and diastolic filling time shortens as rate rises, moving this slider also moves Ea and EDV — so cardiac output does <b>not</b> rise in proportion to rate.</span></span>
+        <span class="slider-info" tabindex="0" role="button" aria-label="Parameter definition">ⓘ<span class="tooltip"><b>Heart Rate</b><br>Sets cycle length. The engine runs the beat: a faster rate shortens diastole so filling falls short, and raises E<sub>a</sub> (about R<sub>s</sub> × HR/60), so cardiac output rises <b>less</b> than in proportion to rate and falls again at high rates.</span></span>
         <div class="slider-wrap">
-          <input type="range" id="slHR" aria-label="Heart rate, beats per minute" min="40" max="150" step="1" value="70" oninput="onRateChange()">
+          <input type="range" id="slHR" aria-label="Heart rate, beats per minute" min="40" max="150" step="1" value="70" oninput="onParamChange()">
           <span class="slider-value" id="valHR">70</span>
           <span class="slider-unit">bpm</span>
         </div>
@@ -1321,13 +1330,25 @@ body.dark .seo-content-body p { color: #c4ccda; }
         <button class="idx-size-btn" onclick="changeIdxSize(-1)" title="Smaller">&#8722;</button>
         <button class="idx-size-btn" onclick="changeIdxSize(1)" title="Larger">&#43;</button>
       </div>
+      <div class="idx-row"><span class="idx-label">EDV</span><span><span class="idx-val" id="outEDV">—</span><span class="idx-unit"> mL</span></span></div>
       <div class="idx-row"><span class="idx-label">SV</span><span><span class="idx-val" id="outSV">—</span><span class="idx-unit"> mL</span></span></div>
+      <div class="idx-row" id="rowFwd" hidden><span class="idx-label">Fwd SV</span><span><span class="idx-val" id="outFwd">—</span><span class="idx-unit"> mL</span></span></div>
       <div class="idx-row"><span class="idx-label">EF</span><span><span class="idx-val" id="outEF">—</span><span class="idx-unit"> %</span></span></div>
       <div class="idx-row"><span class="idx-label">CO</span><span><span class="idx-val" id="outCO">—</span><span class="idx-unit"> L/min</span></span></div>
+      <div class="idx-row" id="rowDevice" hidden><span class="idx-label">Device</span><span><span class="idx-val" id="outDevice">—</span><span class="idx-unit"> L/min</span></span></div>
+      <div class="idx-row"><span class="idx-label">Ao</span><span><span class="idx-val" id="outAo">—</span><span class="idx-unit"> mmHg</span></span></div>
+      <div class="idx-row" id="rowAug" hidden><span class="idx-label">Aug dia</span><span><span class="idx-val" id="outAug">—</span><span class="idx-unit"> mmHg</span></span></div>
+      <div class="idx-row"><span class="idx-label">MAP</span><span><span class="idx-val" id="outMAP">—</span><span class="idx-unit"> mmHg</span></span></div>
       <div class="idx-row"><span class="idx-label">ESP</span><span><span class="idx-val" id="outESP">—</span><span class="idx-unit"> mmHg</span></span></div>
       <div class="idx-row"><span class="idx-label">EDP</span><span><span class="idx-val" id="outEDP">—</span><span class="idx-unit"> mmHg</span></span></div>
-      <div class="idx-row"><span class="idx-label">SW</span><span><span class="idx-val" id="outSW">—</span><span class="idx-unit"> mmHg·mL</span></span></div>
+      <div class="idx-row"><span class="idx-label">PCWP</span><span><span class="idx-val" id="outPCWP">—</span><span class="idx-unit"> mmHg</span></span></div>
+      <div class="idx-row"><span class="idx-label">RAP</span><span><span class="idx-val" id="outRAP">—</span><span class="idx-unit"> mmHg</span></span></div>
+      <div class="idx-row" id="rowGrad" hidden><span class="idx-label">AV ΔP</span><span><span class="idx-val" id="outGrad">—</span><span class="idx-unit"> mmHg</span></span></div>
+      <div class="idx-row" id="rowRVol" hidden><span class="idx-label">RVol</span><span><span class="idx-val" id="outRVol">—</span><span class="idx-unit"> mL</span></span></div>
+      <div class="idx-row"><span class="idx-label">E<sub>a</sub></span><span><span class="idx-val" id="outEa">—</span><span class="idx-unit"> mmHg/mL</span></span></div>
       <div class="idx-row"><span class="idx-label">Ea/Ees</span><span><span class="idx-val" id="outCoupling">—</span></span></div>
+      <div class="idx-row"><span class="idx-label">SW</span><span><span class="idx-val" id="outSW">—</span><span class="idx-unit"> mmHg·mL</span></span></div>
+      <div class="idx-refusal" id="outRefusal" role="note" hidden></div>
     </div>
 
     <!-- STATE SUMMARY (top-left) -->
@@ -1411,189 +1432,692 @@ body.dark .seo-content-body p { color: #c4ccda; }
 })();
 // </shared:analytics>
 
-// ============================================================
-// CathMath PV Loop Simulator — Phase 1 Core Engine
+// <shared:engine v1>
+// GENERATED FROM shared/engine/cathmath-engine.js BY scripts/sync-shared.mjs — DO NOT EDIT HERE.
+// Edit shared/engine/cathmath-engine.js, then run: node scripts/sync-shared.mjs --write
+// ═══════════════════════════════════════════════════════════════════════════
+// cathmath-engine.js — CathMath closed-loop cardiovascular engine (v1)
 //
-// MATHEMATICAL MODEL — what the code does, not what it resembles.
-// This is NOT a time-varying-elastance integration: there is no activation function e(t)
-// and no state integrated over time. End systole is solved in CLOSED FORM as the
-// intersection of the ESPVR (P = Ees*(V - V0), Suga & Sagawa 1974) with the arterial
-// elastance line; end diastole is read off the exponential EDPVR; the four phases between
-// those two corners are drawn geometrically. Time enters in exactly two places, and both
-// are explicit: the phase DURATIONS that pace the animated dot (cycleTiming), and the
-// rate coupling that moves afterload and preload when the rate changes (coupleToRate).
-// ============================================================
+// CANONICAL SOURCE. This file is inlined into tool pages by scripts/sync-shared.mjs between
+// the "shared:engine" open/close comment markers (see that script's header for the exact
+// strings), so every tool stays one self-contained HTML file with zero runtime dependencies.
+// Edit HERE, then run: node scripts/sync-shared.mjs --write. Tested by scripts/test-engine.mjs.
+//
+// It is a plain classic script (no import/export): it declares ONE global, CathMathEngine,
+// and touches nothing else — no DOM, no storage, no timers, no Math.random.
+//
+// WHAT IT IS
+//   A time-varying-elastance left ventricle coupled to a lumped systemic circulation, run as a
+//   CLOSED LOOP to steady state. Nothing that used to be a slider on the PV-loop page is
+//   prescribed any more: arterial elastance Ea EMERGES from systemic resistance, heart rate
+//   and arterial compliance; end-diastolic volume EMERGES from venous return meeting the
+//   EDPVR; pulse pressure EMERGES from stroke volume meeting arterial compliance.
+//
+//   Compartments (volumes are the state; pressures are algebraic):
+//     LV         P_lv = Ped(V) + e(t)·[Pes(V) − Ped(V)]    (Suga–Sagawa / Burkhoff form)
+//     arterial   P_a  = V_a / Ca                          (Windkessel; + IABP displacement)
+//     sys. veins P_v  = V_v / Cv                          (systemic venous reservoir; RAP proxy)
+//     pulmonary  P_p  = V_p / Cp                          (PA + pulmonary veins + LA lumped;
+//                                                          the LV filling reservoir; PCWP proxy)
+//   Flows: aortic outflow (LV → arteries, Gorlin orifice); systemic runoff (arteries → veins,
+//   Rs); a bronchial bypass (arteries → pulmonary reservoir, ~2 % of flow); the RIGHT HEART as
+//   a Guyton cardiac-function curve — a continuous flow from the systemic veins into the
+//   pulmonary reservoir that rises with right atrial pressure and plateaus (there is no RV
+//   chamber and no RV loop); mitral inflow (pulmonary reservoir → LV, linear venous R in
+//   series with a Gorlin orifice); optional regurgitant orifices (MR: LV → pulmonary
+//   reservoir, AR: arteries → LV; simplified-Bernoulli EROA); optional devices (transvalvular
+//   pump LV → arteries, VA-ECMO systemic veins → arteries, IABP as a volume displaced into
+//   the arterial compartment during diastole).
+//
+//   Why a fourth compartment: with a single venous reservoir of 100 mL/mmHg the LV filling
+//   pressure could not move — an Impella that shifted 40 mL to the arteries lowered it by
+//   0.4 mmHg, mitral stenosis raised it by nothing, and VA-ECMO distended nothing. The stiff
+//   pulmonary reservoir behind a flow-limited right heart is what lets PCWP rise in MS and
+//   fall under LV unloading, and the bronchial bypass is what distends a non-ejecting LV on
+//   ECMO. Both are the physiology, not a tuning device.
+//
+// SOLVER
+//   Fixed-step explicit (forward) Euler, dt = 0.2 ms. Steady state = five beat-to-beat
+//   metrics (EDV, ESV, MAP, mean venous pressure) each changing by less than the tolerances
+//   below on two consecutive beats, after at least MIN_BEATS beats; capped at MAX_BEATS and
+//   flagged if the cap is hit. The reported beat is the last one integrated.
+//
+// PRINTED-NUMBER LAW
+//   report.printed is the ONLY block a page may show. Each operand is rounded ONCE where it
+//   becomes text and every downstream number is computed from those rounded operands:
+//   SV = EDV − ESV, EF = SV/EDV, CO = (SVfwd − RVolAR) × HR (+ device flow), PP = SBP − DBP, Ea = ESP/SV, Ea/Ees from
+//   the printed Ea and Ees. report.raw carries the doubles for tests only.
+//
+// REFUSALS
+//   report.flags names every regime in which a printed number would be a guess: no aortic
+//   ejection (pump-only support), pump suction, ECMO drain of an empty reservoir, an ESPVR
+//   that falls below the EDPVR (contraction cannot generate pressure), EDV at or below V0,
+//   non-convergence, and numerical instability (an extreme EDPVR the explicit step cannot
+//   follow — the beat is abandoned and every printed operand is null). A page must print the
+//   refusal, not the number.
+//
+// STRUCTURE — learned from, not copied from, ARTHUR (github.com/internalempire/arthur,
+// MIT, src/model/circulation.js): volumes as the conserved state, pressures algebraic,
+// valves as flow laws on pressure differences, a venous-tone term that moves unstressed
+// volume rather than compliance, per-beat trackers closed at the beat boundary, and
+// validity latches instead of clamps that hide the problem.
+// ═══════════════════════════════════════════════════════════════════════════
+var CathMathEngine = (function () {
+  'use strict';
 
-// ---- CONSTANTS ----
-// EDPVR scaling constant. At the previous 0.03 every LVEDP the tool printed was 5-20x too
-// low — baseline 0.5 mmHg against a normal 8-12, decompensated HFrEF 1.3 against 20-25, and
-// tamponade 2.0 on a preset whose own text claims diastolic equalisation near 20. EDP is a
-// headline index in the overlay and the ED point is drawn at that pressure, so the whole
-// diastolic half of the loop sat on the floor. 0.54 puts the baseline at 9.0 mmHg.
-const A_EDPVR = 0.54; // EDPVR scaling constant (mmHg)
+  var VERSION = '1.0.0';
 
-// ---- PRINTED-NUMBER LAW ----
-// An operand is rounded ONCE, where it becomes text, and every result is computed from
-// those same rounded operands. The overlay prints SV, EF and CO side by side and the HR
-// slider's own tooltip states CO = SV x HR, so CO has to be the product of the two
-// numbers on the screen. decRound is the canonical implementation (rhc_calculator.html):
-// it rounds the DECIMAL a double denotes, by string carry, because toFixed rounds the
-// binary value and takes exact halves like 14.35 down.
-function decRound(val, dp) {
-  if (val === 0) return 0;
-  const neg = val < 0;
-  const snapped = Number(val.toPrecision(15));
-  const parts = Math.abs(snapped).toExponential().split('e');
-  const digits = parts[0].replace('.', '');
-  const keep = Number(parts[1]) + 1 + dp;
-  if (keep >= digits.length) return snapped;
-  if (keep < 0) return 0;
-  let out = keep === 0 ? '0' : digits.slice(0, keep);
-  if (digits.charCodeAt(keep) >= 53 /* '5' */) {
-    const a = out.split('');
-    let i = a.length - 1;
-    for (; i >= 0 && a[i] === '9'; i--) a[i] = '0';
-    if (i < 0) a.unshift('1');
-    else a[i] = String.fromCharCode(a[i].charCodeAt(0) + 1);
-    out = a.join('');
+  // ---- ROUNDING (rhc_calculator.html / echocalc convention) -----------------------------
+  // decRound rounds the DECIMAL a double denotes, by string carry, because toFixed rounds
+  // the binary value and takes exact halves like 14.35 down.
+  function decRound(val, dp) {
+    if (val === 0) return 0;
+    var neg = val < 0;
+    var snapped = Number(val.toPrecision(15));
+    var parts = Math.abs(snapped).toExponential().split('e');
+    var digits = parts[0].replace('.', '');
+    var keep = Number(parts[1]) + 1 + dp;
+    if (keep >= digits.length) return snapped;
+    if (keep < 0) return 0;
+    var out = keep === 0 ? '0' : digits.slice(0, keep);
+    if (digits.charCodeAt(keep) >= 53 /* '5' */) {
+      var a = out.split('');
+      var i = a.length - 1;
+      for (; i >= 0 && a[i] === '9'; i--) a[i] = '0';
+      if (i < 0) a.unshift('1');
+      else a[i] = String.fromCharCode(a[i].charCodeAt(0) + 1);
+      out = a.join('');
+    }
+    var padded = out.padStart(dp + 1, '0');
+    var t = dp === 0 ? out : padded.slice(0, -dp) + '.' + padded.slice(-dp);
+    return Number(neg ? '-' + t : t);
   }
-  const padded = out.padStart(dp + 1, '0');
-  const t = dp === 0 ? out : padded.slice(0, -dp) + '.' + padded.slice(-dp);
-  return Number(neg ? '-' + t : t);
-}
-function q(val, dp) {
-  if (val === null || val === undefined || isNaN(val) || !isFinite(val)) return null;
-  return decRound(val, dp);
-}
+  function q(val, dp) {
+    if (val === null || val === undefined || isNaN(val) || !isFinite(val)) return null;
+    return decRound(val, dp);
+  }
 
-// ---- CARDIAC TIMING ----
-// Phase durations in SECONDS, derived from the rate. The animation used to advance by a
-// fixed increment per FRAME (0.008), so the dot circled at 28.8 bpm on a 60 Hz display and
-// 57.6 bpm on a 120 Hz phone and never at the rate on the slider; and it advanced by array
-// index, so it spent 20% of the cycle in isovolumic contraction and 27% in filling — the
-// opposite of the lesson. Both now come from here.
-//   LVET  Weissler's regression for ejection time: LVET(ms) = 413 - 1.7 x HR
-//   IVCT  isovolumic contraction, ~50 ms, near-constant across rates
-//   IVRT  isovolumic relaxation, ~80 ms, near-constant across rates
-//   fill  the remainder of the RR interval — the term tachycardia actually eats
-// At HR 70 that is 6% / 34% / 9% / 51%, which is the textbook division.
-const IVCT_S = 0.050, IVRT_S = 0.080, FILL_MIN_S = 0.060;
-function cycleTiming(HR) {
-  const hr = Math.max(20, Math.min(220, HR || 70));
-  const rr = 60 / hr;
-  const lvet = Math.max(0.12, (413 - 1.7 * hr) / 1000);
-  const fill = Math.max(FILL_MIN_S, rr - IVCT_S - lvet - IVRT_S);
-  return { rr, ivct: IVCT_S, lvet, ivrt: IVRT_S, fill, total: IVCT_S + lvet + IVRT_S + fill };
-}
+  // ---- CONSTANTS, each labelled MEASURED / DERIVED / FITTED ------------------------------
+  // MEASURED = taken from a cited measurement or published model table.
+  // DERIVED  = arithmetic from other constants, shown.
+  // FITTED   = calibrated to a stated observation; the observation is the claim, not the number.
+  var C = Object.freeze({
+    // — Left ventricle —
+    EES: 2.5,        // mmHg/mL. MEASURED: CVSim 1.0 LV end-systolic compliance 0.40 mL/mmHg
+                     //   (MIT-LCP/cvsim, 6_comp_backend/main/initial.c, c_sys[1]) = 2.5 mmHg/mL;
+                     //   also the site's existing baseline (pvloop/CLAUDE.md).
+    V0: 10,          // mL. FITTED: ESPVR volume intercept placing baseline ESV ≈ 55-60 mL at
+                     //   ESP ≈ 115-120 with Ees 2.5 (pvloop baseline since 2026-08).
+    EDPVR_A: 0.54,   // mmHg. FITTED (2026-08-11): with B below, LVEDP = 9.0 mmHg at EDV 125 mL
+                     //   (normal 8-12); the pre-2026-08 value 0.03 printed every EDP 5-20x low.
+    EDPVR_B: 0.025,  // 1/mL. FITTED: exponential EDPVR stiffness giving EDP 9 at 125 mL and
+                     //   ≈22 at 180 mL (decompensated HFrEF range), Burkhoff-form EDPVR.
+    TS_COEF: 0.33,   // s·s^-1/2. FITTED: time to peak elastance Ts = 0.33·√RR (0.305 s at
+                     //   HR 70). CVSim uses 0.30 (initial.c system.T[1]); 0.33 lengthens
+                     //   ejection to ~215 ms at HR 70 and puts the cardiac-output peak of a
+                     //   rate sweep between 100 and 120 bpm with a fall by 150 (pacing
+                     //   plateau). Residual: Weissler's LVET regression (413 − 1.7·HR =
+                     //   294 ms at 70) is still longer than the ejection this form produces.
+                     //   e(t) peaks at Ts and relaxes over Ts/2 (CVSim form).
+    // — Systemic circulation —
+    CA: 1.3,         // mL/mmHg. FITTED: total arterial compliance such that SV ≈ 70 mL at
+                     //   HR 70 draws 120/80 (pulse pressure 40). Consistent with Chemla et al.
+                     //   Am J Physiol 1998;274:H500 (SV/PP ≈ 1.6-1.9 mL/mmHg in adults) and
+                     //   ARTHUR's 1.35 mL/mmHg.
+    RS: 1.07,        // mmHg·s/mL (PRU). DERIVED: (MAP 93 − RAP 4) / (5.0 L/min = 83.3 mL/s)
+                     //   = 1.068 PRU. CVSim's four parallel beds (3.9, 4.1, 3.0, 8.0 PRU)
+                     //   total 1.04 PRU.
+    CV: 100,         // mL/mmHg. MEASURED (model table): CVSim 6-compartment systemic venous
+                     //   compliance 100 mL/mmHg (Heldt et al. J Appl Physiol 2002;92:1239);
+                     //   the 21-compartment beds sum to 92 mL/mmHg.
+    CP: 20,          // mL/mmHg. FITTED: pulmonary artery + pulmonary veins + left atrium as one
+                     //   reservoir. CVSim's PA (4.3) + PV (9.0) compartments give 13 mL/mmHg;
+                     //   20 adds the LA and keeps the within-beat swing of the filling
+                     //   pressure near 3-4 mmHg (a physiologic v-wave / y-descent) rather
+                     //   than the 6 mmHg that 13 produced.
+    VS: 810,         // mL. FITTED: total stressed volume (LV above V0 + arterial + systemic
+                     //   venous + pulmonary) landing the golden state at HR 70: EDV ≈ 125,
+                     //   PCWP proxy 8-12, RAP proxy ≈ 4, MAP 85-100. It is close to Magder's
+                     //   ~15 % of a 5 L blood volume (≈ 750 mL); the 30 % framing (Crit Care
+                     //   2022) would be ~1500 mL — the open question in plans/recon.
+    RV: 0.02,        // mmHg·s/mL. FITTED: pulmonary-reservoir-to-LV inflow resistance giving
+                     //   early filling of ~300 mL/s at a 3-4 mmHg gradient (normal mitral
+                     //   E-wave, ASE 2016) and complete filling at HR 70 but not at HR 150.
+    // — Right heart as a Guyton cardiac-function curve —
+    QRV_MAX: 200,    // mL/s (12 L/min). FITTED: plateau of the resting cardiac-function curve
+                     //   (Guyton; a normal right heart at rest cannot be driven past roughly
+                     //   twice its resting output by filling alone).
+    PRV_K: 7.4,      // mmHg. DERIVED: with Q = QRV_MAX·(1 − e^(−RAP/k)), the anchor "5.0 L/min
+                     //   (83.3 mL/s) at RAP 4 mmHg" gives 1 − e^(−4/k) = 0.4167 → k = 7.42.
+    R_BRONCH: 50,    // mmHg·s/mL. DERIVED: bronchial + thebesian flow ≈ 1-2 % of cardiac
+                     //   output (Deffebach et al. Am Rev Respir Dis 1987;135:463 — bronchial
+                     //   flow ≈ 1 % of CO); (MAP 92 − PCWP 9) / 50 PRU = 1.7 mL/s = 0.1
+                     //   L/min = 2 % of 5 L/min. This is the path that fills a non-ejecting
+                     //   LV on VA-ECMO.
+    // — Valves —
+    GORLIN_AO: 44.3, // MEASURED: Gorlin & Gorlin, Am Heart J 1951;41:1 — aortic constant,
+                     //   AVA (cm²) = Q (mL/s) / (44.3·√ΔP). Used as ΔP = (Q / (44.3·AVA))².
+    GORLIN_MV: 37.7, // DERIVED: 44.3 × 0.85 (the Gorlin mitral empirical constant).
+    BERNOULLI: 50,   // DERIVED: simplified Bernoulli ΔP = 4v² (v in m/s) → v = 50·√ΔP cm/s,
+                     //   so regurgitant Q (mL/s) = 50 · EROA (cm²) · √ΔP. This is the
+                     //   definition of an effective regurgitant orifice (ASE 2017).
+    R_VALVE: 0.003,  // mmHg·s/mL. FITTED (numerical): a small linear term in series with the
+                     //   orifice law so dQ/dΔP is finite at ΔP → 0 (explicit Euler otherwise
+                     //   chatters at valve opening). 0.003 PRU × 300 mL/s = 0.9 mmHg.
+    AVA: 4.0,        // cm². MEASURED: normal aortic valve area 3-4 cm² (ACC/AHA 2020 VHD).
+    MVA: 5.0,        // cm². MEASURED: normal mitral valve area 4-6 cm² (ACC/AHA 2020 VHD).
+    // — Devices —
+    IABP_VOL: 40,    // mL. MEASURED: standard adult balloon volume (40 cc; Getinge/Datascope
+                     //   Sensation Plus 40 cc, product labelling).
+    IABP_RAMP: 0.03, // s. FITTED (numerical): inflation/deflation ramp so the arterial
+                     //   volume step is not a discontinuity at dt = 0.2 ms.
+    PUMP_HEAD_REF: 60,    // mmHg. FITTED: the head at which a transvalvular pump delivers its
+                          //   nominal flow (mid-diastolic aortic-minus-LV gradient).
+    PUMP_HEAD_SLOPE: 0.005, // per mmHg. FITTED to the shape of the Impella pressure-flow
+                          //   chart: flow falls roughly linearly with head, ≈ −30 % per 60
+                          //   mmHg (1.3× nominal at zero head, 0.7× at 120 mmHg).
+    PUMP_SUCTION_V: 15,   // mL above V0 over which pump flow is throttled to zero. FITTED
+                          //   (numerical guard): a pump cannot draw the cavity below its
+                          //   unstressed volume; the throttle latches the `suction` flag.
+    ECMO_DRAIN_V: 60,     // mL of venous stressed volume over which ECMO drainage is
+                          //   throttled. FITTED (numerical guard); latches `drain`.
+    // — Solver —
+    DT: 0.0002,      // s. DERIVED: the fastest time constant is R_VALVE × (LV‖arterial
+                     //   capacitance) = 0.003 × 0.31 ≈ 0.9 ms; 0.2 ms keeps dt/τ < 0.25.
+    SAMPLE_EVERY: 10,// steps per stored loop sample (2 ms → ~430 points per beat at HR 70).
+    MIN_BEATS: 6,
+    MAX_BEATS: 160,
+    TOL_V: 0.05,     // mL, beat-to-beat change in EDV and ESV
+    TOL_P: 0.05,     // mmHg, beat-to-beat change in MAP and mean venous pressure
+  });
 
-// Filling is approximately exponential and strongly front-loaded: early rapid filling moves
-// most of the stroke volume inside the first ~150 ms, diastasis adds little. A time constant
-// of 0.10 s reproduces that (78% filled at 150 ms, essentially complete by 400 ms). The
-// share of the achievable end-diastolic volume a diastole of length t reaches is
-// 1 - exp(-t / TAU_FILL), so at rest the ventricle is effectively full and only tachycardia
-// bites — which is the point.
-const TAU_FILL = 0.10;
-function fillingFraction(HR) {
-  return 1 - Math.exp(-cycleTiming(HR).fill / TAU_FILL);
-}
+  // ---- BAROREFLEX HOOK (OFF by default; Phase 3 uses it) ---------------------------------
+  // Ported from CVSim 1.0 (MIT-LCP/cvsim, 6_comp_backend/main/initial.c and sim/reflex.c),
+  // the arterial baroreflex of Heldt, Shim, Kamm & Mark, J Appl Physiol 2002;92:1239-54.
+  // CVSim senses a saturating error  s = 18·atan((MAP − 91)/18)  mmHg and drives four
+  // effectors through unit-area impulse responses; at steady state only the static gains
+  // matter, and those are what is ported. Signs are CVSim's: a pressure ABOVE the set point
+  // (s > 0) lengthens RR, lowers resistance, raises unstressed venous volume (lowers Vs) and
+  // raises end-systolic compliance (lowers Ees).
+  var BARO = Object.freeze({
+    setPoint: 91,    // mmHg. MEASURED: CVSim arterial set point (reflex.set[0][0]).
+    scale: 18,       // mmHg. MEASURED: CVSim arctan scaling factor (reflex.set[1][0]).
+    gRRsymp: 0.012,  // s/mmHg. MEASURED: CVSim RR sympathetic gain (reflex.rr[0][0]); the
+                     //   2002 paper prints 9 ms/mmHg (DeBoer), the shipped code 12.
+    gRRpara: 0.009,  // s/mmHg. MEASURED: CVSim RR parasympathetic gain (reflex.rr[1][0]).
+    gRs: -0.0356,    // PRU/mmHg on the LUMPED resistance. DERIVED: CVSim applies −0.13
+                     //   PRU/mmHg to each of four parallel beds (3.9, 4.1, 3.0, 8.0 PRU;
+                     //   total 1.043); d(R_total)/ds = R_total² · Σ(−0.13 / R_i²)
+                     //   = 1.088 × (−0.13) × 0.2519 = −0.0356 PRU/mmHg (−3.4 %/mmHg).
+    gVs: 26.6,       // mL/mmHg. DERIVED: sum of CVSim venous-tone gains 5.3 + 1.3 + 13.3 +
+                     //   6.7 (reflex.vt[0..3][0], α = 1). Positive s moves this much volume
+                     //   from stressed to unstressed.
+    gCes: 0.014,     // mL/mmHg per mmHg. MEASURED: CVSim LV contractility gain
+                     //   (reflex.c[1][0]) on end-systolic COMPLIANCE 1/Ees.
+    maxIter: 30, tolS: 0.1,    // secant on the sensed error s (mmHg); 0.1 is twice the steady-
+                               // state solver's own MAP tolerance, so the root is resolvable
+  });
 
-// ---- RATE COUPLING ----
-// Heart rate used to appear exactly once in the whole model, as a multiplier in
-// CO = SV x HR, so doubling the rate doubled cardiac output with a bit-identical loop —
-// no filling penalty, no afterload consequence. Two couplings fix that, and both are
-// exact ratios, so the mapping is analytically invertible:
+  function defaults() {
+    return {
+      Ees: C.EES, V0: C.V0, A: C.EDPVR_A, B: C.EDPVR_B, HR: 70,
+      Ca: C.CA, Rs: C.RS, Cv: C.CV, Cp: C.CP, Vs: C.VS, Rv: C.RV,
+      rvGain: 1,     // multiplier on the right-heart function curve (1 = normal RV)
+      AVA: C.AVA, MVA: C.MVA, eroaMR: 0, eroaAR: 0,
+      pumpFlow: 0,   // L/min nominal transvalvular pump flow (Impella-type), LV → arteries
+      ecmoFlow: 0,   // L/min VA-ECMO flow, venous reservoir → arteries
+      iabpVol: 0,    // mL balloon displacement (40 = standard adult IABP), 0 = off
+      baro: { on: false },
+    };
+  }
+
+  // ---- ACTIVATION e(t) — CVSim / Heldt 2002 form --------------------------------------
+  function activation(t, Ts) {
+    if (t <= 0 || t >= 1.5 * Ts) return 0;
+    if (t <= Ts) return 0.5 * (1 - Math.cos(Math.PI * t / Ts));
+    return 0.5 * (1 + Math.cos(2 * Math.PI * (t - Ts) / Ts));
+  }
+
+  // Forward flow through a valve: ΔP = R·Q + (Q / (G·A))², solved for Q ≥ 0.
+  function orificeFlow(dp, R, kq) {
+    if (dp <= 0) return 0;
+    if (kq <= 0) return dp / R;
+    return (-R + Math.sqrt(R * R + 4 * kq * dp)) / (2 * kq);
+  }
+  function clamp(x, lo, hi) { return x < lo ? lo : (x > hi ? hi : x); }
+
+  // The cold start. The LV is seeded at 120 mL or, when the EDPVR is stiffer than that
+  // allows, at the volume where the EDPVR reads 10 mmHg (a fixed 120 mL at B 0.10 and V0 10
+  // is 32,000 mmHg on the EDPVR, and the first step blows up). Small stressed volumes share
+  // the remainder out so the venous reservoir never starts negative. At the defaults this is
+  // exactly the old {120, 120, 180} start, so no golden number moves.
+  function freshState(p) {
+    var total = p.Vs + p.V0;
+    var Vlv = Math.min(120, p.V0 + Math.log(1 + 10 / p.A) / p.B);
+    if (Vlv < p.V0 + 5) Vlv = p.V0 + 5;
+    var rest = total - Vlv, Va = 120, Vp = 180;
+    if (rest < 300) { Va = rest * 0.4; Vp = rest * 0.5; }
+    return { Vlv: Vlv, Va: Va, Vp: Vp, Vv: total - Vlv - Va - Vp, t: 0, iabpS: 0 };
+  }
+
+  // ---- ONE BEAT --------------------------------------------------------------------------
+  // Integrates from t = 0 (activation onset) to t = RR, returning the per-beat trackers and
+  // the sampled loop. `st` is mutated (volumes carried into the next beat).
+  function runBeat(p, st, wantSamples) {
+    var dt = C.DT;
+    var RR = 60 / p.HR;
+    var Ts = C.TS_COEF * Math.sqrt(RR);
+    var n = Math.round(RR / dt);
+    var kAV = 1 / Math.pow(C.GORLIN_AO * Math.max(0.05, p.AVA), 2);
+    var kMV = 1 / Math.pow(C.GORLIN_MV * Math.max(0.05, p.MVA), 2);
+    var pumpNom = p.pumpFlow * 1000 / 60;   // mL/s
+    var ecmoNom = p.ecmoFlow * 1000 / 60;
+    var iabpVol = p.iabpVol || 0;
+
+    var Vlv = st.Vlv, Va = st.Va, Vv = st.Vv, Vp = st.Vp, iabpS = st.iabpS || 0;
+    var sumPa = 0, sumPv = 0, sumPp = 0, sumPlv = 0, SBP = -1e9, DBP = 1e9;
+    var qAv = 0, qMr = 0, qAr = 0, qPump = 0, qEcmo = 0, qMv = 0;
+    var ejTime = 0, gradSum = 0, ejected = false, inEj = false;
+    var maxV = -1e9, maxVi = 0;
+    var edp = 0;   // LV pressure at activation onset (t = 0): the catheter-lab LVEDP
+    var esRatio = -1e9, esV = 0, esP = 0, esI = 0;
+    var sbpNative = -1e9, augDia = -1e9;
+    var flags = { suction: false, drain: false, pressureDomain: false, unstable: false };
+    var samples = wantSamples ? [] : null;
+    var rvMax = C.QRV_MAX * (p.rvGain > 0 ? p.rvGain : 0);
+    var i, t, e, dv, Ped, Pes, Pact, Plv, Pa, Pv, Pp, Qmv, Qmr, Qav, Qar, Qs, Qbr, Qrv, Qp, Qe, head, sc;
+
+    for (i = 0; i < n; i++) {
+      t = i * dt;
+      e = activation(t, Ts);
+      dv = Vlv - p.V0;
+      Ped = p.A * (Math.exp(p.B * dv) - 1);
+      Pes = p.Ees * dv;
+      if (dv > 0 && Pes < Ped) flags.pressureDomain = true;
+      Pact = Pes > Ped ? Pes : Ped;
+      Plv = Ped + e * (Pact - Ped);
+      if (i === 0) edp = Plv;
+
+      // IABP: deflate at activation onset, inflate at aortic valve closure (or, if the valve
+      // never opens under pump support, once relaxation is under way).
+      if (iabpVol > 0) {
+        var target = (t < 0.5 * Ts) ? 0 : ((ejected && !inEj) || t > 1.25 * Ts ? 1 : 0);
+        iabpS += clamp(target - iabpS, -dt / C.IABP_RAMP, dt / C.IABP_RAMP);
+      } else iabpS = 0;
+
+      Pa = (Va + iabpVol * iabpS) / p.Ca;
+      Pv = Vv / p.Cv;
+      Pp = Vp / p.Cp;
+
+      Qmv = Pp > Plv ? orificeFlow(Pp - Plv, p.Rv, kMV) : 0;
+      Qmr = (p.eroaMR > 0 && Plv > Pp) ? C.BERNOULLI * p.eroaMR * Math.sqrt(Plv - Pp) : 0;
+      Qav = Plv > Pa ? orificeFlow(Plv - Pa, C.R_VALVE, kAV) : 0;
+      Qar = (p.eroaAR > 0 && Pa > Plv) ? C.BERNOULLI * p.eroaAR * Math.sqrt(Pa - Plv) : 0;
+      Qs = (Pa - Pv) / p.Rs;
+      Qbr = Pa > Pp ? (Pa - Pp) / C.R_BRONCH : 0;
+      // Right heart: Guyton cardiac-function curve on right atrial (systemic venous) pressure.
+      Qrv = Pv > 0 ? rvMax * (1 - Math.exp(-Pv / C.PRV_K)) : 0;
+
+      Qp = 0;
+      if (pumpNom > 0) {
+        head = Pa - Plv;
+        Qp = clamp(pumpNom * (1 + C.PUMP_HEAD_SLOPE * (C.PUMP_HEAD_REF - head)), 0, 1.5 * pumpNom);
+        sc = clamp(dv / C.PUMP_SUCTION_V, 0, 1);
+        if (sc < 1) flags.suction = true;
+        Qp *= sc;
+      }
+      Qe = 0;
+      if (ecmoNom > 0) {
+        sc = clamp(Vv / C.ECMO_DRAIN_V, 0, 1);
+        if (sc < 1) flags.drain = true;
+        Qe = ecmoNom * sc;
+      }
+
+      // Volume conservation: the four right-hand sides sum to zero.
+      Vlv += (Qmv - Qav + Qar - Qmr - Qp) * dt;
+      Va  += (Qav + Qp + Qe - Qar - Qs - Qbr) * dt;
+      Vv  += (Qs - Qrv - Qe) * dt;
+      Vp  += (Qrv + Qbr + Qmr - Qmv) * dt;
+
+      // Instability latch. The exponential EDPVR is unbounded, so an extreme pair such as
+      // B 0.10 with a stressed volume of 2.6 L asks for filling pressures in the millions of
+      // mmHg and flows the explicit step cannot follow (the 2026-09-22 headless drive printed
+      // EDV −7,844,250 at the all-max slider corner). Any volume or pressure outside a band no
+      // physiology reaches ends the beat here and latches `unstable`; solve() then prints
+      // nothing from it. A latch, not a clamp: a clamp would print a number.
+      if (!(Vlv > -1 && Vlv < 4000 && Va > -1 && Vv > -1 && Vp > -1 && Plv < 1500 && Plv > -100 && Pa < 1500)) {
+        flags.unstable = true;
+        break;
+      }
+
+      // Trackers.
+      sumPa += Pa; sumPv += Pv; sumPp += Pp; sumPlv += Plv;
+      if (Pa > SBP) SBP = Pa;
+      if (Pa < DBP) DBP = Pa;
+      if (iabpS < 0.5) { if (Pa > sbpNative) sbpNative = Pa; }
+      else if (Pa > augDia) augDia = Pa;
+      qAv += Qav * dt; qMr += Qmr * dt; qAr += Qar * dt; qPump += Qp * dt; qEcmo += Qe * dt; qMv += Qmv * dt;
+      if (Qav > 0) { ejected = true; inEj = true; ejTime += dt; gradSum += (Plv - Pa) * dt; }
+      else inEj = false;
+      // End-diastolic VOLUME is the largest volume of the beat (the echo quantity; mitral
+      // closure in a competent-valve loop, the end of regurgitant inflow in AR). End-diastolic
+      // PRESSURE is read at activation onset (the catheter-lab quantity, e = 0, so it sits on
+      // the EDPVR). In a normal loop the two instants are a few ms apart; in AR they are not,
+      // and reading EDP at the largest volume would print the aortic diastolic pressure.
+      if (Vlv > maxV) { maxV = Vlv; maxVi = i; }
+      // End-systole = the point of maximal elastance, Emax = max of P(t)/(V(t) − V0)
+      // (Suga & Sagawa 1974). In a competent-valve loop it is the upper-left corner and
+      // the ESPVR line passes through it by construction; in MR the ventricle keeps
+      // emptying through the mitral valve after this point at falling pressure, which is
+      // exactly why the minimum-volume sample must NOT be called end-systole.
+      if (dv > 0.5 && e > 0.3) {
+        var ratio = Plv / dv;
+        if (ratio > esRatio) { esRatio = ratio; esV = Vlv; esP = Plv; esI = i; }
+      }
+      if (samples && i % C.SAMPLE_EVERY === 0) {
+        samples.push({ t: t, V: Vlv, P: Plv, Pa: Pa, Pv: Pv, Qav: Qav, Qmv: Qmv, i: i });
+      }
+    }
+
+    st.Vlv = Vlv; st.Va = Va; st.Vv = Vv; st.Vp = Vp; st.iabpS = iabpS; st.t = 0;
+    return {
+      RR: RR, Ts: Ts, n: n,
+      EDV: maxV, EDP: edp, edI: maxVi,
+      ESV: esV, ESP: esP, esI: esI, esFound: esRatio > -1e9 && maxV - esV > 0.5,
+      MAP: sumPa / n, RAP: sumPv / n, PCWP: sumPp / n, meanPlv: sumPlv / n,
+      SBP: iabpVol > 0 && sbpNative > -1e9 ? sbpNative : SBP, DBP: DBP,
+      augDia: iabpVol > 0 && augDia > -1e9 ? augDia : null,
+      SVfwd: qAv, RVolMR: qMr, RVolAR: qAr, pumpVol: qPump, ecmoVol: qEcmo, mvVol: qMv,
+      ejTime: ejTime, meanGrad: ejTime > 0 ? gradSum / ejTime : 0, ejected: ejected,
+      flags: flags, samples: samples,
+    };
+  }
+
+  // ---- STEADY STATE ----------------------------------------------------------------------
+  function solveSteady(p, warm) {
+    var st = warm && isFinite(warm.Vlv) && isFinite(warm.Va) && isFinite(warm.Vv) && isFinite(warm.Vp)
+      ? { Vlv: warm.Vlv, Va: warm.Va, Vv: warm.Vv, Vp: warm.Vp, t: 0, iabpS: warm.iabpS || 0 }
+      : freshState(p);
+    // A warm start must still conserve the CURRENT total volume: the systemic venous
+    // reservoir (the only compartment large enough to absorb it) takes the difference.
+    var total = p.Vs + p.V0;
+    st.Vv = total - st.Vlv - st.Va - st.Vp;
+    if (st.Vv < 5) { st = freshState(p); }
+
+    var prev = null, stable = 0, beat = null, k, converged = false, unstable = false;
+    // The refusal flags (suction, drain, pressureDomain) belong to the REPORTED beat, not to
+    // the transient: until 2026-09-22 they were OR-ed across the approach, so the same
+    // parameters refused or printed depending on where the solve started (a cold start at
+    // 120 mL passed through volumes a stiff EDPVR forbids; a warm start did not).
+    for (k = 1; k <= C.MAX_BEATS; k++) {
+      beat = runBeat(p, st, false);
+      if (beat.flags.unstable) { unstable = true; break; }
+      if (prev && Math.abs(beat.EDV - prev.EDV) < C.TOL_V && Math.abs(beat.ESV - prev.ESV) < C.TOL_V &&
+          Math.abs(beat.MAP - prev.MAP) < C.TOL_P && Math.abs(beat.PCWP - prev.PCWP) < C.TOL_P &&
+          Math.abs(beat.RAP - prev.RAP) < C.TOL_P) {
+        stable++;
+      } else stable = 0;
+      prev = beat;
+      if (k >= C.MIN_BEATS && stable >= 2) { converged = true; break; }
+    }
+    // A warm start that blows up is retried cold before anything is refused: the previous
+    // steady state can hold a volume the new EDPVR cannot (the page eases B from 0.025 toward
+    // 0.10 with 2.6 L on board), and that is a bad starting point, not a bad parameter set.
+    if (unstable && warm) return solveSteady(p, null);
+    // One more beat, sampled, from the converged state — this is the beat that is reported.
+    // An unstable run reports the beat that blew up (its numbers are nulled by solve) and no
+    // warm state, so the next solve starts fresh rather than from the wreckage.
+    if (!unstable) {
+      var stCopy = { Vlv: st.Vlv, Va: st.Va, Vv: st.Vv, Vp: st.Vp, iabpS: st.iabpS };
+      beat = runBeat(p, stCopy, true);
+      unstable = !!beat.flags.unstable;
+    }
+    beat.flags.unstable = unstable;
+    beat.beats = k;
+    beat.converged = converged;
+    beat.state = unstable ? null : { Vlv: st.Vlv, Va: st.Va, Vv: st.Vv, Vp: st.Vp, iabpS: st.iabpS };
+    return beat;
+  }
+
+  // ---- LOOP GEOMETRY FOR DRAWING --------------------------------------------------------
+  // The samples run from activation onset and each is labelled with its phase by VALVE
+  // STATE, not by position: Ejection while forward aortic flow runs, Filling while forward
+  // mitral flow runs, IVC between activation onset and ejection, IVR between ejection and
+  // filling. Any volume still entering after activation onset (the tail of mitral inflow, or
+  // regurgitant aortic inflow in AR) therefore belongs to the contraction limb, which is the
+  // physiology: that limb is not isovolumic until the inflow stops.
+  // With a leaking valve or a pump those two limbs move volume; shape.ivcFrac / ivrFrac say
+  // by how much (signed fraction of SV), so the page can stop calling them isovolumic.
+  function buildLoop(beat, p) {
+    var s = beat.samples, N = s.length;
+    var start = 0, j;   // the beat is sampled from activation onset, which is where the loop starts
+    var esIdx = 0;
+    for (j = 0; j < N; j++) if (s[j].i >= beat.esI) { esIdx = j; break; }
+    var esPos = (esIdx - start + N) % N;
+    var pts = [], phase = 'IVC', k, sm, pos;
+    var Qthr = 0.5; // mL/s: below this a valve is closed for labelling purposes
+    for (k = 0; k < N; k++) {
+      pos = (start + k) % N;
+      sm = s[pos];
+      if (phase === 'IVC' && sm.Qav > Qthr) phase = 'Ejection';
+      else if (phase === 'IVC' && !beat.ejected && k > esPos) phase = 'IVR';
+      else if (phase === 'Ejection' && sm.Qav <= Qthr && k > esPos) phase = 'IVR';
+      else if (phase === 'IVR' && sm.Qmv > Qthr) phase = 'Filling';
+      pts.push({ V: sm.V, P: sm.P, phase: phase, t: sm.t });
+    }
+    var order = ['IVC', 'Ejection', 'IVR', 'Filling'];
+    var bounds = [0], durs = [], counts = { IVC: 0, Ejection: 0, IVR: 0, Filling: 0 };
+    for (k = 0; k < pts.length; k++) counts[pts[k].phase]++;
+    var acc = 0, sampleDt = C.DT * C.SAMPLE_EVERY;
+    for (k = 0; k < order.length; k++) { acc += counts[order[k]]; bounds.push(acc); durs.push(counts[order[k]] * sampleDt); }
+    var SV = beat.EDV - beat.ESV;
+    function limbFrac(name) {
+      var first = -1, last = -1;
+      for (k = 0; k < pts.length; k++) if (pts[k].phase === name) { if (first < 0) first = k; last = k; }
+      if (first < 0 || SV <= 0) return 0;
+      return (pts[last].V - pts[first].V) / SV;
+    }
+    var lesion = p.eroaMR > 0 ? 'MR' : (p.eroaAR > 0 ? 'AR' : null);
+    return {
+      pts: pts,
+      shape: { ivcFrac: limbFrac('IVC'), ivrFrac: limbFrac('IVR'), lesion: lesion },
+      timing: { bounds: bounds, durs: durs, total: beat.RR, P_ao_dia: beat.DBP },
+    };
+  }
+
+  // ---- SUNAGAWA'S CLOSED-FORM Ea (for tests and teaching, not for printing) --------------
+  // Sunagawa, Maughan, Burkhoff & Sagawa, Am J Physiol 1983;245:H773: for a 3-element
+  // Windkessel, Ea = Rs / [ ts + τ·(1 − e^(−td/τ)) ], τ = Rs·Ca, ts = ejection time,
+  // td = the rest of the cycle. The engine does not use this; test-engine.mjs checks that
+  // the EMERGENT ESP/SV agrees with it.
+  function sunagawaEa(p, beat) {
+    var tau = p.Rs * p.Ca;
+    var ts = beat.ejTime > 0 ? beat.ejTime : 0.3 * beat.RR;
+    var td = beat.RR - ts;
+    return p.Rs / (ts + tau * (1 - Math.exp(-td / tau)));
+  }
+
+  // ---- PUBLIC SOLVE ----------------------------------------------------------------------
+  function solve(params, warm) {
+    var base = defaults(), p = {}, k;
+    for (k in base) p[k] = base[k];
+    if (params) for (k in params) if (params[k] !== undefined && params[k] !== null) p[k] = params[k];
+    var eff = {};
+    for (k in p) eff[k] = p[k];
+    eff.baro = undefined;
+
+    var beat, it = 0, err = 0;
+    if (p.baro && p.baro.on) {
+      // Static baroreflex. The effectors are functions of the sensed error s, and s is a
+      // function of the MAP the effectors produce, so the steady state is the root of
+      //   g(s) = s − 18·atan((MAP(s) − setPoint)/18).
+      // A plain fixed-point iteration diverges (the loop gain is about 5 mmHg per mmHg), so
+      // this is a secant iteration with a bisection safeguard once the root is bracketed.
+      var setPoint = isFinite(p.baro.setPoint) ? p.baro.setPoint : BARO.setPoint;
+      var gain = isFinite(p.baro.gain) ? p.baro.gain : 1;      // multiplies all four gains
+      var applyS = function (s) {
+        eff.HR = 60 / Math.max(0.25, 60 / p.HR + gain * (BARO.gRRsymp + BARO.gRRpara) * s);
+        eff.Rs = Math.max(0.1, p.Rs + gain * BARO.gRs * s);
+        eff.Vs = Math.max(100, p.Vs - gain * BARO.gVs * s);
+        eff.Ees = 1 / Math.max(0.05, 1 / p.Ees + gain * BARO.gCes * s);
+        beat = solveSteady(eff, warm);
+        warm = beat.state;
+        return s - BARO.scale * Math.atan((beat.MAP - setPoint) / BARO.scale);
+      };
+      var s0 = 0, g0 = applyS(s0);
+      var s1 = -g0 * 0.2, g1;                     // first step: a fifth of the raw error
+      var lo = null, hi = null, glo = 0, ghi = 0;  // bracket, once found
+      if (g0 < 0) { lo = s0; glo = g0; } else { hi = s0; ghi = g0; }
+      for (it = 1; it <= BARO.maxIter; it++) {
+        g1 = applyS(s1);
+        if (Math.abs(g1) < BARO.tolS) break;
+        if (g1 < 0) { lo = s1; glo = g1; } else { hi = s1; ghi = g1; }
+        if (lo !== null && hi !== null && Math.abs(hi - lo) < BARO.tolS) break;
+        var sNext = s1 - g1 * (s1 - s0) / ((g1 - g0) || 1e-9);
+        if (lo !== null && hi !== null) {
+          // Safeguard: a secant step outside the bracket is replaced by regula falsi.
+          if (sNext <= Math.min(lo, hi) || sNext >= Math.max(lo, hi)) sNext = (lo * ghi - hi * glo) / (ghi - glo);
+        }
+        if (!isFinite(sNext)) sNext = (s0 + s1) / 2;
+        s0 = s1; g0 = g1; s1 = sNext;
+      }
+      err = s1;
+    } else {
+      beat = solveSteady(eff, warm);
+    }
+
+    var SV = beat.EDV - beat.ESV;
+    var deviceLpm = (beat.pumpVol + beat.ecmoVol) * eff.HR / 1000;
+    var flags = {
+      noEjection: !beat.ejected || beat.SVfwd < 1,
+      suction: beat.flags.suction,
+      drain: beat.flags.drain,
+      pressureDomain: beat.flags.pressureDomain,
+      edvBelowV0: beat.EDV <= p.V0 + 2,
+      notConverged: !beat.converged,
+      noEndSystole: !beat.esFound,
+      unstable: !!beat.flags.unstable,
+    };
+    flags.any = flags.noEjection || flags.suction || flags.drain || flags.pressureDomain ||
+                flags.edvBelowV0 || flags.notConverged || flags.noEndSystole || flags.unstable;
+
+    if (flags.unstable) {
+      // Nothing measured survives a blown-up beat: every printed operand is null, the loop is
+      // empty, and only the parameters (HR, Ees) are echoed. raw carries the wreckage for tests.
+      var nul = { EDV: null, ESV: null, SV: null, SVfwd: null, HR: q(eff.HR, 0), Ees: q(eff.Ees, 1),
+        EF: null, CO: null, CO_native: null, deviceFlow: null, ESP: null, EDP: null, SBP: null, DBP: null,
+        PP: null, augDia: null, MAP: null, PCWP: null, RAP: null, Ea: null, coupling: null, SW: null,
+        RVolMR: null, RVolAR: null, RF: null, meanGrad: null };
+      return {
+        version: VERSION, converged: false, beats: beat.beats, dt: C.DT, baroIterations: it, baroError: err,
+        effective: eff, flags: flags,
+        raw: { EDV: beat.EDV, ESV: beat.ESV, MAP: beat.MAP, HR: eff.HR, RR: beat.RR },
+        printed: nul,
+        loop: { pts: [], shape: { ivcFrac: 0, ivrFrac: 0, lesion: null },
+                timing: { bounds: [0, 0, 0, 0, 0], durs: [0, 0, 0, 0], total: beat.RR, P_ao_dia: null } },
+        state: null,
+      };
+    }
+
+    // Printed block — every operand rounded ONCE; downstream numbers from the rounded ones.
+    var EDV_p = q(beat.EDV, 0), ESV_p = q(beat.ESV, 0);
+    var SV_p = (EDV_p !== null && ESV_p !== null) ? EDV_p - ESV_p : null;
+    var SVfwd_p = q(beat.SVfwd, 0);
+    var HR_p = q(eff.HR, 0);
+    var Ees_p = q(eff.Ees, 1);
+    var EF_p = (EDV_p > 0 && SV_p !== null) ? q(SV_p / EDV_p * 100, 1) : null;
+    // Native CO is the NET systemic output: forward aortic volume minus what comes back
+    // through an incompetent aortic valve (in MR the forward aortic volume is already net).
+    var RVolAR_p0 = q(beat.RVolAR, 0) || 0;
+    var CO_native_p = (SVfwd_p !== null && HR_p !== null) ? q(Math.max(0, SVfwd_p - RVolAR_p0) * HR_p / 1000, 1) : null;
+    var device_p = q(deviceLpm, 1);
+    var CO_p = (CO_native_p !== null && device_p !== null) ? q(CO_native_p + device_p, 1) : null;
+    var ESP_p = q(beat.ESP, 0), EDP_p = q(beat.EDP, 1);
+    var SBP_p = q(beat.SBP, 0), DBP_p = q(beat.DBP, 0), aug_p = beat.augDia === null ? null : q(beat.augDia, 0);
+    var PP_p = (SBP_p !== null && DBP_p !== null) ? SBP_p - DBP_p : null;
+    var MAP_p = q(beat.MAP, 0), PCWP_p = q(beat.PCWP, 0), RAP_p = q(beat.RAP, 0);
+    var Ea_p = (SV_p > 0 && ESP_p !== null) ? q(ESP_p / SV_p, 2) : null;
+    var coupling_p = (Ea_p !== null && Ees_p > 0) ? q(Ea_p / Ees_p, 2) : null;
+    var RVolMR_p = q(beat.RVolMR, 0), RVolAR_p = q(beat.RVolAR, 0);
+    var RF_p = null;
+    if (RVolMR_p > 0 && SV_p > 0) RF_p = q(RVolMR_p / SV_p * 100, 0);
+    else if (RVolAR_p > 0 && SV_p > 0) RF_p = q(RVolAR_p / SV_p * 100, 0);
+    var grad_p = beat.ejected ? q(beat.meanGrad, 0) : null;
+
+    // Stroke work: shoelace over the sampled loop (mmHg·mL).
+    var loop = buildLoop(beat, eff);
+    var SW = 0, pts = loop.pts, m;
+    for (m = 0; m < pts.length; m++) {
+      var nxt = pts[(m + 1) % pts.length];
+      SW += pts[m].V * nxt.P - nxt.V * pts[m].P;
+    }
+    SW = Math.abs(SW) / 2;
+
+    return {
+      version: VERSION,
+      converged: beat.converged, beats: beat.beats, dt: C.DT, baroIterations: it, baroError: err,
+      effective: eff,
+      flags: flags,
+      raw: {
+        EDV: beat.EDV, ESV: beat.ESV, SV: SV, SVfwd: beat.SVfwd, EF: beat.EDV > 0 ? SV / beat.EDV * 100 : 0,
+        CO: Math.max(0, beat.SVfwd - beat.RVolAR) * eff.HR / 1000, deviceFlow: deviceLpm, ESP: beat.ESP, EDP: beat.EDP,
+        MAP: beat.MAP, SBP: beat.SBP, DBP: beat.DBP, PP: beat.SBP - beat.DBP, augDia: beat.augDia,
+        Ea: SV > 0 ? beat.ESP / SV : NaN, EaSunagawa: sunagawaEa(eff, beat),
+        PCWP: beat.PCWP, RAP: beat.RAP, SW: SW, RVolMR: beat.RVolMR, RVolAR: beat.RVolAR,
+        meanGrad: beat.meanGrad, ejTime: beat.ejTime, RR: beat.RR, Ts: beat.Ts, HR: eff.HR,
+      },
+      printed: {
+        EDV: EDV_p, ESV: ESV_p, SV: SV_p, SVfwd: SVfwd_p, HR: HR_p, Ees: Ees_p,
+        EF: EF_p, CO: CO_p, CO_native: CO_native_p, deviceFlow: device_p,
+        ESP: ESP_p, EDP: EDP_p, SBP: SBP_p, DBP: DBP_p, PP: PP_p, augDia: aug_p, MAP: MAP_p, PCWP: PCWP_p, RAP: RAP_p,
+        Ea: Ea_p, coupling: coupling_p, SW: q(SW, 0),
+        RVolMR: RVolMR_p, RVolAR: RVolAR_p, RF: RF_p, meanGrad: grad_p,
+      },
+      loop: loop,
+      state: beat.state,
+    };
+  }
+
+  return Object.freeze({
+    VERSION: VERSION, CONSTANTS: C, BARO: BARO,
+    defaults: defaults, solve: solve, activation: activation, sunagawaEa: sunagawaEa,
+    decRound: decRound, q: q,
+  });
+})();
+// </shared:engine>
+
+// ============================================================
+// CathMath PV Loop Simulator — closed-loop edition (2026-09-21)
 //
-//   (1) AFTERLOAD.  Ea = R_sys / T = R_sys x HR / 60 (Sunagawa). At constant systemic
-//       resistance, arterial elastance is PROPORTIONAL to rate. This is why metoprolol's
-//       -15 bpm is also an afterload reduction, and why isoproterenol's vasodilation is
-//       largely cancelled by its own tachycardia.
-//   (2) PRELOAD.  Shorter diastole fills less, so EDV falls as rate rises (above V0,
-//       which is not filled volume).
+// THE MODEL IS THE SHARED ENGINE ABOVE (CathMathEngine, inlined from
+// shared/engine/cathmath-engine.js by scripts/sync-shared.mjs). Nothing on this page computes
+// physiology. The page owns six sliders (Ees, Rs, Vs, B, HR, V0), presets expressed as engine
+// parameters, and the drawing. Every printed number is read from report.printed, which the
+// engine builds from operands rounded once (the printed-number law); every refusal comes from
+// report.flags and is printed as a sentence, never as a severity colour.
 //
-// REVERSIBILITY IS NOT UNCONDITIONAL. The ratios invert exactly, but every step is passed
-// through clampParams (the slider ranges), and a clamp is lossy. If a drag pushes Ea or EDV
-// past the end of its slider, the excess is gone and dragging back does not restore it.
-// Reproduced: load MS + AS (Ea 3.5, EDV 80, HR 80), drag HR to 150 and back to 80 — Ea returns
-// 3.2, not 3.5, because it hit the 6.0 ceiling on the way up, and EDV returns 84, not 80,
-// because it hit the 60 floor. From the baseline state, and from any state whose excursion
-// stays inside the slider ranges, the round trip IS exact. Keeping the clamp is the deliberate
-// choice: the six sliders are the model's whole visible state, so no parameter may hold a
-// value its slider cannot show.
-//
-// This is a rate coupling, NOT a closed loop: venous return, the baroreflex and the
-// force-frequency relation are still absent, and the six sliders remain the model's whole
-// state. A disease preset sets all six at once and is therefore NOT re-coupled — its
-// numbers are the authored ones. Drug/MCS rate deltas and the HR slider are.
-function coupleToRate(from, toHR) {
-  const out = { ...from, HR: toHR };
-  if (!(toHR > 0) || !(from.HR > 0) || toHR === from.HR) return out;
-  out.Ea = from.Ea * (toHR / from.HR);
-  out.EDV = from.V0 + (from.EDV - from.V0) * (fillingFraction(toHR) / fillingFraction(from.HR));
-  return out;
-}
+// What this replaced (the closed-form tool, 2026-08 to 2026-09-21): Ea and EDV were sliders;
+// HR multiplied CO; pulse pressure was a fixed 45 % of ESP until a Windkessel patch; valve
+// lesions were drawn slopes; devices were hand-set deltas (VA-ECMO's distension was a
+// hard-coded EDV + 15). Now Ea emerges from Rs, HR and Ca; EDV from venous return meeting the
+// EDPVR; pulse pressure from SV meeting Ca; HR acts through filling time; valves are orifices
+// (AVA, MVA, EROA); devices are flows (pump, ECMO) or a displaced balloon volume.
+// ============================================================
 
-// One clamp table for the six parameters — the slider ranges, and nothing else.
-function clampParams(p) {
-  return {
-    Ees: Math.max(0.3, Math.min(5.0, p.Ees)),
-    Ea: Math.max(0.3, Math.min(6.0, p.Ea)),
-    EDV: Math.max(60, Math.min(250, p.EDV)),
-    B: Math.max(0.005, Math.min(0.10, p.B)),
-    HR: Math.max(40, Math.min(150, p.HR)),
-    V0: Math.max(0, Math.min(50, p.V0)),
-  };
-}
-
-// ---- ARTERIAL DIASTOLIC PRESSURE ----
-// Aortic diastolic pressure is where the loop's AV-opens corner sits. It used to be a flat
-// 0.55 x ESP, which fixed pulse pressure at 45% of end-systolic pressure in EVERY state:
-// aortic regurgitation and tamponade drew the SAME relative pulse pressure, so neither of
-// the two most-tested bedside signs could appear at all. It is now a two-element Windkessel
-// decay across the real diastolic interval:
-//     P_dia = P_ao_sys x exp(-t_diastole / tau),  tau = C_ART x R_sys,  R_sys = Ea x 60/HR
-// C_ART is a lumped arterial compliance calibrated so the baseline state draws 120/83.
-// tau is held inside 0.35-2.2 s because that is the measured range of the human aortic
-// pressure-decay time constant; an Ea of 6 at 40 bpm otherwise implies a decay slower than
-// any artery has. What falls out, rather than being asserted: warm sepsis and vasodilators
-// widen the pulse pressure, tamponade / hypovolaemia / HFrEF narrow it.
-const C_ART = 1.0;        // mL/mmHg, lumped total arterial compliance
-const TAU_MIN = 0.35, TAU_MAX = 2.2;
-
-// A stenotic aortic valve holds LV systolic pressure above AORTIC systolic pressure by the
-// transvalvular gradient, and the loop draws the LV. This closed-form model has exactly ONE
-// systolic pressure — ESP, the ESPVR corner — so the aortic ceiling has to be ESP minus a
-// single representative systolic offset.
-//
-// BE PRECISE ABOUT WHAT 40 IS. It is the MEAN systolic gradient that defines severe AS
-// (ACC/AHA 2020 Valvular Heart Disease guideline, stage D1: mean gradient >= 40 mmHg). It is
-// NOT an end-systolic gradient: the instantaneous gradient is near zero at aortic valve
-// closure and largest in early-to-mid systole, and the peak-to-peak gradient is larger than
-// the mean. So this constant is a severity-anchored stand-in for the average systolic offset,
-// borrowed to place the aortic ceiling; it is not a claim that LV-minus-aortic equals 40 mmHg
-// at the instant ESP is measured. The AV-opens corner it produces (aortic_stenosis: 146/113)
-// is in range for severe AS, which is why the approximation is kept. A real instantaneous
-// gradient needs a time-resolved flow model — Phase 1, not a constant.
-// Without some offset the AS presets put the AV-opens corner ~40 mmHg too high.
-const AV_GRADIENT = { aortic_stenosis: 40, as_ar: 40, as_mr: 40, ms_as: 40 };
-
-// An incompetent aortic valve is a second runoff path in parallel with the systemic bed, so
-// the aortic pressure decays faster in diastole — the mechanism behind the wide pulse pressure
-// and low diastolic of AR. This is the REGURGITANT SHARE OF DIASTOLIC RUNOFF: the fraction of
-// total diastolic outflow from the aorta that goes backwards through the valve instead of
-// forwards into the systemic bed. Conductances in parallel add, so the decay constant scales
-// by (1 - share).
-//
-// It lives here, keyed by preset, and NOT in REGURG_SHAPES. The limb-slope fractions in
-// REGURG_SHAPES are DRAWING constants, picked so the loop reads correctly on screen; this is a
-// PHYSIOLOGIC quantity that sets a printed pressure. They happen to carry the same values
-// today, which is exactly why they must not share a variable: retuning how the relaxation limb
-// looks would otherwise silently move the reported aortic diastolic pressure.
-const AR_RUNOFF_SHARE = { aortic_regurg: 0.30, as_ar: 0.24 };
+const ENGINE = CathMathEngine;
+const q = ENGINE.q;   // the engine's rounding helper (rounds the decimal, not the binary)
 
 // ---- STATE ----
-let params = {
-  Ees: 2.5, Ea: 1.8, EDV: 125, B: 0.025, HR: 70, V0: 10
-};
+// `params` is a FULL engine parameter object. The six slider-backed keys are the visible
+// state a user can drag; the remaining keys (valve areas, regurgitant orifices, device
+// flows, right-heart gain) are set only by presets and are named in the state badge.
+const SLIDER_KEYS = ['Ees', 'Rs', 'Vs', 'B', 'HR', 'V0'];
+// One clamp table — the slider ranges, and nothing else. No slider-backed parameter may hold
+// a value its slider cannot show. The old rate coupling (coupleToRate) and its lossy round
+// trip are gone: the heart rate no longer rewrites other parameters, the engine runs the beat.
+const SLIDER_RANGE = { Ees: [0.3, 5.0], Rs: [0.3, 3.0], Vs: [250, 2600], B: [0.005, 0.10], HR: [40, 150], V0: [0, 50] };
+const BASELINE = Object.freeze(ENGINE.defaults());
+let params = { ...BASELINE };
 let ghostLoop = null; // stored snapshot for comparison
 let ghostValues = null;
 let animProgress = 0; // 0-1 for loop trace animation
@@ -1631,213 +2155,74 @@ function yToP(y) {
   return (1 - (y - MARGIN.top) / plotH) * pMax;
 }
 
-// ---- MATHEMATICAL MODEL ----
+// ---- MODEL ADAPTER ----
+// The engine solves to steady state (its header states the step and the criterion). A solve
+// costs 5-25 ms warm and 20-140 ms cold, so the report is memoised on the parameter values and,
+// WHILE THE PARAMETERS ARE MOVING (a 400 ms eased drug/preset transition, a slider being
+// dragged), warm-started from the previous frame's steady state: each frame re-solves from a
+// state a few millilitres away and meets the stability criterion in a handful of beats. That
+// warm beat is a moving picture, not the documented number — MIN_BEATS 6 + two stable beats at
+// TOL 0.05 is met while the slow venous and pulmonary compartments are still drifting, and until
+// 2026-09-22 the page memoised it and printed it, up to PCWP 3 / MAP 2 / SBP 3 / EF 1.3 away
+// from the cold solve the preset table, the residuals and test-engine quote (37 of 38 presets
+// differed in some printed digit). So the moment the parameters come to rest — the final
+// transition frame, or SLIDER_SETTLE_MS after the last slider input — the report is re-solved
+// COLD (warm = null, the same call test-engine makes) and that is the beat that stays on screen.
+// Section 9 of scripts/test-engine.mjs drives this path frame by frame and asserts the printed
+// values equal the cold solve to the printed digit on every preset.
+let lastReport = null, lastKey = '', lastCold = false, warmState = null;
+let animatingDrugs = false;                 // a drug/disease/device transition is easing
+let sliderMoving = false, sliderSettle = null;   // a slider is being dragged; its settle timer
+const SLIDER_SETTLE_MS = 150;
 
+function paramsMoving() { return animatingDrugs || sliderMoving; }
+
+function paramKey(p) {
+  const parts = [];
+  for (const k of Object.keys(p).sort()) {
+    const v = p[k];
+    if (typeof v === 'number') parts.push(k + '=' + v);
+    else if (v && typeof v === 'object') parts.push(k + '=' + JSON.stringify(v));
+  }
+  return parts.join('|');
+}
+
+function currentReport() {
+  const key = paramKey(params);
+  const cold = !paramsMoving();
+  // A memoised warm beat is reused only while still moving; at rest it is replaced by the cold
+  // solve of the same parameters once, and that cold beat is then reused for good.
+  if (lastReport && key === lastKey && (lastCold || !cold)) return lastReport;
+  const rep = ENGINE.solve(params, cold ? null : warmState);
+  warmState = rep.state;
+  lastReport = rep;
+  lastKey = key;
+  lastCold = cold;
+  return rep;
+}
+
+function clampParams(p) {
+  const out = { ...p };
+  for (const k of SLIDER_KEYS) {
+    const [lo, hi] = SLIDER_RANGE[k];
+    out[k] = Math.max(lo, Math.min(hi, out[k]));
+  }
+  return out;
+}
+
+// Reference curves for the drawing, from the same constants the engine integrates.
 function espvr(V, Ees, V0) {
   return Ees * (V - V0);
 }
 
 function edpvr(V, B, V0) {
-  return A_EDPVR * (Math.exp(B * (V - V0)) - 1);
-}
-
-// Limb-slope fractions are a share of SV; keep them inside a range that still leaves a
-// recognisable ejection and filling phase even when an MCS device stacks on a leaking valve.
-function clampFrac(f) {
-  return Math.max(-0.55, Math.min(0.55, f));
-}
-
-// ---- REGURGITANT LOOP SHAPE ----
-// An incompetent valve abolishes the isovolumic phase on the side it leaks — this is the
-// single most-tested feature of the valvular PV loop, and the reason these lesions must not
-// be drawn with the vertical limbs of a competent-valve loop.
-//
-//   MITRAL REGURGITATION — the mitral orifice is open to the LA from the moment LV pressure
-//   exceeds LA pressure, which happens at the very onset of systole. Blood leaves the LV
-//   before the aortic valve ever opens, so there is NO isovolumic contraction: the limb
-//   slopes up-and-LEFT. Regurgitation continues after the aortic valve shuts, so the
-//   relaxation limb also loses volume (smaller effect — LA pressure is rising by then).
-//
-//   AORTIC REGURGITATION — the aortic orifice is open to the aorta whenever aortic pressure
-//   exceeds LV pressure. That is true throughout relaxation, so there is NO isovolumic
-//   relaxation: the limb slopes down-and-RIGHT. It is still true in early contraction,
-//   until LV pressure climbs past aortic diastolic, so the contraction limb also gains a
-//   little volume (smaller effect — that window is short).
-//
-// Fractions are of stroke volume. Sign convention matches computeLoop: negative = volume
-// falls across the limb, positive = volume rises. These are DRAWING constants only — they set
-// limb slope and nothing else. No printed number may be derived from them; the regurgitant
-// share of diastolic runoff has its own constant (AR_RUNOFF_SHARE).
-const REGURG_SHAPES = {
-  mitral_regurg: { ivc: -0.30, ivr: -0.12, lesion: 'MR' },
-  aortic_regurg: { ivc: +0.12, ivr: +0.30, lesion: 'AR' },
-  as_ar:         { ivc: +0.10, ivr: +0.24, lesion: 'AR' },
-  as_mr:         { ivc: -0.24, ivr: -0.10, lesion: 'MR' },
-  ms_mr:         { ivc: -0.26, ivr: -0.10, lesion: 'MR' },
-};
-
-function getRegurgShape() {
-  return (activeDisease && REGURG_SHAPES[activeDisease]) || null;
-}
-
-function getAvGradient() {
-  return (activeDisease && AV_GRADIENT[activeDisease]) || 0;
-}
-
-function getArRunoffShare() {
-  return (activeDisease && AR_RUNOFF_SHARE[activeDisease]) || 0;
-}
-
-function computeLoop(p, triFactor, regurgShape, avGradient, arRunoffShare) {
-  const { Ees, Ea, EDV, B, HR, V0 } = p;
-  const tri = triFactor || 0; // 0 = normal rectangular, 1 = fully triangular (Impella)
-  const rg = regurgShape || { ivc: 0, ivr: 0 };
-
-  const ESV = (Ees * V0 + Ea * EDV) / (Ees + Ea);
-  const ESP = Ees * (ESV - V0);
-  const EDP = edpvr(EDV, B, V0);
-  const SV = EDV - ESV;
-
-  // Printed-number law: SV, EDV, HR, Ees and Ea are all on the screen, so EF, CO and the
-  // coupling ratio are computed from the ROUNDED numbers the user can read, not from the
-  // doubles underneath them. CO = SV x HR is a claim the HR tooltip makes explicitly.
-  const SV_p = q(SV, 0), EDV_p = q(EDV, 0), HR_p = q(HR, 0);
-  const Ees_p = q(Ees, 1), Ea_p = q(Ea, 1);
-  const EF = (EDV_p ? q(SV_p / EDV_p * 100, 1) : 0) || 0;
-  const CO = q(SV_p * HR_p / 1000, 1) || 0;
-  const coupling = (Ees_p ? q(Ea_p / Ees_p, 2) : 0) || 0;
-
-  const pts = [];
-  const N_IVC = 30;
-  const N_EJ = 50;
-  const N_IVR = 30;
-  const N_FILL = 40;
-
-  // Windkessel diastolic runoff (see C_ART / TAU_MIN above). The runoff interval is the
-  // whole of diastole as the AORTA sees it: from valve closure, through relaxation and
-  // filling, to the next valve opening.
-  const timing = cycleTiming(HR);
-  const tDia = timing.ivrt + timing.fill + timing.ivct;
-  const R_sys = Ea * 60 / Math.max(20, HR);
-  // Aortic regurgitation opens a second runoff path in parallel with the systemic bed
-  // (see AR_RUNOFF_SHARE above — a physiologic share, deliberately not the drawing constant).
-  const arShare = Math.min(0.5, Math.max(0, arRunoffShare || 0));
-  const tau = Math.max(TAU_MIN, Math.min(TAU_MAX, C_ART * R_sys)) * (1 - arShare);
-  const P_ao_sys = Math.max(20, ESP - (avGradient || 0));
-  let P_ao_dia = P_ao_sys * Math.exp(-tDia / tau);
-  // The AV-opens corner has to sit above end-diastolic pressure and below end-systolic,
-  // or there is no isovolumic contraction limb left to draw.
-  P_ao_dia = Math.max(P_ao_dia, EDP + 5);
-  P_ao_dia = Math.min(P_ao_dia, Math.max(EDP + 5, ESP - 5));
-
-  // === LIMB SLOPE: how much volume moves during the two "isovolumic" phases ===
-  // Both limbs are expressed as a SIGNED fraction of SV. Negative = volume falls,
-  // positive = volume rises. Zero on both = the classic rectangular loop.
-  //
-  // Two independent physiologic sources, and they are NOT the same shape:
-  //
-    //   Valvular regurgitation (rg) — an incompetent valve abolishes the isovolumic
-  //   period on the side it leaks. In MR the mitral valve leaks the instant LV
-  //   pressure exceeds LA pressure, so volume FALLS through both limbs (rg.ivc and
-  //   rg.ivr both negative). In AR the aortic valve leaks whenever aortic pressure
-  //   exceeds LV pressure, so volume RISES through both limbs (both positive).
-  //   This is why a regurgitant loop must never be drawn with vertical limbs.
-  //   MCS triangularization (tri) — a continuous-flow pump moves blood out of the LV in EVERY
-  //   phase, including relaxation, so BOTH limbs lose volume. The relaxation term used to be
-  //   +0.25*tri, which drew LV volume RISING during isovolumic relaxation: impossible with the
-  //   mitral valve shut and the pump running, and it put the loop's leftmost point at the wrong
-  //   corner. Both terms are now negative for the pump.
-  const ivcFrac = clampFrac(-0.25 * tri + (rg.ivc || 0));
-  let   ivrFrac = clampFrac(-0.25 * tri + (rg.ivr || 0));
-
-  // Filling has to start at a volume the EDPVR can actually be evaluated at. When the
-  // relaxation limb runs leftward (MR), keep it above V0 so edpvr() stays on its
-  // physiologic branch rather than dropping below the unstressed volume.
-  const minFillV = Math.max(V0 + 1, ESV - 0.45 * SV);
-  if (ESV + ivrFrac * SV < minFillV) ivrFrac = (minFillV - ESV) / SV;
-
-  // Close the loop exactly: the relaxation limb must land ON the EDPVR at the volume
-  // where filling begins, not at ESV — otherwise a sloped limb leaves a visible gap.
-  const P_ivr_bottom = edpvr(ESV + ivrFrac * SV, B, V0);
-
-  // IVC: normally vertical at EDV; sloped when the pump or a leaking valve moves volume
-  for (let i = 0; i <= N_IVC; i++) {
-    const t = i / N_IVC;
-    const tt = t * t * (3 - 2 * t);
-    const P = EDP + (P_ao_dia - EDP) * tt;
-    const V = EDV + ivcFrac * SV * t;
-    pts.push({ V, P, phase: 'IVC' });
-  }
-
-  // EJECTION
-  const ejStartV = EDV + ivcFrac * SV;
-  for (let i = 1; i <= N_EJ; i++) {
-    const t = i / N_EJ;
-    const V = ejStartV + (ESV - ejStartV) * t;
-    const P_start = P_ao_dia;
-    const P_end = ESP;
-    const P_linear = P_start + (P_end - P_start) * t;
-    const bulge = Math.sin(Math.PI * t) * (ESP - P_ao_dia) * 0.2 * (1 - tri * 0.6);
-    const P = P_linear + bulge;
-    pts.push({ V, P, phase: 'Ejection' });
-  }
-
-  // IVR: normally vertical at ESV; sloped when the pump or a leaking valve moves volume
-  for (let i = 1; i <= N_IVR; i++) {
-    const t = i / N_IVR;
-    const tt = t * t * (3 - 2 * t);
-    const P = ESP + (P_ivr_bottom - ESP) * tt;
-    const V = ESV + ivrFrac * SV * t;
-    pts.push({ V, P, phase: 'IVR' });
-  }
-
-  // FILLING
-  const fillStartV = ESV + ivrFrac * SV;
-  for (let i = 1; i <= N_FILL; i++) {
-    const t = i / N_FILL;
-    const V = fillStartV + (EDV - fillStartV) * t;
-    const P = edpvr(V, B, V0);
-    pts.push({ V, P, phase: 'Filling' });
-  }
-
-  // Stroke Work (shoelace)
-  let SW = 0;
-  for (let i = 0; i < pts.length; i++) {
-    const j = (i + 1) % pts.length;
-    SW += (pts[i].V * pts[j].P - pts[j].V * pts[i].P);
-  }
-  SW = Math.abs(SW) / 2;
-
-  return {
-    pts,
-    // Limb geometry, so the phase labels can tell the truth about what each limb is:
-    // a limb with a non-zero fraction is NOT isovolumic and must not be labelled IVC/IVR.
-    shape: { ivcFrac, ivrFrac, lesion: rg.lesion || null },
-    // Where each phase starts in pts[], and how long it lasts in seconds. The animated dot
-    // walks TIME across these, so its dwell in each phase is that phase's real share of the
-    // cycle rather than its share of the sample points.
-    timing: {
-      bounds: [0, N_IVC + 1, N_IVC + 1 + N_EJ, N_IVC + 1 + N_EJ + N_IVR, pts.length],
-      durs: [timing.ivct, timing.lvet, timing.ivrt, timing.fill],
-      total: timing.total,
-      P_ao_dia: P_ao_dia
-    },
-    values: {
-      SV: SV_p,
-      EF: EF.toFixed(1),
-      CO: CO.toFixed(1),
-      ESP: q(ESP, 0),
-      EDP: q(EDP, 1).toFixed(1),
-      SW: q(SW, 0),
-      coupling: coupling.toFixed(2),
-      ESV: q(ESV, 0),
-      EDV: EDV_p
-    }
-  };
+  return params.A * (Math.exp(B * (V - V0)) - 1);
 }
 
 // Map a fraction of the CYCLE (time) onto a fraction of the loop's point array, so the
-// tracing and the dot move at the speed the phase actually runs at.
+// tracing and the dot move at the speed the phase actually runs at. The engine samples the
+// beat uniformly in time, so this is close to the identity; it is kept because the timing
+// block is the contract the ghost loop and the phase labels also read.
 function loopIndexFraction(loop, tFrac) {
   const t = loop.timing;
   if (!t || !t.total) return tFrac;
@@ -1875,14 +2260,16 @@ function resizeCanvas() {
 }
 
 function autoScaleAxes() {
-  const { Ees, Ea, EDV, B, V0 } = params;
-  const ESV = (Ees * V0 + Ea * EDV) / (Ees + Ea);
-  const ESP = Ees * (ESV - V0);
+  const rep = currentReport();
+  let vTop = 0, pTop = 0;
+  for (const pt of rep.loop.pts) { if (pt.V > vTop) vTop = pt.V; if (pt.P > pTop) pTop = pt.P; }
+  if (rep.raw.SBP > pTop) pTop = rep.raw.SBP;
+  if (rep.raw.augDia !== null && rep.raw.augDia > pTop) pTop = rep.raw.augDia;
 
   // Volume axis: show from 0 to a bit beyond EDV
-  vMax = Math.max(180, Math.ceil((EDV + 30) / 20) * 20);
-  // Pressure axis: show from 0 to a bit beyond ESP
-  pMax = Math.max(150, Math.ceil((ESP * 1.3) / 20) * 20);
+  vMax = Math.max(180, Math.ceil((vTop + 30) / 20) * 20);
+  // Pressure axis: show from 0 to a bit beyond the highest pressure in the beat
+  pMax = Math.max(150, Math.ceil((pTop * 1.3) / 20) * 20);
   // Clamp
   if (vMax > 300) vMax = 300;
   if (pMax > 300) pMax = 300;
@@ -2044,11 +2431,11 @@ function drawEDPVR() {
   ctx.restore();
 }
 
-function drawEaLine(loop) {
+function drawEaLine(rep) {
   if (!document.getElementById('togEa').checked) return;
-  const { Ea, EDV } = params;
-  const ESV = parseFloat(loop.values.ESV);
-  const ESP = parseFloat(loop.values.ESP);
+  const pr = rep.printed;
+  if (pr.Ea === null || !(pr.SV > 0)) return;   // no ejection: there is no Ea line to draw
+  const EDV = pr.EDV, ESV = pr.ESV, ESP = pr.ESP, Ea = pr.Ea;
   const color = getCSS('--ea-color');
 
   ctx.save();
@@ -2057,10 +2444,10 @@ function drawEaLine(loop) {
   ctx.setLineDash([3, 3]);
   ctx.globalAlpha = 0.5;
 
-  // Ea line from (EDV, 0) to (ESV, ESP) and slightly beyond
+  // Ea line from (EDV, 0) to (ESV, ESP) and slightly beyond — the printed Ea IS ESP/SV, so
+  // this line's slope is the number in the panel.
   ctx.beginPath();
   ctx.moveTo(vToX(EDV), pToY(0));
-  // Extend slightly past ESP
   const extV = ESV - (EDV - ESV) * 0.1;
   const extP = ESP + ESP * 0.1;
   ctx.lineTo(vToX(Math.max(extV, 0)), pToY(Math.min(extP, pMax)));
@@ -2295,33 +2682,38 @@ function drawDiamond(cx, cy, r, color) {
   ctx.restore();
 }
 
-function drawESEDPoints(loop) {
-  const { V0 } = params;
-  const ESV = parseFloat(loop.values.ESV);
-  const ESP = parseFloat(loop.values.ESP);
-  const EDV = parseFloat(loop.values.EDV);
-  const EDP = parseFloat(loop.values.EDP);
+function drawESEDPoints(rep) {
+  const pr = rep.printed;
+  const ESV = pr.ESV, ESP = pr.ESP, EDV = pr.EDV;
+  // The ED marker sits at the largest volume of the beat, at the pressure the loop has there
+  // (mitral closure). The printed EDP is read at activation onset (see the engine); in a
+  // competent-valve loop the two are a few ms and under 1 mmHg apart.
+  let EDPm = pr.EDP;
+  for (const pt of rep.loop.pts) if (pt.V >= EDV - 0.01) { EDPm = pt.P; break; }
   const isDark = document.body.classList.contains('dark');
 
   // ES point
   ctx.save();
+  if (ESV !== null && ESP !== null) {
+    ctx.beginPath();
+    ctx.arc(vToX(ESV), pToY(ESP), 3.5, 0, Math.PI * 2);
+    ctx.fillStyle = isDark ? '#ff6b6b' : var_navy();
+    ctx.fill();
+    ctx.font = 'bold 9px -apple-system, Helvetica, sans-serif';
+    ctx.fillStyle = isDark ? '#ff8a80' : '#1565c0';
+    ctx.textAlign = 'left';
+    ctx.fillText('ES', vToX(ESV) - 18, pToY(ESP) + 4);
+  }
+
+  // ED point
   ctx.beginPath();
-  ctx.arc(vToX(ESV), pToY(ESP), 3.5, 0, Math.PI * 2);
+  ctx.arc(vToX(EDV), pToY(EDPm), 3.5, 0, Math.PI * 2);
   ctx.fillStyle = isDark ? '#ff6b6b' : var_navy();
   ctx.fill();
   ctx.font = 'bold 9px -apple-system, Helvetica, sans-serif';
   ctx.fillStyle = isDark ? '#ff8a80' : '#1565c0';
-  ctx.textAlign = 'left';
-  ctx.fillText('ES', vToX(ESV) - 18, pToY(ESP) + 4);
-
-  // ED point
-  ctx.beginPath();
-  ctx.arc(vToX(EDV), pToY(EDP), 3.5, 0, Math.PI * 2);
-  ctx.fillStyle = isDark ? '#ff6b6b' : var_navy();
-  ctx.fill();
-  ctx.fillStyle = isDark ? '#ff8a80' : '#1565c0';
   ctx.textAlign = 'right';
-  ctx.fillText('ED', vToX(EDV) - 6, pToY(EDP) + 4);
+  ctx.fillText('ED', vToX(EDV) - 6, pToY(EDPm) + 4);
   ctx.restore();
 }
 
@@ -2342,8 +2734,18 @@ function draw() {
 
   drawGrid();
 
-  // Compute current loop (with triangularization for MCS devices)
-  const loop = computeLoop(params, getTriangularFactor(), getRegurgShape(), getAvGradient(), getArRunoffShare());
+  // The steady-state beat for the current parameters (memoised; see currentReport).
+  const rep = currentReport();
+  const loop = rep.loop;
+
+  // An unstable solve has no beat to draw: axes, reference lines and the refusal sentence only.
+  if (rep.flags.unstable) {
+    if (ghostLoop) drawLoopPath(ghostLoop.pts, getCSS('--ghost-color'), 2, 1, undefined, true);
+    drawEDPVR();
+    drawESPVR();
+    updateValues(rep);
+    return;
+  }
 
   // Draw ghost if exists
   if (ghostLoop) {
@@ -2353,7 +2755,7 @@ function draw() {
   // Draw reference lines
   drawEDPVR();
   drawESPVR();
-  drawEaLine(loop);
+  drawEaLine(rep);
 
   // Draw main loop. animProgress is a fraction of the CYCLE; the path and the dot need a
   // fraction of the point array, and the two are not the same because the phases have very
@@ -2369,10 +2771,10 @@ function draw() {
 
   // Phase labels and points
   drawPhaseLabels(loop.pts, loop.shape);
-  drawESEDPoints(loop);
+  drawESEDPoints(rep);
 
   // Update derived values
-  updateValues(loop.values);
+  updateValues(rep);
 }
 
 function requestDraw() {
@@ -2394,7 +2796,7 @@ function animate(ts) {
   // A backgrounded tab delivers one enormous dt on return; cap it rather than teleport.
   const dt = Math.min(0.25, Math.max(0, (ts - animLastTs) / 1000));
   animLastTs = ts;
-  const cycle = cycleTiming(params.HR).total;
+  const cycle = currentReport().loop.timing.total;
   animProgress = (animProgress + dt / cycle) % 1;
   draw();
   animFrameId = requestAnimationFrame(animate);
@@ -2417,8 +2819,8 @@ function toggleAnimation() {
 
 function readSliders() {
   params.Ees = parseFloat(document.getElementById('slEes').value);
-  params.Ea = parseFloat(document.getElementById('slEa').value);
-  params.EDV = parseFloat(document.getElementById('slEDV').value);
+  params.Rs = parseFloat(document.getElementById('slRs').value);
+  params.Vs = parseFloat(document.getElementById('slVs').value);
   params.B = parseFloat(document.getElementById('slB').value);
   params.HR = parseFloat(document.getElementById('slHR').value);
   params.V0 = parseFloat(document.getElementById('slV0').value);
@@ -2426,8 +2828,8 @@ function readSliders() {
 
 function updateSliderDisplays() {
   document.getElementById('valEes').textContent = params.Ees.toFixed(1);
-  document.getElementById('valEa').textContent = params.Ea.toFixed(1);
-  document.getElementById('valEDV').textContent = Math.round(params.EDV);
+  document.getElementById('valRs').textContent = params.Rs.toFixed(2);
+  document.getElementById('valVs').textContent = Math.round(params.Vs);
   document.getElementById('valB').textContent = params.B.toFixed(3);
   document.getElementById('valHR').textContent = Math.round(params.HR);
   document.getElementById('valV0').textContent = Math.round(params.V0);
@@ -2435,8 +2837,8 @@ function updateSliderDisplays() {
 
 function setSliders(p) {
   document.getElementById('slEes').value = p.Ees;
-  document.getElementById('slEa').value = p.Ea;
-  document.getElementById('slEDV').value = p.EDV;
+  document.getElementById('slRs').value = p.Rs;
+  document.getElementById('slVs').value = p.Vs;
   document.getElementById('slB').value = p.B;
   document.getElementById('slHR').value = p.HR;
   document.getElementById('slV0').value = p.V0;
@@ -2445,53 +2847,90 @@ function setSliders(p) {
 function onParamChange() {
   readSliders();
   updateSliderDisplays();
+  // A dragged slider is solved warm frame by frame; SLIDER_SETTLE_MS after the last input the
+  // parameters are at rest and the next draw re-solves cold (see currentReport).
+  sliderMoving = true;
+  if (sliderSettle) clearTimeout(sliderSettle);
+  sliderSettle = setTimeout(() => { sliderSettle = null; sliderMoving = false; requestDraw(); }, SLIDER_SETTLE_MS);
   if (!animRunning) requestDraw();
 }
 
-// Heart rate is no longer a bare multiplier on CO (see coupleToRate): moving it also moves
-// afterload and preload. Those two land on their own sliders, where the user can see them,
-// rather than being applied invisibly inside the model. The mapping is an exact ratio in both
-// directions, so the round trip restores the starting state — EXCEPT where clampParams bites
-// mid-drag, which is lossy; see the reversibility note above coupleToRate.
-function onRateChange() {
-  const newHR = parseFloat(document.getElementById('slHR').value);
-  params = clampParams(coupleToRate(params, newHR));
-  setSliders(params);
-  updateSliderDisplays();
-  if (!animRunning) requestDraw();
-}
 
 // draw() runs on every animation frame, so this used to write 7 textContent values and 3
 // className changes 120 times a second on a ProMotion phone for numbers that had not
 // changed. Write only what moved.
 let lastPrinted = null;
-function updateValues(v) {
-  const key = v.SV + '|' + v.EF + '|' + v.CO + '|' + v.ESP + '|' + v.EDP + '|' + v.SW + '|' + v.coupling;
+function updateValues(rep) {
+  const v = rep.printed, fl = rep.flags;
+  const key = JSON.stringify(v) + '|' + JSON.stringify(fl);
   if (key === lastPrinted) return;
   lastPrinted = key;
 
-  document.getElementById('outSV').textContent = v.SV;
-  document.getElementById('outEF').textContent = v.EF;
-  document.getElementById('outCO').textContent = v.CO;
-  document.getElementById('outESP').textContent = v.ESP;
-  document.getElementById('outEDP').textContent = v.EDP;
-  document.getElementById('outSW').textContent = v.SW;
-  document.getElementById('outCoupling').textContent = v.coupling;
+  const txt = (id, val) => { document.getElementById(id).textContent = (val === null || val === undefined) ? '—' : String(val); };
+  const show = (id, on) => { document.getElementById(id).hidden = !on; };
+  const f1 = (x) => (x === null || x === undefined) ? null : x.toFixed(1);
+  const f2 = (x) => (x === null || x === undefined) ? null : x.toFixed(2);
 
-  // Color coding
-  colorVal('outEF', parseFloat(v.EF), 55, 40, 70, 100);
-  colorVal('outCO', parseFloat(v.CO), 4.0, 2.0, 8.0, 12.0);
-  colorCoupling(parseFloat(v.coupling));
+  txt('outEDV', v.EDV);
+  txt('outSV', v.SV);
+  const regurg = (v.RVolMR > 0 || v.RVolAR > 0) || v.SVfwd !== v.SV;
+  show('rowFwd', regurg);
+  txt('outFwd', v.SVfwd);
+  txt('outEF', f1(v.EF));
+  txt('outCO', f1(v.CO));
+  show('rowDevice', v.deviceFlow > 0);
+  txt('outDevice', f1(v.deviceFlow));
+  txt('outAo', (v.SBP === null || v.DBP === null) ? null : v.SBP + '/' + v.DBP);
+  show('rowAug', v.augDia !== null);
+  txt('outAug', v.augDia);
+  txt('outMAP', v.MAP);
+  txt('outESP', v.ESP);
+  txt('outEDP', f1(v.EDP));
+  txt('outPCWP', v.PCWP);
+  txt('outRAP', v.RAP);
+  show('rowGrad', params.AVA < 2.5 && v.meanGrad !== null);
+  txt('outGrad', v.meanGrad);
+  show('rowRVol', v.RVolMR > 0 || v.RVolAR > 0);
+  txt('outRVol', (v.RVolMR > 0 || v.RVolAR > 0) ? (v.RVolMR > 0 ? v.RVolMR : v.RVolAR) + ' (RF ' + v.RF + ' %)' : null);
+  txt('outEa', f2(v.Ea));
+  txt('outCoupling', f2(v.coupling));
+  txt('outSW', v.SW);
+
+  // Refuse rather than grade: any flagged regime prints its sentence and drops the colours.
+  const refusals = [];
+  if (fl.noEjection) refusals.push('The aortic valve does not open in this state: forward flow is device-driven, and EF, ESP and Ea describe a loop with no native ejection.');
+  if (fl.suction) refusals.push('The pump is throttled by suction: the cavity cannot supply its set flow.');
+  if (fl.drain) refusals.push('ECMO drainage exceeds what the venous reservoir holds; the circuit flow is throttled.');
+  if (fl.pressureDomain) refusals.push('At this volume the ESPVR lies below the EDPVR, so contraction cannot raise pressure above the passive curve: this contractility and this stiffness are not a physiologic pair.');
+  if (fl.edvBelowV0) refusals.push('End-diastolic volume is at or below V0, where the EDPVR is undefined.');
+  if (fl.notConverged) refusals.push('No steady state within 160 beats; the numbers are the last beat integrated.');
+  if (fl.unstable) refusals.push('These parameters are outside what the solver can integrate: at this stiffness and volume the EDPVR asks for filling pressures no circulation reaches, and the beat was abandoned. Nothing is printed from it.');
+  const rEl = document.getElementById('outRefusal');
+  rEl.textContent = refusals.join(' ');
+  rEl.hidden = refusals.length === 0;
+
+  // Color coding — only when nothing is refused.
+  if (fl.any) {
+    for (const id of ['outEF', 'outCO', 'outCoupling', 'outPCWP', 'outMAP']) document.getElementById(id).className = 'idx-val';
+  } else {
+    colorVal('outEF', v.EF, 55, 40, 70, 100);
+    colorVal('outCO', v.CO, 4.0, 2.0, 8.0, 12.0);
+    colorVal('outPCWP', v.PCWP, 4, -1, 12, 18);
+    colorVal('outMAP', v.MAP, 65, 55, 110, 130);
+    colorCoupling(v.coupling);
+  }
 
   // The canvas is the whole teaching artifact and a screen reader gets nothing from it, so the
   // accessible NAME carries the numbers the picture is drawn from. An accessible name is not a
   // live region: it is read when the canvas is reached, so it makes the picture inspectable but
   // it announces nothing while a slider moves. announceLoopValues() below is the live half.
-  canvas.setAttribute('aria-label',
-    'Left ventricular pressure-volume loop. Stroke volume ' + v.SV + ' mL, ejection fraction ' +
-    v.EF + ' percent, cardiac output ' + v.CO + ' litres per minute, end-systolic pressure ' +
-    v.ESP + ' mmHg, end-diastolic pressure ' + v.EDP + ' mmHg, stroke work ' + v.SW +
-    ' mmHg mL, Ea over Ees ' + v.coupling + '.');
+  canvas.setAttribute('aria-label', fl.unstable ? 'Left ventricular pressure-volume loop. ' + refusals.join(' ') :
+    'Left ventricular pressure-volume loop. End-diastolic volume ' + v.EDV + ' mL, stroke volume ' + v.SV +
+    ' mL, ejection fraction ' + f1(v.EF) + ' percent, cardiac output ' + f1(v.CO) + ' litres per minute, aortic pressure ' +
+    v.SBP + ' over ' + v.DBP + ', mean arterial pressure ' + v.MAP + ', end-systolic pressure ' + v.ESP +
+    ' mmHg, end-diastolic pressure ' + f1(v.EDP) + ' mmHg, wedge pressure proxy ' + v.PCWP +
+    ' mmHg, stroke work ' + v.SW + ' mmHg mL, arterial elastance ' + f2(v.Ea) + ', Ea over Ees ' + f2(v.coupling) + '.' +
+    (refusals.length ? ' ' + refusals.join(' ') : ''));
 }
 
 // The live half of the same job. Fired on the sliders' `change` event — i.e. when a drag is
@@ -2501,11 +2940,13 @@ function updateValues(v) {
 function announceLoopValues() {
   const el = document.getElementById('srStatus');
   if (!el) return;
-  const v = computeLoop(params, getTriangularFactor(), getRegurgShape(), getAvGradient(),
-                        getArRunoffShare()).values;
-  el.textContent = 'Stroke volume ' + v.SV + ' millilitres, ejection fraction ' + v.EF +
-    ' percent, cardiac output ' + v.CO + ' litres per minute, end-systolic pressure ' + v.ESP +
-    ' mmHg, end-diastolic pressure ' + v.EDP + ' mmHg.';
+  const v = currentReport().printed;
+  el.textContent = 'End-diastolic volume ' + v.EDV + ' millilitres, stroke volume ' + v.SV +
+    ' millilitres, ejection fraction ' + (v.EF === null ? 'unavailable' : v.EF.toFixed(1)) +
+    ' percent, cardiac output ' + (v.CO === null ? 'unavailable' : v.CO.toFixed(1)) +
+    ' litres per minute, aortic pressure ' + v.SBP + ' over ' + v.DBP + ', mean ' + v.MAP +
+    ', end-systolic pressure ' + v.ESP + ' mmHg, end-diastolic pressure ' + (v.EDP === null ? 'unavailable' : v.EDP.toFixed(1)) +
+    ' mmHg, wedge proxy ' + v.PCWP + ' mmHg.';
 }
 
 function colorVal(id, val, lowWarn, lowBad, hiWarn, hiBad) {
@@ -2526,9 +2967,10 @@ function colorCoupling(ratio) {
 
 // ---- SNAPSHOT ----
 function takeSnapshot() {
-  const loop = computeLoop(params, getTriangularFactor(), getRegurgShape(), getAvGradient(), getArRunoffShare());
-  ghostLoop = { pts: [...loop.pts] };
-  ghostValues = { ...loop.values };
+  cmTrack('tool_action', { action: 'snapshot' });
+  const rep = currentReport();
+  ghostLoop = { pts: rep.loop.pts.slice() };
+  ghostValues = { ...rep.printed };
   document.getElementById('btnClearSnap').style.display = '';
   document.getElementById('btnSnapshot').textContent = 'Update Snapshot';
   requestDraw();
@@ -2626,24 +3068,60 @@ function bindTip(el, htmlFn) {
 
 // ---- DRUGS & INTERVENTIONS ----
 
-const BASELINE = { Ees: 2.5, Ea: 1.8, EDV: 125, B: 0.025, HR: 70, V0: 10 };
-
+// Each drug is a set of SHIFTS and SCALES on engine parameters, applied to the base state
+// (disease or baseline): a plain numeric key is an additive delta, a `scale` object multiplies.
+// Contractility (Ees) and the right-heart gain (rvGain) are SCALED, never shifted, and so is
+// the SVR fall of dobutamine's β2 effect; the resistance shifts of the vasodilators and
+// pressors, the stressed-volume shifts, stiffness and rate stay additive. They are FITTED
+// teaching magnitudes — the size of a typical clinical effect at an ordinary dose, not a
+// dose-response — carried over from the closed-form tool's Ea/EDV deltas and converted: an Ea
+// delta became an Rs delta (Ea ≈ Rs·HR/60, ×0.86 at HR 70, then reduced because the closed
+// loop answers a resistance change with a MAP change the old open loop could not show), an
+// EDV delta became a stressed-volume delta (the engine moves EDV by ~1 mL per 13 mL of Vs at
+// the baseline), and inotropes also move the right-heart gain because a β1 agonist does not
+// spare the RV. Rate deltas are as before (2026-08-11). Phenylephrine's −5 bpm and the
+// vasodilators' +5 to +10 stand in for the reflex the engine carries but does not run here
+// (baroreflex OFF); Phase 3 (/pressors/) replaces all of this with a dose → concentration →
+// receptor → parameter chain.
+// Why contractility SCALES (2026-09-22, FITTED): the first closed-loop fit shifted Ees by +1.0
+// for dobutamine. On the baseline (Ees 2.5) that is +40 %; on HFrEF (Ees 1.0) it was +100 %
+// and on cardiogenic shock (0.6) +167 %, and the page printed dobutamine raising MAP by 34-42
+// mmHg on exactly the ventricles the drug is given to, while the same additive +0.3 on a
+// throttled right heart (rvGain 0.25-0.3, the pericardial presets) handed it most of a normal
+// RV's gain and let the 2.2 L venous reservoir flood the left side to a wedge of 55-62. A
+// β-agonist recruits a fraction of the contractility that is there (a failing, β1-downregulated
+// myocardium answers with less, not more), so every inotrope and the β-blocker now carry the
+// SAME fraction they had on the baseline — dobutamine ×1.4, milrinone ×1.32, isoproterenol
+// ×1.48, dopamine ×1.2, norepinephrine ×1.12, metoprolol ×0.8 — with the right-heart gain
+// scaled the same way. The baseline rows of the table below are unchanged by this; the
+// failing-ventricle and pericardial stacks are what moved. Dobutamine's SVR is scaled too
+// (×0.75, −25 %): Leier, Webel and Bush, Circulation 1977;56:468-472 (continuous dobutamine
+// infusion in severe heart failure) found cardiac output up, SVR down and mean arterial
+// pressure essentially unchanged, and the 2022 AHA/ACC/HFSA Heart Failure Guideline (Table 20,
+// p. e338, on disk) lists dobutamine as CO ↑, HR ↑, SVR ↓, PVR ↓ with "↑/↓ BP" among its
+// adverse effects. What scripts/test-engine.mjs asserts: `expectDir` (a direction) and
+// `expectNear` (|Δ| ≤ value, for a number that should NOT move) for each drug alone on the
+// baseline — dobutamine MAP ±6, prints 91 vs 92 — and `expectOn` for the same two claims on a
+// named preset: dobutamine on HFrEF, cardiogenic shock and DCM must hold MAP within ±10 with
+// CO up and PCWP down. The residual +7 to +8 on those three is the compensatory Rs 1.2-1.4
+// that the OFF reflex never withdraws; it is recorded under the residuals below.
 const DRUGS = {
-  dobutamine:    { name: 'Dobutamine',     Ees: +1.0, Ea: 0,    EDV: 0,   B: 0, HR: +10,      mech: 'β1 agonist — increases contractility' },
-  milrinone:     { name: 'Milrinone',       Ees: +0.8, Ea: -0.6, EDV: 0,   B: 0, HR: +5,      mech: 'PDE3 inhibitor — inodilator (↑contractility + ↓afterload)' },
-  isoproterenol: { name: 'Isoproterenol',   Ees: +1.2, Ea: -0.5, EDV: 0,   B: -0.005, HR: +25, mech: 'β1+β2 agonist — inotropy + vasodilation + lusitropy' },
-  dopamine_low:  { name: 'Dopamine (low)',  Ees: +0.5, Ea: 0,    EDV: 0,   B: 0, HR: +5,      mech: 'Low-dose β1 effect — mild inotropy' },
-  dopamine_high: { name: 'Dopamine (high)', Ees: +0.5, Ea: +0.8, EDV: 0,   B: 0, HR: +10,      mech: 'High-dose β1 + α1 — inotropy + vasoconstriction' },
-  phenylephrine: { name: 'Phenylephrine',   Ees: 0,    Ea: +1.0, EDV: 0,   B: 0, HR: -5,      mech: 'Pure α1 agonist — increases afterload only' },
-  norepinephrine:{ name: 'Norepinephrine',  Ees: +0.3, Ea: +1.2, EDV: 0,   B: 0, HR: 0,      mech: 'α1 + mild β1 — predominant vasoconstriction' },
-  nitroprusside: { name: 'Nitroprusside',   Ees: 0,    Ea: -1.0, EDV: -10, B: 0, HR: +8,      mech: 'Arterio + venodilator — ↓afterload + ↓preload' },
-  ntg:           { name: 'Nitroglycerin',   Ees: 0,    Ea: -0.4, EDV: -20, B: 0, HR: +5,      mech: 'Primarily venodilator — ↓↓preload, mild ↓afterload' },
-  phentolamine:  { name: 'Phentolamine',    Ees: 0,    Ea: -0.8, EDV: 0,   B: 0, HR: +10,      mech: 'α1 blocker — pure afterload reduction' },
-  acei:          { name: 'ACE Inhibitor',   Ees: 0,    Ea: -0.6, EDV: -10, B: 0, HR: 0,      mech: 'Arterio + venodilation — balanced ↓afterload + ↓preload' },
-  ccb:           { name: 'CCB (DHP)',       Ees: 0,    Ea: -0.5, EDV: 0,   B: 0, HR: +5,      mech: 'Dihydropyridine — arterial vasodilation ↓afterload' },
-  metoprolol:    { name: 'Metoprolol',      Ees: -0.5, Ea: 0,    EDV: 0,   B: 0, HR: -15,      mech: 'β-blocker — ↓contractility, ↓heart rate' },
-  fluids:        { name: 'IV Fluids',       Ees: 0,    Ea: 0,    EDV: +20, B: 0, HR: 0,      mech: 'Volume expansion — ↑preload (Frank-Starling)' },
-  diuretics:     { name: 'Diuretics',       Ees: 0,    Ea: 0,    EDV: -20, B: 0, HR: 0,      mech: 'Volume removal — ↓preload' },
+  dobutamine:    { name: 'Dobutamine',      scale: { Ees: 1.4, Rs: 0.75, rvGain: 1.3 }, HR: +10,      mech: 'β1 agonist with β2 vasodilation — contractility (LV and RV) up by ~40% of what the ventricle has, SVR down ~25%, modest chronotropy. On a normal ventricle MAP barely moves while CO climbs; on a failing one MAP rises modestly here because this page runs no reflex to withdraw its compensatory vasoconstriction.', expectDir: { EF: 1, CO: 1, ESV: -1 }, expectNear: { MAP: 6 },
+                   expectOn: { hfref: { near: { MAP: 10 }, dir: { CO: 1, PCWP: -1 } }, cardiogenic_shock: { near: { MAP: 10 }, dir: { CO: 1, PCWP: -1 } }, dcm: { near: { MAP: 10 }, dir: { CO: 1, PCWP: -1 } } } },
+  milrinone:     { name: 'Milrinone',       scale: { Ees: 1.32, rvGain: 1.3 }, Rs: -0.25, HR: +5,     mech: 'PDE3 inhibitor — inodilator (↑contractility + ↓afterload)', expectDir: { CO: 1, MAP: -1, EF: 1 } },
+  isoproterenol: { name: 'Isoproterenol',   scale: { Ees: 1.48, rvGain: 1.4 }, Rs: -0.45, HR: +25, B: -0.005, mech: 'β1+β2 agonist — inotropy + β2 vasodilation (SVR falls hard) + lusitropy + tachycardia; diastolic pressure falls even as output climbs', expectDir: { CO: 1, DBP: -1, HR: 1 } },
+  dopamine_low:  { name: 'Dopamine (low)',  scale: { Ees: 1.2, rvGain: 1.2 }, HR: +5,                 mech: 'Low-dose β1 effect — mild inotropy', expectDir: { CO: 1, EF: 1 } },
+  dopamine_high: { name: 'Dopamine (high)', scale: { Ees: 1.2, rvGain: 1.2 }, Rs: +0.3, HR: +10,      mech: 'High-dose β1 + α1 — inotropy + vasoconstriction', expectDir: { MAP: 1, CO: 1 } },
+  phenylephrine: { name: 'Phenylephrine',   Rs: +0.4, HR: -5,                                          mech: 'Pure α1 agonist — raises SVR; SV and CO fall as the loop tilts (afterload), MAP rises', expectDir: { MAP: 1, SV: -1, CO: -1 } },
+  norepinephrine:{ name: 'Norepinephrine',  scale: { Ees: 1.12 }, Rs: +0.45, Vs: +80,                 mech: 'α1 + mild β1 — arterial AND venous constriction (stressed volume ↑) with modest inotropy', expectDir: { MAP: 1, PCWP: 1 } },
+  nitroprusside: { name: 'Nitroprusside',   Rs: -0.35, Vs: -120, HR: +8,                               mech: 'Arterio + venodilator — ↓afterload + ↓preload', expectDir: { MAP: -1, PCWP: -1 } },
+  ntg:           { name: 'Nitroglycerin',   Rs: -0.12, Vs: -250, HR: +5,                               mech: 'Primarily venodilator — unstressed volume ↑ so stressed volume ↓↓ (preload), mild ↓afterload', expectDir: { PCWP: -1, EDV: -1 } },
+  phentolamine:  { name: 'Phentolamine',    Rs: -0.3, HR: +10,                                         mech: 'α1 blocker — pure afterload reduction with reflex tachycardia. On a NORMAL ventricle (Ees ≈ 2) the loop shifts left (ESV falls) but SV barely moves — the shorter filling time takes back what the lower Ea gave; CO rises with the rate. Afterload reduction pays in SV only when Ees is low (try it on HFrEF).', expectDir: { MAP: -1, ESV: -1, CO: 1 } },
+  acei:          { name: 'ACE Inhibitor',   Rs: -0.25, Vs: -120,                                       mech: 'Arterio + venodilation — balanced ↓afterload + ↓preload', expectDir: { MAP: -1, PCWP: -1 } },
+  ccb:           { name: 'CCB (DHP)',       Rs: -0.2, HR: +5,                                          mech: 'Dihydropyridine — arterial vasodilation ↓afterload. ESV falls and the loop shifts left; on a normal ventricle SV is nearly unchanged because the reflex rate shortens filling.', expectDir: { MAP: -1, ESV: -1 } },
+  metoprolol:    { name: 'Metoprolol',      scale: { Ees: 0.8, rvGain: 0.85 }, HR: -15,               mech: 'β-blocker — ↓contractility, ↓heart rate', expectDir: { HR: -1, CO: -1 } },
+  fluids:        { name: 'IV Fluids',       Vs: +250,                                                  mech: 'Volume expansion — ↑stressed volume → ↑venous return → ↑preload (Frank-Starling)', expectDir: { EDV: 1, PCWP: 1, CO: 1 } },
+  diuretics:     { name: 'Diuretics',       Vs: -250,                                                  mech: 'Volume removal — ↓stressed volume → ↓preload', expectDir: { EDV: -1, PCWP: -1 } },
 };
 
 // Both animation chains — the tracing dot and the 400 ms drug transition — start on load or
@@ -2654,13 +3132,13 @@ const REDUCED_MOTION = (() => {
 })();
 
 let activeDrugs = new Set();
-let animatingDrugs = false;
 let drugAnimStart = null;
 let drugAnimFrom = null;
 let drugAnimTo = null;
 const DRUG_ANIM_MS = 400;
 
 function toggleDrug(drugId) {
+  cmTrack('tool_action', { action: 'drug', target: drugId });
   // Auto-snapshot before first drug if no ghost exists
   if (activeDrugs.size === 0 && !ghostLoop) {
     takeSnapshot();
@@ -2692,8 +3170,8 @@ function toggleDrug(drugId) {
 }
 
 function getBaseParams() {
-  // If a disease is active, use its params as base; otherwise BASELINE
-  return activeDisease ? { ...DISEASES[activeDisease].params } : { ...BASELINE };
+  // If a disease is active, its engine parameters overlay the baseline; otherwise BASELINE.
+  return { ...BASELINE, ...(activeDisease ? DISEASES[activeDisease].params : {}) };
 }
 
 
@@ -2704,26 +3182,24 @@ function animateDrugTransition(ts) {
   // Ease-out cubic
   t = 1 - Math.pow(1 - t, 3);
 
-  params.Ees = drugAnimFrom.Ees + (drugAnimTo.Ees - drugAnimFrom.Ees) * t;
-  params.Ea = drugAnimFrom.Ea + (drugAnimTo.Ea - drugAnimFrom.Ea) * t;
-  params.EDV = drugAnimFrom.EDV + (drugAnimTo.EDV - drugAnimFrom.EDV) * t;
-  params.B = drugAnimFrom.B + (drugAnimTo.B - drugAnimFrom.B) * t;
-  params.HR = drugAnimFrom.HR + (drugAnimTo.HR - drugAnimFrom.HR) * t;
-  params.V0 = drugAnimFrom.V0 + (drugAnimTo.V0 - drugAnimFrom.V0) * t;
+  // Every numeric engine parameter is eased — sliders, valve areas, device flows alike — and
+  // each frame is a fresh steady-state solve warm-started from the previous one.
+  const next = { ...drugAnimTo };
+  for (const k of Object.keys(drugAnimTo)) {
+    if (typeof drugAnimTo[k] === 'number' && typeof drugAnimFrom[k] === 'number') {
+      next[k] = drugAnimFrom[k] + (drugAnimTo[k] - drugAnimFrom[k]) * t;
+    }
+  }
+  params = t < 1 ? next : { ...drugAnimTo };
+  // The final frame is at rest: the flag is cleared BEFORE this draw so that currentReport
+  // solves it cold and the printed numbers are the documented ones (see the model adapter).
+  if (t >= 1) animatingDrugs = false;
 
   setSliders(params);
   updateSliderDisplays();
   draw();
 
-  if (t < 1) {
-    requestAnimationFrame(animateDrugTransition);
-  } else {
-    animatingDrugs = false;
-    params = { ...drugAnimTo };
-    setSliders(params);
-    updateSliderDisplays();
-    draw();
-  }
+  if (t < 1) requestAnimationFrame(animateDrugTransition);
 }
 
 function updateDrugSummary() {
@@ -2762,103 +3238,200 @@ function initDrugButtons() {
 
 // ---- DISEASE STATES ----
 //
-// Three presets were retuned on 2026-09-20 because the numbers they produced contradicted
-// their own descriptions. The model's closed form is ESV = (Ees*V0 + Ea*EDV)/(Ees + Ea),
-// ESP = Ees*(ESV - V0), so a preset is a claim about SV/EF/CO/ESP and has to be checked:
+// A preset is a set of ENGINE PARAMETERS overlaid on the baseline: contractility (Ees, V0),
+// stiffness (B), rate, systemic resistance, stressed volume, right-heart gain, valve areas and
+// regurgitant orifices. Everything it used to assert directly — EDV, Ea, EDP, the loop's
+// pressures — now emerges, so a preset is a CLAIM about what the closed loop will produce and
+// `expect` states that claim as ranges. scripts/test-engine.mjs solves every preset and fails
+// if a number leaves its range; the derived table below is regenerated from the same run.
 //
-//   aortic_stenosis  Ees 3.0 / Ea 3.5 -> EF 44%, on a preset whose text says "compensatory
-//                    concentric LVH". Compensated severe AS preserves EF; that is the whole
-//                    point of the adaptation. Now Ees 4.3 / Ea 2.6 -> EF 60%, ESP 186.
-//   mitral_regurg    Ea 0.8 represented the regurgitant pop-off but dragged the pressure
-//                    ceiling to ESP 89, drawing a SHORT loop. Chronic MR is normal-height
-//                    and wide. Now Ees 2.5 / Ea 1.1 -> ESP 119, EF 63%, total SV 108.
-//   septic_shock     Ea 0.6 gave ESP 54, i.e. a systolic near 60 — not the high-output,
-//                    modestly hypotensive state the description promises. Now Ees 1.6 /
-//                    Ea 1.0 -> ESP 83, EF 55%, CO 9.1.
+// Stressed volumes were tuned by bisection (2026-09-21) to a documented filling-pressure or
+// volume target: HFrEF/HFpEF/MS to PCWP, DCM/AR/MR/eccentric LVH to EDV, cardiogenic shock to
+// PCWP 25, constriction/tamponade to RAP 18. Two consequences of a LINEAR venous compliance
+// of 100 mL/mmHg are recorded rather than hidden: a right atrial pressure of 18 needs ~1.8 L
+// of stressed venous volume, so the pericardial presets carry Vs ≈ 2.2 L (reflex venoconstriction
+// and retention are the only route this model has to that pressure), and tamponade is still
+// represented as a steep EDPVR (B) rather than the parallel upward shift a pericardial
+// pressure would give — pPeri is a Phase 3 parameter.
 //
-// The full derived table for all 18 presets is printed in the comment block below DISEASES.
+// Small-ventricle EF (2026-09-22). The engine's ESPVR is linear with a fixed intercept, so
+// ESV ≥ ESP/Ees + V0 whatever the EDV. On a 50-80 mL ventricle the baseline Ees 2.5 / V0 10
+// put ESV at 35-47 mL and printed EF 35-47 % for tamponade, hypovolaemia and constriction —
+// states that are hyperdynamic (EF ≥ 60 %) in life. Those three presets therefore carry V0 0
+// (FITTED: V0 10 is the fit intercept that places the NORMAL ESV at 55 mL; a linear fit through
+// a normal working range overstates the unloaded volume of a small chamber) and a raised Ees
+// (hypovolaemia 4.5, tamponade 5.0 = 2× baseline, the endogenous catecholamine surge of
+// haemorrhage and pericardial compression; constriction 3.5, sympathetically driven but not in
+// extremis). With the steeper ESPVR the old B cap of 0.05 (set so the EDPVR stayed under an
+// Ees 2.0-2.5 ESPVR in the filling range) can be lifted: constriction B 0.06 and tamponade
+// B 0.08 restore the end-diastolic pressure that the smaller EDV had drained away, and
+// tamponade now equalises (RAP 18 / PCWP 16 / EDP 15.8) where it did not before. Constriction's
+// rvGain went 0.3 → 0.28 in the same pass because the steeper B had opened its RAP–EDP gap from
+// 1 to 4 mmHg (16 / 20 / 20.1); it now prints 17 / 17 / 16.8. Each carries EF in its expect
+// block so section 8 catches a regression; both pericardial presets also assert `expectEqualised`
+// (|RAP − EDP| and |PCWP − EDP| ≤ 3) and `expectStacked` (with each inotrope on top, PCWP 8-30
+// and RAP 8-24, converged). Tamponade's Ees sits at the slider maximum, so its EF stops at 58 %
+// and a stacked inotrope is clamped — recorded under residuals.
 const DISEASES = {
-  hfref:             { name: 'HFrEF', params: {Ees:1.0, Ea:2.2, EDV:180, B:0.025, HR:85, V0:30},
-                       desc: 'Reduced ejection fraction HF. ↓↓Contractility (Ees), ↑afterload, dilated LV. EF <40%.', category: 'Heart failure with reduced systolic function.' },
-  hfpef:             { name: 'HFpEF', params: {Ees:3.2, Ea:2.2, EDV:110, B:0.0364, HR:75, V0:10},
-                       desc: 'Preserved EF but ↑diastolic stiffness (B). Normal Ees, ↑Ea, ↑EDP. Small stiff ventricle.', category: 'Diastolic dysfunction, impaired relaxation.' },
-  dcm:               { name: 'Dilated Cardiomyopathy', params: {Ees:0.8, Ea:2.0, EDV:220, B:0.02, HR:90, V0:40},
-                       desc: 'Severely dilated LV with ↓↓contractility. ↑↑EDV, ↑V0 (rightward shift). Very low EF.', category: 'End-stage dilated cardiomyopathy.' },
-  cardiogenic_shock: { name: 'Cardiogenic Shock', params: {Ees:0.6, Ea:2.5, EDV:200, B:0.024, HR:110, V0:35},
-                       desc: '↓↓↓Contractility with ↑afterload (compensatory vasoconstriction). Tachycardic. EF <20%, ↓CO.', category: 'SCAI Stage C/D shock.' },
-  septic_shock:      { name: 'Septic Shock (warm)', params: {Ees:1.6, Ea:1.0, EDV:150, B:0.02, HR:110, V0:15},
-                       desc: 'Distributive: ↓↓SVR (low Ea), mild myocardial depression, ↑HR. High-output, low-pressure state.', category: 'Vasodilatory/distributive shock.' },
-  hypovolemic_shock: { name: 'Hypovolemic Shock', params: {Ees:2.8, Ea:2.5, EDV:70, B:0.025, HR:120, V0:10},
-                       desc: '↓↓Preload (low EDV), compensatory ↑HR and vasoconstriction (↑Ea). Small loop, low SV.', category: 'Hemorrhage, dehydration.' },
-  aortic_stenosis:   { name: 'Aortic Stenosis', params: {Ees:4.3, Ea:2.6, EDV:120, B:0.0307, HR:70, V0:5},
-                       desc: 'Fixed obstruction → ↑↑afterload (Ea). Compensatory concentric LVH (↑Ees, ↑B). ↑↑ESP, ↓SV.', category: 'Pressure overload → concentric hypertrophy.' },
-  mitral_stenosis:   { name: 'Mitral Stenosis', params: {Ees:2.5, Ea:1.8, EDV:85, B:0.025, HR:80, V0:10},
-                       desc: 'Restricted LV filling → ↓EDV. Normal contractility and afterload. Small loop, low SV.', category: 'Inflow obstruction limits preload.' },
-  aortic_regurg:     { name: 'Aortic Regurgitation', params: {Ees:1.8, Ea:1.0, EDV:190, B:0.02, HR:75, V0:25},
-                       desc: 'Volume overload → ↑↑EDV, eccentric remodeling (↑V0). ↓Effective Ea (regurgitant flow). Wide loop. <b>No isovolumic relaxation</b> — the aortic valve leaks the moment LV pressure drops below aortic, so volume RISES through relaxation and that limb slopes down-and-right instead of falling vertically.', category: 'Combined volume + pressure overload.' },
-  mitral_regurg:     { name: 'Mitral Regurgitation', params: {Ees:2.5, Ea:1.1, EDV:170, B:0.02, HR:85, V0:15},
-                       desc: 'Low-impedance ejection into LA → ↓effective Ea. Volume overload → ↑EDV. High total SV but ↓forward SV. <b>No isovolumic contraction</b> — the mitral valve leaks as soon as LV pressure exceeds LA pressure, so volume FALLS before the aortic valve opens and that limb slopes up-and-left instead of rising vertically.', category: 'Part of SV is regurgitant.' },
-  concentric_lvh:    { name: 'Concentric LVH', params: {Ees:3.5, Ea:2.5, EDV:100, B:0.036, HR:70, V0:5},
-                       desc: 'Wall thickening without chamber dilation. ↑Ees (supranormal contractility), ↑B (stiff), ↓cavity size.', category: 'Hypertension, AS response.' },
-  eccentric_lvh:     { name: 'Eccentric LVH', params: {Ees:1.5, Ea:1.8, EDV:170, B:0.02, HR:75, V0:25},
+  hfref:             { name: 'HFrEF', params: {Ees:1.0, V0:30, B:0.025, HR:85, Rs:1.4, rvGain:0.7, Vs:1125},
+                       expect: { EF:[20,40], PCWP:[18,26], CO:[3,4.6], EDV:[165,195] },
+                       desc: 'Reduced ejection fraction HF. ↓↓Contractility (Ees), dilated LV (V0), compensatory ↑SVR, volume retained (Vs) → PCWP ~22. EF <40%.', category: 'Heart failure with reduced systolic function.' },
+  hfpef:             { name: 'HFpEF', params: {Ees:3.2, V0:10, B:0.0364, HR:75, Rs:1.4, Vs:960},
+                       expect: { EF:[50,70], PCWP:[16,24], EDV:[95,125], MAP:[95,120] },
+                       desc: 'Preserved EF but ↑diastolic stiffness (B). Normal Ees, hypertensive afterload, ↑EDP at a small EDV. Small stiff ventricle.', category: 'Diastolic dysfunction, impaired relaxation.' },
+  dcm:               { name: 'Dilated Cardiomyopathy', params: {Ees:0.8, V0:40, B:0.02, HR:90, Rs:1.3, rvGain:0.6, Vs:1295},
+                       expect: { EF:[15,30], EDV:[205,235], PCWP:[16,26] },
+                       desc: 'Severely dilated LV with ↓↓contractility. ↑↑EDV, ↑V0 (rightward shift), biventricular involvement (RV gain ↓). Very low EF.', category: 'End-stage dilated cardiomyopathy.' },
+  cardiogenic_shock: { name: 'Cardiogenic Shock', params: {Ees:0.6, V0:35, B:0.024, HR:110, Rs:1.2, rvGain:0.4, Vs:1540},
+                       expect: { EF:[8,22], CO:[2,3.6], MAP:[55,75], PCWP:[20,30] },
+                       desc: '↓↓↓Contractility, failing RV, tachycardic, PCWP ~25, MAP ~70 on compensatory vasoconstriction. EF <20%, ↓↓CO.', category: 'SCAI Stage C/D shock.' },
+  septic_shock:      { name: 'Septic Shock (warm)', params: {Ees:1.6, V0:15, B:0.02, HR:110, Rs:0.5, rvGain:1.5, Vs:805},
+                       expect: { CO:[6.5,9.5], MAP:[55,72], EF:[45,60] },
+                       desc: 'Distributive: ↓↓SVR (Rs 0.5), mild myocardial depression, hyperdynamic RV, ↑HR. High-output, low-pressure state.', category: 'Vasodilatory/distributive shock.' },
+  hypovolemic_shock: { name: 'Hypovolemic Shock', params: {Ees:4.5, V0:0, B:0.025, HR:120, Rs:1.3, Vs:505},
+                       expect: { EDV:[40,65], PCWP:[2,8], PP:[10,25], CO:[2.5,4.5], EF:[55,75] },
+                       desc: '↓↓Stressed volume (Vs) → small EDV, low PCWP; compensatory ↑HR, ↑↑Ees (catecholamine surge) and ↑SVR. Small hyperdynamic loop (EF ~60%), narrow pulse pressure.', category: 'Hemorrhage, dehydration.' },
+  aortic_stenosis:   { name: 'Aortic Stenosis', params: {AVA:0.9, Ees:4.0, B:0.0307, V0:5, HR:70, Rs:1.07, Vs:930},
+                       expect: { meanGrad:[40,80], EF:[55,72], PCWP:[10,20], SBP:[100,135] },
+                       desc: 'Fixed orifice (AVA 0.9 cm²) → LV systolic pressure well above aortic; mean gradient ≥40 mmHg (severe, ACC/AHA 2020). Compensatory concentric LVH (↑Ees, ↑B) preserves EF.', category: 'Pressure overload → concentric hypertrophy.' },
+  mitral_stenosis:   { name: 'Mitral Stenosis', params: {MVA:1.2, HR:80, Vs:985},
+                       expect: { PCWP:[16,25], EDV:[95,125], CO:[3.5,5.5] },
+                       desc: 'Inflow orifice (MVA 1.2 cm², severe ≤1.5 by ACC/AHA 2020) → filling needs a transmitral gradient, so PCWP rises while LVEDP stays low. Normal contractility and afterload.', category: 'Inflow obstruction limits preload.' },
+  aortic_regurg:     { name: 'Aortic Regurgitation', params: {eroaAR:0.35, Ees:1.8, V0:25, B:0.02, HR:75, Rs:1.2, Vs:665},
+                       expect: { RVolAR:[45,80], DBP:[25,50], PP:[55,85], EF:[50,65], EDV:[175,205] },
+                       desc: 'EROA 0.35 cm² (severe ≥0.3, ASE 2017): diastolic runoff back into the LV → low aortic diastolic, wide pulse pressure, ↑↑EDV with eccentric remodeling (↑V0). <b>No isovolumic relaxation</b> — the relaxation limb slopes down-and-right as regurgitant inflow begins the moment aortic pressure exceeds LV pressure.', category: 'Combined volume + pressure overload.' },
+  mitral_regurg:     { name: 'Mitral Regurgitation', params: {eroaMR:0.45, Ees:2.5, V0:15, B:0.02, HR:85, Rs:1.0, Vs:1015},
+                       expect: { RVolMR:[45,80], EF:[60,78], EDV:[155,185], CO:[4,6.5] },
+                       desc: 'EROA 0.45 cm² (severe ≥0.4, ASE 2017): a low-impedance path into the LA → ↓effective Ea, high total SV but ↓forward SV, ↑EDV. <b>No isovolumic contraction</b> — volume leaves before the aortic valve opens and the contraction limb slopes up-and-left.', category: 'Part of SV is regurgitant.' },
+  concentric_lvh:    { name: 'Concentric LVH', params: {Ees:3.5, B:0.036, V0:5, HR:70, Rs:1.7, Vs:770},
+                       expect: { MAP:[100,125], EF:[52,70], EDV:[85,115], PCWP:[10,18] },
+                       desc: 'Hypertension (Rs 1.7) with wall thickening and no dilation. ↑Ees (supranormal contractility), ↑B (stiff), ↓cavity size, ↑EDP.', category: 'Hypertension, AS response.' },
+  eccentric_lvh:     { name: 'Eccentric LVH', params: {Ees:1.5, V0:25, B:0.02, HR:75, Rs:1.1, Vs:855},
+                       expect: { EDV:[155,185], EF:[32,50], CO:[4,6] },
                        desc: 'Chamber dilation with wall thinning. ↑EDV, ↑V0 (rightward shift). ↓Ees, relatively compliant (↓B).', category: 'Volume overload response (AR, MR).' },
-  constriction:      { name: 'Constrictive Pericarditis', params: {Ees:2.5, Ea:1.8, EDV:100, B:0.0415, HR:85, V0:10},
-                       desc: 'Rigid pericardium limits filling → ↑↑B (steep EDPVR), ↓EDV. Normal systolic function. ↑EDP.', category: 'Dip-and-plateau physiology.' },
-  tamponade:         { name: 'Cardiac Tamponade', params: {Ees:2.5, Ea:2.2, EDV:80, B:0.052, HR:110, V0:10},
-                       desc: 'External compression → ↓↓EDV, ↑B, ↑Ea (compensatory). Tachycardic. Very small loop.', category: 'Pericardial effusion with hemodynamic compromise.' },
+  constriction:      { name: 'Constrictive Pericarditis', params: {Ees:3.5, V0:0, B:0.06, HR:85, rvGain:0.28, Vs:2185},
+                       expect: { RAP:[14,22], PCWP:[12,24], EDV:[50,80], CO:[2.5,4.5], EF:[55,75] }, expectEqualised: 3,
+                       expectStacked: { drugs: ['dobutamine', 'milrinone', 'isoproterenol', 'dopamine_low', 'dopamine_high'], PCWP: [8, 30], RAP: [8, 24] },
+                       desc: 'Rigid pericardium: steep EDPVR (↑↑B) at a small EDV and a throttled right heart → RAP ≈ PCWP ≈ LVEDP (diastolic equalization). Systolic function preserved (EF ~60%), output limited by filling.', category: 'Dip-and-plateau physiology.' },
+  tamponade:         { name: 'Cardiac Tamponade', params: {Ees:5.0, V0:0, B:0.08, HR:110, Rs:1.5, rvGain:0.25, Vs:2225},
+                       expect: { RAP:[14,22], PCWP:[12,22], PP:[8,25], CO:[2,3.8], EDV:[38,60], EF:[55,75] }, expectEqualised: 3,
+                       expectStacked: { drugs: ['dobutamine', 'milrinone', 'isoproterenol', 'dopamine_low', 'dopamine_high'], PCWP: [8, 30], RAP: [8, 24] },
+                       desc: 'External compression → ↓↓EDV, ↑↑B, throttled right heart (RAP ~18 ≈ PCWP ≈ LVEDP), compensatory ↑HR, ↑↑Ees (catecholamine surge) and ↑SVR. Very small hyperdynamic loop, narrow pulse pressure.', category: 'Pericardial effusion with hemodynamic compromise.' },
   // Mixed Valve Disease
-  as_ar:             { name: 'AS + AR (Mixed Aortic)', params: {Ees:2.5, Ea:2.5, EDV:170, B:0.025, HR:75, V0:20},
-                       desc: 'Combined pressure + volume overload. Tall AND wide loop. Concentric + eccentric hypertrophy. Highest wall stress. The AR component abolishes isovolumic relaxation — that limb slopes right.', category: 'Bicuspid AV, calcific degeneration.' },
-  as_mr:             { name: 'AS + MR', params: {Ees:2.8, Ea:2.0, EDV:150, B:0.026, HR:80, V0:10},
-                       desc: 'AS pressure overload partially offset by MR "pop-off" into LA. ↑EDV from MR volume overload. Preserved EF. The MR component abolishes isovolumic contraction — that limb slopes left.', category: 'Calcific AS + functional MR (common in elderly).' },
-  ms_mr:             { name: 'MS + MR (Rheumatic)', params: {Ees:2.2, Ea:1.0, EDV:100, B:0.025, HR:90, V0:10},
-                       desc: 'Restricted inflow (MS) + low-impedance regurgitant path (MR). Small loop, low pressures, high EF from MR unloading. The MR component abolishes isovolumic contraction — that limb slopes left.', category: 'Rheumatic mitral valve disease.' },
-  ms_as:             { name: 'MS + AS (Rheumatic)', params: {Ees:3.0, Ea:3.5, EDV:80, B:0.045, HR:80, V0:5},
-                       desc: 'Worst combination: restricted inflow (MS) + outflow obstruction (AS). Tiny high-pressure loop. Very low CO.', category: 'Rheumatic multivalvular disease.' },
+  as_ar:             { name: 'AS + AR (Mixed Aortic)', params: {AVA:1.0, eroaAR:0.25, Ees:2.5, V0:25, B:0.02, HR:75, Rs:1.1, Vs:630},
+                       expect: { meanGrad:[40,90], RVolAR:[30,65], PP:[45,75], EDV:[155,185] },
+                       desc: 'Combined pressure + volume overload: an orifice of 1.0 cm² AND a regurgitant orifice of 0.25 cm². Tall AND wide loop, highest wall stress. The AR component abolishes isovolumic relaxation — that limb slopes right.', category: 'Bicuspid AV, calcific degeneration.' },
+  as_mr:             { name: 'AS + MR', params: {AVA:1.0, eroaMR:0.3, Ees:2.8, V0:10, B:0.026, HR:80, Vs:1035},
+                       expect: { meanGrad:[30,70], RVolMR:[30,65], EF:[55,75], PCWP:[15,28] },
+                       desc: 'AS pressure overload partially offset by MR "pop-off" into the LA. ↑EDV from MR volume overload, ↑PCWP. Preserved EF. The MR component abolishes isovolumic contraction — that limb slopes left.', category: 'Calcific AS + functional MR (common in elderly).' },
+  ms_mr:             { name: 'MS + MR (Rheumatic)', params: {MVA:1.3, eroaMR:0.3, Ees:2.2, HR:90, Rs:1.3, Vs:830},
+                       expect: { PCWP:[16,28], CO:[2.5,4.5], RVolMR:[15,45], MAP:[60,85] },
+                       desc: 'Restricted inflow (MS) + a regurgitant path (MR). Small loop, low forward output, high PCWP from both lesions. The MR component abolishes isovolumic contraction — that limb slopes left.', category: 'Rheumatic mitral valve disease.' },
+  ms_as:             { name: 'MS + AS (Rheumatic)', params: {MVA:1.2, AVA:1.0, Ees:3.0, B:0.045, V0:5, HR:80, Vs:890},
+                       expect: { PCWP:[16,28], CO:[3,5], meanGrad:[20,45], EDV:[70,100] },
+                       desc: 'Restricted inflow (MS) + outflow obstruction (AS). Tiny high-pressure loop, low CO — and because flow is low, the AS gradient reads only moderate across a 1.0 cm² valve: low-flow, low-gradient AS.', category: 'Rheumatic multivalvular disease.' },
 };
 
-// ---- WHAT EVERY PRESET ACTUALLY DRAWS ----
-// Generated from this file's own computeLoop on 2026-09-20. A preset is a claim about SV,
-// EF, CO and ESP, and until this table existed there was no way to diff a preset change or
-// to notice that one of them contradicted its own description. Regenerate it when a preset
-// or a model constant moves; a preset whose row disagrees with its text is a defect.
-// Pao-dia is the AV-opens corner (Windkessel decay; AS rows include the 40 mmHg gradient).
+// <preset-table>
+// Every number below is report.printed for the preset as engineParamsFor builds it, written
+// by `node scripts/test-engine.mjs --write-preset-table` and asserted equal by every test run.
+// Units: mL, %, L/min, mmHg, mmHg/mL. ΔPm = aortic mean gradient, RVol = regurgitant volume,
+// dev = device flow (L/min). Diseases alone; drugs alone on the baseline; devices on
+// cardiogenic_shock. Engine 1.0.0.
 //
-//   preset              Ees   Ea    EDV   B      HR   V0 |  SV   EF    CO   ESP  EDP   SW    Pao-dia
-//   (baseline)          2.5   1.8   125  0.025   70  10 |  67  53.6   4.7  120   9.0   6855    84
-//   hfref               1.0   2.2   180  0.025   85  30 |  47  26.1   4.0  103  22.4   3783    78
-//   hfpef               3.2   2.2   110 0.0364   75  10 |  59  53.6   4.4  130  20.0   6528    97
-//   dcm                 0.8   2.0   220   0.02   90  40 |  51  23.2   4.6  103  19.2   4164    76
-//   cardiogenic_shock   0.6   2.5   200  0.024  110  35 |  32  16.0   3.5   80  27.8   1737    63
-//   septic_shock        1.6   1.0   150   0.02  110  15 |  83  55.3   9.1   83   7.5   5481    46
-//   hypovolemic_shock   2.8   2.5    70  0.025  120  10 |  32  45.7   3.8   79   1.9   2282    63
-//   aortic_stenosis     4.3   2.6   120 0.0307   70   5 |  72  60.0   5.0  186  17.9  10907   113
-//   mitral_stenosis     2.5   1.8    85  0.025   80  10 |  44  51.8   3.5   78   3.0   2975    55
-//   aortic_regurg       1.8   1.0   190   0.02   75  25 | 106  55.8   8.0  106  14.1   7161    42
-//   mitral_regurg       2.5   1.1   170   0.02   85  15 | 108  63.5   9.2  118  11.4   9050    67
-//   concentric_lvh      3.5   2.5   100  0.036   70   5 |  55  55.0   3.9  139  16.0   6650   107
-//   eccentric_lvh       1.5   1.8   170   0.02   75  25 |  66  38.8   5.0  119   9.3   6620    83
-//   constriction        2.5   1.8   100 0.0415   85  10 |  52  52.0   4.4   94  22.1   3939    67
-//   tamponade           2.5   2.2    80  0.052  110  10 |  37  46.3   4.1   82  20.0   2466    63
-//   as_ar               2.5   2.5   170  0.025   75  20 |  75  44.1   5.6  188  22.4  10059   105
-//   as_mr               2.8   2.0   150  0.026   80  10 |  82  54.7   6.6  163  20.0   9525    90
-//   ms_mr               2.2   1.0   100  0.025   90  10 |  62  62.0   5.6   62   4.6   2720    34
-//   ms_as               3.0   3.5    80  0.045   80   5 |  35  43.8   2.8  121  15.2   3217    65
+// Diseases
+//   preset             EDV ESV  SV    EF   CO   Ao(S/D) MAP PCWP RAP   EDP    Ea  ΔPm RVol  dev  refusal
+//   baseline           127  55  72  56.7    5  113/71  92   11   4   9.4  1.56    6    —    —
+//   hfref              178 134  44  24.7  3.8  104/77  91   22   4  21.5  2.36    4    —    —
+//   hfpef              109  49  60    55  4.6  124/89 107   20   3  19.5  2.05    5    —    —
+//   dcm                220 174  46  20.9  4.1  107/80  93   20   6  19.1  2.33    5    —    —
+//   cardiogenic_shock  195 166  29  14.9  3.2   79/62  70   25   8  24.5  2.72    3    —    —
+//   septic_shock       135  67  68  50.4  7.5   84/48  66   12   4   4.9  1.22    8    —    —
+//   hypovolemic_shock   50  19  31    62  3.7   88/71  81    5   3   1.3  2.84    3    —    —
+//   aortic_stenosis    113  40  73  64.6  5.3  119/78  97   15   4  14.3  1.93   63    —    —
+//   mitral_stenosis    116  53  63  54.3    5  109/73  92   20   4   6.3  1.71    6    —    —
+//   aortic_regurg      190  83 107  56.3  3.5  104/34  70   11   2  13.1  0.97    9   61    —
+//   mitral_regurg      170  54 116  68.2  5.6  117/76  96   17   5    11  0.84   10   62    —
+//   concentric_lvh      96  40  56  58.3  3.9  125/92 109   14   3  13.6  2.21    4    —    —
+//   eccentric_lvh      170 102  68    40  5.1  116/76  96   11   4   9.2  1.69    7    —    —
+//   constriction        58  22  36  62.1    3   79/59  70   17  17  16.8  2.17    2    —    —
+//   tamponade           43  18  25  58.1  2.8   90/76  84   16  18  15.8  3.56    2    —    —
+//   as_ar              170  82  88  51.8  3.8  101/41  69    9   3   8.6  1.63   67   46    —
+//   as_mr              150  50 100  66.7    5  108/74  91   22   4  19.9  1.11   47   47    —
+//   ms_mr              105  45  60  57.1  3.3   84/61  73   22   2   4.4   1.3    4   29    —
+//   ms_as               85  37  48  56.5    4   87/60  73   22   3    19  1.98   29    —    —
 //
-// Known residuals, recorded rather than quietly tuned away:
-//   ms_mr  ESP 62, and therefore an aortic 62/34, a MAP near 43 — frankly hypotensive for a
-//          preset described as stable rheumatic valve disease. The low ESP is the closed
-//          form's doing (a small ventricle ejecting into a low-impedance regurgitant path
-//          cannot be given a normal systolic pressure without an Ees the lesion does not
-//          have), and the Windkessel then decays honestly FROM that ESP, so the aortic
-//          pressure inherits it. The loop SHAPE is right; the absolute pressures on this
-//          preset are not. Do not cite this row's pressures.
-//   as_ar / eccentric_lvh  EF 44% and 39% (table above), defensible for decompensated mixed aortic disease
-//          but should be revisited with the closed-loop engine.
-//   EDPVR at the extremes  edpvr() is exponential and unbounded: EDV 150 with B 0.05 prints
-//          EDP 591.6 mmHg, and the slider maxima reach ~3.9e10. Pre-existing, not introduced
-//          by the Windkessel, but P_ao_dia is floored at EDP + 5, so an absurd B now produces
-//          an absurd aortic diastolic too.
+// Drugs alone on the baseline
+//   preset             EDV ESV  SV    EF   CO   Ao(S/D) MAP PCWP RAP   EDP    Ea  ΔPm RVol  dev  refusal
+//   dobutamine         124  42  82  66.1  6.6  113/67  91   11   4   8.6  1.34    8    —    —
+//   milrinone          129  44  85  65.9  6.4  113/65  90   12   4   9.9  1.31    8    —    —
+//   isoproterenol      116  37  79  68.1  7.6  102/59  82   10   4   3.7  1.25    9    —    —
+//   dopamine_low       128  51  77  60.2  5.8  125/81 104   11   4   9.7  1.61    7    —    —
+//   dopamine_high      126  58  68    54  5.4 144/104 125   11   3   9.3   2.1    7    —    —
+//   phenylephrine      132  62  70    53  4.6  132/90 112   12   3  10.9  1.87    6    —    —
+//   norepinephrine     134  62  72  53.7    5 148/105 127   12   4  11.4  2.04    7    —    —
+//   nitroprusside      106  42  64  60.4    5   81/45  63    8   4   5.3  1.23    5    —    —
+//   ntg                 96  42  54  56.3  4.1   81/50  66    6   3     4  1.48    4    —    —
+//   phentolamine       117  47  70  59.8  5.6   94/55  75    9   5   7.1  1.33    6    —    —
+//   acei               113  44  69  61.1  4.8   87/49  68    8   4   6.5  1.25    5    —    —
+//   ccb                122  50  72    59  5.4  101/60  81   10   4   8.2  1.39    6    —    —
+//   metoprolol         134  59  75    56  4.1   98/54  76   12   4  11.5  1.31    5    —    —
+//   fluids             146  62  84  57.5  5.9  132/83 108   17   5  15.7  1.55    8    —    —
+//   diuretics          100  44  56    56  3.9   87/54  71    6   3   4.5  1.54    4    —    —
+//
+// Devices on cardiogenic_shock
+//   preset             EDV ESV  SV    EF   CO   Ao(S/D) MAP PCWP RAP   EDP    Ea  ΔPm RVol  dev  refusal
+//   CS+iabp            184 153  31  16.8  3.4   85/51  77   20   9  18.8  2.29    3    —    —
+//   CS+impella_cp      166 151  15     9  3.7   82/81  82   14  10  11.8  4.67    —    —  3.7  noEjection
+//   CS+impella_5        64  50  14  21.9  4.1   94/93  93    4  13   0.5  0.64    —    —  4.1  noEjection,suction
+//   CS+va_ecmo         224 214  10   4.5  5.1 107/100 104   50   2  50.4  10.7    1    —    4
+//   CS+ecpella         158 143  15   9.5  6.7 141/140 141   12  10   9.8  4.33    —    —  6.7  noEjection
+// </preset-table>
+//
+// Known residuals of the closed loop, recorded rather than tuned away (2026-09-22, engine 1.0.0;
+// re-check against the table above after any engine or preset change):
+//   tamponade      EF 58 at Ees 5.0, the slider maximum: the linear ESPVR cannot print the
+//                  65-75 % a real tamponade ventricle reaches, and any inotrope stacked on this
+//                  preset is clamped at Ees 5.0 (no further rise). Equalisation now holds
+//                  (RAP 18 / PCWP 16 / EDP 15.8) but comes from B 0.08, a steep EDPVR, not
+//                  from the parallel upward shift a pericardial pressure gives (pPeri, Phase 3).
+//   small chamber  hypovolaemia, tamponade and constriction carry V0 0 and Ees 3.5-5.0 because
+//                  ESV ≥ ESP/Ees + V0 under a linear ESPVR; with the baseline V0 10 / Ees 2.5
+//                  those loops printed EF 35-47 %. Their EFs are the fit, not a finding.
+//   dobutamine+HF  MAP +8 / +7 / +8 on HFrEF, cardiogenic shock and DCM (91→99, 70→77, 93→101)
+//                  where Leier 1977 found it unchanged: the presets carry a compensatory Rs
+//                  1.2-1.4 that the OFF reflex never withdraws, so the ×0.75 SVR fall lands on a
+//                  resistance nothing else relaxes. Was +34 / +42 / +37 under the additive
+//                  Ees +1.0; `expectOn` holds it within ±10 with CO up and PCWP down.
+//   pericardial +  a single inotrope on tamponade or constriction prints PCWP 17-26 and RAP
+//   inotrope       15-19 (was PCWP 55-62 under the additive rvGain +0.3, which handed a
+//                  throttled RV most of a normal one's gain and let the 2.2 L venous reservoir
+//                  flood the left side). The gain now scales, so the throttle stays; the wedge
+//                  rise that remains is the steep EDPVR filling, not a pericardial pressure
+//                  (pPeri, Phase 3). Two inotropes stacked reach PCWP 39 on tamponade
+//                  (dopamine-high + milrinone). `expectStacked` holds each single one under 30.
+//   CS+impella_cp  the worked example (CS + Impella CP + dobutamine) prints EF 15.1, CO 4.9,
+//   +dobutamine    PCWP 13, MAP 81 — was EF 25.3, CO 6.5, MAP 115 when the additive Ees +1.0
+//                  meant +167 % contractility on an Ees of 0.6.
+//   CS+va_ecmo     PCWP 50, EDP 50 — the ECMO paradox in the right direction at roughly twice a
+//                  plausible magnitude: no reflex, a linear pulmonary reservoir (Cp 20 mL/mmHg)
+//                  and a fixed bronchial resistance keep filling a ventricle that cannot eject.
+//                  The direction is the lesson; the number is not citable.
+//   CS+ecpella     MAP 141 at 6.7 L/min — the preset's Rs 1.2 (compensatory vasoconstriction)
+//                  is never withdrawn because the baroreflex hook is OFF. Likewise CS+impella_5
+//                  MAP 93 and CS+va_ecmo MAP 104. Device MAPs on shock presets overstate.
+//   CS+impella_5   suction latched (EDV 64, PCWP 4): a 5 L/min pump on this ventricle empties
+//                  the cavity, so the page prints the refusal, not a loop to teach from.
+//   CS+iabp        CO +0.2 L/min and MAP +7 on CS. The balloon displaces 40 mL; it adds no flow,
+//                  so nothing near the "0.5 L/min" of device literature is printed, and the
+//                  tooltip no longer claims a flow for it.
+//   aortic_regurg  CO 3.5, MAP 70 (as_ar: 3.8, 69) — forward output falls by the regurgitant
+//                  volume with no compensation, because the engine has no reflex and the preset
+//                  carries only the Vs its EDV target needs. Chronic compensated AR runs a
+//                  higher output than this; acute severe AR does not.
+//   ms_mr          MAP 73, CO 3.3 — no longer the frankly hypotensive 62/34 of the closed-form
+//                  tool (aortic pressure now decays from an emergent ESP), but still a low-output
+//                  preset because both lesions cost forward flow.
 
 let activeDisease = null;
 
@@ -2873,6 +3446,7 @@ function toggleDisease(diseaseId) {
     activeDisease = null;
   } else {
     activeDisease = diseaseId;
+    cmTrack('module_view', { module_id: diseaseId, via: 'click' });
   }
 
   // Update button states
@@ -2933,49 +3507,45 @@ function initDiseaseButtons() {
 const MCS_DEVICES = {
   iabp: {
     name: 'IABP',
-    Ea: -0.4, EDV: -5, Ees: 0, B: 0, HR: 0, V0: 0,
-    triangular: 0, // 0 = normal shape, 1 = fully triangular
-    flow: 0.5,
-    mech: 'Counterpulsation — diastolic augmentation + systolic unloading. ↓Afterload, modest ↑CO (~0.5 L/min). Least powerful MCS device.',
-    category: 'counterpulse'
+    params: { iabpVol: 40 },
+    flow: null, // displaces volume; adds no flow, so no flow is claimed in the tooltip
+    mech: 'Counterpulsation — a 40 mL balloon inflates in diastole (augmented diastolic pressure) and deflates at the onset of systole (unloading). ↓Afterload with a small rise in CO (a few tenths of a litre per minute here). Least powerful MCS device.',
+    category: 'counterpulse', expectDir: { MAP: 1, CO: 1 }
   },
   impella_cp: {
     name: 'Impella CP',
-    Ea: -0.4, EDV: -25, Ees: 0, B: 0, HR: 0, V0: 0,
-    triangular: 0.45,
+    params: { pumpFlow: 3.5 },
     flow: 3.5,
-    mech: 'Transvalvular axial pump (LV→Aorta). Direct LV unloading, ↓↓LVEDP, ↓↓MVO₂. Up to 3.5 L/min. Partial triangularization of PV loop.',
-    category: 'lvad'
+    mech: 'Transvalvular axial pump (LV→Aorta), 3.5 L/min nominal, flow falling with head. Draws from the LV in every phase: direct unloading, ↓LVEDP, ↓PCWP, ↓MVO₂, and the loop triangularizes because the limbs are no longer isovolumic.',
+    category: 'lvad', expectDir: { CO: 1, PCWP: -1, EDV: -1 }
   },
   impella_5: {
     name: 'Impella 5.0',
-    Ea: -0.6, EDV: -45, Ees: 0, B: 0, HR: 0, V0: 0,
-    triangular: 0.85,
+    params: { pumpFlow: 5.0 },
     flow: 5.0,
-    mech: 'High-flow transvalvular pump. Near-complete LV unloading, ↓↓↓MVO₂. Up to 5 L/min. AV may not open. Triangular PV loop.',
-    category: 'lvad'
+    mech: 'High-flow transvalvular pump, 5 L/min nominal. Near-complete LV unloading, ↓↓↓MVO₂. On a failing LV the aortic valve may not open at all — the page then says so instead of printing an EF.',
+    category: 'lvad', expectDir: { CO: 1, PCWP: -1, EDV: -1 }
   },
   va_ecmo: {
     name: 'VA-ECMO',
-    Ea: +1.2, EDV: +15, Ees: 0, B: 0, HR: 0, V0: 0,
-    triangular: 0,
-    flow: 5.0,
-    mech: 'Venous drainage → oxygenator → arterial return (retrograde). ↑↑Afterload, ↑LV distension, ↑↑MVO₂. Full cardiopulmonary support but WORSENS LV mechanics. May need LV venting.',
-    category: 'ecmo'
+    params: { ecmoFlow: 4.0 },
+    flow: 4.0,
+    mech: 'Venous drainage → oxygenator → retrograde arterial return, 4 L/min. Full systemic support but the aortic pressure it creates is the LV\'s afterload: a failing LV stops ejecting, and bronchial return keeps filling it — LVEDP and PCWP RISE. That is the ECMO paradox, and here it emerges rather than being asserted. May need LV venting.',
+    category: 'ecmo', expectDir: { MAP: 1, CO: 1, EDP: 1 }
   },
   ecpella: {
     name: 'ECPELLA',
-    Ea: -0.3, EDV: -35, Ees: 0, B: 0, HR: 0, V0: 0,
-    triangular: 0.8,
+    params: { ecmoFlow: 3.0, pumpFlow: 5.0 },
     flow: 8.0,
-    mech: 'VA-ECMO + Impella. ECMO provides systemic perfusion; Impella unloads LV. Best of both: ↓↓↓MVO₂ + full circulatory support. PVA can approach near zero.',
-    category: 'combo'
+    mech: 'VA-ECMO (3 L/min) + Impella 5.0. ECMO provides systemic perfusion; the Impella drains the LV that ECMO would otherwise distend, so PCWP falls instead of rising. A CP (3.5 L/min nominal) against the aortic pressure ECMO builds loses flow to head and cannot vent this ventricle — the 5.0 can. ↓↓↓MVO₂ + full circulatory support.',
+    category: 'combo', expectDir: { CO: 1, MAP: 1, PCWP: -1 }
   }
 };
 
 let activeMCS = null;
 
 function toggleMCS(mcsId) {
+  cmTrack('tool_action', { action: 'mcs', target: mcsId });
   // Auto-snapshot before first MCS if no ghost
   if (!activeMCS && !ghostLoop) {
     takeSnapshot();
@@ -3008,44 +3578,33 @@ function toggleMCS(mcsId) {
 }
 
 function calcFullParams() {
-  // Start from disease or baseline
-  const base = getBaseParams();
-  const result = { ...base };
+  return engineParamsFor(activeDisease, [...activeDrugs], activeMCS);
+}
 
-  // Add drug deltas
-  activeDrugs.forEach(id => {
+// The one place the base state, the drug shifts and scales, and the device settings are
+// combined. Pure, so scripts/test-engine.mjs can call it for every preset without a DOM.
+// Order is (base + Σ shifts) × Π scales, so the result does not depend on the order the drugs
+// were clicked in.
+function engineParamsFor(diseaseId, drugIds, mcsId) {
+  const result = { ...BASELINE, ...(diseaseId && DISEASES[diseaseId] ? DISEASES[diseaseId].params : {}) };
+  const scale = {};
+  for (const id of (drugIds || [])) {
     const d = DRUGS[id];
-    if (d.Ees) result.Ees += d.Ees;
-    if (d.Ea) result.Ea += d.Ea;
-    if (d.EDV) result.EDV += d.EDV;
-    if (d.B) result.B += d.B;
-    if (d.HR) result.HR += d.HR;   // the mech strings advertise rate effects; CO depends on HR
-  });
-
-  // Add MCS deltas
-  if (activeMCS) {
-    const m = MCS_DEVICES[activeMCS];
-    result.Ees += m.Ees;
-    result.Ea += m.Ea;
-    result.EDV += m.EDV;
-    result.B += m.B;
-    result.HR += m.HR;
-    result.V0 += m.V0;
+    if (!d) continue;
+    for (const k of Object.keys(d)) {
+      if (typeof d[k] === 'number' && typeof result[k] === 'number') result[k] += d[k];
+    }
+    for (const [k, m] of Object.entries(d.scale || {})) {
+      if (typeof result[k] === 'number') scale[k] = (scale[k] || 1) * m;
+    }
   }
-
-  // A drug or device that changes the rate changes afterload and filling time with it, so
-  // the rate delta goes through the same coupling the HR slider uses. This is what makes
-  // metoprolol read as afterload relief rather than as a bare 29% cut in cardiac output.
-  const coupled = coupleToRate({ ...result, HR: base.HR }, result.HR);
-
-  // One clamp, and it is the slider range. There used to be two consecutive clamps here,
-  // 35-180 immediately overwritten by 40-150, and pvloop/CLAUDE.md documented the dead one.
-  return clampParams(coupled);
+  for (const [k, m] of Object.entries(scale)) result[k] *= m;
+  if (mcsId && MCS_DEVICES[mcsId]) Object.assign(result, MCS_DEVICES[mcsId].params);
+  if (result.rvGain < 0.05) result.rvGain = 0.05;
+  // One clamp, and it is the slider range.
+  return clampParams(result);
 }
 
-function getTriangularFactor() {
-  return activeMCS ? (MCS_DEVICES[activeMCS].triangular || 0) : 0;
-}
 
 function updateMCSInfo() {
   const clearBtn = document.getElementById('mcsClearBtn');
@@ -3078,7 +3637,7 @@ function initMCSButtons() {
     if (!device) return;
     btn.setAttribute('aria-pressed', 'false');
     bindTip(btn, () => '<b>' + device.name + '</b><br>' + device.mech +
-      '<br><span style="opacity:0.7;font-size:10px">Flow: ~' + device.flow + ' L/min</span>');
+      (device.flow ? '<br><span style="opacity:0.7;font-size:10px">Set flow: ' + device.flow + ' L/min (the delivered flow is printed by the engine)</span>' : ''));
   });
 }
 
@@ -3126,27 +3685,38 @@ function updateStateBadge() {
     nameParts.push('<span class="state-drugs">' + names.join(' + ') + '</span>');
   }
 
-  // Net effect summary — compare current params to BASELINE
+  // Net effect summary — the engine PARAMETERS that differ from BASELINE (what was set), not
+  // the readouts (what emerged; those are in the panel).
   const current = calcFullParams();
   let effectLine = '';
   if (current) {
     const effects = [];
+    const item = (html) => effects.push('<span class="eff-item">' + html + '</span>');
     const dEes = current.Ees - BASELINE.Ees;
-    const dEa = current.Ea - BASELINE.Ea;
-    const dEDV = current.EDV - BASELINE.EDV;
+    const dRs = current.Rs - BASELINE.Rs;
+    const dVs = current.Vs - BASELINE.Vs;
     const dB = current.B - BASELINE.B;
     const dHR = current.HR - BASELINE.HR;
     const dV0 = current.V0 - BASELINE.V0;
+    const dRV = current.rvGain - BASELINE.rvGain;
 
-    if (Math.abs(dEes) >= 0.1) effects.push('<span class="eff-item">' + arrow(dEes) + 'Contractility</span>');
-    if (Math.abs(dEa) >= 0.1) effects.push('<span class="eff-item">' + arrow(dEa) + 'Afterload</span>');
-    if (Math.abs(dEDV) >= 5) effects.push('<span class="eff-item">' + arrow(dEDV) + 'Preload</span>');
-    if (Math.abs(dB) >= 0.003) effects.push('<span class="eff-item">' + arrow(dB) + 'Stiffness</span>');
-    if (Math.abs(dHR) >= 5) effects.push('<span class="eff-item">' + arrow(dHR) + 'HR</span>');
-    if (Math.abs(dV0) >= 3) effects.push('<span class="eff-item">' + arrow(dV0) + 'V\u2080</span>');
+    if (Math.abs(dEes) >= 0.1) item(arrow(dEes) + 'Contractility');
+    if (Math.abs(dRs) >= 0.1) item(arrow(dRs) + 'SVR');
+    if (Math.abs(dVs) >= 50) item(arrow(dVs) + 'Volume');
+    if (Math.abs(dB) >= 0.003) item(arrow(dB) + 'Stiffness');
+    if (Math.abs(dHR) >= 5) item(arrow(dHR) + 'HR');
+    if (Math.abs(dV0) >= 3) item(arrow(dV0) + 'V₀');
+    if (Math.abs(dRV) >= 0.1) item(arrow(dRV) + 'RV');
+    if (current.AVA < 2.5) item('AVA ' + current.AVA + ' cm²');
+    if (current.MVA < 3) item('MVA ' + current.MVA + ' cm²');
+    if (current.eroaMR > 0) item('MR EROA ' + current.eroaMR + ' cm²');
+    if (current.eroaAR > 0) item('AR EROA ' + current.eroaAR + ' cm²');
+    if (current.pumpFlow > 0) item('Pump ' + current.pumpFlow + ' L/min');
+    if (current.ecmoFlow > 0) item('ECMO ' + current.ecmoFlow + ' L/min');
+    if (current.iabpVol > 0) item('IABP ' + current.iabpVol + ' mL');
 
     if (effects.length) {
-      effectLine = '<div class="state-effects">' + effects.join('<span class="state-dot">\u00B7</span>') + '</div>';
+      effectLine = '<div class="state-effects">' + effects.join('<span class="state-dot">·</span>') + '</div>';
     }
   }
 
@@ -3192,6 +3762,7 @@ const EXAMPLES = [
 let exampleIdx = -1;
 
 function loadExample() {
+  cmTrack('tool_action', { action: 'load_example' });
   exampleIdx = (exampleIdx + 1) % EXAMPLES.length;
   const ex = EXAMPLES[exampleIdx];
 
@@ -3353,16 +3924,16 @@ document.addEventListener('DOMContentLoaded', init);
       <details class="seo-section">
         <summary>About the Pressure-Volume Loop Simulator</summary>
         <div class="seo-content-body">
-          <h3>The elastance model behind the loop</h3>
-          <p>This simulator solves the end-systolic pressure-volume point in closed form and draws the four phases of the cardiac cycle geometrically between it and end diastole. Three reference lines frame the loop: the ESPVR, the Suga-Sagawa end-systolic elastance line of slope Ees through the unstressed volume V0; the EDPVR, an exponential curve whose steepness is set by the chamber stiffness constant B; and the arterial elastance line Ea, drawn from end-diastolic volume on the volume axis to the end-systolic point. Six sliders set Ees, Ea, EDV, B, heart rate and V0; end-systole falls where the ESPVR and the Ea line intersect. There is no time-varying activation function: time enters as phase durations and as the rate coupling described below, and nowhere else.</p>
+          <h3>The closed-loop model behind the loop</h3>
+          <p>This simulator runs a closed-loop circulation to steady state and draws the beat it settles on. The left ventricle is a time-varying elastance chamber: its pressure at any instant is the passive EDPVR pressure plus an activation fraction of the distance to the ESPVR, the Suga-Sagawa end-systolic line of slope Ees through the unstressed volume V0. It ejects through a Gorlin orifice into a Windkessel arterial compartment, which drains through the systemic resistance into a venous reservoir; a right-heart function curve returns that blood to a pulmonary reservoir from which the ventricle fills through the mitral orifice. Six sliders set Ees, systemic resistance, stressed blood volume, the chamber stiffness constant B, heart rate and V0. Everything else emerges: end-diastolic volume from venous return meeting the EDPVR, arterial elastance Ea from resistance, rate and arterial compliance, pulse pressure from stroke volume meeting arterial compliance. The integration uses a fixed 0.2 ms step, and the beat shown is the one after five beat-to-beat measures stop changing.</p>
           <h3>Hemodynamic readouts and ventriculo-arterial coupling</h3>
-          <p>Each change updates stroke volume, ejection fraction, cardiac output, end-systolic and end-diastolic pressure, stroke work as the area enclosed by the loop, and the Ea/Ees coupling ratio. Readouts are flagged against the tool's bands: ejection fraction normal from 55 to 70 percent, cardiac output from 4.0 to 8.0 L/min, and coupling normal from 0.5 to 1.3 and borderline up to 1.5. Moving one slider at a time separates preload, afterload and contractility — with one deliberate exception. Heart rate is coupled to the other two: arterial elastance is systemic resistance divided by cycle length, and diastolic filling time shortens as rate rises, so moving the rate slider also moves Ea and end-diastolic volume and cardiac output does not scale linearly with rate. Aortic diastolic pressure, the pressure at which the loop's valve-opening corner sits, decays from end-systole with a Windkessel time constant, so pulse pressure widens in aortic regurgitation and vasodilatation and narrows in tamponade, hypovolemia and low-output heart failure.</p>
+          <p>Each change updates end-diastolic volume, stroke volume, ejection fraction, cardiac output, aortic systolic and diastolic pressure, mean arterial pressure, end-systolic and end-diastolic pressure, a wedge-pressure proxy (the mean pressure of the pulmonary reservoir), a right atrial pressure proxy, stroke work as the loop area, arterial elastance and the Ea/Ees coupling ratio. Every printed number is computed from the printed operands: stroke volume is the printed EDV minus the printed ESV, ejection fraction the printed stroke volume over the printed EDV, cardiac output the printed forward stroke volume times the printed rate, Ea the printed end-systolic pressure over the printed stroke volume. Readouts are flagged against the tool's bands: ejection fraction normal from 55 to 70 percent, cardiac output from 4.0 to 8.0 L/min, wedge proxy up to 12, mean pressure from 65 to 110, and coupling normal from 0.5 to 1.3 and borderline up to 1.5. Heart rate acts through the beat itself: a faster rate shortens diastole so filling falls short and raises Ea, so cardiac output rises less than in proportion to rate and falls again at high rates. When the model is outside the range in which its numbers mean anything, for example when a pump keeps the aortic valve closed, the panel says so in a sentence instead of colouring a value.</p>
           <h3>Drugs and interventions</h3>
-          <p>Fifteen agents are grouped as inotropes (dobutamine, milrinone, isoproterenol, low- and high-dose dopamine), vasopressors (phenylephrine, norepinephrine), vasodilators (nitroprusside, nitroglycerin, phentolamine, an ACE inhibitor and a dihydropyridine calcium channel blocker), metoprolol as a negative inotrope, and volume as fluids or diuretics. Each acts by shifting Ees, Ea, EDV or B, so phenylephrine moves the Ea line alone while nitroglycerin, mainly a venodilator, pulls preload down. Agents stack additively.</p>
+          <p>Fifteen agents are grouped as inotropes (dobutamine, milrinone, isoproterenol, low- and high-dose dopamine), vasopressors (phenylephrine, norepinephrine), vasodilators (nitroprusside, nitroglycerin, phentolamine, an ACE inhibitor and a dihydropyridine calcium channel blocker), metoprolol as a negative inotrope, and volume as fluids or diuretics. Each is a set of shifts on the engine's parameters, contractility, systemic resistance, stressed volume, stiffness, rate and right-heart gain, so phenylephrine raises resistance alone and the loop narrows and tilts while mean pressure rises, and nitroglycerin, mainly a venodilator, lowers stressed volume so preload and wedge pressure fall. When agents stack, contractility and right-heart gain multiply and resistance, volume, stiffness and rate add, and the transition between states is eased over 400 milliseconds with a fresh steady state each frame.</p>
           <h3>Disease states</h3>
-          <p>Eighteen presets set all six parameters at once; drugs then stack on top. Heart failure covers HFrEF, HFpEF and dilated cardiomyopathy; shock, cardiogenic shock at SCAI stage C/D, warm septic shock and hypovolemic shock; remodeling, concentric and eccentric LVH; pericardial disease, constrictive pericarditis and tamponade. Valve disease includes aortic and mitral stenosis and regurgitation plus mixed lesions AS+AR, AS+MR, MS+MR and MS+AS. Regurgitant loops lose their vertical limbs: mitral regurgitation abolishes isovolumic contraction, aortic regurgitation abolishes isovolumic relaxation, and each tilts the opposite limb slightly.</p>
+          <p>Eighteen presets set the engine's parameters at once; drugs then stack on top. Heart failure covers HFrEF, HFpEF and dilated cardiomyopathy; shock, cardiogenic shock at SCAI stage C/D, warm septic shock and hypovolemic shock; remodeling, concentric and eccentric LVH; pericardial disease, constrictive pericarditis and tamponade. Valve disease is expressed as orifices: aortic stenosis as an aortic valve area of 0.9 square centimetres, which produces a mean gradient above the 40 mmHg severe threshold of the 2020 ACC/AHA valvular guideline; mitral stenosis as a mitral valve area of 1.2, which raises wedge pressure while the ventricle's own diastolic pressure stays low; aortic and mitral regurgitation as effective regurgitant orifices of 0.35 and 0.45 square centimetres, above the ASE 2017 severe thresholds of 0.3 and 0.4. Regurgitant loops lose their vertical limbs because the flow itself does: mitral regurgitation empties the ventricle before the aortic valve opens, aortic regurgitation refills it before the mitral valve opens. Mixed lesions AS+AR, AS+MR, MS+MR and MS+AS combine the orifices, and MS+AS shows low-flow, low-gradient aortic stenosis because the restricted inflow lowers the flow that generates the gradient.</p>
           <h3>Mechanical circulatory support</h3>
-          <p>Five configurations layer onto any disease and drug combination. The intra-aortic balloon pump unloads modestly by counterpulsation, adding about 0.5 L/min. Impella CP and Impella 5.0 are transvalvular axial pumps that unload the ventricle directly, lower LVEDP and progressively triangularize the loop; with the 5.0 the aortic valve may not open. VA-ECMO raises afterload and distends the left ventricle despite full systemic support, which is why LV venting is considered. ECPELLA adds an Impella to ECMO, unloading while perfusing.</p>
+          <p>Five configurations layer onto any disease and drug combination, each as a flow or a volume rather than a hand-set effect. The intra-aortic balloon pump displaces 40 millilitres into the arterial compartment during diastole and withdraws it at the onset of systole, so diastolic augmentation and systolic unloading appear in the aortic pressure. Impella CP and Impella 5.0 are transvalvular pumps of 3.5 and 5 litres per minute whose flow falls as the pressure head rises; they draw from the ventricle in every phase, which is what triangularizes the loop and lowers wedge pressure, and on a failing ventricle the 5.0 may keep the aortic valve closed. VA-ECMO drains the venous reservoir at 4 litres per minute and returns it to the arteries, raising the afterload a failing ventricle must open the aortic valve against; bronchial return keeps filling that ventricle, so its end-diastolic pressure rises. That is the ECMO paradox, and here it emerges from the circuit rather than being asserted. ECPELLA adds an Impella to ECMO, draining the ventricle that ECMO would distend.</p>
           <h3>Comparing loops and worked cases</h3>
           <p>A ghost loop is stored automatically before the first drug, disease or device is chosen, so each new loop is drawn against its own baseline; snapshots can also be taken manually. Toggles hide the ESPVR, EDPVR and Ea lines, the phase labels and the animated tracing; the tracing takes 60/HR seconds per revolution and dwells in each phase for that phase's real share of the cycle, and it does not run for a visitor whose system asks for reduced motion. The phase-label toggle also carries markers for mitral and aortic valve opening and closing, and renames any limb no longer isovolumic. Three worked examples load full scenarios, one of them cardiogenic shock supported with an Impella CP and dobutamine.</p>
         </div>

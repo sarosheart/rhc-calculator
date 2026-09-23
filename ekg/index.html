@@ -2336,6 +2336,7 @@ function updatePhaseButtons() {
 }
 
 function setPhase(phase) {
+  cmTrack('tool_action', { action: 'phase', target: phase });
   state.phase = phase;
   document.querySelectorAll('.phase-btn').forEach(b => {
     b.classList.toggle('active', b.dataset.phase === phase);
@@ -2351,6 +2352,7 @@ function setHR(val) {
 }
 
 function setDominance(d) {
+  if (d !== state.dominance) cmTrack('tool_action', { action: 'dominance', target: d });
   state.dominance = d;
   // Update coronary tree: PDA/PLV branch from RCA (right-dom) or LCx (left-dom)
   if (d === 'left') {
@@ -2399,6 +2401,7 @@ function setSpecialPattern(key) {
     state.specialPattern = null;
   } else {
     state.specialPattern = key;
+    cmTrack('module_view', { module_id: key, via: 'click' });
     // Clear vessel selection when special pattern is active
     state.activeVessel = null;
     document.querySelectorAll('.vessel-btn[data-vessel]').forEach(b => b.classList.remove('active'));
@@ -2470,7 +2473,10 @@ function updateClinicalInfo() {
   panel.innerHTML = html;
 }
 
+var cmLastVessel = null;   // analytics: both vessel entry paths (list button, tree canvas) reach here; count each CHANGE once
 function updateStateBadge() {
+  if (state.activeVessel && state.activeVessel !== cmLastVessel) cmTrack('module_view', { module_id: state.activeVessel, via: 'click' });
+  cmLastVessel = state.activeVessel;
   const badge = document.getElementById('stateBadge');
 
   // Special pattern badge

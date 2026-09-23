@@ -2659,6 +2659,7 @@ function startTransition() {
 function toggleDrug(id) {
   // Block toggling drugs that have no pacemaker effect when in pacemaker mode
   if (cellType === 'pace' && DRUGS[id] && !DRUGS[id].paceMajor) return;
+  cmTrack('tool_action', { action: 'drug', target: id });
   if (activeDrugs.has(id)) activeDrugs.delete(id); else activeDrugs.add(id);
   clearPreset();
   updateDrugBtns();
@@ -2709,6 +2710,7 @@ function syncSlidersFromState() {
 }
 
 function setCellTypeUI(c) {
+  if (c !== cellType) cmTrack('module_view', { module_id: c, via: 'click' });   // scenarios/diseases call this too; count only a change
   cellType = c;
   document.querySelectorAll('#cellToggle .seg-btn').forEach(b => {
     b.classList.toggle('active', b.dataset.cell === c);
@@ -2738,6 +2740,7 @@ function setCellTypeUI(c) {
 function applyScenario(id) {
   const s = SCENARIOS[id];
   if (!s) return;
+  cmTrack('module_view', { module_id: id, via: 'click' });
   // Scenario = full clean preset. Wipe everything, then load fresh.
   activeDrugs.clear();
   clearAllOverrides();
@@ -2765,6 +2768,7 @@ function applyScenario(id) {
 function applyDisease(id) {
   const d = DISEASES[id];
   if (!d) return;
+  cmTrack('module_view', { module_id: id, via: 'click' });
   // Disease = substrate layer. Reset disease + user overrides for the relevant cell,
   // but KEEP active drugs so they stack on the diseased baseline.
   if (d.cell === 'vent') { diseaseOverrides = {}; clearFastOverrides(); }

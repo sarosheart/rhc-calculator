@@ -2379,11 +2379,11 @@ function onStateChange(){
   markDirty();
   updateUI();updateCrossSection();
 }
-function goToStage(i){if(i<0||i>=STAGES.length)return;const ch=i!==curStage;curStage=i;curSub=0;defectIdx=0;if(ch)animCam(i);onStateChange();}
+function goToStage(i){if(i<0||i>=STAGES.length)return;const ch=i!==curStage;curStage=i;if(ch)cmTrack('module_view',{module_id:'stage-'+STAGES[i].id,via:'click'});curSub=0;defectIdx=0;if(ch)animCam(i);onStateChange();}
 function goToSub(i){const s=STAGES[curStage];if(i<0||i>=s.substeps.length)return;curSub=i;onStateChange();}
 function nextStep(){const s=STAGES[curStage];if(curSub<s.substeps.length-1)goToSub(curSub+1);else if(curStage<STAGES.length-1)goToStage(curStage+1);else goToStage(0);}
 function prevStep(){if(curSub>0)goToSub(curSub-1);else if(curStage>0){curStage--;curSub=STAGES[curStage].substeps.length-1;animCam(curStage);onStateChange();}}
-function toggleDefect(){defectMode=!defectMode;needsRebuild=true;markDirty();updateUI();updateCrossSection();}
+function toggleDefect(){defectMode=!defectMode;cmTrack('tool_action',{action:'defect',target:defectMode?'on':'off'});needsRebuild=true;markDirty();updateUI();updateCrossSection();}
 function togglePlay(){autoPlaying=!autoPlaying;document.getElementById('btnPlay').textContent=autoPlaying?'⏸ Pause':'▶ Play';
   document.getElementById('mBtnPlay').textContent=autoPlaying?'⏸':'⏵';
   if(autoPlaying){autoTimer=setInterval(()=>nextStep(),4000);}

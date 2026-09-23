@@ -2882,7 +2882,9 @@ function buildSidebar() {
   }
 }
 
+var cmViewed = false;   // analytics: the boot-time selectModule is the arrival (via: load), later ones are clicks
 function selectModule(id) {
+  cmTrack('module_view', { module_id: id, via: cmViewed ? 'click' : 'load' }); cmViewed = true;
   activeModule = id;
   document.querySelectorAll('.module-btn').forEach(b => {
     const on = b.dataset.module === id;
@@ -2939,6 +2941,7 @@ function buildInputs(m) {
       wrap.appendChild(row);
       const slider = row.querySelector('input');
       slider.addEventListener('input', () => {
+        cmTrack('calc_used', { module_id: activeModule }, 'calc:' + activeModule);
         const v = parseFloat(slider.value);
         inputState[inp.key] = v;
         document.getElementById('val-' + inp.key).textContent = v.toFixed(inp.decimals || 1);
@@ -2957,6 +2960,7 @@ function buildInputs(m) {
         b.setAttribute('aria-pressed', opt.v === inp.default ? 'true' : 'false');
         b.textContent = opt.text;
         b.onclick = () => {
+          cmTrack('tool_action', { action: 'picker', target: opt.v });
           inputState[inp.key] = opt.v;
           opts.querySelectorAll('.picker-opt').forEach(o => { o.classList.remove('active'); o.setAttribute('aria-pressed', 'false'); });
           b.classList.add('active');

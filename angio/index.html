@@ -2758,10 +2758,12 @@ function tick(now) {
 // ═══════════════════════════════════════════════════════════
 // INTERACTION
 // ═══════════════════════════════════════════════════════════
+var cmViewed = false;   // analytics: first applyPreset is the arrival (via: load), later ones are clicks
 function applyPreset(id) {
   const p = PRESETS[id];
   if (!p) return;
   activePreset = id;
+  cmTrack('module_view', { module_id: id, via: cmViewed ? 'click' : 'load' }); cmViewed = true;
   // Update side toggle if needed
   if (p.side !== activeSide) {
     setSide(p.side);
@@ -2782,6 +2784,7 @@ function applyPreset(id) {
 }
 
 function setSide(side) {
+  if (side !== activeSide) cmTrack('tool_action', { action: 'set_side', target: side });
   activeSide = side;
   document.querySelectorAll('#sideToggle .seg-btn').forEach(b => {
     b.classList.toggle('active', b.dataset.side === side);

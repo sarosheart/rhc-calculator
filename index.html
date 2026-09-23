@@ -58,7 +58,8 @@
     {"@type": "ListItem", "position": 6, "url": "https://cathmath.org/ap/", "name": "Cardiac Action Potential Simulator"},
     {"@type": "ListItem", "position": 7, "url": "https://cathmath.org/echocalc/", "name": "Echo Hemodynamics Calculator"},
     {"@type": "ListItem", "position": 8, "url": "https://cathmath.org/angio/", "name": "Coronary Angiography Views Simulator"},
-    {"@type": "ListItem", "position": 9, "url": "https://cathmath.org/intracoronary/", "name": "Intracoronary Physiology & Imaging Simulator"}
+    {"@type": "ListItem", "position": 9, "url": "https://cathmath.org/intracoronary/", "name": "Intracoronary Physiology & Imaging Simulator"},
+    {"@type": "ListItem", "position": 10, "url": "https://cathmath.org/pressors/", "name": "Vasopressor & Inotrope Simulator"}
   ]
 }
 </script>
@@ -826,6 +827,24 @@ body {
         </div>
       </div>
     </a>
+
+    <!-- Vasopressor & Inotrope Simulator -->
+    <a class="tool-card" id="cardPressors" href="/pressors/">
+      <div class="card-canvas-wrap">
+        <canvas id="canvasPressors" role="img"
+               aria-label="Dose-response panel: a log concentration axis with two sigmoid curves drawn left to right, a lower one labelled occupancy and a steeper one labelled response, the gap between them shaded and labelled spare receptors; a mean arterial pressure readout rises as the sweep advances."></canvas>
+      </div>
+      <div class="card-info">
+        <div class="card-title">Vasopressor &amp; Inotrope Simulator <span class="card-arrow">&rarr;</span></div>
+        <div class="card-desc">Dose to plasma concentration to receptor occupancy to hemodynamics, in one closed loop with a working baroreflex. Stack three infusions on five substrates and watch the PV loop, arterial trace and cath-lab readout settle together.</div>
+        <div class="card-tags">
+          <span class="card-tag">Receptor occupancy</span>
+          <span class="card-tag">Baroreflex</span>
+          <span class="card-tag">Septic / Cardiogenic</span>
+          <span class="card-tag">Spare receptors</span>
+        </div>
+      </div>
+    </a>
   </div>
 </section>
 
@@ -1134,6 +1153,7 @@ body {
       startEchoAnimation(loops);
       startAngioAnimation(loops);
       startIntraAnimation(loops);
+      startPressorsAnimation(loops);
     }, instant ? 100 : 600);
   }
 
@@ -1232,6 +1252,7 @@ body {
       echoSetup = setupCanvas('canvasEcho');
       angioSetup = setupCanvas('canvasAngio');
       intraSetup = setupCanvas('canvasIntra');
+      pressorsSetup = setupCanvas('canvasPressors');
       // Redraw final frames if animations completed
       if (hemoDone) drawHemoFrame(hemoSetup, 1);
       if (rhcDone) drawRhcFrame(rhcSetup, 1);
@@ -1242,13 +1263,14 @@ body {
       if (echoDone) drawEchoFrame(echoSetup, 1);
       if (angioDone) drawAngioFrame(angioSetup, 1);
       if (intraDone) drawIntraFrame(intraSetup, 1);
+      if (pressorsDone) drawPressorsFrame(pressorsSetup, 1);
     }, 200);
   });
 
   // Lazy init — canvases may not have dimensions yet
-  var hemoSetup, rhcSetup, pvSetup, ekgSetup, embryoSetup, apSetup, echoSetup, angioSetup, intraSetup;
-  var hemoDone = false, rhcDone = false, pvDone = false, ekgDone = false, embryoDone = false, apDone = false, echoDone = false, angioDone = false, intraDone = false;
-  var hemoRunning = false, rhcRunning = false, pvRunning = false, ekgRunning = false, embryoRunning = false, apRunning = false, echoRunning = false, angioRunning = false, intraRunning = false;
+  var hemoSetup, rhcSetup, pvSetup, ekgSetup, embryoSetup, apSetup, echoSetup, angioSetup, intraSetup, pressorsSetup;
+  var hemoDone = false, rhcDone = false, pvDone = false, ekgDone = false, embryoDone = false, apDone = false, echoDone = false, angioDone = false, intraDone = false, pressorsDone = false;
+  var hemoRunning = false, rhcRunning = false, pvRunning = false, ekgRunning = false, embryoRunning = false, apRunning = false, echoRunning = false, angioRunning = false, intraRunning = false, pressorsRunning = false;
 
   function ensureSetup() {
     if (!hemoSetup) hemoSetup = setupCanvas('canvasHemo');
@@ -1260,6 +1282,7 @@ body {
     if (!echoSetup) echoSetup = setupCanvas('canvasEcho');
     if (!angioSetup) angioSetup = setupCanvas('canvasAngio');
     if (!intraSetup) intraSetup = setupCanvas('canvasIntra');
+    if (!pressorsSetup) pressorsSetup = setupCanvas('canvasPressors');
   }
 
 
@@ -2424,6 +2447,94 @@ body {
   });
 
 
+  /* ══════════════════════════════════════
+     VASOPRESSOR & INOTROPE CARD — occupancy vs response sigmoids on a log-concentration axis
+     ══════════════════════════════════════ */
+  function drawPressorsFrame(s, progress) {
+    var ctx = s.ctx, W = s.w, H = s.h;
+    ctx.clearRect(0, 0, W, H);
+    var margin = { l: 12, r: 12, t: 16, b: 16 };
+    var plotW = W - margin.l - margin.r, plotH = H - margin.t - margin.b;
+    var N = 80;
+    function xOf(i) { return margin.l + plotW * i / N; }
+    function yOf(f) { return margin.t + plotH * (1 - f); }
+    // log axis spans 6 decades; response EC50 sits 2 decades left of occupancy KD (spare receptors)
+    function hill(i, mid) { var lg = i / N * 6; return 1 / (1 + Math.pow(10, (mid - lg))); }
+    var midResp = 2.2, midOcc = 4.2;
+    var sweep = Math.min(progress * 1.15, 1);
+    var iMax = Math.floor(sweep * N);
+
+    // baseline
+    ctx.strokeStyle = 'rgba(148,163,184,0.25)'; ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.moveTo(margin.l, yOf(0)); ctx.lineTo(margin.l + plotW, yOf(0)); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(margin.l, yOf(0.5)); ctx.lineTo(margin.l + plotW, yOf(0.5)); ctx.stroke();
+
+    // spare-receptor gap fill
+    if (iMax > 1) {
+      ctx.fillStyle = 'rgba(253,204,77,0.12)';
+      ctx.beginPath();
+      for (var a = 0; a <= iMax; a++) { var p = [xOf(a), yOf(hill(a, midResp))]; if (a === 0) ctx.moveTo(p[0], p[1]); else ctx.lineTo(p[0], p[1]); }
+      for (var b = iMax; b >= 0; b--) ctx.lineTo(xOf(b), yOf(hill(b, midOcc)));
+      ctx.closePath(); ctx.fill();
+    }
+
+    // occupancy curve (KD)
+    ctx.strokeStyle = '#4a90d9'; ctx.lineWidth = 1.8;
+    ctx.shadowColor = 'rgba(74,144,217,0.5)'; ctx.shadowBlur = 4;
+    ctx.beginPath();
+    for (var i = 0; i <= iMax; i++) { var y1 = yOf(hill(i, midOcc)); if (i === 0) ctx.moveTo(xOf(i), y1); else ctx.lineTo(xOf(i), y1); }
+    ctx.stroke();
+
+    // response curve (functional EC50)
+    ctx.strokeStyle = '#ef4444';
+    ctx.shadowColor = 'rgba(239,68,68,0.5)';
+    ctx.beginPath();
+    for (var j = 0; j <= iMax; j++) { var y2 = yOf(hill(j, midResp)); if (j === 0) ctx.moveTo(xOf(j), y2); else ctx.lineTo(xOf(j), y2); }
+    ctx.stroke();
+    ctx.shadowBlur = 0;
+
+    // labels
+    ctx.font = '600 9px DM Sans, sans-serif'; ctx.textAlign = 'left';
+    if (sweep > 0.55) { ctx.fillStyle = 'rgba(239,68,68,0.9)'; ctx.fillText('response (EC50)', xOf(N * 0.42), yOf(0.9) - 2); }
+    if (sweep > 0.85) { ctx.fillStyle = 'rgba(74,144,217,0.9)'; ctx.fillText('occupancy (KD)', xOf(N * 0.62), yOf(0.30)); }
+    if (sweep > 0.7)  { ctx.fillStyle = 'rgba(253,204,77,0.9)'; ctx.fillText('spare receptors', xOf(N * 0.30), yOf(0.50) - 2); }
+
+    // MAP readout that rises with the response curve
+    var f = hill(iMax, midResp);
+    var map = Math.round(65 + 35 * f);
+    ctx.textAlign = 'right';
+    ctx.fillStyle = 'rgba(226,232,240,0.9)';
+    ctx.font = '700 12px DM Sans, sans-serif';
+    ctx.fillText('MAP ' + map, margin.l + plotW, margin.t + 12);
+    ctx.font = '500 8px DM Sans, sans-serif';
+    ctx.fillStyle = 'rgba(148,163,184,0.8)';
+    ctx.fillText('log [drug]  \u2192', margin.l + plotW, yOf(0) + 11);
+  }
+
+  function startPressorsAnimation(loops) {
+    if (pressorsRunning) return;
+    loops = loops || 1;
+    ensureSetup();
+    if (!pressorsSetup) return;
+    pressorsDone = false; pressorsRunning = true;
+    var dur = 2600, loopIdx = 0;
+    function runLoop() {
+      var t0 = performance.now();
+      function frame() {
+        var p = Math.min((performance.now() - t0) / dur, 1);
+        drawPressorsFrame(pressorsSetup, p);
+        if (p < 1) requestAnimationFrame(frame);
+        else {
+          loopIdx++;
+          if (loopIdx < loops) { setTimeout(runLoop, 200); }
+          else { pressorsDone = true; pressorsRunning = false; }
+        }
+      }
+      requestAnimationFrame(frame);
+    }
+    runLoop();
+  }
+
   // Wait for images to load before setting up hover
   window.addEventListener('load', function() {
     addHoverReplay('cardHemo', startHemoAnimation);
@@ -2435,6 +2546,7 @@ body {
     addHoverReplay('cardEcho', startEchoAnimation);
     addHoverReplay('cardAngio', startAngioAnimation);
     addHoverReplay('cardIntra', startIntraAnimation);
+    addHoverReplay('cardPressors', startPressorsAnimation);
   });
 
   // Auto-skip animation if already seen on this device within 48 hours

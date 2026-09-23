@@ -1692,6 +1692,7 @@
 // ===================== TAB SWITCHING =====================
 let currentTab = 'rhc';
 function switchTab(tab) {
+  if (tab !== currentTab) cmTrack('module_view', { module_id: tab, via: 'click' });
   currentTab = tab;
   document.getElementById('tabRhc').classList.toggle('active', tab === 'rhc');
   document.getElementById('tabShunt').classList.toggle('active', tab === 'shunt');
@@ -2082,6 +2083,9 @@ function gorlinBeatNotes(G, zeros, lows, valve, floor, kept) {
 }
 
 function calc() {
+  // analytics: calc() also runs programmatically (tab switch, examples). Only a user's input event
+  // counts as the calculator being USED; window.event is set for the inline oninput= handlers.
+  if (window.event && window.event.type === 'input') cmTrack('calc_used', { module_id: currentTab }, 'calc:' + currentTab);
   // --- Auto-calculate LaFarge if selected, and SEP/DFP from HR ---
   calcLaFarge();
   calcSEP();
@@ -3253,6 +3257,7 @@ function buildShuntCopyText(d) {
 
 // ===================== COPY SHUNT RESULTS =====================
 function copyShuntResults() {
+  cmTrack('tool_action', { action: 'copy_report', target: 'shunt' });
   const text = document.getElementById('shuntCopyText').value;
   navigator.clipboard.writeText(text).then(() => {
     const btn = document.getElementById('shuntCopyBtn');
@@ -3637,6 +3642,7 @@ function toPlainText(str) {
 
 // ===================== COPY TO CLIPBOARD =====================
 function copyResults() {
+  cmTrack('tool_action', { action: 'copy_report', target: 'rhc' });
   const text = document.getElementById('copyText').value;
   navigator.clipboard.writeText(text).then(() => {
     const btn = document.getElementById('copyBtn');
@@ -3678,6 +3684,7 @@ function resetInputs() {
 
 // ===================== LOAD EXAMPLE =====================
 function loadExample() {
+  cmTrack('tool_action', { action: 'load_example', target: 'rhc' });
   resetInputs();
   document.getElementById('age').value = '65';
   document.getElementById('sex').value = 'male';
@@ -3737,6 +3744,7 @@ function loadExample() {
 // main sat of 84%. That makes the RHC tab's Fick flow and the Shunts tab's Qp the same
 // number for the same patient, which is the whole point.
 function loadShuntExample() {
+  cmTrack('tool_action', { action: 'load_example', target: 'shunt' });
   resetInputs();
   document.getElementById('age').value = '34';
   document.getElementById('sex').value = 'female';
