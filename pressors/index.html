@@ -468,7 +468,7 @@ details.seo-section ul { padding-left: 20px; }
            clip: rect(0 0 0 0); white-space: nowrap; border: 0; }
 
 .scenario-btn { text-align: left; }
-.verdict { font-size: 11.5px; font-weight: 800; letter-spacing: .3px; }
+.verdict { font-size: 13px; font-weight: 800; }
 .verdict.yes { color: var(--severity-mild); }
 .verdict.no  { color: var(--severity-severe); }
 .verdict.pending { color: var(--text-muted); }
@@ -478,11 +478,102 @@ details.seo-section ul { padding-left: 20px; }
 .audit-line .arrow { color: var(--text-muted); margin: 0 5px; }
 .audit-line a { color: var(--accent); text-decoration: none; border-bottom: 1px dotted var(--accent); }
 
+/* ─────────────────────────────────────────────── progressive disclosure */
+details.fold > summary {
+  font-size: 12px; text-transform: uppercase; letter-spacing: .7px; font-weight: 800;
+  color: var(--text-dim); padding: 12px; background: var(--panel-bg-2); cursor: pointer;
+  list-style: none; display: flex; align-items: center; justify-content: space-between; gap: 8px;
+}
+details.fold > summary::-webkit-details-marker, details.more > summary::-webkit-details-marker { display: none; }
+details.fold > summary::after { content: "+"; font-size: 17px; font-weight: 600; line-height: 1; color: var(--accent); }
+details.fold[open] > summary::after { content: "\2212"; }
+details.fold[open] > summary { border-bottom: 1px solid var(--border); }
+details.more { margin-top: 6px; }
+details.more > summary {
+  list-style: none; cursor: pointer; display: inline-block; font-size: 12px; font-weight: 600;
+  color: var(--accent); padding: 4px 0;
+}
+details.more > summary::before { content: "\25B8\00a0"; }
+details.more[open] > summary::before { content: "\25BE\00a0"; }
+details.more > .more-body {
+  font-size: 12px; color: var(--text-dim); padding: 8px 10px; margin-top: 2px;
+  border-left: 2px solid var(--border2); background: var(--panel-bg-2); border-radius: 0 6px 6px 0;
+  overflow-wrap: anywhere;
+}
+.more-body p { margin: 0 0 7px; }
+.more-body p:last-child { margin-bottom: 0; }
+code { white-space: normal; overflow-wrap: anywhere; }
+.scn-result { margin-top: 10px; padding: 10px; border: 1px solid var(--border2); border-radius: 8px; background: var(--panel-bg-2); }
+.verdict { margin: 6px 0 2px; }
+.chain-head { font-size: 12px; text-transform: uppercase; letter-spacing: .7px; font-weight: 800;
+              color: var(--text-muted); margin: 8px 2px -2px; }
+.legend { display: block; margin-top: 7px; line-height: 1.9; }
+.legend .lg { white-space: nowrap; margin-right: 10px; font-size: 11.5px; }
+a.cite { color: inherit; text-decoration: none; border-bottom: 1px dotted currentColor; white-space: nowrap; }
+.ref-item { font-size: 12px; color: var(--text-dim); padding: 6px 0; border-bottom: 1px dashed var(--border);
+            overflow-wrap: anywhere; scroll-margin-top: 80px; }
+.ref-item:last-child { border-bottom: none; }
+.ref-item:target { color: var(--text-hi); }
+.ref-item b { color: var(--text); }
+
+/* per-drug / per-row blocks used instead of wide tables */
+.blk { padding: 10px 0; border-bottom: 1px solid var(--border); }
+.blk:last-child { border-bottom: none; padding-bottom: 0; }
+.blk-title { font-weight: 700; color: var(--text-hi); font-size: 13.5px; }
+.blk-title .dose { font-family: ui-monospace, "SF Mono", Menlo, monospace; font-weight: 600; color: var(--text-dim); font-size: 12px; }
+.kv { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px; margin-top: 6px; }
+.kv .stat .v { font-size: 14.5px; }
+.grid .lab2 { color: var(--text-hi); font-weight: 600; }
+.grid .lab2 .u { display: block; font-weight: 400; font-size: 10.5px; color: var(--text-muted); }
+table.grid td, table.grid th { vertical-align: top; }
+table.grid tr.detail td { border-bottom: 1px solid var(--border); padding-top: 0; text-align: left; }
+table.grid tr.has-detail td { border-bottom: none; }
+
+/* sticky vitals strip — the result stays in view while a slider is being dragged */
+.vitals {
+  position: sticky; top: 42px; z-index: 150; display: flex; gap: 0;
+  max-width: 1680px; margin: 10px auto 0; padding: 0 20px;
+}
+.vitals .vi { flex: 1 1 0; min-width: 0; text-align: center; padding: 6px 2px; background: var(--navy-deep);
+              border: 1px solid var(--border2); border-left-width: 0; }
+.vitals .vi:first-child { border-left-width: 1px; border-radius: 8px 0 0 8px; }
+.vitals .vi:last-child { border-radius: 0 8px 8px 0; }
+.vitals .k { font-size: 9.5px; font-weight: 800; letter-spacing: .5px; color: rgba(255,255,255,.65); text-transform: uppercase; }
+.vitals .v { font-family: ui-monospace, "SF Mono", Menlo, monospace; font-size: 15px; font-weight: 700; color: #fff; white-space: nowrap; }
+.vitals .v.up { color: #6ee7a8; } .vitals .v.down { color: #fca5a5; }
+
 @media (max-width: 1080px) {
+  .site-nav { position: static; }
+  .vitals { top: 0; }
   .wrap { grid-template-columns: 1fr; padding: 12px; }
   .page-head { padding: 12px; }
   .honesty { margin: 10px 12px 0; }
+  .vitals { padding: 0 12px; }
   .related, details.seo-section { padding-left: 12px; padding-right: 12px; }
+}
+@media (max-width: 700px) {
+  /* one swipeable row of tabs instead of four wrapped rows of sticky chrome */
+  .site-nav { position: static; flex-wrap: nowrap; padding: 0 0 0 12px; }
+  .nav-brand { margin-right: 10px; }
+  .nav-tabs { flex-wrap: nowrap; overflow-x: auto; -webkit-overflow-scrolling: touch; scrollbar-width: none; flex: 1 1 auto; min-width: 0; }
+  .nav-tabs::-webkit-scrollbar { display: none; }
+  .nav-tab { white-space: nowrap; padding: 10px 9px; }
+  .nav-right { margin-left: 0; padding: 4px 8px; flex: 0 0 auto; }
+  .vitals { top: 0; margin-top: 8px; padding: 0 6px; }
+  .vitals .v { font-size: 14px; }
+  .page-head h1 { font-size: 19px; }
+  .page-head .sub { font-size: 12.5px; }
+  input[type="number"], select { font-size: 16px; padding: 9px 8px; }   /* 16px stops iOS zooming on focus */
+  input[type="range"] { height: 30px; }
+  .btn { padding: 10px 10px; font-size: 13px; }
+  .readout { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px; }
+  .stat { padding: 6px 7px; }
+  .stat .v { font-size: 15px; }
+  .stat .k { font-size: 9.5px; letter-spacing: .2px; }
+  table.grid { font-size: 12px; }
+  table.grid th { white-space: normal; font-size: 9.5px; }
+  table.grid th, table.grid td { padding: 5px 4px; }
+  .views { grid-template-columns: 1fr; }
 }
 </style>
 </head>
@@ -511,20 +602,19 @@ details.seo-section ul { padding-left: 20px; }
 
 <header class="page-head">
   <h1>Vasopressor &amp; Inotrope Simulator</h1>
-  <p class="sub">One infusion, carried all the way: the dose you order &rarr; the plasma concentration it
-  produces &rarr; the fraction of each receptor it drives &rarr; the change in resistance, elastance and
-  rate &rarr; the pressures and flows a closed loop with a working baroreflex settles at. The PV loop,
-  the arterial trace, the Guyton diagram and the cath-lab numbers are four views of <em>one</em> engine
-  state, not four drawings.</p>
+  <p class="sub">Pick a patient and a drug, set the dose, and watch the hemodynamics move. Below the
+  result, the same infusion is traced step by step: dose &rarr; plasma level &rarr; receptor response
+  &rarr; change in resistance, preload, contractility and rate.</p>
 </header>
 
 <div class="honesty" id="honestyBanner" role="note">
-  <b>Read this first.</b> <span id="honestyText">There is no published function mapping receptor occupancy to
-  a change in systemic resistance, stressed volume, elastance, rate or lusitropy, for any of these drugs,
-  in humans. Receptor pharmacology here sets the <b>shape</b> and the <b>rank order</b>; the gain constants
-  are fitted to a named clinical observation where one exists and are declared teaching constructs where
-  none does. Every number on this page carries the class it earned.</span>
+  <b>A teaching model, not a dosing tool.</b> Receptor pharmacology sets the <b>shape</b> and
+  <b>rank order</b> of each response. No published human data converts receptor response into a change
+  in resistance or contractility, so most effect sizes here are estimates. Every number is tagged:
+  <span class="legend" id="chipLegend"></span>
 </div>
+
+<div class="vitals" id="vitalsBar" aria-hidden="true"></div>
 
 <main class="wrap">
 
@@ -532,187 +622,193 @@ details.seo-section ul { padding-left: 20px; }
   <div class="col" id="controlCol">
 
     <section class="card">
-      <h2><span class="step-no">1</span> Patient &amp; substrate</h2>
+      <h2><span class="step-no">1</span> Patient</h2>
       <div class="body">
+        <div class="field">
+          <span class="lab" id="substrateLab">Clinical state</span>
+          <div class="btn-grid" id="substrateGrid" role="group" aria-labelledby="substrateLab"></div>
+          <div id="substrateNote"></div>
+        </div>
         <div class="row2">
           <div class="field">
             <label for="inWeight">Weight (kg)</label>
-            <input type="number" id="inWeight" value="70" min="30" max="200" step="1">
+            <input type="number" id="inWeight" value="70" min="30" max="200" step="1" inputmode="decimal">
           </div>
           <div class="field">
             <label for="inBSA">BSA (m&sup2;)</label>
-            <input type="number" id="inBSA" value="1.9" min="1" max="3" step="0.01">
+            <input type="number" id="inBSA" value="1.9" min="1" max="3" step="0.01" inputmode="decimal">
           </div>
         </div>
         <div class="field">
-          <span class="lab" id="substrateLab">Substrate</span>
-          <div class="btn-grid" id="substrateGrid" role="group" aria-labelledby="substrateLab"></div>
-        </div>
-        <div class="field">
           <div class="toggle-row">
-            <span><span class="tl">Baroreflex</span><br><span class="ts" id="baroSub">on — CVSim arterial reflex</span></span>
+            <span><span class="tl">Baroreflex</span><br><span class="ts" id="baroSub"></span></span>
             <button type="button" class="btn active" id="baroBtn" aria-pressed="true"
                     aria-label="Baroreflex, currently on">ON</button>
           </div>
         </div>
+      </div>
+    </section>
+
+    <section class="card">
+      <h2><span class="step-no">2</span> Drugs <span style="font-weight:600;text-transform:none;letter-spacing:0">(up to 3)</span></h2>
+      <div class="body" id="infusionBody"></div>
+    </section>
+
+    <section class="card">
+      <h2>Or load a teaching scenario</h2>
+      <div class="body">
+        <div class="btn-grid one" id="scenarioGrid" role="group" aria-label="Teaching scenarios"></div>
+        <div id="scenarioVerdict"></div>
+      </div>
+    </section>
+
+    <details class="card fold" data-k="knobs">
+      <summary>Advanced model settings</summary>
+      <div class="body">
         <div class="field">
           <div class="slider-row">
-            <label for="inBaroGain">Sustained reflex gain</label>
+            <label for="inBaroGain">Baroreflex strength</label>
             <span class="slider-val" id="valBaroGain">0.35</span>
           </div>
           <input type="range" id="inBaroGain" min="0" max="1.2" step="0.05" value="0.35">
-          <p class="note" id="baroGainNote"></p>
+          <div id="baroGainNote"></div>
         </div>
-        <p class="note" id="substrateNote"></p>
-      </div>
-    </section>
-
-    <section class="card">
-      <h2><span class="step-no">2</span> Infusions <span style="font-weight:600;text-transform:none;letter-spacing:0">(up to 3)</span></h2>
-      <div class="body" id="infusionBody"></div>
-      <div class="body" style="border-top:1px solid var(--border);padding-top:10px">
-        <p class="note" id="stackingNote"></p>
-      </div>
-    </section>
-
-    <section class="card">
-      <h2>Model knobs</h2>
-      <div class="body">
         <div class="field">
           <div class="slider-row">
             <label for="inShift">In-vivo potency shift</label>
             <span class="slider-val" id="valShift">&times;41</span>
           </div>
           <input type="range" id="inShift" min="0" max="3" step="0.01" value="1.61">
-          <p class="note" id="shiftNote"></p>
+          <div id="shiftNote"></div>
         </div>
         <div class="field">
           <div class="slider-row">
-            <label for="inDensity">Receptor density (&beta;)</label>
+            <label for="inDensity">&beta; receptor density</label>
             <span class="slider-val" id="valDensity">100%</span>
           </div>
           <input type="range" id="inDensity" min="10" max="130" step="1" value="100">
         </div>
         <div class="field">
           <div class="slider-row">
-            <label for="inCoupling">G-protein coupling (&beta;)</label>
+            <label for="inCoupling">&beta; G-protein coupling</label>
             <span class="slider-val" id="valCoupling">100%</span>
           </div>
           <input type="range" id="inCoupling" min="10" max="130" step="1" value="100">
-          <p class="note">Density moves E<sub>max</sub> only. Coupling moves E<sub>max</sub> <em>and</em> the
-          apparent EC<sub>50</sub>. Two knobs, never one — that distinction is what makes
-          catecholamine-refractory shock intelligible.</p>
+          <p class="note">Density lowers the maximum response only. Coupling lowers the maximum
+          <em>and</em> shifts the EC<sub>50</sub>. The clinical states above set both.</p>
         </div>
         <div class="field">
           <div class="slider-row">
-            <label for="inVariability">Patient variability</label>
+            <label for="inVariability">Patient-to-patient drug level</label>
             <span class="slider-val" id="valVariability">typical</span>
           </div>
           <input type="range" id="inVariability" min="0" max="100" step="1" value="50">
           <div class="btn-grid one" style="margin-top:6px">
-            <button type="button" class="btn" id="reseedBtn">Re-seed this patient</button>
+            <button type="button" class="btn" id="reseedBtn">Random patient</button>
           </div>
           <p class="note" id="variabilityNote"></p>
         </div>
+        <div id="stackingNote"></div>
       </div>
-    </section>
-
-    <section class="card">
-      <h2>Scenarios</h2>
-      <div class="body">
-        <p class="note" style="margin-top:0">Each one is a starting state, not a script. The page
-        re-runs the model and reports whether the lesson actually emerged.</p>
-        <div class="btn-grid one" id="scenarioGrid" role="group" aria-label="Teaching scenarios"></div>
-        <div id="scenarioVerdict"></div>
-      </div>
-    </section>
+    </details>
   </div>
 
-  <!-- ══════════════════════════════════ RIGHT: the chain ══════════════════════════════════ -->
+  <!-- ══════════════════════════════════ RIGHT: result, then the chain ═══════════════════ -->
   <div class="col" id="chainCol">
 
+    <section class="card" id="resultCard">
+      <h2><span class="step-no">3</span> Hemodynamics</h2>
+      <div class="body">
+        <div class="readout" id="cathReadout"></div>
+        <div id="engineFlags"></div>
+        <div style="height:12px"></div>
+        <div class="views">
+          <div class="canvas-wrap">
+            <canvas id="pvCanvas" role="img" aria-label="Left ventricular pressure-volume loop for the current engine state, with the end-systolic and end-diastolic pressure-volume relations and the arterial elastance line." height="260"></canvas>
+          </div>
+          <div class="canvas-wrap">
+            <canvas id="apCanvas" role="img" aria-label="Arterial pressure trace over one cardiac cycle for the current engine state, with left ventricular pressure overlaid." height="260"></canvas>
+          </div>
+          <div class="canvas-wrap">
+            <canvas id="guytonCanvas" role="img" aria-label="Guyton diagram: the venous return curve and the cardiac function curve, meeting at the operating point." height="260"></canvas>
+          </div>
+        </div>
+        <div id="readoutMore"></div>
+      </div>
+    </section>
+
+    <p class="chain-head">How the drug gets there</p>
+
     <section class="card">
-      <h2><span class="step-no">3</span> Plasma concentration</h2>
+      <h2><span class="step-no">4</span> Plasma level</h2>
       <div class="body">
         <div class="canvas-wrap">
-          <canvas id="pkCanvas" role="img" aria-label="Plasma concentration against time since the infusion started, drawn as a typical-patient line inside a shaded band of observed inter-patient spread." height="260"></canvas>
+          <canvas id="pkCanvas" role="img" aria-label="Plasma concentration against time since the infusion started, drawn as a typical-patient line inside a shaded band of observed inter-patient spread." height="220"></canvas>
         </div>
         <p id="pkDesc" class="sr-only"></p>
-        <div id="pkTable" class="scroll-x"></div>
+        <div id="pkTable"></div>
         <div id="pkRefusals"></div>
       </div>
     </section>
 
     <section class="card">
-      <h2><span class="step-no">4</span> Receptor occupancy &amp; response</h2>
+      <h2><span class="step-no">5</span> Receptor response</h2>
       <div class="body">
         <div class="canvas-wrap">
-          <canvas id="recCanvas" role="img" aria-label="Fractional response at each adrenergic and non-adrenergic receptor for the drugs currently infusing." height="300"></canvas>
+          <canvas id="recCanvas" role="img" aria-label="Fractional response at each adrenergic and non-adrenergic receptor for the drugs currently infusing." height="200"></canvas>
         </div>
+        <p class="note" style="margin:6px 0 8px">Bar = response with the drug. Tick = resting tone.
+        Red bar = potency is an estimate.</p>
         <p id="recDesc" class="sr-only"></p>
-        <div id="recTable" class="scroll-x"></div>
+        <div id="recTable"></div>
         <div id="recRefusals"></div>
       </div>
     </section>
 
     <section class="card">
-      <h2><span class="step-no">5</span> Effector deltas</h2>
+      <h2><span class="step-no">6</span> Effect on the circulation</h2>
       <div class="body">
-        <div id="effTable" class="scroll-x"></div>
-        <p class="note" id="effNote"></p>
+        <div id="effTable"></div>
+        <div id="effNote"></div>
       </div>
     </section>
 
-    <section class="card">
-      <h2>Calibration check — the model against its one human anchor</h2>
+    <p class="chain-head">Behind the model</p>
+
+    <details class="card fold" data-k="calib">
+      <summary>How well is it calibrated?</summary>
       <div class="body" id="calibBody"></div>
-    </section>
+    </details>
 
-    <section class="card">
-      <h2><span class="step-no">6</span> Hemodynamics — three views of one engine state</h2>
-      <div class="body">
-        <div class="views">
-          <div class="canvas-wrap">
-            <canvas id="pvCanvas" role="img" aria-label="Left ventricular pressure-volume loop for the current engine state, with the end-systolic and end-diastolic pressure-volume relations and the arterial elastance line." height="300"></canvas>
-          </div>
-          <div class="canvas-wrap">
-            <canvas id="apCanvas" role="img" aria-label="Arterial pressure trace over one cardiac cycle for the current engine state, with left ventricular pressure overlaid." height="300"></canvas>
-          </div>
-          <div class="canvas-wrap">
-            <canvas id="guytonCanvas" role="img" aria-label="Guyton diagram: the venous return curve and the cardiac function curve, meeting at the operating point." height="300"></canvas>
-          </div>
-        </div>
-        <div style="height:12px"></div>
-        <div class="readout" id="cathReadout"></div>
-        <div id="engineFlags"></div>
-        <p class="note" id="engineNote"></p>
-      </div>
-    </section>
-
-    <section class="card">
-      <h2>Receptor audit trail — every printed number, backwards</h2>
+    <details class="card fold" data-k="audit">
+      <summary>Trace the SVR back to its sources</summary>
       <div class="body" id="auditBody"></div>
-    </section>
+    </details>
 
-    <section class="card">
-      <h2>Spare receptors: occupancy on K<sub>D</sub> vs response on EC<sub>50</sub></h2>
+    <details class="card fold" data-k="spare" id="spareCard">
+      <summary><span>Spare receptors: why binding K<sub>D</sub> is the wrong number</span></summary>
       <div class="body">
         <div class="canvas-wrap">
-          <canvas id="spareCanvas" role="img" aria-label="Two curves against plasma concentration on a log axis: fractional receptor occupancy computed from the binding dissociation constant, and fractional response computed from the functional half-maximal effective concentration. The horizontal distance between them is the spare-receptor reserve." height="280"></canvas>
+          <canvas id="spareCanvas" role="img" aria-label="Two curves against plasma concentration on a log axis: fractional receptor occupancy computed from the binding dissociation constant, and fractional response computed from the functional half-maximal effective concentration. The horizontal distance between them is the spare-receptor reserve." height="240"></canvas>
         </div>
         <div class="field" style="margin-top:10px">
           <label for="inSpareRow">Drug and receptor</label>
           <select id="inSpareRow"></select>
         </div>
-        <div id="spareTable" class="scroll-x"></div>
+        <div id="spareTable"></div>
         <p class="note" id="spareNote"></p>
       </div>
-    </section>
+    </details>
 
-    <section class="card">
-      <h2>These drugs do not fit the receptor model</h2>
+    <details class="card fold" data-k="notfit">
+      <summary>Drugs this model cannot simulate</summary>
       <div class="body" id="notFitBody"></div>
-    </section>
+    </details>
+
+    <details class="card fold" data-k="refs" id="refsCard">
+      <summary>References</summary>
+      <div class="body" id="refsBody"></div>
+    </details>
 
   </div>
 </main>
@@ -735,8 +831,8 @@ details.seo-section ul { padding-left: 20px; }
   </div>
 </section>
 
-<details class="seo-section" open>
-  <summary>About this simulator — the model, the sources, and what it refuses to do</summary>
+<details class="seo-section">
+  <summary>About this simulator — the model, its sources and its limits</summary>
 
   <h2>What the vasopressor and inotrope simulator does</h2>
   <p>Most vasoactive-drug references are grids of plus signs and arrows: norepinephrine gets
@@ -756,8 +852,8 @@ details.seo-section ul { padding-left: 20px; }
   <p>A vasoactive simulator without a reflex teaches something false. Phenylephrine given to a patient
   with an intact reflex raises the pressure and <em>slows</em> the heart; without the reflex the model
   shows a pressor response and no bradycardia at all, which is the opposite of the lesson. The reflex
-  here is the arterial baroreflex of the CVSim model (Heldt, Shim, Kamm and Mark), ported from the
-  distributed source rather than from the paper, because the paper carries no numeric parameter table.
+  equations and gains are taken from CVSim, the open-source cardiovascular model published by Heldt,
+  Mukkamala, Moody and Mark at MIT &mdash; an external research model, not another CathMath tool.
   It senses a saturating mean-pressure error and drives four effectors: R-R interval, lumped systemic
   resistance, venous unstressed volume and end-systolic compliance. You can switch it off, and the
   page will show you the difference the reflex makes on every number.</p>
@@ -770,21 +866,20 @@ details.seo-section ul { padding-left: 20px; }
   sits in the single-digit to low-hundreds nanomolar range, so an occupancy model built on
   K<sub>D</sub> would read essentially zero percent occupied at every dose a patient ever receives.
   The response layer here therefore runs on functional EC<sub>50</sub>. The discrepancy is not hidden;
-  it has its own panel, where the occupancy curve and the response curve are drawn together and the
+  it has its own panel (Spare receptors), where the occupancy curve and the response curve are drawn together and the
   horizontal gap between them is labelled the spare-receptor reserve.</p>
 
   <h2>Where the numbers come from, and where they stop</h2>
   <p>Affinity and functional potency at the &alpha;1 and &alpha;2 subtypes are measured human values
   from Proudman and Baker. Pharmacokinetics come from the regulatory labels and from the one good
-  human intensive-care norepinephrine dataset. The &beta;-adrenoceptor agonist column does not exist:
-  the two papers that carry human &beta;1 and &beta;2 agonist affinity are both paywalled, and the
-  page refuses to invent them &mdash; it prints the refusal, names the citations to obtain, and marks
-  every &beta;-derived row as a construct. There is likewise no published transfer function anywhere
+  human intensive-care norepinephrine dataset. Measured human &beta;1 and &beta;2 agonist
+  potencies (Baker 2010; Hoffmann 2004) were not available when the model was built, so every
+  &beta; potency is a placeholder on the published rank order and is tagged as an estimate. There is likewise no published transfer function anywhere
   in the literature that maps receptor occupancy onto a change in systemic vascular resistance or
-  end-systolic elastance in humans. One gain constant is fitted to a named clinical observation; the
-  rest are declared teaching constructs and coloured accordingly. Two whole quantities &mdash;
-  pulmonary vascular resistance and the pulmonary artery pulsatility index &mdash; are refused
-  outright, because this engine lumps the pulmonary artery, pulmonary veins and left atrium into a
+  end-systolic elastance in humans. One effect size is fitted to a named clinical observation; the
+  rest are teaching estimates and are tagged as such. Two quantities &mdash;
+  pulmonary vascular resistance and the pulmonary artery pulsatility index &mdash; are not shown,
+  because this model lumps the pulmonary artery, pulmonary veins and left atrium into a
   single reservoir and so has neither a pulmonary resistance nor a pulmonary artery pulse to measure.</p>
 
   <h2>Drugs that do not fit the model</h2>
@@ -1363,7 +1458,7 @@ var CathMathEngine = (function () {
       else if (phase === 'IVC' && !beat.ejected && k > esPos) phase = 'IVR';
       else if (phase === 'Ejection' && sm.Qav <= Qthr && k > esPos) phase = 'IVR';
       else if (phase === 'IVR' && sm.Qmv > Qthr) phase = 'Filling';
-      pts.push({ V: sm.V, P: sm.P, phase: phase, t: sm.t });
+      pts.push({ V: sm.V, P: sm.P, Pa: sm.Pa, phase: phase, t: sm.t });   // Pa: the arterial trace is drawn from the same beat
     }
     var order = ['IVC', 'Ejection', 'IVR', 'Filling'];
     var bounds = [0], durs = [], counts = { IVC: 0, Ejection: 0, IVR: 0, Filling: 0 };
@@ -4586,7 +4681,7 @@ const BARO_GAIN_DEFAULT = 0.35;
 const ANCHOR_DOSE_MAP_SLOPE = 103;        // mmHg per mcg/kg/min, 95 % CI 81–124 (eja2026_ne_dose_map)
 const ANCHOR_DOSE_MAP_CI = '81 to 124';
 const ANCHOR_DOSE_LO = 0.04, ANCHOR_DOSE_HI = 0.20;   // the studied range
-const SHIFT_ANCHOR = 'EJA 2026 norepinephrine dose–MAP line. The shift itself IS fitted, to that one line — what is NOT a fitted value is the apparent α1 EC50 of about 100 nM it lands on: drugs.json\'s identifiability test names 100 nM as a LOWER BOUND and says an EC50 must not be reported from that dataset. The FITTED chip belongs to the shift, never to the EC50 it produces';
+const SHIFT_ANCHOR = 'EJA 2026 norepinephrine dose–MAP line. The shift itself IS fitted, to that one line — what is NOT a fitted value is the apparent α1 EC50 of about 100 nM it lands on: that dataset can only put a LOWER BOUND of about 100 nM on the EC50, so no EC50 should be quoted from it. The FITTED chip belongs to the shift, never to the EC50 it produces';
 
 // ═══════════════════════════════════════════════════════════════════════════════════════════
 // ENDOGENOUS SYMPATHETIC TONE
@@ -4656,9 +4751,9 @@ const BETA1_EES_FRACTION = 1.28;
 const GAIN = {
   alpha1: {
     Rs:  { v: 0, dynamic: 'alpha1Rs', unit: 'dyn·s·cm⁻⁵', prov: 'FITTED', src: 'eja2026_ne_dose_map',
-           why: 'THE ONE FITTED GAIN. drugs.json delta_Rs = 12.3 dyn·s·cm⁻⁵ per nM plasma noradrenaline in the linear limb, from the EJA 2026 awake dose–MAP slope of 103 mmHg per mcg/kg/min. Emax = 12.3 × apparent EC50 × (1 + tone/(1−tone))². drugs.json\'s own caveat stands: the anchor is OPEN-LOOP and attributes the whole MAP rise to arterial resistance at a fixed cardiac output, so it is a starting value, not the answer.' },
+           why: 'The one gain fitted to human data: 12.3 dyn·s·cm⁻⁵ per nM plasma noradrenaline in the linear limb, from the EJA 2026 awake dose–MAP slope of 103 mmHg per mcg/kg/min. Emax = 12.3 × apparent EC50 × (1 + tone/(1−tone))². The caveat: the anchor is OPEN-LOOP and attributes the whole MAP rise to arterial resistance at a fixed cardiac output, so it is a starting value, not the answer.' },
     Vs:  { v: 900, unit: 'mL', prov: 'CONSTRUCT',
-           why: 'Venous α1 recruits unstressed volume into the stressed compartment — the mechanism drugs.json names for the preload limb of a pressor response. delta_Vs is UNCALIBRATED_NO_HUMAN_ANCHOR_ON_DISK, so this number is chosen rather than fitted: 900 mL at a MAXIMAL α1 stimulus, against a venous reservoir holding most of a 5 L blood volume. Raising it makes the model track the observed dose–MAP line more closely and makes phenylephrine absurd; that trade-off is the calibration panel\'s subject.' },
+           why: 'Venous α1 recruits unstressed volume into the stressed compartment — the preload limb of a pressor response. There is no human dataset to calibrate it against, so this number is chosen rather than fitted: 900 mL at a MAXIMAL α1 stimulus, against a venous reservoir holding most of a 5 L blood volume. Raising it makes the model track the observed dose–MAP line more closely and makes phenylephrine absurd; that trade-off is what the calibration check shows.' },
   },
   alpha2: {
     Rs:  { v: 420, unit: 'dyn·s·cm⁻⁵', prov: 'CONSTRUCT',
@@ -4666,25 +4761,25 @@ const GAIN = {
   },
   beta1: {
     Ees: { v: 0, dynamic: 'beta1Ees', frac: BETA1_EES_FRACTION, unit: 'mmHg/mL', prov: 'FITTED', src: null,
-           why: 'FRACTIONAL, not absolute: the tonic β1 support of contractility is worth ' + BETA1_EES_FRACTION + ' × the SUBSTRATE\'S OWN end-systolic elastance per unit β1 response. It was a flat 3.2 mmHg/mL CONSTRUCT until 2026-09-22 — 1.28 × the normal ventricle\'s Ees of 2.5, but 3.2 × the chronic-HFrEF substrate\'s Ees of 1.0, so β-blockade withdrew more elastance than the failing ventricle had and 5 mg of IV metoprolol printed MAP 49 / CO 1.8 / EF 0 on a stable outpatient. FITTED, and to a bedside anchor rather than to a number on disk: acute IV β-blockade in chronic HFrEF lowers cardiac output MODESTLY, not to shock. drugs.json still records delta_Ees as UNCALIBRATED_NO_HUMAN_ANCHOR_ON_DISK — no human β1-occupancy-to-elastance dataset exists — so what is fitted is the SCALING RULE, and the normal substrate is left bit-identical to the construct it replaces.' },
-    HR:  { v: 45,  unit: 'bpm',     prov: 'CONSTRUCT', why: 'drugs.json delta_HR: UNCALIBRATED (EJA 2026 lists heart rate as a secondary outcome; the numeric slope was not in the retrieved abstract, and that one is probably recoverable).' },
-    lus: { v: -0.40, unit: 'fraction of EDPVR scale A', prov: 'CONSTRUCT', why: 'drugs.json delta_lusitropy: UNCALIBRATED.' },
+           why: 'FRACTIONAL, not absolute: the tonic β1 support of contractility is worth ' + BETA1_EES_FRACTION + ' × the SUBSTRATE\'S OWN end-systolic elastance per unit β1 response. A fixed 3.2 mmHg/mL would be 1.28 × the normal ventricle\'s Ees of 2.5 but 3.2 × the chronic-HFrEF ventricle\'s Ees of 1.0, so β-blockade would withdraw more elastance than a failing ventricle has. FITTED to a bedside observation rather than to a published number: acute IV β-blockade in chronic HFrEF lowers cardiac output MODESTLY, not to shock. No human β1-occupancy-to-elastance dataset exists, so what is fitted is the SCALING RULE.' },
+    HR:  { v: 45,  unit: 'bpm',     prov: 'CONSTRUCT', why: 'No human calibration. The norepinephrine dose–MAP study lists heart rate as a secondary outcome, but its numeric slope was not available.' },
+    lus: { v: -0.40, unit: 'fraction of EDPVR scale A', prov: 'CONSTRUCT', why: 'β1 speeds relaxation. No human calibration exists for the size of the effect.' },
   },
   beta2: {
-    Rs:  { v: -380, unit: 'dyn·s·cm⁻⁵', prov: 'CONSTRUCT', why: 'β2 arterial vasodilatation. No human anchor, and RE-PLACED on 2026-09-22 from −1200: at −1200 a maximal β2 stimulus removed 84 % of the baseline systemic resistance, which no patient survives, and adrenaline came out a net VASODILATOR at every dose the slider reaches — the opposite of the textbook low-dose-β / high-dose-α transition. At −380 the β2 limb saturates by about 0.05 mcg/kg/min while the α1 limb keeps climbing, so the crossover lands near 0.08. The price is paid by the pure β agonists: this one lumped resistance must serve both a drug whose β2 is the whole story (isoproterenol) and one where α1 overtakes it (adrenaline), so isoproterenol and dobutamine now dilate the arteries LESS than they do at the bedside. Both numbers are constructs; which one is wrong cannot be settled from anything on disk.' },
+    Rs:  { v: -380, unit: 'dyn·s·cm⁻⁵', prov: 'CONSTRUCT', why: 'β2 arterial vasodilatation. No human anchor. A larger gain (−1200) lets a maximal β2 stimulus remove 84 % of the baseline systemic resistance, which no patient survives, and makes adrenaline a net VASODILATOR at every dose — the opposite of the textbook low-dose-β / high-dose-α transition. At −380 the β2 limb saturates by about 0.05 mcg/kg/min while the α1 limb keeps climbing, so the crossover lands near 0.08. The price is paid by the pure β agonists: this one lumped resistance must serve both a drug whose β2 is the whole story (isoproterenol) and one where α1 overtakes it (adrenaline), so isoproterenol and dobutamine dilate the arteries LESS here than they do at the bedside. No available human data settles which compromise is right.' },
     Vs:  { v: -60, unit: 'mL', prov: 'CONSTRUCT', why: 'β2 venodilatation, deliberately small against the arterial term. No human anchor.' },
   },
   D1: {
     Rs:  { v: -200, unit: 'dyn·s·cm⁻⁵', prov: 'CONSTRUCT',
-           why: 'Renal and splanchnic D1 vasodilatation. drugs.json: no clean human D1 EC50 exists, and the "renal dose" threshold it would encode is clinically discredited — the vasodilatation is real pharmacology, the benefit was disproven.' },
+           why: 'Renal and splanchnic D1 vasodilatation. No clean human D1 EC50 exists, and the "renal dose" threshold it would encode is clinically discredited — the vasodilatation is real pharmacology, the benefit was disproven.' },
   },
   V1: {
     Rs:  { v: 1400, unit: 'dyn·s·cm⁻⁵', prov: 'CONSTRUCT',
-           why: 'V1a Gq vasoconstriction, catecholamine-independent — that independence is the teaching point and needs no affinity number. No human V1a Ki for AVP is on disk; drugs.json warns explicitly against the hamster number.' },
+           why: 'V1a Gq vasoconstriction, catecholamine-independent — that independence is the teaching point and needs no affinity number. No human V1a affinity for vasopressin was found; the commonly quoted number is from hamster tissue and is not used.' },
   },
   AT1: {
     Rs:  { v: 1400, unit: 'dyn·s·cm⁻⁵', prov: 'CONSTRUCT',
-           why: 'AT1 Gq vasoconstriction. The SAME construct number as the V1a gain — there is no separate anchor for either — but a SEPARATE channel, which is the point: vasopressin and angiotensin II are different receptors on different ligand families, so they must not share a Gaddum denominator. When they did (until 2026-09-22) a maximal second vasoconstrictor added about 30 dyn·s·cm⁻⁵ on top of the first, i.e. the two drugs competitively antagonised each other, which is the wrong answer to a live bedside question about refractory vasoplegia. Their Rs deltas now ADD, like every other pair of channels. drugs.json records human vascular AT1 affinity as UNAVAILABLE.' },
+           why: 'AT1 Gq vasoconstriction. The SAME construct number as the V1a gain — there is no separate anchor for either — but a SEPARATE channel, which is the point: vasopressin and angiotensin II are different receptors on different ligand families, so they do not compete with each other: their resistance effects ADD, like every other pair of receptors. No human vascular AT1 affinity was found.' },
   },
   PDE3: {
     Ees: { v: 1.4, unit: 'mmHg/mL', prov: 'CONSTRUCT', why: 'PDE3 inhibition raises cAMP downstream of the receptor, which is why it works when the receptor does not. No human anchor.' },
@@ -4707,13 +4802,13 @@ const GAIN = {
 };
 
 const EFFECTOR_META = {
-  Rs:  { label: 'Systemic vascular resistance', unit: 'dyn·s·cm⁻⁵', param: 'Rs' },
+  Rs:  { label: 'Arterial resistance', unit: 'dyn·s·cm⁻⁵', param: 'Rs' },
   Vs:  { label: 'Stressed volume (preload)',     unit: 'mL',          param: 'Vs' },
   Ees: { label: 'End-systolic elastance',        unit: 'mmHg/mL',     param: 'Ees' },
   HR:  { label: 'Heart rate',                    unit: 'bpm',         param: 'HR' },
-  lus: { label: 'Lusitropy (EDPVR scale A)',     unit: '× baseline',  param: 'A' },
-  PVR: { label: 'Pulmonary vascular resistance', unit: 'dyn·s·cm⁻⁵', param: null,
-         refused: 'This engine lumps the pulmonary artery, pulmonary veins and left atrium into ONE reservoir. It has no pulmonary resistance element, so a PVR effector has nothing to act on and PVR has nothing to be read from. Refused rather than fabricated.' },
+  lus: { label: 'Diastolic stiffness',           unit: '× baseline',  param: 'A' },
+  PVR: { label: 'Pulmonary vascular resistance', unit: '', param: null,
+         refused: 'This model lumps the pulmonary artery, pulmonary veins and left atrium into one reservoir. It has no pulmonary resistance element, so there is nothing for a drug to act on and no PVR to read. It is left out rather than invented.' },
 };
 
 // ═══════════════════════════════════════════════════════════════════════════════════════════
@@ -4759,7 +4854,7 @@ const RX = {
     group: 'Catecholamine vasopressor / inotrope',
     dose: { unit: 'mcg/kg/min', perKg: true, min: 0, max: 0.5, step: 0.005, start: 0.05,
             rangeText: 'No numeric infusion range on the labels checked; 0.01–0.5 mcg/kg/min is the practice range',
-            rangeProv: 'CONVENTION — drugs.json records the label dosing as UNAVAILABLE' },
+            rangeProv: 'CONVENTION — no label infusion range was found' },
     rec: {
       alpha1: { from: 'alpha1A' }, alpha2: { from: 'alpha2B' },
       beta1: { construct: BETA_REF_EC50 * 1.2, ia: 1.0,
@@ -4786,7 +4881,7 @@ const RX = {
                why: 'Placed well below noradrenaline on the β rank order. No measured value exists.' },
       beta2: { construct: BETA_REF_EC50 * 600, ia: 0.6, why: 'No measured value exists.' },
       D1:    { construct: 15, ia: 1.0,
-               why: 'drugs.json: no clean human D1 EC50 was retrieved. Placed so the D1 vasodilator limb is already working at 2 mcg/kg/min and is overtaken by the measured α1 limb as the dose climbs — that crossover IS the dose-dependence being taught, and it falls out of two EC50 values rather than out of a dose label. The "renal dose" clinical benefit the threshold encodes was disproven.' },
+               why: 'No clean human D1 EC50 was found. Placed so the D1 vasodilator limb is already working at 2 mcg/kg/min and is overtaken by the measured α1 limb as the dose climbs — that crossover IS the dose-dependence being taught, and it falls out of two EC50 values rather than out of a dose label. The "renal dose" clinical benefit the threshold encodes was disproven.' },
     },
   },
   dobutamine: {
@@ -4796,7 +4891,7 @@ const RX = {
             rangeProv: 'MEASURED (label)' },
     rec: {
       alpha1: { constructDose: 30, iaFrom: 'alpha1A',
-                why: 'Dobutamine has NO clearance on disk, so there is no concentration and the measured α1A functional EC50 cannot be used. The potency below is anchored in dose units. The intrinsic activity, however, IS the measured one — it is a ratio and so survives the missing concentration — and it is what makes dobutamine a PARTIAL α1 agonist in this model.' },
+                why: 'No clearance is published on the dobutamine label, so there is no concentration and the measured α1A functional EC50 cannot be used. The potency below is anchored in dose units. The intrinsic activity, however, IS the measured one — it is a ratio and so survives the missing concentration — and it is what makes dobutamine a PARTIAL α1 agonist in this model.' },
       beta1: { constructDose: 3.5, ia: 1.0, why: 'Dose-unit placeholder; no measured β potency exists.' },
       beta2: { constructDose: 5, ia: 0.8, why: 'Dose-unit placeholder; no measured β potency exists. Placed close to the β1 placeholder because the inodilator phenotype — output up, pressure not — is the thing being taught.' },
     },
@@ -4808,10 +4903,10 @@ const RX = {
             rangeText: 'Label gives an adult bolus of 10–20 mcg and, for infusion, only the AHA paediatric recommendation',
             rangeProv: 'MEASURED (label) — no adult infusion range is stated; the slider range is CONVENTION' },
     rec: {
-      beta1: { constructDose: 6, ia: 1.0, why: 'Isoproterenol has NO clearance, volume of distribution or half-life on disk at all, so the potency is anchored in dose units. No measured β value exists either.' },
+      beta1: { constructDose: 6, ia: 1.0, why: 'The isoproterenol label gives no clearance, volume of distribution or half-life, so the potency is anchored in dose units. No measured β value exists either.' },
       beta2: { constructDose: 5, ia: 1.0, why: 'Non-selective by construction — the rank order says isoprenaline is the reference non-selective full β agonist. No measured value exists.' },
     },
-    note: 'drugs.json records isoprenaline α2 IC50 as >1 mM at all three α2 subtypes — a clean, defensible zero, and one of the very few zeros in the whole table that is measured rather than assumed.',
+    note: 'Isoprenaline\'s measured α2 IC50 is >1 mM at all three α2 subtypes — a clean, defensible zero, and one of the very few zeros in the whole table that is measured rather than assumed.',
   },
   vasopressin: {
     group: 'V1a agonist — non-adrenergic',
@@ -4819,7 +4914,7 @@ const RX = {
             rangeText: 'Label: 0.01–0.07 units/min in septic shock; 0.03–0.1 units/min in post-cardiotomy shock',
             rangeProv: 'MEASURED (label)' },
     rec: { V1: { constructDose: 0.025, ia: 1.0,
-                 why: 'No human V1a Ki for AVP is on disk; drugs.json records V1a as UNAVAILABLE and warns against the hamster [125I]LVA number. The catecholamine-INDEPENDENCE is the teaching point and needs no affinity value.' } },
+                 why: 'No human V1a affinity for vasopressin was found, and the hamster-tissue number often quoted is not used. The catecholamine-INDEPENDENCE is the teaching point and needs no affinity value.' } },
   },
   angiotensin_ii: {
     group: 'AT1 agonist — non-adrenergic',
@@ -4827,7 +4922,7 @@ const RX = {
             rangeText: 'Label: start 20 ng/kg/min, titrate by up to 15 ng/kg/min every 5 min, max 80 in the first 3 h, maintenance not above 40',
             rangeProv: 'MEASURED (label)' },
     rec: { AT1: { constructDose: 18, ia: 0.85,
-                 why: 'drugs.json records human vascular AT1 affinity as UNAVAILABLE (the only number retrieved was rat aortic endothelium), so the potency is stated in the drug\'s own dose units. AT1 is its OWN channel here, with the same construct gain as V1a but its own Gaddum denominator — angiotensin II and vasopressin are different receptors and must not compete for one pool.' } },
+                 why: 'No human vascular AT1 affinity was found (the only number available was rat aortic endothelium), so the potency is stated in the drug\'s own dose units. AT1 is its OWN channel here, with the same construct gain as V1a but its own Gaddum denominator — angiotensin II and vasopressin are different receptors and must not compete for one pool.' } },
   },
   milrinone: {
     group: 'PDE3 inhibitor — inodilator',
@@ -4836,7 +4931,7 @@ const RX = {
             rangeProv: 'MEASURED (label)' },
     rec: {},
     mech: { PDE3: { ec50: 900, ia: 1.0, prov: 'CONSTRUCT',
-                    why: 'drugs.json records the PDE3 IC50 as SECONDARY_UNVERIFIED with status UNAVAILABLE and the instruction "print the range or print neither" — 56 ± 12 nM in one source against 0.66–1.3 µM in others, a >20-fold spread. The placeholder is set inside the label\'s own therapeutic plasma window of 100–300 ng/mL = 473–1420 nM, which IS on firm ground.' } },
+                    why: 'Published PDE3 IC50 values disagree by more than 20-fold — 56 ± 12 nM in one source against 0.66–1.3 µM in others — so no single value is used. The placeholder is set inside the label\'s own therapeutic plasma window of 100–300 ng/mL = 473–1420 nM, which is on firm ground.' } },
   },
   esmolol: {
     group: 'β1-selective antagonist',
@@ -4844,10 +4939,10 @@ const RX = {
             rangeText: 'Label: maximum maintenance dose 300 mcg/kg/min',
             rangeProv: 'MEASURED (label)' },
     rec: {
-      beta1: { construct: 900, ia: 0, why: 'Esmolol HAS a clearance on disk, so its potency is in nM. The value is a placeholder on the β1-selective rank order — no measured esmolol β affinity exists anywhere on disk (see the note below).' },
+      beta1: { construct: 900, ia: 0, why: 'Esmolol has a labelled clearance, so its potency is in nM. The value is a placeholder on the β1-selective rank order — no measured esmolol β affinity was found.' },
       beta2: { construct: 45000, ia: 0, why: 'β1-selective by rank order. No measured value exists.' },
     },
-    note: 'drugs.json carries an explicit correction: ESMOLOL DOES NOT APPEAR IN OLIVER 2019 AT ALL. The single-value β-blocker affinity table circulating on secondary sites takes the low end of Oliver\'s published ranges and adds an esmolol row from an unstated source. Do not attribute an esmolol β affinity to Oliver 2019 — this page does not.',
+    note: 'Esmolol does not appear in Oliver 2019 at all. The single-value β-blocker affinity table circulating on secondary sites takes the low end of Oliver\'s published ranges and adds an esmolol row from an unstated source. Do not attribute an esmolol β affinity to Oliver 2019 — this page does not.',
   },
   metoprolol: {
     group: 'β1-selective antagonist',
@@ -4855,10 +4950,10 @@ const RX = {
             rangeText: 'Label: three bolus injections of 5 mg each at about 2-minute intervals',
             rangeProv: 'MEASURED (label) — this is a BOLUS drug; the slider models a standing effect, not an infusion' },
     rec: {
-      beta1: { constructDose: 2.5, ia: 0, why: 'IV metoprolol is a bolus drug with no clearance on disk, so its potency is in dose units (mg given). β1-selective by rank order; no measured value exists.' },
+      beta1: { constructDose: 2.5, ia: 0, why: 'IV metoprolol is a bolus drug with no usable clearance, so its potency is in dose units (mg given). β1-selective by rank order; no measured value exists.' },
       beta2: { constructDose: 90, ia: 0, why: 'β1-selective by rank order. No measured value exists.' },
     },
-    note: 'β1:β2 selectivity for metoprolol is 2.3 in Baker 2005 and 58.9 in the table derived from Oliver 2019 — a 25-fold disagreement driven by assay method. drugs.json records the selectivity ratio as UNAVAILABLE / REFUSED_BY_DESIGN, so this page prints the rank order and never a selectivity number.',
+    note: 'β1:β2 selectivity for metoprolol is 2.3 in Baker 2005 and 58.9 in the table derived from Oliver 2019 — a 25-fold disagreement driven by assay method. A single ratio would misrepresent a disputed quantity, so this page prints the rank order and never a selectivity number.',
   },
   labetalol: {
     group: 'Non-selective β + α1 antagonist',
@@ -4871,7 +4966,7 @@ const RX = {
       alpha1: { fromKD: 'alpha1', ia: 0,
                 why: 'Labetalol\'s α1 affinity IS measured (Proudman 2021, α1A log KD −7.33) — it is an ANTAGONIST, so the binding KD is the right potency term for it and no functional EC50 is needed. That asymmetry is deliberate: occupancy is what an antagonist does.' },
     },
-    note: 'Labetalol is β1 pKD 7.63 to 7.99 — Oliver 2019 Table 1 publishes a RANGE and drugs.json records the point value as UNAVAILABLE, so the range is what is printed here — against an α1A log KD of −7.33. That is roughly 2:1 to 4:1 β:α BY AFFINITY, against the textbook "7:1 IV" figure, which is a FUNCTIONAL ratio, not an affinity ratio. The two are not the same claim, and taking the low end of a published range to make a tidy single ratio is the same error this page refuses two drugs below.',
+    note: 'Labetalol is β1 pKD 7.63 to 7.99 — Oliver 2019 Table 1 publishes a RANGE, not a point value, so the range is what is printed here — against an α1A log KD of −7.33. That is roughly 2:1 to 4:1 β:α BY AFFINITY, against the textbook "7:1 IV" figure, which is a FUNCTIONAL ratio, not an affinity ratio. The two are not the same claim, and taking the low end of a published range to make a tidy single ratio is the error this page avoids.',
   },
   carvedilol: {
     group: 'Non-selective β + α1 antagonist (oral)',
@@ -4881,7 +4976,7 @@ const RX = {
     rec: {
       beta1: { constructDose: 6, ia: 0, why: 'Oral only, no titratable infusion and no usable clearance path, so the potency is in dose units. Non-selective by rank order; no measured value exists.' },
       beta2: { constructDose: 9, ia: 0, why: 'Non-selective by rank order. No measured value exists.' },
-      alpha1: { constructDose: 28, ia: 0, why: 'No measured human carvedilol α1 KD is on disk; placed below labetalol on the α rank order, in dose units.' },
+      alpha1: { constructDose: 28, ia: 0, why: 'No measured human carvedilol α1 KD was found; placed below labetalol on the α rank order, in dose units.' },
     },
   },
   clevidipine: {
@@ -4891,7 +4986,7 @@ const RX = {
             rangeProv: 'MEASURED (label)' },
     rec: {},
     mech: { CaL: { constructDose: 7, ia: 1.0, prov: 'CONSTRUCT',
-                   why: 'drugs.json records dihydropyridine potency as UNAVAILABLE. Anchored at the midpoint of the label dose range, in dose units, because no clearance is on disk either.' } },
+                   why: 'No dihydropyridine potency value was found. Anchored at the midpoint of the label dose range, in dose units, because the label gives no clearance either.' } },
   },
   nicardipine: {
     group: 'Dihydropyridine calcium-channel blocker',
@@ -4899,7 +4994,7 @@ const RX = {
             rangeText: 'Label: 5 mg/hr in a patient not already on oral nicardipine; increase by 2.5 mg/hr every 5 minutes',
             rangeProv: 'MEASURED (label)' },
     rec: {},
-    mech: { CaL: { ec50: 380, ia: 1.0, prov: 'CONSTRUCT', why: 'Nicardipine HAS a clearance on disk, so its potency is in nM; 380 nM is roughly the steady-state level the label starting dose of 5 mg/hr produces in a 70 kg patient. No measured potency value is on disk.' } },
+    mech: { CaL: { ec50: 380, ia: 1.0, prov: 'CONSTRUCT', why: 'Nicardipine has a labelled clearance, so its potency is in nM; 380 nM is roughly the steady-state level the label starting dose of 5 mg/hr produces in a 70 kg patient. No measured potency value was found.' } },
     note: 'Nicardipine\'s terminal half-life is 14.4 hours. It is categorically NOT titratable minute to minute, and this page makes that visible rather than hiding it — compare the concentration curve with clevidipine\'s, whose initial half-life is under a minute.',
   },
   nitroglycerin: {
@@ -4908,7 +5003,7 @@ const RX = {
             rangeText: 'Label: usual reported starting range 25 mcg/min or more in studies using PVC sets; non-absorbing tubing requires reduced doses',
             rangeProv: 'MEASURED (label)' },
     rec: {},
-    mech: { NOven: { ec50: 180, ia: 1.0, prov: 'CONSTRUCT', why: 'No human concentration–effect potency is on disk; anchored near the level the label\'s reported starting range produces.' } },
+    mech: { NOven: { ec50: 180, ia: 1.0, prov: 'CONSTRUCT', why: 'No human concentration–effect potency was found; anchored near the level the label\'s reported starting range produces.' } },
   },
   nitroprusside: {
     group: 'NO donor — balanced',
@@ -4917,7 +5012,7 @@ const RX = {
             rangeProv: 'MEASURED (label)' },
     rec: {},
     mech: { NObal: { constructDose: 2.5, ia: 1.0, prov: 'CONSTRUCT',
-                     why: 'Anchored at the midpoint of the label dose range, in dose units, because no clearance is on disk.' } },
+                     why: 'Anchored at the midpoint of the label dose range, in dose units, because the label gives no clearance.' } },
     warn: { above: 2, text: 'Above about 2 mcg/kg/min cyanide accumulates: conversion of CN⁻ to SCN⁻ proceeds at roughly 1 mcg/kg/min on normal physiologic thiosulfate, which corresponds to steady-state processing of a nitroprusside infusion of slightly more than 2 mcg/kg/min (US label).' },
   },
 };
@@ -4968,7 +5063,7 @@ const PK_REFUSAL = {
   dobutamine:     'The label checked states a plasma half-life of 2 minutes and gives no clearance and no volume of distribution. It also notes that up to 10 minutes may be needed to reach the peak effect of a given rate, so the effect compartment lags the plasma compartment and a pure plasma model would titrate too fast.',
   isoproterenol:  'The isoproterenol injection label checked states only that the half-life is short and gives no numeric clearance, volume of distribution or half-life at all. Obtain: a primary human isoproterenol pharmacokinetic study, or the Isuprel NDA clinical pharmacology section.',
   metoprolol:     'IV metoprolol is a bolus drug (three 5 mg injections about 2 minutes apart), not a titrated infusion, and no numeric clearance was retrieved. A steady-state infusion model does not describe it.',
-  vasopressin:    'Clearance IS on disk (9–25 mL/min/kg in vasodilatory shock) but the dose is in UNITS per minute and no units-to-mass conversion is on disk, so the numerator of the concentration cannot be formed. The label does state that concentration rises linearly with infusion rate from 10 to 200 µU/kg/min — one of the few explicit linearity statements available.',
+  vasopressin:    'A clearance is published (9–25 mL/min/kg in vasodilatory shock) but the dose is in UNITS per minute and there is no reliable units-to-mass conversion, so the numerator of the concentration cannot be formed. The label does state that concentration rises linearly with infusion rate from 10 to 200 µU/kg/min — one of the few explicit linearity statements available.',
   angiotensin_ii: 'The label states that no formal pharmacokinetic studies were conducted and gives no numeric clearance or volume of distribution; only that the half-life is under a minute.',
   clevidipine:    'The label gives an initial half-life under a minute and a volume of distribution of 0.17 L/kg but no clearance.',
   nitroprusside:  'The label describes distribution into a volume "approximately coextensive with the extracellular space" and a circulatory half-life of about 2 minutes, with no numeric clearance or volume.',
@@ -5005,7 +5100,7 @@ const PK_SPREAD = {
                     why: 'Clearance rises from 52 to 89 mL/min/kg across the physiologic-to-pharmacologic range; 89/52 = 1.7.' },
 };
 const PK_SPREAD_DEFAULT = { fold: 3, prov: 'CONSTRUCT',
-  why: 'No inter-patient spread was retrieved for this drug. Three-fold is carried as a placeholder so the page never draws a concentration as a single confident line — the two drugs where the spread WAS measured came in at 3.3-fold and 10-fold.' };
+  why: 'No inter-patient spread was found for this drug. Three-fold is carried as a placeholder so the page never draws a concentration as a single confident line — the two drugs where the spread WAS measured came in at 3.3-fold and 10-fold.' };
 
 const LN2 = Math.log(2);
 
@@ -5054,12 +5149,12 @@ function pk(id, dose, weight, variability) {
     tauNote: PK_HALFLIFE_NOTE[id] || null,
     css: null, cssLo: null, cssHi: null, arith: null, spread: null, refusal: null, clCaveat: null,
   };
-  if (tau === null) out.tauRefusal = 'No numeric half-life for this drug is on disk, so no time course is drawn — only the steady state.';
+  if (tau === null) out.tauRefusal = 'No numeric half-life is published for this drug, so no time course is drawn — only the steady state.';
 
   const cl = clearanceLpm(id, weight);
   const mass = doseMcgPerMin(id, dose, weight);
   if (!cl || !mass || !mw) {
-    out.refusal = (PK_REFUSAL[id] || 'No clearance for this drug is on disk.') + ' ' + PK_REFUSAL.metaBoilerplate;
+    out.refusal = (PK_REFUSAL[id] || 'No clearance is published for this drug.') + ' ' + PK_REFUSAL.metaBoilerplate;
     return out;
   }
   out.clCaveat = PK_CL[id].caveat || null;
@@ -5114,8 +5209,8 @@ const CHANNELS = ['alpha1', 'alpha2', 'beta1', 'beta2', 'D1', 'V1', 'AT1'];
 const MECHS = ['PDE3', 'NOven', 'NObal', 'CaL'];
 const CHANNEL_LABEL = {
   alpha1: 'α1 (α1A)', alpha2: 'α2 (α2B)', beta1: 'β1', beta2: 'β2', D1: 'D1',
-  V1: 'V1a (catecholamine-independent)', AT1: 'AT1 (angiotensin II)',
-  PDE3: 'PDE3 inhibition', NOven: 'NO donor (venous-predominant)',
+  V1: 'V1a (vasopressin)', AT1: 'AT1 (angiotensin II)',
+  PDE3: 'PDE3 inhibition', NOven: 'NO donor (venous)',
   NObal: 'NO donor (balanced)', CaL: 'L-type Ca²⁺ blockade',
 };
 const CHANNEL_SUBTYPE = { alpha1: 'alpha1A', alpha2: 'alpha2B' };
@@ -5186,7 +5281,7 @@ function potency(id, chan) {
           pct + ' % of the ionomycin maximum ÷ ' + IA_MAX[spec.iaFrom] + ' % = ' + fmt(ia, 2) + ' at ' + spec.iaFrom + '.';
         borrowed = spec.iaFrom;
         if (r.functional_EC50_nM) borrowed += ' (its measured functional EC50 is ' + r.functional_EC50_nM +
-          ' nM and its binding KD ' + (r.KD_nM || '—') + ' nM — both unusable here, because with no clearance on disk there is no concentration to compare them with)';
+          ' nM and its binding KD ' + (r.KD_nM || '—') + ' nM — both unusable here, because with no published clearance there is no concentration to compare them with)';
       }
     }
     return { chan: chan, kind: 'construct', ec50: spec.constructDose, ia: ia, prov: 'CONSTRUCT', src: null,
@@ -5324,11 +5419,11 @@ function effectors(rec, knobs) {
 // engine's RR floor allows, and that a rate a drug itself produced is never argued upwards.
 const SUBSTRATE = {
   normal: {
-    label: 'Normal', params: {}, tone: {}, density: 1, coupling: 1, hrRange: [45, 150],
-    note: 'Engine defaults: Ees 2.5 mmHg/mL, Rs 1.07 PRU (≈1,427 dyn·s·cm⁻⁵), stressed volume 810 mL, HR 70.',
+    label: 'Normal', summary: 'A healthy resting circulation.', params: {}, tone: {}, density: 1, coupling: 1, hrRange: [45, 150],
+    note: 'Baseline model values: Ees 2.5 mmHg/mL, arterial resistance 1,427 dyn·s·cm⁻⁵, stressed volume 810 mL, HR 70.',
   },
   hfref: {
-    label: 'Chronic HFrEF',
+    label: 'Chronic HFrEF', summary: 'Weak ventricle, high filling pressures and raised sympathetic tone. β1 receptors are down-regulated to 38 % of normal; β2 is spared.',
     params: { Ees: 1.0, V0: 30, A: 0.9, B: 0.030, Vs: 1150, HR: 85, Rs: 1.30, rvGain: 0.8 },
     tone: { alpha1: 0.45, beta1: 0.55 },
     density: 0.38, coupling: 1, hrRange: [45, 140],
@@ -5336,24 +5431,24 @@ const SUBSTRATE = {
     src: 'bristow1986',
   },
   septic: {
-    label: 'Septic shock',
+    label: 'Septic shock', summary: 'Vasodilated and tachycardic, with desensitised β receptors and low vasopressin tone.',
     params: { Rs: 0.52, Vs: 700, HR: 105, Ees: 2.2 },
     tone: { alpha1: 0.55, beta1: 0.55, beta2: 0.35, V1: 0.04, AT1: 0.04 },
     density: 0.65, coupling: 0.50, hrRange: [55, 160],
-    note: 'Vasoplegia plus β desensitisation: receptor density −35 %, inhibitory Gα +60 % and isoproterenol-stimulated adenylyl cyclase −50 %. SECONDARY_UNVERIFIED and, importantly, RAT cardiomyocytes exposed to human septic plasma — not a direct human receptor measurement. GRK2 phosphorylates agonist-occupied receptors, recruits β-arrestin and uncouples them. The V1 tone is dropped to model relative vasopressin deficiency (CONSTRUCT). β2 TONE IS RAISED TO 0.35 HERE, against 0.10 on every other substrate — FITTED, and the reason is a direction the page was getting wrong: the endogenous catecholamine storm that puts the α1 tone at 0.55 occupies β2 as well, and while it stayed at the normal 0.10 the β2 limb had the whole of its headroom left while α1 had almost none, so ADRENALINE came out a net VASODILATOR on the septic substrate at 0.03–0.1 mcg/kg/min (MAP 73 → 67) — the substrate where adrenaline is actually used as a second-line vasopressor. With the β2 tone raised, adrenaline no longer lowers the mean pressure at any dose on this preset. The price, declared: isoproterenol and dobutamine now drop the resistance LESS on the septic substrate than on a normal one, which is the wrong way round, and the residual is visible if you drag the two β-desensitisation knobs back to 100 % — at that setting (not the preset) adrenaline below about 0.1 mcg/kg/min is still a net vasodilator. One lumped β2→resistance gain cannot serve both ends; which number is wrong cannot be settled from anything on disk.',
+    note: 'Vasoplegia plus β desensitisation: receptor density −35 %, inhibitory Gα +60 % and isoproterenol-stimulated adenylyl cyclase −50 %. SECONDARY_UNVERIFIED and, importantly, RAT cardiomyocytes exposed to human septic plasma — not a direct human receptor measurement. GRK2 phosphorylates agonist-occupied receptors, recruits β-arrestin and uncouples them. The V1 tone is dropped to model relative vasopressin deficiency (CONSTRUCT). β2 TONE IS RAISED TO 0.35 HERE, against 0.10 on every other substrate — FITTED, and the reason is this: the endogenous catecholamine storm that puts the α1 tone at 0.55 occupies β2 as well, and at the normal 0.10 the β2 limb has the whole of its headroom left while α1 has almost none, so ADRENALINE comes out a net VASODILATOR on the septic substrate at 0.03–0.1 mcg/kg/min (MAP 73 → 67) — the substrate where adrenaline is actually used as a second-line vasopressor. With the β2 tone raised, adrenaline no longer lowers the mean pressure at any dose on this preset. The price, declared: isoproterenol and dobutamine now drop the resistance LESS on the septic substrate than on a normal one, which is the wrong way round, and the residual is visible if you drag the two β-desensitisation knobs back to 100 % — at that setting (not the preset) adrenaline below about 0.1 mcg/kg/min is still a net vasodilator. One lumped β2→resistance gain cannot serve both ends; no available human data settles which is right.',
     src: null,
-    srcNote: 'drugs.json carries this block as SECONDARY_UNVERIFIED: recon_source PMID 8403246 (RAT cardiomyocytes exposed to human septic plasma), with a citation_to_obtain that was not read in this session and no source key. No SOURCE chip is printed for it — these numbers are repeated from a secondary record, not from a paper anyone here has read.',
+    srcNote: 'These figures come from a secondary summary of PMID 8403246 (RAT cardiomyocytes exposed to human septic plasma); the primary paper was not read, so treat them as unverified.',
     srcProv: 'SECONDARY_UNVERIFIED',
   },
   cardiogenic: {
-    label: 'Cardiogenic shock',
+    label: 'Cardiogenic shock', summary: 'Very low contractility, high filling pressures and a clamped-down circulation.',
     params: { Ees: 0.8, V0: 25, A: 0.9, B: 0.030, Vs: 1250, HR: 100, Rs: 1.55, rvGain: 0.7 },
     tone: { alpha1: 0.55, beta1: 0.60 },
     density: 0.55, coupling: 0.85, hrRange: [50, 150],
-    note: 'Low contractility, high filling pressure and a reflexly clamped-down circulation. The β knobs sit between normal and chronic HFrEF; both are CONSTRUCT here — no acute-shock human receptor-density measurement is on disk.',
+    note: 'Low contractility, high filling pressure and a reflexly clamped-down circulation. The β knobs sit between normal and chronic HFrEF; both are CONSTRUCT here — no human receptor-density measurement in acute shock was found.',
   },
   hypovolaemia: {
-    label: 'Hypovolaemia',
+    label: 'Hypovolaemia', summary: 'Low circulating volume with a normal heart and normal receptors. A pressor here treats the wrong problem.',
     params: { Vs: 520, HR: 95 },
     tone: { alpha1: 0.50, beta1: 0.50 },
     density: 1, coupling: 1, hrRange: [55, 170],
@@ -5421,7 +5516,7 @@ function cathReadout(printed, bsaPrinted) {
   } else out.CPO = { v: null, u: 'W' };
 
   out.PAPi = { v: null, u: '', refused:
-    'PAPi is (PA systolic − PA diastolic) ÷ RAP. This engine lumps the pulmonary artery, the pulmonary veins and the left atrium into ONE reservoir behind a flow-limited right heart, so there is no pulmonary artery pulse to measure and no PA systolic or diastolic pressure to subtract. Not computed.' };
+    'PAPi is (PA systolic − PA diastolic) ÷ RAP. This model lumps the pulmonary artery, pulmonary veins and left atrium into one reservoir, so there is no pulmonary artery pulse to measure.' };
   out.PVR = { v: null, u: '', refused: EFFECTOR_META.PVR.refused };
   return out;
 }
@@ -5461,7 +5556,10 @@ function guytonCurves(effectiveParams) {
   for (const g of [0.15, 0.3, 0.5, 0.75, 1, 1.4, 2, 3]) {
     const r = E.solve(Object.assign({}, p, { rvGain: g }), warm);
     warm = r.state;
-    if (r.printed.RAP !== null && r.printed.CO !== null) vr.push({ rap: r.printed.RAP, co: r.printed.CO });
+    // The CURVE is drawn from the unrounded solution. RAP is printed as an integer, so plotting
+    // the printed values put several points on one RAP and drew the curve as a staircase with a
+    // vertical hook at its tail. The operating-point dot still sits at the printed RAP and CO.
+    if (r.printed.RAP !== null && r.printed.CO !== null) vr.push({ rap: r.raw.RAP, co: r.raw.CO });
   }
   vr.sort((a, b) => a.rap - b.rap);
   // The cardiac-function curve IS the engine's right-heart law, plotted directly:
@@ -5680,25 +5778,76 @@ function esc(s) {
   return String(s === null || s === undefined ? '' : s)
     .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 }
+const CHIP_LABEL = { SECONDARY_UNVERIFIED: 'UNVERIFIED', UNAVAILABLE: 'NOT AVAILABLE',
+                     REFUSED_BY_DESIGN: 'NOT MODELLED', CONSTRUCT: 'ESTIMATE' };
 function chip(prov) {
   const cls = { MEASURED: 'measured', DERIVED: 'derived', FITTED: 'fitted', CONSTRUCT: 'construct',
                 SECONDARY_UNVERIFIED: 'construct', UNAVAILABLE: 'unavailable',
                 REFUSED_BY_DESIGN: 'unavailable', CONVENTION: 'unavailable' }[prov] || 'unavailable';
-  return '<span class="chip ' + cls + '" title="' + esc(legendFor(prov)) + '">' + esc(prov) + '</span>';
+  return '<span class="chip ' + cls + '" data-prov="' + esc(prov) + '">' + esc(CHIP_LABEL[prov] || prov) + '</span>';
 }
-function legendFor(prov) {
-  if (prov === 'CONSTRUCT') return 'A teaching construct with NO human anchor at all. Not a claim about a patient.';
-  if (prov === 'CONVENTION') return 'Common practice, not stated on the label or in a cited source.';
-  return (PHARM.provenance_legend && PHARM.provenance_legend[prov]) || prov;
+const LEGEND = {
+  MEASURED: 'read from a named paper or drug label',
+  DERIVED: 'arithmetic on measured numbers',
+  FITTED: 'tuned to one human observation',
+  CONSTRUCT: 'a teaching estimate with no human data behind it',
+  SECONDARY_UNVERIFIED: 'quoted secondhand; the primary paper was not read',
+  UNAVAILABLE: 'no defensible number was found, so none is shown',
+  REFUSED_BY_DESIGN: 'the quantity is disputed, so no single number is shown',
+  CONVENTION: 'common practice, not stated on the label',
+};
+function legendFor(prov) { return LEGEND[prov] || prov; }
+
+// Chips sit inside prose that was written with the internal class names; the reader sees the
+// chip's label, so the prose is brought into line with it at the point of display.
+function plain(s) {
+  return String(s === null || s === undefined ? '' : s)
+    .replace(/SECONDARY_UNVERIFIED/g, 'unverified (secondhand)')
+    .replace(/UNAVAILABLE \/ REFUSED_BY_DESIGN/g, 'not available')
+    .replace(/UNAVAILABLE/g, 'not available')
+    .replace(/CONSTRUCTS\b/g, 'estimates').replace(/CONSTRUCT\b/g, 'estimate')
+    .replace(/\bconstructs\b/g, 'estimates').replace(/\ba (teaching )?construct\b/g, 'an estimate').replace(/\bconstruct\b/g, 'estimate')
+    .replace(/\ba estimate\b/g, 'an estimate');
+}
+function escp(s) { return esc(plain(s)); }
+
+/** A reference key as a reader sees it: "Proudman 2022", never the key. */
+const CITE_LABEL = {
+  ne_label: 'norepinephrine US label', fda_label: 'US FDA label', eja2026_ne_dose_map: 'Eur J Anaesthesiol 2026',
+  dopamine_anesth2000: 'MacGregor 2000', dopamine_ccm1993: 'Juste 1993', cvsim2010: 'Heldt 2010',
+  baker2010_hoffmann2004: 'Baker 2010; Hoffmann 2004', oliver_secondary_warning: 'derangedphysiology.com',
+};
+function citeLabel(key) {
+  if (CITE_LABEL[key]) return CITE_LABEL[key];
+  const m = /^([a-z]+)(\d{4})$/.exec(key);
+  return m ? m[1].charAt(0).toUpperCase() + m[1].slice(1) + ' ' + m[2] : key;
 }
 function citeText(key) {
   const s = PHARM.sources && PHARM.sources[key];
   if (!s) return null;
-  return s.citation || s.citation_to_obtain_1 || null;
+  return s.citation_to_obtain_2 ? s.citation_to_obtain_1 + ' — and — ' + s.citation_to_obtain_2
+                                : (s.citation || s.citation_to_obtain_1 || null);
 }
 function cite(key) {
-  const t = citeText(key);
-  return t ? '<span title="' + esc(t) + '" style="border-bottom:1px dotted currentColor;cursor:help">' + esc(key) + '</span>' : '';
+  return citeText(key) ? '<a class="cite" href="#ref-' + esc(key) + '" data-ref="' + esc(key) + '">' + esc(citeLabel(key)) + '</a>' : '';
+}
+function renderRefs() {
+  $('refsBody').innerHTML = Object.keys(PHARM.sources || {}).filter(citeText).map(function (k) {
+    return '<div class="ref-item" id="ref-' + esc(k) + '"><b>' + esc(citeLabel(k)) + '.</b> ' +
+      esc(citeText(k).replace(/, retrieved 2026-09-21( from the DailyMed SPL REST API \([^)]*\))?/g, '').replace(/ The specific labeller.*$/, '')) + '</div>';
+  }).join('');
+}
+
+/**
+ * A collapsed "show me why" block. The panels re-render on every slider tick, so which blocks
+ * are open is remembered by key and re-applied — otherwise a block would snap shut under the
+ * reader's thumb the moment a dose moved.
+ */
+const OPEN = new Set();
+function more(key, label, html) {
+  if (!html) return '';
+  return '<details class="more" data-k="' + esc(key) + '"' + (OPEN.has(key) ? ' open' : '') + '><summary>' + label +
+    '</summary><div class="more-body">' + html + '</div></details>';
 }
 
 const DRUG_IDS = Object.keys(RX);
@@ -5716,11 +5865,12 @@ function buildSubstrates() {
   });
 }
 
-/** A substrate note carries a SOURCE chip only when it HAS a source. */
+/** One plain line about the state, with the modelling detail folded away beneath it. */
 function substrateNoteHTML(sub) {
-  return esc(sub.note) +
-    (sub.src ? ' <span class="chip measured">SOURCE</span> ' + cite(sub.src)
-             : (sub.srcProv ? ' ' + chip(sub.srcProv) + ' <span class="note">' + esc(sub.srcNote || '') + '</span>' : ''));
+  return '<p class="note">' + esc(sub.summary) + '</p>' +
+    more('sub', 'Model details', '<p>' + escp(sub.note) + '</p>' +
+      (sub.src ? '<p>Source: ' + cite(sub.src) + '</p>'
+               : (sub.srcProv ? '<p>' + chip(sub.srcProv) + ' ' + escp(sub.srcNote || '') + '</p>' : '')));
 }
 
 function setSubstrate(k) {
@@ -5745,16 +5895,20 @@ function buildInfusions() {
     })).join('');
     const d = inf.id ? RX[inf.id] : null;
     const dd = d ? d.dose : { unit: '', min: 0, max: 1, step: 0.01 };
-    return '<div class="field" data-slot="' + i + '" style="padding-bottom:10px;border-bottom:1px solid var(--border)">' +
-      '<label for="infSel' + i + '">Infusion ' + (i + 1) + '</label>' +
+    // An empty slot is only offered once the one before it is in use, so a first-time reader
+    // sees one drug picker, not three.
+    if (i > 0 && !inf.id && !S.inf[i - 1].id) return '';
+    return '<div class="field" data-slot="' + i + '">' +
+      '<label for="infSel' + i + '">' + (i === 0 ? 'Drug' : 'Add a drug') + '</label>' +
       '<select id="infSel' + i + '" data-slot="' + i + '" aria-label="Infusion ' + (i + 1) + ' drug">' + opts + '</select>' +
       (d ? ('<div class="slider-row" style="margin-top:7px">' +
         '<label for="infDose' + i + '" style="margin:0;text-transform:none;letter-spacing:0;font-size:11px">Dose</label>' +
         '<span class="slider-val" id="infVal' + i + '">' + esc(fmt(inf.dose, stepDp(dd.step))) + ' ' + esc(dd.unit) + '</span></div>' +
         '<input type="range" id="infDose' + i + '" data-slot="' + i + '" min="' + dd.min + '" max="' + dd.max +
         '" step="' + dd.step + '" value="' + inf.dose + '" aria-label="Dose of ' + esc(drugLabel(inf.id)) + ' in ' + esc(dd.unit) + '">' +
-        '<p class="note" style="margin-top:4px">' + esc(d.group) + ' · ' + esc(dd.rangeText) + ' ' + chip(dd.rangeProv.split(' ')[0]) + '</p>' +
-        (d.note ? '<p class="note">' + esc(d.note) + '</p>' : '') +
+        '<p class="note" style="margin-top:2px">' + esc(d.group) + '</p>' +
+        more('dose' + i, 'Dose range and notes', '<p>' + esc(dd.rangeText) + '. ' + chip(dd.rangeProv.split(' ')[0]) + '</p>' +
+          (d.note ? '<p>' + escp(d.note) + '</p>' : '')) +
         (d.warn && inf.dose > d.warn.above ? '<div class="refusal"><b>Dose caution.</b> ' + esc(d.warn.text) + '</div>' : '')
       ) : '') + '</div>';
   }).join('');
@@ -5778,13 +5932,11 @@ function buildInfusions() {
     });
     r.addEventListener('change', function () { announce(); });
   });
-  $('stackingNote').innerHTML =
-    '<b>Stacking rules.</b> Concentrations are independent — no pharmacokinetic interaction is modelled, ' +
-    'because none is on disk. At each receptor the drugs compete: agonists and antagonists enter ' +
-    'ONE Gaddum denominator together with the endogenous tone, ' +
-    '<code>f = (Σ IAᵢxᵢ + x_endo) / (1 + Σxᵢ + x_endo)</code>, <code>xᵢ = Cᵢ/EC50ᵢ</code>. ' +
-    'Effector deltas from DIFFERENT receptors add. There is no synergy term, because there is no ' +
-    'human data for one.';
+  $('stackingNote').innerHTML = more('stack', 'How combined drugs are handled',
+    '<p>Each drug\'s plasma level is computed independently; no pharmacokinetic interaction is modelled. ' +
+    'At each receptor the drugs compete with each other and with the resting tone: ' +
+    '<code>f = (Σ IAᵢxᵢ + x_tone) / (1 + Σxᵢ + x_tone)</code>, <code>xᵢ = Cᵢ/EC50ᵢ</code>. ' +
+    'Effects from different receptors add. There is no synergy term, because there is no human data for one.</p>');
 }
 function stepDp(step) { const s = String(step); const i = s.indexOf('.'); return i < 0 ? 0 : s.length - i - 1; }
 
@@ -5794,28 +5946,32 @@ function refreshKnobLabels() {
   $('valCoupling').textContent = S.coupling + '%';
   $('valBaroGain').textContent = fmt(S.baroGain, 2);
   $('baroGainNote').innerHTML =
-    'CVSim publishes this reflex as a BEAT-TO-BEAT arterial reflex; this page applies its gains ' +
-    'statically at steady state, which overstates how much of a 15-minute infusion\'s pressor effect ' +
-    'the reflex undoes. 0.35 is ' + chip('FITTED') + ' to the one human dose–MAP anchor — and it still ' +
-    'falls short of it, which the calibration panel prints. Put it back to 1.00 for the published CVSim reflex. ' +
-    'Two things are done to the published reflex here, both ' + chip('CONSTRUCT') + ': its chronotropic limb is ' +
-    'the SYMPATHETIC one, so a reflex tachycardia is blunted in proportion to β1 ANTAGONIST occupancy — a ' +
+    '<p class="note">How much of the reflex survives a sustained infusion. 1.00 is the published beat-to-beat reflex; ' +
+    'the default 0.35 is ' + chip('FITTED') + ' to the one human dose–MAP study.</p>' +
+    more('baro', 'Model details',
+    '<p>The reflex equations and gains come from the MIT cardiovascular model of Heldt and colleagues ' + cite('cvsim2010') +
+    ', which describes a BEAT-TO-BEAT arterial reflex. This page applies those gains at steady state, which overstates ' +
+    'how much of a 15-minute infusion\'s pressor effect the reflex undoes — hence the reduced default, which still ' +
+    'falls short of the human data (see the calibration check).</p>' +
+    '<p>Two changes are made to the published reflex, both ' + chip('CONSTRUCT') + ': its heart-rate limb is ' +
+    'sympathetic, so a reflex tachycardia is blunted in proportion to β1 blockade — a ' +
     'metoprolol-loaded patient cannot mount it, while reflex bradycardia, being vagal, is untouched — and the rate ' +
-    'the reflex may reach is held inside the substrate\'s own window (' + SUBSTRATE[S.substrate].hrRange.join('–') +
-    ' bpm here), widened whenever the drugs themselves put the rate outside it. Without those two the static reflex ' +
-    'prints 200–240 bpm on a β-blocked or vasodilated shock patient, and prints a β-blocker RAISING the heart rate.';
+    'the reflex may reach is held inside ' + SUBSTRATE[S.substrate].hrRange.join('–') +
+    ' bpm for this clinical state, widened whenever the drugs themselves put the rate outside it. Without those two, ' +
+    'the steady-state reflex produces 200–240 bpm in a β-blocked or vasodilated shock patient.</p>');
   $('valVariability').textContent = S.variability === 50 ? 'typical'
-    : (S.variability < 50 ? 'low exposure' : 'high exposure');
+    : (S.variability < 50 ? 'low level' : 'high level');
   $('shiftNote').innerHTML =
-    'Measured recombinant functional EC<sub>50</sub> values are multiplied by this before the effector ' +
-    'stage. Default ×41 = 10<sup>1.61</sup> ' + chip('FITTED') + ' — the one anchor is the ' +
-    esc(SHIFT_ANCHOR) + '. Drag it to 1 and the dose–response flattens: every clinical dose is ' +
-    'already above 90 % of maximum. That flattening is the evidence that the recombinant number ' +
-    'is not the number the patient sees.';
+    '<p class="note">Receptor potency measured in cell lines is multiplied by this to get potency in a patient. ' +
+    'Default ×41 ' + chip('FITTED') + '.</p>' +
+    more('shift', 'Model details',
+    '<p>Default ×41 = 10<sup>1.61</sup>. The one anchor is the ' + esc(SHIFT_ANCHOR) +
+    '.</p><p>Drag it to 1 and the dose–response flattens: every clinical dose is already above 90 % of maximum. ' +
+    'That flattening is the evidence that the cell-line number is not the number the patient sees.</p>');
   $('variabilityNote').innerHTML =
-    'A position inside the OBSERVED inter-patient range, not a random draw — the same setting is ' +
-    'always the same patient. Dopamine at a fixed 3 mcg/kg/min produced 1,880 to 18,300 ng/L across ' +
-    'the same subjects ' + chip('MEASURED') + ' ' + cite('dopamine_anesth2000') + '.';
+    'The same dose gives very different plasma levels in different patients: dopamine at a fixed ' +
+    '3 mcg/kg/min produced 1,880 to 18,300 ng/L ' + chip('MEASURED') + ' ' + cite('dopamine_anesth2000') +
+    '. This slider moves the patient across the observed range.';
 }
 
 function announce() {
@@ -5829,43 +5985,47 @@ function announce() {
 function renderPK(model) {
   const live = model.infusions.filter(function (i) { return i.pk; });
   if (!live.length) {
-    $('pkTable').innerHTML = '<p class="note" style="margin-top:0">No infusion running. Pick a drug on the left.</p>';
+    $('pkTable').innerHTML = '<p class="note" style="margin-top:8px">No drug running. Pick one above.</p>';
     $('pkRefusals').innerHTML = '';
     $('pkDesc').textContent = 'No infusion is running, so no concentration is drawn.';
     return;
   }
-  let rows = '', refusals = '', desc = [];
+  let rows = '', desc = [];
   for (const i of live) {
     const P = i.pk;
+    const title = '<div class="blk-title">' + esc(drugLabel(i.id)) + ' <span class="dose">' + fmt(i.dose, 3) + ' ' + esc(P.unit) + '</span></div>';
     if (P.refusal) {
-      rows += '<tr class="inert"><td>' + esc(drugLabel(i.id)) + '</td><td class="num">' + fmt(i.dose, 3) + ' ' + esc(P.unit) +
-        '</td><td colspan="3">not computed ' + chip('UNAVAILABLE') + '</td></tr>';
-      refusals += '<div class="refusal"><b>No plasma concentration for ' + esc(drugLabel(i.id)) + '.</b> ' + esc(P.refusal) + '</div>';
-      desc.push(drugLabel(i.id) + ': concentration refused.');
+      rows += '<div class="blk">' + title +
+        '<p class="note" style="margin-top:4px">No plasma level can be calculated ' + chip('UNAVAILABLE') +
+        ' — the receptor step uses the dose directly instead.</p>' +
+        more('pk-' + i.id, 'Why not', '<p>' + escp(P.refusal) + '</p>') + '</div>';
+      desc.push(drugLabel(i.id) + ': concentration not available.');
       continue;
     }
-    rows += '<tr><td>' + esc(drugLabel(i.id)) + ' ' + chip(P.clProv) + '</td>' +
-      '<td class="num">' + fmt(i.dose, 3) + ' ' + esc(P.unit) + '</td>' +
-      '<td class="num">' + fmt(P.css, 2) + '</td>' +
-      '<td class="num">' + fmt(P.cssLo, 2) + '–' + fmt(P.cssHi, 2) + '</td>' +
-      '<td class="num">' + (P.tau === null ? '—' : fmt(P.tau, 1)) + '</td></tr>' +
-      '<tr><td colspan="5" class="note" style="text-align:left;padding-top:0">' +
-      '<code>' + esc(P.arith) + '</code>' +
-      (P.clArith ? ' · clearance ' + esc(P.clArith) + ' ' + cite(P.clSrc) : '') +
-      (P.tauArith ? '<br><code>' + esc(P.tauArith) + '</code>' : '') +
-      (P.tauNote ? '<br>' + esc(P.tauNote) : '') +
-      (P.clCaveat ? '<br><b>Caveat:</b> ' + esc(P.clCaveat) : '') +
-      '<br>Band = the observed ' + fmt(P.spread.fold, 1) + '-fold inter-patient spread ' + chip(P.spread.prov) +
-      (P.spread.src ? ' ' + cite(P.spread.src) : '') + '. ' + esc(P.spread.why) +
-      '</td></tr>';
+    rows += '<div class="blk">' + title +
+      '<div class="kv">' +
+      '<div class="stat"><div class="k">Steady state</div><div class="v">' + fmt(P.css, 2) + '</div><div class="u">nM</div></div>' +
+      '<div class="stat"><div class="k">Patient range</div><div class="v">' + fmt(P.cssLo, 1) + '–' + fmt(P.cssHi, 1) + '</div><div class="u">nM</div></div>' +
+      '<div class="stat"><div class="k">Time to 95 %</div><div class="v">' + (P.tau === null ? '—' : fmtDuration(3 * P.tau)) + '</div><div class="u">' + (P.tau === null ? 'no half-life published' : 'of steady state') + '</div></div>' +
+      '</div>' +
+      more('pk-' + i.id, 'Show the calculation',
+        '<p><code>' + esc(P.arith) + '</code> ' + chip(P.clProv) + '</p>' +
+        (P.clArith ? '<p>Clearance: ' + esc(P.clArith) + ' ' + cite(P.clSrc) + '</p>' : '') +
+        (P.tauArith ? '<p><code>' + esc(P.tauArith) + '</code></p>' : '') +
+        (P.tauNote ? '<p>' + escp(P.tauNote) + '</p>' : '') +
+        (P.clCaveat ? '<p><b>Caveat:</b> ' + escp(P.clCaveat) + '</p>' : '') +
+        '<p>The shaded band is a ' + fmt(P.spread.fold, 1) + '-fold patient-to-patient spread ' + chip(P.spread.prov) +
+        (P.spread.src ? ' ' + cite(P.spread.src) : '') + '. ' + escp(P.spread.why) + '</p>') +
+      '</div>';
     desc.push(drugLabel(i.id) + ' steady state ' + fmt(P.css, 2) + ' nanomolar, observed band ' +
       fmt(P.cssLo, 2) + ' to ' + fmt(P.cssHi, 2) + '.');
   }
-  $('pkTable').innerHTML = '<table class="grid"><thead><tr><th>Drug</th><th>Dose</th>' +
-    '<th>C<sub>ss</sub> (nM)</th><th>Observed band (nM)</th><th>τ (min)</th></tr></thead><tbody>' +
-    rows + '</tbody></table>';
-  $('pkRefusals').innerHTML = refusals;
+  $('pkTable').innerHTML = rows;
+  $('pkRefusals').innerHTML = '';
   $('pkDesc').textContent = desc.join(' ');
+}
+function fmtDuration(min) {
+  return min < 90 ? fmt(min, min < 10 ? 1 : 0) + ' min' : fmt(min / 60, 1) + ' h';
 }
 
 // ---- stage 3 panel -----------------------------------------------------------------------
@@ -5877,35 +6037,39 @@ function renderReceptors(model) {
     const pct = (r.f * 100), pctTone = (r.fTone * 100);
     const detail = r.parts.map(function (pt) {
       const kd = pt.p.kd;
-      return esc(drugLabel(pt.id)) + ': ' +
-        (pt.doseUnits ? 'dose-scaled potency ' + fmt(pt.p.ec50, 2) + ' ' + esc(RX[pt.id].dose.unit)
-                      : 'EC50 ' + fmt(pt.p.ec50, 3) + ' nM' + (pt.p.shiftable ? ' → apparent ' + fmt(pt.ec50app, 1) + ' nM' : '')) +
-        ', intrinsic activity ' + fmt(pt.p.ia, 2) + ' ' + chip(pt.p.iaProv) +
-        ', x = ' + fmt(pt.x, 3) + ' ' + chip(pt.p.prov) + (pt.p.src ? ' ' + cite(pt.p.src) : '') +
-        (kd ? ' · binding K<sub>D</sub> ' + fmt(kd, 0) + ' nM' : '') +
-        (pt.p.why ? '<br><span style="opacity:.85">' + esc(pt.p.why) + '</span>' : '');
-    }).join('<br>');
-    rows.push('<tr' + (r.active ? '' : ' class="inert"') + '><td>' + esc(CHANNEL_LABEL[chan]) + '</td>' +
+      return '<p><b>' + esc(drugLabel(pt.id)) + '.</b> ' +
+        (pt.doseUnits ? 'Potency set in dose units: half-maximal at ' + fmt(pt.p.ec50, 2) + ' ' + esc(RX[pt.id].dose.unit)
+                      : 'EC<sub>50</sub> ' + fmt(pt.p.ec50, 3) + ' nM' + (pt.p.shiftable ? ', ×' + fmt(pt.ec50app / pt.p.ec50, 0) + ' in-vivo shift = ' + fmt(pt.ec50app, 1) + ' nM' : '')) +
+        ' ' + chip(pt.p.prov) + (pt.p.src ? ' ' + cite(pt.p.src) : '') +
+        '. Intrinsic activity ' + fmt(pt.p.ia, 2) + ' ' + chip(pt.p.iaProv) +
+        '. Drive x = ' + fmt(pt.x, 3) + '.' +
+        (kd ? ' Binding K<sub>D</sub> ' + fmt(kd, 0) + ' nM.' : '') +
+        (pt.p.why ? ' ' + escp(pt.p.why) : '') + '</p>';
+    }).join('');
+    const amp = r.amp !== 1 ? '<p>Receptor density × coupling for this clinical state: ' + fmt(r.amp, 2) + '.</p>' : '';
+    const d = (detail || amp) ? more('rec-' + chan, 'Where these numbers come from', detail + amp) : '';
+    const dv = pct - pctTone;
+    rows.push('<tr class="' + (r.active ? '' : 'inert ') + (d ? 'has-detail' : '') + '"><td class="lab2">' + esc(CHANNEL_LABEL[chan]) + '</td>' +
       '<td class="num">' + fmt(pctTone, 1) + '%</td>' +
       '<td class="num">' + fmt(pct, 1) + '%</td>' +
-      '<td class="num">' + (pct - pctTone >= 0 ? '+' : '') + fmt(pct - pctTone, 1) + '%</td>' +
-      '<td class="num">' + fmt(r.amp, 2) + '</td></tr>' +
-      (detail ? '<tr><td colspan="5" class="note" style="text-align:left;padding-top:0">' + detail + '</td></tr>' : ''));
+      '<td class="num">' + (dv >= 0 ? '+' : '') + fmt(dv, 1) + '%</td></tr>' +
+      (d ? '<tr class="detail"><td colspan="4">' + d + '</td></tr>' : ''));
     if (r.active) desc.push(CHANNEL_LABEL[chan] + ' response ' + fmt(pct, 0) + ' percent.');
   }
-  // The β refusal is printed whenever a β channel is in play, every time.
+  // The β caveat is printed whenever a β channel is in play, every time.
   const betaLive = model.infusions.some(function (i) { return i.id && (RX[i.id].rec || {}).beta1; });
   if (betaLive) {
-    refusals.push('<div class="refusal"><b>No measured β potency exists on this page.</b> ' +
-      esc(PHARM.drugs.norepinephrine.receptors.beta1.reason) +
-      ' Citations to obtain: ' + esc(PHARM.sources.baker2010_hoffmann2004.citation_to_obtain_1) + ' and ' +
-      esc(PHARM.sources.baker2010_hoffmann2004.citation_to_obtain_2) +
-      '. The only open quantitative claim is a rank order, recorded ' + chip('SECONDARY_UNVERIFIED') + ': ' +
-      esc(PHARM.sources.baker2010_hoffmann2004.only_open_quantitative_claim) +
-      ' Every β number above is a placeholder on that rank order and is marked ' + chip('CONSTRUCT') + '.</div>');
+    refusals.push('<div class="refusal"><b>β-receptor potencies here are estimates.</b> ' +
+      'Measured human β1/β2 agonist potencies were not available to this model, so each drug is placed on the ' +
+      'published rank order instead.' +
+      more('beta', 'Details',
+        '<p>The two primary sources are ' + cite('baker2010_hoffmann2004') + '; neither could be read in full when this ' +
+        'model was built. The rank order used, quoted secondhand ' + chip('SECONDARY_UNVERIFIED') +
+        ': epinephrine binds β2 tightest, β1 about 5-fold weaker; norepinephrine binds β1 about 6-fold tighter than β2. ' +
+        'Every β potency on this page is a placeholder on that rank order.</p>') + '</div>');
   }
-  $('recTable').innerHTML = '<table class="grid"><thead><tr><th>Receptor / mechanism</th>' +
-    '<th>Baseline tone</th><th>With drug</th><th>Δ</th><th>Density × coupling</th></tr></thead><tbody>' +
+  $('recTable').innerHTML = '<table class="grid"><thead><tr><th>Receptor</th>' +
+    '<th>Resting</th><th>With drug</th><th>Change</th></tr></thead><tbody>' +
     rows.join('') + '</tbody></table>';
   $('recRefusals').innerHTML = refusals.join('');
   $('recDesc').textContent = desc.length ? desc.join(' ') : 'No receptor is being driven above its baseline tone.';
@@ -5947,15 +6111,14 @@ function stateWarnings(printed) {
   if (printed.EF !== null && printed.EF !== undefined && printed.EF < EF_COLLAPSE_PCT) {
     w.push({ key: 'EF_COLLAPSE', label: 'This state is a ventricular collapse, not a readout.',
       text: 'The printed ejection fraction is ' + fmt(printed.EF, 1) + ' %, below the ' + EF_COLLAPSE_PCT +
-            ' % at which this page stops presenting a number as a teaching example. Read it as "the model has ' +
-            'emptied this ventricle", not as a prediction about a patient. The threshold is a CONSTRUCT.' });
+            ' % at which this page stops treating the numbers as a teaching example. Read it as "the model has ' +
+            'emptied this ventricle", not as a prediction about a patient.' });
   }
   if (printed.MAP !== null && printed.MAP !== undefined && printed.MAP < MAP_COLLAPSE_MMHG) {
     w.push({ key: 'MAP_COLLAPSE', label: 'This state is a shock state.',
       text: 'The printed mean arterial pressure is ' + fmt(printed.MAP, 0) + ' mmHg, below ' + MAP_COLLAPSE_MMHG +
-            ' mmHg. The engine solved it and every printed operand is real, but no dose-response on this page is ' +
-            'calibrated this far from its anchor, so the MAGNITUDE here is a construct — read the direction only. ' +
-            'The threshold is a CONSTRUCT.' });
+            ' mmHg. Nothing on this page is calibrated this far from normal, so read the direction of change only, ' +
+            'not the size.' });
   }
   return w;
 }
@@ -5965,37 +6128,39 @@ function renderEffectors(model) {
   let rows = '', uncal = 0, total = 0;
   for (const [eff, meta] of Object.entries(EFFECTOR_META)) {
     if (meta.refused) {
-      rows += '<tr class="inert"><td>' + esc(meta.label) + '</td><td colspan="3">refused ' + chip('UNAVAILABLE') +
-        '</td></tr><tr><td colspan="4" class="note" style="text-align:left;padding-top:0">' + esc(meta.refused) + '</td></tr>';
+      rows += '<tr class="inert has-detail"><td class="lab2">' + esc(meta.label) + '</td><td colspan="3">' + chip('REFUSED_BY_DESIGN') +
+        '</td></tr><tr class="detail"><td colspan="4">' + more('eff-' + eff, 'Why not', '<p>' + escp(meta.refused) + '</p>') + '</td></tr>';
       continue;
     }
     const e = model.eff[eff];
     const base = model.params.__base[meta.param];
     const shown = eff === 'lus' ? model.params.A / base : model.params[meta.param];
     let terms = '';
+    const provs = {};
     for (const t of e.terms) {
       total++;
       if (t.gain.prov === 'CONSTRUCT') uncal++;
-      terms += effectorTermLine(t) +
-        ' ' + chip(t.gain.prov) + '<br><span style="opacity:.85">' + esc(t.gain.why) + '</span><br>';
+      provs[t.gain.prov] = 1;
+      terms += '<p><code>' + effectorTermLine(t) + '</code> ' + chip(t.gain.prov) + '<br>' + escp(t.gain.why) + '</p>';
     }
     const baseShown = eff === 'lus' ? 1 : base;
     const dp = (eff === 'Ees') ? 2 : (eff === 'lus' ? 2 : 0);
-    const deltaShown = eff === 'lus' ? (model.params.A / base - 1) : (eff === 'Rs' ? e.total : e.total);
-    rows += '<tr><td>' + esc(meta.label) + '</td>' +
+    const deltaShown = eff === 'lus' ? (model.params.A / base - 1) : e.total;
+    const d = terms ? more('eff-' + eff, 'Show the arithmetic', terms) : '';
+    rows += '<tr class="' + (d ? 'has-detail' : '') + '"><td class="lab2">' + esc(meta.label) + ' <span class="u">' + esc(meta.unit) + '</span></td>' +
       '<td class="num">' + fmt(eff === 'Rs' ? baseShown * DYN_PER_PRU : baseShown, dp) + '</td>' +
       '<td class="num">' + (deltaShown >= 0 ? '+' : '') + fmt(deltaShown, dp === 0 ? 0 : dp) + '</td>' +
-      '<td class="num">' + fmt(eff === 'Rs' ? shown * DYN_PER_PRU : shown, dp) + ' <span class="u">' + esc(meta.unit) + '</span></td></tr>' +
-      (terms ? '<tr><td colspan="4" class="note" style="text-align:left;padding-top:0">' + terms + '</td></tr>' : '');
+      '<td class="num">' + fmt(eff === 'Rs' ? shown * DYN_PER_PRU : shown, dp) + '</td></tr>' +
+      (d ? '<tr class="detail"><td colspan="4">' + Object.keys(provs).map(chip).join(' ') + d + '</td></tr>' : '');
   }
   $('effTable').innerHTML =
-    '<p class="note" style="margin:0 0 8px"><b>' + uncal + ' of the ' + total + ' gain terms in play are ' +
-    chip('CONSTRUCT') + '</b> — they have no human anchor at all. ' +
-    esc(PHARM.the_central_honesty.the_consequence) + '</p>' +
-    '<table class="grid"><thead><tr><th>Effector</th><th>Baseline</th><th>Δ from drugs</th><th>Effective</th>' +
+    '<p class="note" style="margin:0 0 8px">What the drugs alone do to each property, before the baroreflex responds.' +
+    (total ? ' <b>' + uncal + ' of the ' + total + ' effect sizes in play are ' + chip('CONSTRUCT') + '</b> — no human data sets their size.' : '') + '</p>' +
+    '<table class="grid"><thead><tr><th>Property</th><th>Before</th><th>Drug effect</th><th>After</th>' +
     '</tr></thead><tbody>' + rows + '</tbody></table>';
-  $('effNote').innerHTML = 'Resistance is shown in dyn·s·cm⁻⁵; the engine carries it as PRU. ' +
-    '<code>1 PRU = 1 mmHg·s/mL = 1 ÷ 0.06 = 16.667 WU × 80 = ' + fmt(DYN_PER_PRU, 1) + ' dyn·s·cm⁻⁵</code> ' + chip('DERIVED') + '.';
+  $('effNote').innerHTML = more('units', 'Units',
+    '<p>Resistance is shown in dyn·s·cm⁻⁵; the model carries it in mmHg·s/mL. ' +
+    '<code>1 mmHg·s/mL = 1 ÷ 0.06 = 16.667 WU × 80 = ' + fmt(DYN_PER_PRU, 1) + ' dyn·s·cm⁻⁵</code> ' + chip('DERIVED') + '</p>');
 }
 
 function renderPanels(model) {
@@ -6018,7 +6183,12 @@ function prep(id) {
   const c = $(id);
   if (!c) return null;
   const dpr = window.devicePixelRatio || 1;
-  const w = c.clientWidth || 600, h = +c.getAttribute('height') || 260;
+  // The drawing height is read from the markup ONCE and kept in data-h. Assigning c.height
+  // below rewrites the height ATTRIBUTE to the backing-store size, so re-reading that attribute
+  // on the next draw multiplied the canvas by devicePixelRatio every time it was redrawn — on a
+  // phone (dpr 2–3) the chart doubled or tripled in height with every slider tick.
+  if (!c.dataset.h) c.dataset.h = c.getAttribute('height') || '260';
+  const w = c.clientWidth || 600, h = +c.dataset.h;
   if (c.width !== Math.round(w * dpr) || c.height !== Math.round(h * dpr)) {
     c.width = Math.round(w * dpr); c.height = Math.round(h * dpr);
   }
@@ -6049,13 +6219,17 @@ function gridLines(g, pad, n) {
 }
 
 function drawPK(model) {
+  const live = model.infusions.filter(function (i) { return i.pk && i.pk.css !== null; });
+  // With nothing to plot the chart is hidden rather than drawn as an empty frame.
+  const c0 = $('pkCanvas');
+  if (c0) c0.style.display = live.length ? '' : 'none';
+  if (!live.length) return;
   const g = prep('pkCanvas'); if (!g) return;
   const pad = { l: 52, r: 12, t: 12, b: 30 };
-  const live = model.infusions.filter(function (i) { return i.pk && i.pk.css !== null; });
-  axes(g, pad, 'minutes since the infusion started', 'plasma nM');
+  axes(g, pad, 'minutes since the infusion started', 'plasma level (nM)');
   if (!live.length) {
     g.x.fillStyle = css('--text-muted'); g.x.textAlign = 'center';
-    g.x.fillText('No concentration is computable for the current infusions.', g.w / 2, g.h / 2);
+    g.x.fillText('No plasma level to show.', g.w / 2, g.h / 2);
     return;
   }
   let tMax = 30, cMax = 0;
@@ -6087,45 +6261,48 @@ function drawPK(model) {
     for (let t = 0; t <= tMax; t += tMax / 240) x.lineTo(X(t), Y(P.css * f(t)));
     x.stroke(); x.setLineDash([]);
     x.fillStyle = col; x.textAlign = 'left';
-    x.fillText(drugLabel(i.id) + (P.tau ? '' : ' (steady state only — no half-life on disk)'),
+    x.fillText(drugLabel(i.id) + (P.tau ? '' : ' (steady state only)'),
       pad.l + 6, pad.t + 12 + n * 14);
   });
 }
 
 function drawReceptors(model) {
+  const c0 = $('recCanvas');
+  const chans = CHANNELS.concat(MECHS).filter(function (c) { return model.rec[c] && (model.rec[c].active || model.rec[c].tone > 0); });
+  if (c0) c0.dataset.h = String(Math.max(60, 16 + 28 * chans.length));
   const g = prep('recCanvas'); if (!g) return;
   const x = g.x;
-  const chans = CHANNELS.concat(MECHS).filter(function (c) { return model.rec[c] && (model.rec[c].active || model.rec[c].tone > 0); });
   if (!chans.length) {
     x.fillStyle = css('--text-muted'); x.textAlign = 'center';
     x.fillText('No receptor is being driven.', g.w / 2, g.h / 2); return;
   }
-  const pad = { l: 120, r: 46, t: 14, b: 22 };
-  const rowH = Math.min(26, (g.h - pad.t - pad.b) / chans.length);
+  x.font = '12px -apple-system, Helvetica, Arial, sans-serif';
+  let labW = 0;
+  chans.forEach(function (c) { labW = Math.max(labW, x.measureText(CHANNEL_LABEL[c]).width); });
+  const pad = { l: Math.min(Math.ceil(labW) + 12, g.w * 0.45), r: 40, t: 8, b: 8 };
+  const rowH = 28;
   const W = g.w - pad.l - pad.r;
   x.strokeStyle = css('--border2'); x.lineWidth = 1;
   x.beginPath(); x.moveTo(pad.l, pad.t); x.lineTo(pad.l, pad.t + rowH * chans.length); x.stroke();
   chans.forEach(function (c, i) {
     const r = model.rec[c], y = pad.t + i * rowH;
     x.fillStyle = css('--text-dim'); x.textAlign = 'right';
-    x.fillText(CHANNEL_LABEL[c].slice(0, 20), pad.l - 6, y + rowH / 2 + 3);
+    x.fillText(CHANNEL_LABEL[c], pad.l - 6, y + rowH / 2 + 4, pad.l - 8);
     x.fillStyle = css('--bg3');
-    x.fillRect(pad.l, y + 4, W, rowH - 9);
+    x.fillRect(pad.l, y + 5, W, rowH - 10);
     const hasCon = r.parts.some(function (p) { return p.p.prov === 'CONSTRUCT'; });
     x.fillStyle = hasCon ? css('--severity-severe') : css('--severity-mild');
     x.globalAlpha = 0.85;
-    x.fillRect(pad.l, y + 4, Math.max(0, Math.min(1, r.f)) * W, rowH - 9);
+    x.fillRect(pad.l, y + 5, Math.max(0, Math.min(1, r.f)) * W, rowH - 10);
     x.globalAlpha = 1;
     // Baseline tone tick: the response the endogenous drive already produces.
     x.strokeStyle = css('--text-hi'); x.lineWidth = 2;
     x.beginPath();
-    x.moveTo(pad.l + Math.min(1, r.fTone) * W, y + 2); x.lineTo(pad.l + Math.min(1, r.fTone) * W, y + rowH - 3);
+    x.moveTo(pad.l + Math.min(1, r.fTone) * W, y + 2); x.lineTo(pad.l + Math.min(1, r.fTone) * W, y + rowH - 2);
     x.stroke();
     x.fillStyle = css('--text-hi'); x.textAlign = 'left';
-    x.fillText(fmt(r.f * 100, 0) + '%', pad.l + W + 5, y + rowH / 2 + 3);
+    x.fillText(fmt(r.f * 100, 0) + '%', pad.l + W + 5, y + rowH / 2 + 4);
   });
-  x.fillStyle = css('--text-muted'); x.textAlign = 'left';
-  x.fillText('bar = response with drug · tick = baseline endogenous tone · red = a CONSTRUCT potency', pad.l, g.h - 6);
 }
 
 function drawPV(model, rep) {
@@ -6188,6 +6365,8 @@ function drawAP(model, rep) {
   x.stroke(); x.setLineDash([]);
   x.fillStyle = css('--text-dim'); x.textAlign = 'right';
   for (let k = 1; k <= 3; k++) { const p = pMax * k / 4; x.fillText(fmt(p, 0), pad.l - 4, Y(p) + 3); }
+  x.textAlign = 'center';
+  for (let k = 1; k <= 3; k++) { const t = tMax * k / 4; x.fillText(fmt(t, 2), X(t), g.h - pad.b + 13); }
   x.fillStyle = css('--clr-ao'); x.textAlign = 'left'; x.fillText('aortic', pad.l + 4, pad.t + 10);
   x.fillStyle = css('--clr-lv'); x.fillText('LV', pad.l + 4, pad.t + 23);
 }
@@ -6214,7 +6393,9 @@ function drawGuyton(model) {
   const pr = model.report.printed;
   if (pr.RAP !== null && pr.CO !== null) {
     x.fillStyle = css('--dot-color');
-    x.beginPath(); x.arc(X(pr.RAP), Y(pr.CO), 5, 0, 6.2832); x.fill();
+    // Drawn at the unrounded solution so the dot sits ON the crossing of the two curves.
+    const rw = model.report.raw || pr;
+    x.beginPath(); x.arc(X(rw.RAP), Y(rw.CO), 5, 0, 6.2832); x.fill();
     x.strokeStyle = css('--text-hi'); x.lineWidth = 1.5; x.stroke();
   }
   x.fillStyle = css('--text-dim'); x.textAlign = 'right';
@@ -6238,61 +6419,69 @@ function drawViews(model, rep) {
 const READOUT_ORDER = ['MAP', 'BP', 'HR', 'CO', 'CI', 'SVR', 'SVR_WU', 'PCWP', 'RAP', 'CPO', 'EF',
                        'SV', 'Ea', 'Ees', 'coupling', 'PAPi', 'PVR'];
 const READOUT_LABEL = {
-  MAP: 'MAP', BP: 'Ao systolic/diastolic', HR: 'Heart rate', CO: 'Cardiac output', CI: 'Cardiac index',
-  SVR: 'SVR', SVR_WU: 'SVR', PCWP: 'PCWP (proxy)', RAP: 'RAP (proxy)', CPO: 'Cardiac power output',
-  EF: 'Ejection fraction', SV: 'Stroke volume', Ea: 'Arterial elastance', Ees: 'End-systolic elastance',
-  coupling: 'Ventriculo-arterial coupling', PAPi: 'PAPi', PVR: 'PVR',
+  MAP: 'MAP', BP: 'Aortic BP', HR: 'Heart rate', CO: 'Cardiac output', CI: 'Cardiac index',
+  SVR: 'SVR', SVR_WU: 'SVR', PCWP: 'PCWP', RAP: 'RAP', CPO: 'Cardiac power',
+  EF: 'Ejection fraction', SV: 'Stroke volume', Ea: 'Ea (arterial)', Ees: 'Ees (contractility)',
+  coupling: 'V-A coupling', PAPi: 'PAPi', PVR: 'PVR',
 };
+
+// Cardiac output is carried at one decimal; "5" and "5.0" are the same number, but only one of
+// them tells the reader the precision.
+const READOUT_DP = { CO: 1 };
+function shownValue(k, r) {
+  if (!r || r.v === null || r.v === undefined) return '—';
+  return READOUT_DP[k] !== undefined && typeof r.v === 'number' ? fmt(r.v, READOUT_DP[k]) : esc(r.v);
+}
 
 function renderReadout(model) {
   const rep = model.report;
   const bsaP = decRound(S.bsa, 2);
   const R = cathReadout(rep.printed, bsaP);
   model.readout = R;
+  const formulas = [], missing = [];
   $('cathReadout').innerHTML = READOUT_ORDER.map(function (k) {
     const r = R[k];
     if (!r) return '';
-    if (r.refused) {
-      return '<div class="stat refused"><div class="k">' + esc(READOUT_LABEL[k]) + '</div>' +
-        '<div class="v" title="' + esc(r.refused) + '">refused</div>' +
-        '<div class="u">hover for why</div></div>';
-    }
-    return '<div class="stat"' + (r.formula ? ' title="' + esc(r.formula) + '"' : '') + '>' +
-      '<div class="k">' + esc(READOUT_LABEL[k]) + '</div>' +
-      '<div class="v">' + (r.v === null ? '—' : esc(r.v)) + '</div>' +
-      '<div class="u">' + esc(r.u) + (r.formula ? ' · formula on hover' : '') + '</div></div>';
+    if (r.refused) { missing.push('<p><b>' + esc(READOUT_LABEL[k]) + ' is not shown.</b> ' + escp(r.refused) + '</p>'); return ''; }
+    if (r.formula) formulas.push('<p><b>' + esc(READOUT_LABEL[k]) + '</b> <code>' + esc(r.formula) + '</code></p>');
+    return '<div class="stat"><div class="k">' + esc(READOUT_LABEL[k]) + '</div>' +
+      '<div class="v">' + shownValue(k, r) + '</div>' +
+      '<div class="u">' + esc(r.u) + '</div></div>';
   }).join('');
+  const V = function (k, lab) { return '<div class="vi"><div class="k">' + lab + '</div><div class="v">' + shownValue(k, R[k]) + '</div></div>'; };
+  $('vitalsBar').innerHTML = V('MAP', 'MAP') + V('BP', 'BP') + V('HR', 'HR') + V('CO', 'CO') + V('SVR', 'SVR') + V('PCWP', 'PCWP');
 
   const fl = rep.flags, names = [];
   for (const k in fl) if (k !== 'any' && fl[k]) names.push(k);
   const sub = SUBSTRATE[S.substrate] || SUBSTRATE.normal;
   $('engineFlags').innerHTML = stateWarnings(rep.printed).map(function (w) {
-    return '<div class="refusal"><b>' + esc(w.label) + '</b> ' + esc(w.text) + '</div>';
+    return '<div class="refusal"><b>' + esc(w.label) + '</b> ' + escp(w.text) + '</div>';
   }).join('') + (names.length
-    ? '<div class="refusal"><b>The engine refuses part of this state:</b> ' + esc(names.join(', ')) +
-      '. A flagged regime is one where a printed number would be a guess — read the flag, not the number.</div>'
+    ? '<div class="refusal"><b>The model cannot solve part of this state:</b> ' + esc(names.join(', ')) +
+      '. Treat the affected numbers as unreliable.</div>'
     : '') +
     (rep.baroClamped
-      ? '<div class="refusal"><b>The reflex hit its rate bound.</b> The baroreflex was asking for a heart rate outside ' +
-        'this substrate\'s window of ' + sub.hrRange.join('–') + ' bpm, so the printed rate is the BOUND, not the ' +
-        'rate the reflex computed. The bound is a ' + chip('CONSTRUCT') + ' — no reflex rate ceiling is on disk — and it ' +
-        'exists because a static reflex left unbounded runs to the engine\'s RR floor and prints 240 bpm. Read this ' +
-        'rate as "as fast as this model will let the reflex go", not as a number.</div>'
+      ? '<div class="refusal"><b>The reflex hit its heart-rate limit.</b> The baroreflex was asking for a rate outside ' +
+        sub.hrRange.join('–') + ' bpm, the window allowed for this clinical state, so the heart rate shown is that limit ' +
+        chip('CONSTRUCT') + ', not a prediction.</div>'
       : '');
-  $('engineNote').innerHTML =
-    'Converged in ' + rep.beats + ' beats at dt ' + (rep.dt * 1000) + ' ms' +
-    (S.baro ? ', baroreflex root found in ' + rep.baroIterations + ' iterations (sensed error ' + fmt(rep.baroError, 2) +
-      ' mmHg) at gain ' + fmt(rep.baroGainUsed, 2) + ' with the chronotropic limb blunted by β1 antagonist occupancy ' +
-      fmt((rep.baroBeta1Block || 0) * 100, 0) + ' %' : ', baroreflex OFF') +
-    '. ' + (model.guyton ? 'Venous-return curve measured from the engine by sweeping right-heart gain at a fixed vascular state; cardiac-function curve is the engine\'s own law, <code>' + esc(model.guyton.law) + '</code>.' : '') +
-    ' Every printed number is rounded once and every downstream number is computed from the rounded operands — hover a tile with a formula to see the arithmetic.';
+  $('readoutMore').innerHTML =
+    more('formulas', 'Formulas and what is not shown', formulas.join('') + missing.join('') +
+      '<p>PCWP and RAP are the model\'s left- and right-sided filling pressures, used as proxies. Every number is rounded once, ' +
+      'and every derived number is computed from the rounded values shown.</p>') +
+    more('solver', 'Solver details', '<p>Converged in ' + rep.beats + ' beats at a ' + (rep.dt * 1000) + ' ms time step' +
+    (S.baro ? '; baroreflex settled in ' + rep.baroIterations + ' iterations (residual ' + fmt(rep.baroError, 2) +
+      ' mmHg) at strength ' + fmt(rep.baroGainUsed, 2) + ', heart-rate limb blunted ' +
+      fmt((rep.baroBeta1Block || 0) * 100, 0) + ' % by β1 blockade' : '; baroreflex off') +
+    '. ' + (model.guyton ? 'The venous-return curve is measured from the model by sweeping right-heart output at a fixed vascular state; the cardiac-function curve is <code>' + esc(model.guyton.law) + '</code>.' : '') + '</p>');
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════════════════
 // THE RECEPTOR AUDIT TRAIL — every printed number, walked backwards to its citation.
 // ═══════════════════════════════════════════════════════════════════════════════════════════
 function renderAudit(model) {
-  $('auditBody').innerHTML = auditLines(model).join('');
+  $('auditBody').innerHTML = '<p class="note" style="margin:0 0 6px">Each line reads right to left: the number, then what it was computed from.</p>' +
+    auditLines(model).join('');
 }
 
 /** Every audit line, as HTML strings. Pure, so the harness can hold it to the printed-operand law. */
@@ -6304,14 +6493,14 @@ function auditLines(model) {
 
   if (R.SVR && R.SVR.v !== null) {
     A('<b>SVR ' + R.SVR.v + ' dyn·s·cm⁻⁵</b> ' + arrow + ' <code>' + esc(R.SVR.formula) + '</code> ' +
-      arrow + ' MAP, RAP and CO as printed by the engine ' + chip('DERIVED'));
+      arrow + ' MAP, RAP and CO from the model ' + chip('DERIVED'));
   }
   if (rep.printed.MAP !== null) {
     A('<b>MAP ' + rep.printed.MAP + ' mmHg</b> ' + arrow + ' the mean arterial pressure of the integrated beat ' +
       arrow + ' arterial compartment P = V/C<sub>a</sub> with C<sub>a</sub> ' + fmt(model.effective.Ca, 2) +
       ' mL/mmHg ' + arrow + ' systemic resistance R<sub>s</sub> ' + fmt(model.effective.Rs * DYN_PER_PRU, 0) +
       ' dyn·s·cm⁻⁵' + (S.baro ? ' (after the baroreflex moved it by ' + fmt((model.effective.Rs - model.params.Rs) * DYN_PER_PRU, 0) + ')' : '') + ' ' + chip('DERIVED') +
-      ' <span class="note">— this MAP is an ENGINE OUTPUT, integrated beat by beat from the parameters above. It is not read from any source, so it carries no citation and is not a measurement of anything.</span>');
+      ' <span class="note">— a model output, integrated beat by beat; it is not a measurement.</span>');
   }
   const rsTerms = model.eff.Rs.terms.filter(function (t) { return Math.abs(t.term) > 0.5; });
   for (const t of rsTerms) {
@@ -6322,27 +6511,24 @@ function auditLines(model) {
       ' ' + esc(CHANNEL_LABEL[t.chan]) + ' response moved ' + (x.dfP >= 0 ? '+' : '') + fmt(x.dfP, 1) +
       ' % ' + arrow + ' gain ' + fmt(x.gP, 0) + ' ' + esc(t.gain.unit) + ' ' + chip(t.gain.prov) +
       (t.gain.prov === 'FITTED' ? ' ' + cite('eja2026_ne_dose_map') : '') +
-      '<br><span class="note">' + esc(t.gain.why) + '</span>');
+      more('aud-' + t.chan, 'Why this gain', '<p>' + escp(t.gain.why) + '</p>'));
     const r = model.rec[t.chan];
     for (const pt of (r ? r.parts : [])) {
       A('&nbsp;&nbsp;&nbsp;&nbsp;' + esc(drugLabel(pt.id)) + ' occupancy term x = ' + fmt(pt.x, 3) + ' ' + arrow +
         ' ' + (pt.doseUnits ? 'dose ' + fmt(pt.drive, 3) + ' ' + esc(RX[pt.id].dose.unit) + ' ÷ potency ' + fmt(pt.p.ec50, 2)
                             : 'concentration ' + fmt(pt.drive, 2) + ' nM ÷ apparent EC50 ' + fmt(pt.ec50app, 1) + ' nM') +
-        ' ' + arrow + ' ' + (pt.p.shiftable ? 'measured functional EC50 ' + fmt(pt.p.ec50, 3) + ' nM at ' + esc(pt.p.subtype) + ' × 10^' + fmt(S.shiftLog, 2) : 'a potency stated directly on the in-vivo scale') +
+        ' ' + arrow + ' ' + (pt.p.shiftable ? 'measured functional EC50 ' + fmt(pt.p.ec50, 3) + ' nM at ' + esc(pt.p.subtype) + ' × 10^' + fmt(S.shiftLog, 2) : 'a potency set directly on the in-vivo scale') +
         ' ' + chip(pt.p.prov) + (pt.p.src ? ' ' + cite(pt.p.src) : ''));
       const P = model.infusions.find(function (q0) { return q0.id === pt.id; });
       if (P && P.pk && P.pk.arith) {
         A('&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;concentration ' + arrow + ' <code>' + esc(P.pk.arith) + '</code> ' +
           chip(P.pk.clProv) + ' ' + cite(P.pk.clSrc));
       } else if (P && P.pk && P.pk.refusal) {
-        A('&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;concentration ' + arrow + ' <b>refused</b>: ' + esc(P.pk.refusal) + ' ' + chip('UNAVAILABLE'));
+        A('&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;concentration ' + arrow + ' ' + chip('UNAVAILABLE') + ' (see Plasma level)');
       }
     }
   }
-  if (!rsTerms.length) A('<span class="note">No drug is moving systemic resistance, so the trail stops at the baseline engine state.</span>');
-  A('<span class="note">Provenance legend — ' + Object.keys(PHARM.provenance_legend).map(function (k) {
-      return chip(k) + ' ' + esc(PHARM.provenance_legend[k]);
-    }).join('<br>') + '<br>' + chip('CONSTRUCT') + ' ' + esc(legendFor('CONSTRUCT')) + '</span>');
+  if (!rsTerms.length) A('<span class="note">No drug is moving systemic resistance, so the trail stops at the baseline state.</span>');
   return lines;
 }
 
@@ -6385,7 +6571,7 @@ const SCENARIOS = {
   'epi-reversal': {
     label: 'Epinephrine reversal after α blockade',
     apply: { substrate: 'normal', baro: true, inf: inf2('epinephrine', 0.3, 'labetalol', 6) },
-    claim: 'With α1 competitively blocked, adrenaline\'s β2 vasodilatation is unopposed, so the same dose that RAISES the pressure on its own should LOWER it after α blockade. Three arms are needed to show it: adrenaline added to nothing, and adrenaline added to a blocked patient. WATCH THIS ONE FAIL TOO. Two things stop the model producing it, and both are printed above: labetalol is not a selective α antagonist — it blocks β2 as well, so the limb that is supposed to be unopposed is itself occupied — and the blockade is COMPETITIVE, so adding a large dose of adrenaline partially displaces the labetalol at α1 (α1 response climbs from −22 % to −10 % of tone in the two blocked arms below). On top of that, the β2→resistance gain was re-placed on 2026-09-22 to stop adrenaline reading as a net vasodilator at every dose, which cut the size of the unopposed limb. The result is a smaller rise, not a fall. No selective α blocker exists in the source drug table to do the classic phentolamine demonstration properly, so the page reports the failure rather than manufacturing the lesson.',
+    claim: 'With α1 competitively blocked, adrenaline\'s β2 vasodilatation is unopposed, so the same dose that RAISES the pressure on its own should LOWER it after α blockade. Three arms are needed to show it: adrenaline added to nothing, and adrenaline added to a blocked patient. WATCH THIS ONE FAIL TOO. Two things stop the model producing it: labetalol is not a selective α antagonist — it blocks β2 as well, so the limb that is supposed to be unopposed is itself occupied — and the blockade is COMPETITIVE, so adding a large dose of adrenaline partially displaces the labetalol at α1 (α1 response climbs from −22 % to −10 % of tone in the two blocked arms below). On top of that, the β2→resistance gain is kept small so that adrenaline does not read as a net vasodilator at every dose, which limits the size of the unopposed limb. The result is a smaller rise, not a fall. No selective α blocker is in this simulator\'s drug list to do the classic phentolamine demonstration properly, so the page reports the failure rather than manufacturing the lesson.',
     arms: function () {
       return {
         Z: variant({ substrate: 'normal', baro: true, inf: NONE }),
@@ -6410,7 +6596,7 @@ const SCENARIOS = {
   'dopamine-dose': {
     label: 'Low- vs high-dose dopamine',
     apply: { substrate: 'normal', baro: true, inf: inf1('dopamine', 15) },
-    claim: 'At a low rate dopamine is a vasodilator (D1); as the dose climbs the measured α1 and α2 limbs engage and resistance rises again. The crossover is a property of the EC50 values, not of a dose label. NOTE THE LIMIT: much of dopamine\'s high-dose pressor effect in a patient is INDIRECT — noradrenaline released from sympathetic terminals — and an occupancy engine cannot produce that, for exactly the reason ephedrine is on the refused list. What you see here is the DIRECT component only, and it is smaller than the bedside effect.',
+    claim: 'At a low rate dopamine is a vasodilator (D1); as the dose climbs the measured α1 and α2 limbs engage and resistance rises again. The crossover is a property of the EC50 values, not of a dose label. NOTE THE LIMIT: much of dopamine\'s high-dose pressor effect in a patient is INDIRECT — noradrenaline released from sympathetic terminals — and an occupancy engine cannot produce that, for the same reason ephedrine is not modelled. What you see here is the DIRECT component only, and it is smaller than the bedside effect.',
     arms: function () {
       return { A: variant({ substrate: 'normal', baro: true, inf: inf1('dopamine', 2) }),
                B: variant({ substrate: 'normal', baro: true, inf: inf1('dopamine', 15) }) };
@@ -6429,7 +6615,7 @@ const SCENARIOS = {
   'dobutamine-pressure': {
     label: 'Why dobutamine drops the pressure it was given to raise',
     apply: { substrate: 'normal', baro: true, inf: inf1('dobutamine', 7.5) },
-    claim: 'β2 vasodilatation should drop systemic resistance at least as fast as the β1 inotropy raises stroke volume, so cardiac output rises while mean pressure does not. WATCH THIS ONE FAIL as well, and for a stated reason: the β2→resistance gain was cut from −1200 to −380 on 2026-09-22 because at −1200 adrenaline came out a net vasodilator at every clinical dose and a maximal β2 stimulus removed 84 % of the systemic resistance. With the smaller gain the resistance still falls, but not fast enough to hold the pressure down against the inotropy, so mean pressure rises a few mmHg instead of staying flat. One lumped resistance cannot serve both drugs; the page prints which lesson it bought and which it sold. What DOES still hold: switch the substrate to chronic HFrEF and the inotropy shrinks against an intact vasodilatation — the density knob moves β1 only, because Bristow 1986 measured the down-regulation as selective for β1 (77:23 → 60:38).',
+    claim: 'β2 vasodilatation should drop systemic resistance at least as fast as the β1 inotropy raises stroke volume, so cardiac output rises while mean pressure does not. WATCH THIS ONE FAIL as well, and for a stated reason: the β2→resistance gain is deliberately small (−380 dyn·s·cm⁻⁵), because a larger one makes adrenaline a net vasodilator at every clinical dose. With the smaller gain the resistance still falls, but not fast enough to hold the pressure down against the inotropy, so mean pressure rises a few mmHg instead of staying flat. One lumped resistance cannot serve both drugs; the page prints which lesson it bought and which it sold. What DOES still hold: switch the substrate to chronic HFrEF and the inotropy shrinks against an intact vasodilatation — the density knob moves β1 only, because Bristow 1986 measured the down-regulation as selective for β1 (77:23 → 60:38).',
     arms: function () {
       return { A: variant({ substrate: 'normal', baro: true, inf: NONE }),
                B: variant({ substrate: 'normal', baro: true, inf: inf1('dobutamine', 7.5) }) };
@@ -6473,7 +6659,7 @@ const SCENARIOS = {
   'vasopressin-rescue': {
     label: 'Vasopressin works when the catecholamines do not',
     apply: { substrate: 'septic', baro: true, inf: inf2('norepinephrine', 0.5, 'vasopressin', 0.04) },
-    claim: 'β and α desensitisation blunts the catecholamine; V1a is a different receptor on a different G-protein and is untouched by it. That is why the vasopressin row is worth shipping even with its affinity UNAVAILABLE.',
+    claim: 'β and α desensitisation blunts the catecholamine; V1a is a different receptor on a different G-protein and is untouched by it. That is why vasopressin is included even though no human V1a affinity is available.',
     arms: function () {
       return { A: variant({ substrate: 'septic', baro: true, inf: inf1('norepinephrine', 0.5) }),
                B: variant({ substrate: 'septic', baro: true, inf: inf2('norepinephrine', 0.5, 'vasopressin', 0.04) }) };
@@ -6522,25 +6708,27 @@ function applyScenario(key, push) {
 function renderCalibration(model) {
   const c = calibration(S);
   const host = $('calibBody');
-  if (!c) { host.innerHTML = '<div class="refusal">The calibration run did not converge at these settings.</div>'; return; }
+  if (!c) { host.innerHTML = '<p class="note">The calibration run did not converge at these settings.</p>'; return; }
   host.innerHTML =
-    '<p style="margin-top:0"><b>Observed:</b> ' + ANCHOR_DOSE_MAP_SLOPE + ' mmHg per mcg/kg/min (95 % CI ' +
-    ANCHOR_DOSE_MAP_CI + '), 36 healthy volunteers, noradrenaline stepped 0.04 → 0.20 mcg/kg/min in four ' +
-    '15-minute steps, awake, reflex intact. ' + chip('MEASURED') + ' ' + cite('eja2026_ne_dose_map') + '</p>' +
-    '<p><b>This model, right now:</b> <code>' + esc(c.arith) + '</code> — ' +
-    '<b>' + c.pct + ' % of the observed slope.</b> ' +
-    (c.inCI ? '<span class="verdict yes">INSIDE the observed 95 % CI</span>'
-            : '<span class="verdict no">OUTSIDE the observed 95 % CI</span>') + '</p>' +
+    '<p style="margin-top:0">The model has one human anchor: how much MAP rises per unit of norepinephrine.</p>' +
+    '<p><b>Observed:</b> ' + ANCHOR_DOSE_MAP_SLOPE + ' mmHg per mcg/kg/min (95 % CI ' +
+    ANCHOR_DOSE_MAP_CI + ') in 36 awake healthy volunteers, norepinephrine stepped 0.04 → 0.20 mcg/kg/min. ' +
+    chip('MEASURED') + ' ' + cite('eja2026_ne_dose_map') + '</p>' +
+    '<p><b>This model, at the current settings:</b> ' + c.pct + ' % of that slope — ' +
+    (c.inCI ? '<span class="verdict yes">inside the observed 95 % CI</span>'
+            : '<span class="verdict no">outside the observed 95 % CI</span>') + '</p>' +
+    '<p><code>' + esc(c.arith) + '</code></p>' +
     (c.inCI ? '' :
-      '<div class="refusal"><b>The shortfall is printed, not tuned away.</b> Two things make it up: ' +
-      'the anchor is an OPEN-LOOP fit that attributed the whole pressure rise to arterial resistance ' +
-      'at a fixed cardiac output, and this loop is closed, so raising resistance also lowers output; ' +
-      'and the reflex here applies a beat-to-beat gain at steady state. No setting inside ' +
-      'physiologic bounds closes the gap without making phenylephrine produce a mean pressure no ' +
-      'patient has. Raising the α1 venous gain or dropping the reflex gain narrows it — both are ' +
-      'controls on this page, and watching what else breaks when you use them is the lesson.</div>') +
-    '<p class="note">Reflex gain now ' + fmt(S.baroGain, 2) + ' ' + chip('FITTED') + ' (CVSim published = 1.00 ' +
-    chip('MEASURED') + ' ' + cite('cvsim2010') + '). α1 venous gain ' + GAIN.alpha1.Vs.v + ' mL ' + chip('CONSTRUCT') +
+      '<p class="note"><b>So the model under-reads norepinephrine\'s pressor effect.</b> Trust the direction and the ' +
+      'ranking of drugs more than the absolute mmHg.</p>' +
+      more('calib-why', 'Why the gap is left in',
+      '<p>The human study attributed the whole pressure rise to arterial resistance at a fixed cardiac output. This ' +
+      'model is a closed loop, so raising resistance also lowers output, and its reflex gains were published for a ' +
+      'beat-to-beat reflex but are applied at steady state. No physiologic setting closes the gap without making ' +
+      'phenylephrine produce a pressure no patient has. Raising baroreflex strength or the α1 venous effect narrows ' +
+      'it; watching what else breaks is instructive.</p>')) +
+    '<p class="note">Baroreflex strength ' + fmt(S.baroGain, 2) + ' ' + chip('FITTED') + ' (published model = 1.00, ' +
+    cite('cvsim2010') + '). α1 venous effect ' + GAIN.alpha1.Vs.v + ' mL ' + chip('CONSTRUCT') +
     '. Potency shift ×' + fmt(Math.pow(10, S.shiftLog), 0) + '.</p>';
 }
 
@@ -6549,21 +6737,23 @@ function renderScenarioVerdict(model) {
   if (!S.scenario) { host.innerHTML = ''; return; }
   const sc = SCENARIOS[S.scenario];
   let arms;
-  try { arms = sc.arms(); } catch (e) { host.innerHTML = '<div class="refusal">The comparison run failed.</div>'; return; }
+  try { arms = sc.arms(); } catch (e) { host.innerHTML = '<p class="note">The comparison run failed.</p>'; return; }
   const res = sc.test(arms.A.report, arms.B.report, arms);
-  host.innerHTML = '<div class="card" style="margin-top:10px"><div class="body">' +
+  const parts = String(sc.claim).split(/ (?=WATCH THIS ONE FAIL|NOTE THE LIMIT)/);
+  host.innerHTML = '<div class="scn-result">' +
     '<p style="margin:0 0 6px"><b>' + esc(sc.label) + '</b></p>' +
-    '<p class="note" style="margin-top:0">' + esc(sc.claim) + '</p>' +
-    '<p class="verdict ' + (res.ok ? 'yes' : 'no') + '">' + (res.ok ? 'EMERGED FROM THE MODEL' : 'DID NOT EMERGE') + '</p>' +
-    '<p class="note">' + esc(res.text) + '</p>' +
-    '<p class="note"><b>Computed at:</b> potency shift ×' + fmt(Math.pow(10, S.shiftLog), 0) + ', β receptor density ' +
-    S.density + ' %, coupling ' + S.coupling + ' %, inter-patient position ' + S.variability +
-    ' / 100, reflex gain ' + fmt(S.baroGain, 2) + ', ' + S.weight + ' kg. Pressing the scenario button puts all six back to ' +
-    'the values quoted here; moving any of them afterwards can flip the verdict, and this line is how you see that it did. ' +
-    esc(FLOOR_NOTE) + '</p>' +
-    (res.ok ? '' : '<div class="refusal"><b>Said plainly:</b> the lesson this scenario exists to teach did not come out of the model at these settings. ' +
-      'That is reported rather than hidden, and it is usually a gain constant with no human anchor doing the wrong amount of work.</div>') +
-    '</div></div>';
+    '<p class="note" style="margin-top:0"><b>The textbook lesson.</b> ' + escp(parts[0]) + '</p>' +
+    '<p class="verdict ' + (res.ok ? 'yes' : 'no') + '">' + (res.ok ? '✓ The model reproduces it' : '✗ The model does not reproduce it') + '</p>' +
+    '<p class="note">' + escp(res.text) + '</p>' +
+    (parts[1] ? more('scn-why', res.ok ? 'Limits of this demonstration' : 'Why the model falls short',
+      '<p>' + escp(parts.slice(1).join(' ').replace(/^WATCH THIS ONE FAIL( TOO| as well, and for a stated reason)?[.:]? ?/, '').replace(/^NOTE THE LIMIT: ?/, '')) + '</p>') : '') +
+    more('scn-set', 'Settings used',
+    '<p>Potency shift ×' + fmt(Math.pow(10, S.shiftLog), 0) + ', β receptor density ' +
+    S.density + ' %, coupling ' + S.coupling + ' %, patient drug level ' + S.variability +
+    ' / 100, baroreflex strength ' + fmt(S.baroGain, 2) + ', ' + S.weight + ' kg. Loading the scenario resets all six; ' +
+    'changing any of them afterwards can flip the result. Changes smaller than ' + MIN_MAP + ' mmHg, ' + MIN_CO +
+    ' L/min, ' + MIN_HR + ' bpm or ' + (MIN_FRAC * 100) + ' % resistance count as no change.</p>') +
+    '</div>';
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════════════════
@@ -6588,20 +6778,21 @@ function renderSpare() {
     '<tr><td>Binding K<sub>D</sub></td><td class="num">' + r.KD_nM + ' nM (log ' + r.log_KD_M + ')</td></tr>' +
     '<tr><td>Functional EC<sub>50</sub></td><td class="num">' + r.functional_EC50_nM + ' nM (log ' + r.functional_log_EC50_M + ')</td></tr>' +
     '<tr><td>Log efficacy ratio</td><td class="num">' + r.log_efficacy_ratio + ' — a ' + r.fold_gap + '-fold gap</td></tr>' +
-    '<tr><td>Intrinsic activity</td><td class="num">' + r.intrinsic_activity_pct + ' % of the ionomycin maximum</td></tr>' +
-    '<tr><td>At 10 nM: occupancy if you used K<sub>D</sub></td><td class="num">' + r.occupancy_at_10nM_pct_if_KD_used + ' %</td></tr>' +
-    '<tr><td>At 10 nM: response on EC<sub>50</sub></td><td class="num">' + r.response_at_10nM_pct_if_EC50_used + ' %</td></tr>' +
+    '<tr><td>Intrinsic activity</td><td class="num">' + r.intrinsic_activity_pct + ' % of assay maximum</td></tr>' +
+    '<tr><td>At 10 nM: receptors occupied (K<sub>D</sub>)</td><td class="num">' + r.occupancy_at_10nM_pct_if_KD_used + ' %</td></tr>' +
+    '<tr><td>At 10 nM: response (EC<sub>50</sub>)</td><td class="num">' + r.response_at_10nM_pct_if_EC50_used + ' %</td></tr>' +
     '</tbody></table>';
-  $('spareNote').innerHTML = chip(r.provenance) + ' ' + cite(r.source) + ' · ' + esc(r.derivation) +
-    '<br><b>Why this panel exists.</b> ' + esc(PHARM.spare_receptor_gap.why_it_is_its_own_table) +
-    ' ' + esc(PHARM.spare_receptor_gap.headline);
+  $('spareNote').innerHTML =
+    'At clinical plasma levels almost no receptors are occupied, yet the response is near maximal: the cell needs only a ' +
+    'tiny fraction of its receptors. A model built on binding K<sub>D</sub> would predict no drug effect at any clinical ' +
+    'dose, so this simulator uses functional EC<sub>50</sub>. ' + chip(r.provenance) + ' ' + cite(r.source);
   drawSpare(r);
 }
 
 function drawSpare(r) {
   const g = prep('spareCanvas'); if (!g) return;
   const x = g.x, pad = { l: 46, r: 14, t: 14, b: 32 };
-  axes(g, pad, 'plasma concentration (nM, log scale)', 'fraction (%)');
+  axes(g, pad, 'plasma level (nM, log scale)', '% of maximum');
   const lo = -2, hi = 7;                                     // 0.01 nM … 10 mM
   const X = (lg) => pad.l + (g.w - pad.l - pad.r) * (lg - lo) / (hi - lo);
   const Y = (f) => (g.h - pad.b) - (g.h - pad.t - pad.b) * f;
@@ -6609,7 +6800,7 @@ function drawSpare(r) {
   x.fillStyle = css('--text-dim'); x.textAlign = 'right';
   for (let k = 0; k <= 4; k++) x.fillText(String(k * 25), pad.l - 4, Y(k / 4) + 3);
   x.textAlign = 'center';
-  for (let lg = lo; lg <= hi; lg += 1.5) x.fillText('1e' + fmt(lg, 0), X(lg), g.h - pad.b + 13);
+  [[-2, '0.01'], [0, '1'], [2, '100'], [4, '10 µM'], [6, '1 mM']].forEach(function (t) { x.fillText(t[1], X(t[0]), g.h - pad.b + 13); });
   const curve = function (k50, col, dash) {
     x.strokeStyle = col; x.lineWidth = 2.2; x.setLineDash(dash);
     x.beginPath();
@@ -6625,10 +6816,10 @@ function drawSpare(r) {
   x.fillStyle = css('--accent-glow');
   x.fillRect(X(Math.log10(1)), pad.t, X(Math.log10(300)) - X(Math.log10(1)), g.h - pad.t - pad.b);
   x.fillStyle = css('--text-muted'); x.textAlign = 'center';
-  x.fillText('clinical plasma range', (X(0) + X(Math.log10(300))) / 2, pad.t + 11);
+  x.fillText('clinical range', (X(0) + X(Math.log10(300))) / 2, pad.t + 11);
   x.textAlign = 'left';
-  x.fillStyle = css('--espvr-color'); x.fillText('response (functional EC50)', pad.l + 6, g.h - pad.b - 24);
-  x.fillStyle = css('--edpvr-color'); x.fillText('occupancy (binding KD)', pad.l + 6, g.h - pad.b - 10);
+  x.fillStyle = css('--espvr-color'); x.fillText('response (EC50)', g.w - pad.r - 118, g.h - pad.b - 24);
+  x.fillStyle = css('--edpvr-color'); x.fillText('occupancy (KD)', g.w - pad.r - 118, g.h - pad.b - 10);
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════════════════
@@ -6636,22 +6827,15 @@ function drawSpare(r) {
 // ═══════════════════════════════════════════════════════════════════════════════════════════
 function renderNotFit() {
   const N = PHARM.does_not_fit_the_receptor_model || {};
-  let h = '<p class="note" style="margin-top:0">' + esc(N.page_note || '') + '</p>';
+  let h = '<p class="note" style="margin-top:0">Two common drugs are left out on purpose, because a receptor-response model cannot represent how they work.</p>';
   for (const key of ['ephedrine', 'hydralazine']) {
     const d = N[key]; if (!d) continue;
-    h += '<div style="margin-top:12px;padding-top:10px;border-top:1px solid var(--border)">' +
-      '<p><b>' + esc(d.label) + '</b> <span class="note">' + esc(d.moiety) + ', ' + esc(d.molar_mass_g_per_mol) + ' g/mol</span></p>' +
-      '<p class="note"><b>Which model assumption it breaks:</b> ' + esc(d.why_it_does_not_fit) + '</p>' +
-      (d.second_reason ? '<p class="note"><b>And:</b> ' + esc(d.second_reason) + '</p>' : '') +
-      (d.what_the_receptor_data_say ? '<p class="note"><b>What the receptor data do say:</b> ' +
-        esc(JSON.stringify(d.what_the_receptor_data_say).replace(/[{}"]/g, '').replace(/,/g, ', ')) + '</p>' : '') +
-      (d.pk && d.pk.recon_figures ? '<p class="note"><b>PK:</b> ' + esc(d.pk.recon_figures) + ' ' + chip(d.pk.value) + '</p>' : '') +
+    h += '<div class="blk"><div class="blk-title">' + esc(d.label) + '</div>' +
+      '<p class="note">' + escp(d.why_it_does_not_fit) + '</p>' +
+      (d.second_reason ? '<p class="note">' + escp(d.second_reason) + '</p>' : '') +
+      (d.pk && d.pk.recon_figures ? '<p class="note">' + esc(d.pk.recon_figures) + ' ' + chip(d.pk.value) + '</p>' : '') +
       '</div>';
   }
-  h += '<p class="note" style="margin-top:12px"><b>The titratability contrast, on the same page.</b> ' +
-    'Nicardipine\'s terminal half-life is 14.4 hours and clevidipine\'s initial half-life is under a minute. ' +
-    'Both are dihydropyridines, both are given by infusion, and only one of them can be steered. ' +
-    'Put them in two infusion slots and watch the concentration curves.</p>';
   $('notFitBody').innerHTML = h;
 }
 
@@ -6677,8 +6861,8 @@ function syncBaroButton() {
   b.setAttribute('aria-pressed', String(S.baro));
   b.setAttribute('aria-label', 'Baroreflex, currently ' + (S.baro ? 'on' : 'off'));
   $('baroSub').textContent = S.baro
-    ? 'on — CVSim arterial reflex (Heldt 2002), four effectors'
-    : 'OFF — phenylephrine will show no reflex bradycardia, which is the point';
+    ? 'The circulation fights back: rate, tone and contractility adjust to defend MAP'
+    : 'Off — you see the raw drug effect, with no reflex bradycardia or tachycardia';
 }
 
 function wire() {
@@ -6695,20 +6879,52 @@ function wire() {
     $('inVariability').value = S.variability;
     refreshKnobLabels(); recompute(true);
   });
-  let rt = null;
+  // Which "show me why" blocks are open survives a re-render. toggle does not bubble, so capture.
+  document.addEventListener('toggle', function (e) {
+    const d = e.target;
+    if (!d || !d.dataset || !d.dataset.k) return;
+    if (d.classList.contains('more')) { if (d.open) OPEN.add(d.dataset.k); else OPEN.delete(d.dataset.k); }
+    // A canvas inside a closed <details> has no width, so it is drawn when its panel opens.
+    if (d.id === 'spareCard' && d.open) renderSpare();
+  }, true);
+  // A citation jumps to its entry in the reference list, opening the list if it is folded.
+  document.addEventListener('click', function (e) {
+    const a = e.target && e.target.closest ? e.target.closest('a.cite') : null;
+    if (!a) return;
+    e.preventDefault();
+    $('refsCard').open = true;
+    const el = $('ref-' + a.dataset.ref);
+    if (el) {
+      el.scrollIntoView({ block: 'center', behavior: REDUCED_MOTION ? 'auto' : 'smooth' });
+      el.style.color = 'var(--text-hi)';
+      setTimeout(function () { el.style.color = ''; }, 2500);
+    }
+  });
+  let rt = null, lastW = window.innerWidth;
   window.addEventListener('resize', function () {
+    // iOS fires resize every time the URL bar hides or shows; only a WIDTH change needs a redraw.
+    if (window.innerWidth === lastW) return;
+    lastW = window.innerWidth;
     clearTimeout(rt);
     rt = setTimeout(function () { if (settled) { drawViews(settled, settled.report); renderPanels(settled); } }, 150);
   });
 }
 
 function boot() {
+  // On a phone the tab row scrolls sideways; start it with this page's tab in view.
+  try {
+    const at = document.querySelector('.nav-tab.active'), row = document.querySelector('.nav-tabs');
+    if (at && row && row.scrollWidth > row.clientWidth) row.scrollLeft = Math.max(0, at.offsetLeft - row.offsetLeft - 40);
+  } catch (e) {}
   try { if (localStorage.getItem('cathmath_dark') === '0') { isDark = false; document.body.classList.add('light'); } } catch (e) {}
   if (!isDark) {
     const mt = $('modeToggle');
     mt.textContent = 'Dark Mode'; mt.setAttribute('aria-pressed', 'true'); mt.setAttribute('aria-label', 'Switch to dark mode');
   }
-  $('honestyText').innerHTML = esc(PHARM.the_central_honesty.the_gap) + ' ' + esc(PHARM.the_central_honesty.the_consequence);
+  $('chipLegend').innerHTML = ['MEASURED', 'DERIVED', 'FITTED', 'CONSTRUCT'].map(function (k) {
+    return '<span class="lg">' + chip(k) + ' ' + esc(legendFor(k)) + '</span>';
+  }).join(' ');
+  renderRefs();
   buildSubstrates(); buildInfusions(); buildScenarios(); buildSpareSelect(); renderNotFit();
   syncBaroButton(); refreshKnobLabels(); wire();
   $('substrateNote').innerHTML = substrateNoteHTML(SUBSTRATE[S.substrate]);

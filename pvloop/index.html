@@ -1903,7 +1903,7 @@ var CathMathEngine = (function () {
       else if (phase === 'IVC' && !beat.ejected && k > esPos) phase = 'IVR';
       else if (phase === 'Ejection' && sm.Qav <= Qthr && k > esPos) phase = 'IVR';
       else if (phase === 'IVR' && sm.Qmv > Qthr) phase = 'Filling';
-      pts.push({ V: sm.V, P: sm.P, phase: phase, t: sm.t });
+      pts.push({ V: sm.V, P: sm.P, Pa: sm.Pa, phase: phase, t: sm.t });   // Pa: the arterial trace is drawn from the same beat
     }
     var order = ['IVC', 'Ejection', 'IVR', 'Filling'];
     var bounds = [0], durs = [], counts = { IVC: 0, Ejection: 0, IVR: 0, Filling: 0 };
