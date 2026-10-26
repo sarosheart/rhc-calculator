@@ -1110,7 +1110,10 @@ const COR = {
     side: 'right',
     width: 'major',
     points: [
-      { x: 0.70, y: 0.40, z: 0.30 },
+      // Must start where RCA_prox ends. The 2026-08-11 fix moved the end of the proximal RCA
+      // anteriorly (z 0.30 -> 0.72) but not this start point, which left a visible break
+      // between the proximal and mid RCA in every non-AP view.
+      { x: 0.70, y: 0.40, z: 0.72 },
       { x: 0.85, y: 0.10, z: 0.00 },   // turning the corner of the AV groove
       { x: 0.90, y: -0.20, z: -0.30 },
     ],
