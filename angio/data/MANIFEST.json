@@ -1,0 +1,796 @@
+{
+ "coronary-co.json": {
+  "bytes": 36359,
+  "inputs": [
+   {
+    "path": "~/Desktop/Claude/cathmath_data/dodge1992/dodge1992_diameters.json",
+    "sha256": "e75dcd30a7ea8da7488b840f28b62ec8ebff5ca37db331107617e070392eab9e"
+   },
+   {
+    "path": "~/Desktop/Claude/cathmath_data/derived/seated_trees.json",
+    "sha256": "dcd7554e1abdb4150aa5822a5e9428dcf6cb60bd3c308d317b241a36231f99f9"
+   },
+   {
+    "path": "~/Desktop/Claude/cathmath_data/imagecas_x/dataset/ImageCAS-X_dataset/Descriptors.xlsx",
+    "sha256": "966d8b198e60e974fbb5a4ea57559479437c3c780fecd05590a397332b72ea34"
+   }
+  ],
+  "script": "build_coronary.py",
+  "sha256": "c6231400f95f340681b1f9b7631ad836df1814b85548f7e9290067b0376f7861"
+ },
+ "coronary-left.json": {
+  "bytes": 33926,
+  "inputs": [
+   {
+    "path": "~/Desktop/Claude/cathmath_data/dodge1992/dodge1992_diameters.json",
+    "sha256": "e75dcd30a7ea8da7488b840f28b62ec8ebff5ca37db331107617e070392eab9e"
+   },
+   {
+    "path": "~/Desktop/Claude/cathmath_data/derived/seated_trees.json",
+    "sha256": "dcd7554e1abdb4150aa5822a5e9428dcf6cb60bd3c308d317b241a36231f99f9"
+   },
+   {
+    "path": "~/Desktop/Claude/cathmath_data/imagecas_x/dataset/ImageCAS-X_dataset/Descriptors.xlsx",
+    "sha256": "966d8b198e60e974fbb5a4ea57559479437c3c780fecd05590a397332b72ea34"
+   }
+  ],
+  "script": "build_coronary.py",
+  "sha256": "e43b1d5b96f6df3e449b8912316eb6c914434da15314d3bde0a603fe5c3971a0"
+ },
+ "coronary-right.json": {
+  "bytes": 34094,
+  "inputs": [
+   {
+    "path": "~/Desktop/Claude/cathmath_data/dodge1992/dodge1992_diameters.json",
+    "sha256": "e75dcd30a7ea8da7488b840f28b62ec8ebff5ca37db331107617e070392eab9e"
+   },
+   {
+    "path": "~/Desktop/Claude/cathmath_data/derived/seated_trees.json",
+    "sha256": "dcd7554e1abdb4150aa5822a5e9428dcf6cb60bd3c308d317b241a36231f99f9"
+   },
+   {
+    "path": "~/Desktop/Claude/cathmath_data/imagecas_x/dataset/ImageCAS-X_dataset/Descriptors.xlsx",
+    "sha256": "966d8b198e60e974fbb5a4ea57559479437c3c780fecd05590a397332b72ea34"
+   }
+  ],
+  "script": "build_coronary.py",
+  "sha256": "97ef6f291778c87d121e0d6db856cfb8673fa264aa5576dad09014efab7e61e4"
+ },
+ "epicardium.glb": {
+  "bytes": 61032,
+  "inputs": [
+   {
+    "path": "~/Desktop/Claude/cathmath/angio/data/heart.glb",
+    "sha256": "b692a4de06f1b9dab1e155e3cd31b002a5acdec038c99d7d269d07fa2e8ce21e"
+   }
+  ],
+  "script": "build_coronary.py",
+  "sha256": "53cb4c97ee7e3c5ac62df51c132c45da672804e68f9efa79d5675217eec80cc8"
+ },
+ "grafts.json": {
+  "bytes": 44549,
+  "inputs": [
+   {
+    "path": "~/Desktop/Claude/cathmath_data/vmr/VMR_cabg_measurements.json",
+    "sha256": "236d17cf85573eedaf635a176db844ef216e49c1868abf92e6f0637ead981d38"
+   },
+   {
+    "path": "~/Desktop/Claude/cathmath_data/bodyparts3d/obj/isa_BP3D_4.0_obj_99/FJ1972.obj",
+    "sha256": "95cd8361a6efb53ebc3ecb64fcd52f92968f3b915def80142c01fefbaa35bceb"
+   }
+  ],
+  "script": "build_grafts.py",
+  "sha256": "4f8839b4664798d1eccdabe6337c5e7f479f369258171c578c78def24f747e2b"
+ },
+ "heart-lite.glb": {
+  "bytes": 272828,
+  "inputs": [
+   {
+    "path": "~/Desktop/Claude/cathmath_data/bodyparts3d/obj/isa_BP3D_4.0_obj_99/FJ2428.obj",
+    "sha256": "ac3c7d6714bed8cf549c97b013546541cf67e189dad2107092a59758aa3ccc45"
+   },
+   {
+    "path": "~/Desktop/Claude/cathmath_data/bodyparts3d/obj/isa_BP3D_4.0_obj_99/FJ2422.obj",
+    "sha256": "8844c5fc464d23fdc785d1d254d666a4d3b70b14b73ec90ca0c77ba4aff3dd37"
+   },
+   {
+    "path": "~/Desktop/Claude/cathmath_data/bodyparts3d/obj/isa_BP3D_4.0_obj_99/FJ2423.obj",
+    "sha256": "f0d7cbf9e10c0fcefe96741700605e7080d4a627fe214b4c8d5647d970e085f7"
+   },
+   {
+    "path": "~/Desktop/Claude/cathmath_data/bodyparts3d/obj/isa_BP3D_4.0_obj_99/FJ2438.obj",
+    "sha256": "ad28c5925374c6648bafb77ac9a89163316c101559cb730906208c96266ae078"
+   },
+   {
+    "path": "~/Desktop/Claude/cathmath_data/bodyparts3d/obj/isa_BP3D_4.0_obj_99/FJ2439.obj",
+    "sha256": "6e87510c607541b53b124f8224b6be74cb9b7351e29102246053b30a7260d8dd"
+   },
+   {
+    "path": "~/Desktop/Claude/cathmath_data/bodyparts3d/obj/isa_BP3D_4.0_obj_99/FJ3413.obj",
+    "sha256": "764f23e432a9308e0780c586f9d1638db1fbcc52a5019ae61817b4b1de323870"
+   },
+   {
+    "path": "~/Desktop/Claude/cathmath_data/bodyparts3d/obj/isa_BP3D_4.0_obj_99/FJ3411.obj",
+    "sha256": "9eeb5e5a627e8145f03961c661c9c66d8fdc55ed1234d04b84212b87a21d902c"
+   },
+   {
+    "path": "~/Desktop/Claude/cathmath_data/bodyparts3d/obj/isa_BP3D_4.0_obj_99/FJ3427.obj",
+    "sha256": "386a80f191338beee23e83c33800ba17d4990123b41c648b9919764578505f7a"
+   },
+   {
+    "path": "~/Desktop/Claude/cathmath_data/bodyparts3d/obj/isa_BP3D_4.0_obj_99/FJ2966.obj",
+    "sha256": "7d4fbfbeebdb541b4053e62e6ba9e55bdbc8d1354de8192f94d7c6008812ab3f"
+   },
+   {
+    "path": "~/Desktop/Claude/cathmath_data/bodyparts3d/obj/isa_BP3D_4.0_obj_99/FJ2924.obj",
+    "sha256": "0cb5312cf816387fdad0d3809a5b5cae1445806ce85546adea39240bc72d2580"
+   },
+   {
+    "path": "~/Desktop/Claude/cathmath_data/bodyparts3d/obj/isa_BP3D_4.0_obj_99/FJ3019.obj",
+    "sha256": "c773fc2d3d3f79544699c16f38f56619730a6d5a1a2c8bb4d8f0dc2ab6889d97"
+   },
+   {
+    "path": "~/Desktop/Claude/cathmath_data/bodyparts3d/obj/isa_BP3D_4.0_obj_99/FJ2925.obj",
+    "sha256": "e87124704e4ca94bfe3206a571e464fe8ccc41afe0f36ee5ccf46cf00aaf4918"
+   },
+   {
+    "path": "~/Desktop/Claude/cathmath_data/bodyparts3d/obj/isa_BP3D_4.0_obj_99/FJ2933.obj",
+    "sha256": "64e0d2deec1d847be95f41a25c616935c9b400f233a2c07a8c453a3441f80a35"
+   },
+   {
+    "path": "~/Desktop/Claude/cathmath_data/bodyparts3d/obj/isa_BP3D_4.0_obj_99/FJ2944.obj",
+    "sha256": "a531b898f54ae008b1ad0c0f0993158e1a15cfbebee79098033ea8c2d2f84372"
+   },
+   {
+    "path": "~/Desktop/Claude/cathmath_data/bodyparts3d/obj/isa_BP3D_4.0_obj_99/FJ2950.obj",
+    "sha256": "f32bbffccdb0528ed085041ad4243b5b4817a26aa82a73669f9132d6c54f17de"
+   },
+   {
+    "path": "~/Desktop/Claude/cathmath_data/bodyparts3d/obj/isa_BP3D_4.0_obj_99/FJ2955.obj",
+    "sha256": "bfbb5067eb2da9857069139f12d019bb0f599babc89730aeb4accb1a77916991"
+   },
+   {
+    "path": "~/Desktop/Claude/cathmath_data/bodyparts3d/obj/isa_BP3D_4.0_obj_99/FJ3020.obj",
+    "sha256": "074ba67bb3db8f93d6ac7d4e9d2bd1ddcca6e54a2bcb765ec146a9fd30bb3aa8"
+   },
+   {
+    "path": "~/Desktop/Claude/cathmath_data/bodyparts3d/obj/isa_BP3D_4.0_obj_99/FJ3040.obj",
+    "sha256": "2e15b98f227f16c3dcacab1a93a26d42e07cd2c2d72ba34b1ef438396f598a12"
+   },
+   {
+    "path": "~/Desktop/Claude/cathmath_data/bodyparts3d/obj/isa_BP3D_4.0_obj_99/FJ3645.obj",
+    "sha256": "5cc007c2ea51255df641225630e83ddbf3e5c4545dffe4814b098c9199ceb26c"
+   },
+   {
+    "path": "~/Desktop/Claude/cathmath_data/bodyparts3d/obj/isa_BP3D_4.0_obj_99/FJ3441.obj",
+    "sha256": "7b03ef0464b622d0a839c3c55aedcec2a713b4399112e7ce6efa1ac51861b606"
+   },
+   {
+    "path": "~/Desktop/Claude/cathmath_data/bodyparts3d/obj/isa_BP3D_4.0_obj_99/FJ3659.obj",
+    "sha256": "2241af6de027922eb74cb58d882433a5d0ffb7ecce41a1925f05e13dd78d666c"
+   }
+  ],
+  "script": "build_heart.py",
+  "sha256": "e21a932f7b4d7789aa190bb963eea74b0264113fa80445f569ca651123aeee4a"
+ },
+ "heart.glb": {
+  "bytes": 1069424,
+  "inputs": [
+   {
+    "path": "~/Desktop/Claude/cathmath_data/bodyparts3d/obj/isa_BP3D_4.0_obj_99/FJ2428.obj",
+    "sha256": "ac3c7d6714bed8cf549c97b013546541cf67e189dad2107092a59758aa3ccc45"
+   },
+   {
+    "path": "~/Desktop/Claude/cathmath_data/bodyparts3d/obj/isa_BP3D_4.0_obj_99/FJ2422.obj",
+    "sha256": "8844c5fc464d23fdc785d1d254d666a4d3b70b14b73ec90ca0c77ba4aff3dd37"
+   },
+   {
+    "path": "~/Desktop/Claude/cathmath_data/bodyparts3d/obj/isa_BP3D_4.0_obj_99/FJ2423.obj",
+    "sha256": "f0d7cbf9e10c0fcefe96741700605e7080d4a627fe214b4c8d5647d970e085f7"
+   },
+   {
+    "path": "~/Desktop/Claude/cathmath_data/bodyparts3d/obj/isa_BP3D_4.0_obj_99/FJ2438.obj",
+    "sha256": "ad28c5925374c6648bafb77ac9a89163316c101559cb730906208c96266ae078"
+   },
+   {
+    "path": "~/Desktop/Claude/cathmath_data/bodyparts3d/obj/isa_BP3D_4.0_obj_99/FJ2439.obj",
+    "sha256": "6e87510c607541b53b124f8224b6be74cb9b7351e29102246053b30a7260d8dd"
+   },
+   {
+    "path": "~/Desktop/Claude/cathmath_data/bodyparts3d/obj/isa_BP3D_4.0_obj_99/FJ3413.obj",
+    "sha256": "764f23e432a9308e0780c586f9d1638db1fbcc52a5019ae61817b4b1de323870"
+   },
+   {
+    "path": "~/Desktop/Claude/cathmath_data/bodyparts3d/obj/isa_BP3D_4.0_obj_99/FJ3411.obj",
+    "sha256": "9eeb5e5a627e8145f03961c661c9c66d8fdc55ed1234d04b84212b87a21d902c"
+   },
+   {
+    "path": "~/Desktop/Claude/cathmath_data/bodyparts3d/obj/isa_BP3D_4.0_obj_99/FJ3427.obj",
+    "sha256": "386a80f191338beee23e83c33800ba17d4990123b41c648b9919764578505f7a"
+   },
+   {
+    "path": "~/Desktop/Claude/cathmath_data/bodyparts3d/obj/isa_BP3D_4.0_obj_99/FJ2966.obj",
+    "sha256": "7d4fbfbeebdb541b4053e62e6ba9e55bdbc8d1354de8192f94d7c6008812ab3f"
+   },
+   {
+    "path": "~/Desktop/Claude/cathmath_data/bodyparts3d/obj/isa_BP3D_4.0_obj_99/FJ2924.obj",
+    "sha256": "0cb5312cf816387fdad0d3809a5b5cae1445806ce85546adea39240bc72d2580"
+   },
+   {
+    "path": "~/Desktop/Claude/cathmath_data/bodyparts3d/obj/isa_BP3D_4.0_obj_99/FJ3019.obj",
+    "sha256": "c773fc2d3d3f79544699c16f38f56619730a6d5a1a2c8bb4d8f0dc2ab6889d97"
+   },
+   {
+    "path": "~/Desktop/Claude/cathmath_data/bodyparts3d/obj/isa_BP3D_4.0_obj_99/FJ2925.obj",
+    "sha256": "e87124704e4ca94bfe3206a571e464fe8ccc41afe0f36ee5ccf46cf00aaf4918"
+   },
+   {
+    "path": "~/Desktop/Claude/cathmath_data/bodyparts3d/obj/isa_BP3D_4.0_obj_99/FJ2933.obj",
+    "sha256": "64e0d2deec1d847be95f41a25c616935c9b400f233a2c07a8c453a3441f80a35"
+   },
+   {
+    "path": "~/Desktop/Claude/cathmath_data/bodyparts3d/obj/isa_BP3D_4.0_obj_99/FJ2944.obj",
+    "sha256": "a531b898f54ae008b1ad0c0f0993158e1a15cfbebee79098033ea8c2d2f84372"
+   },
+   {
+    "path": "~/Desktop/Claude/cathmath_data/bodyparts3d/obj/isa_BP3D_4.0_obj_99/FJ2950.obj",
+    "sha256": "f32bbffccdb0528ed085041ad4243b5b4817a26aa82a73669f9132d6c54f17de"
+   },
+   {
+    "path": "~/Desktop/Claude/cathmath_data/bodyparts3d/obj/isa_BP3D_4.0_obj_99/FJ2955.obj",
+    "sha256": "bfbb5067eb2da9857069139f12d019bb0f599babc89730aeb4accb1a77916991"
+   },
+   {
+    "path": "~/Desktop/Claude/cathmath_data/bodyparts3d/obj/isa_BP3D_4.0_obj_99/FJ3020.obj",
+    "sha256": "074ba67bb3db8f93d6ac7d4e9d2bd1ddcca6e54a2bcb765ec146a9fd30bb3aa8"
+   },
+   {
+    "path": "~/Desktop/Claude/cathmath_data/bodyparts3d/obj/isa_BP3D_4.0_obj_99/FJ3040.obj",
+    "sha256": "2e15b98f227f16c3dcacab1a93a26d42e07cd2c2d72ba34b1ef438396f598a12"
+   },
+   {
+    "path": "~/Desktop/Claude/cathmath_data/bodyparts3d/obj/isa_BP3D_4.0_obj_99/FJ3645.obj",
+    "sha256": "5cc007c2ea51255df641225630e83ddbf3e5c4545dffe4814b098c9199ceb26c"
+   },
+   {
+    "path": "~/Desktop/Claude/cathmath_data/bodyparts3d/obj/isa_BP3D_4.0_obj_99/FJ3441.obj",
+    "sha256": "7b03ef0464b622d0a839c3c55aedcec2a713b4399112e7ce6efa1ac51861b606"
+   },
+   {
+    "path": "~/Desktop/Claude/cathmath_data/bodyparts3d/obj/isa_BP3D_4.0_obj_99/FJ3659.obj",
+    "sha256": "2241af6de027922eb74cb58d882433a5d0ffb7ecce41a1925f05e13dd78d666c"
+   }
+  ],
+  "script": "build_heart.py",
+  "sha256": "b692a4de06f1b9dab1e155e3cd31b002a5acdec038c99d7d269d07fa2e8ce21e"
+ },
+ "thorax-lite.glb": {
+  "bytes": 220672,
+  "inputs": [
+   {
+    "path": "~/Desktop/Claude/cathmath_data/bodyparts3d/obj/isa_BP3D_4.0_obj_99/FJ3225.obj",
+    "sha256": "40680b5a3556b5984a5006e01649ff20cb4c88d9d3a7fef79cbad0648a972d54"
+   },
+   {
+    "path": "~/Desktop/Claude/cathmath_data/bodyparts3d/obj/isa_BP3D_4.0_obj_99/FJ3226.obj",
+    "sha256": "24a27d42732af55ad1e7142179f2dd4f906de78b701fbe5c459d8884a026f250"
+   },
+   {
+    "path": "~/Desktop/Claude/cathmath_data/bodyparts3d/obj/isa_BP3D_4.0_obj_99/FJ3227.obj",
+    "sha256": "3b7e5d6673a1be5bc14d72a4ea659d361b143f3fda5bca3ec758c176daba16c5"
+   },
+   {
+    "path": "~/Desktop/Claude/cathmath_data/bodyparts3d/obj/isa_BP3D_4.0_obj_99/FJ3228.obj",
+    "sha256": "803a7134c1e69f640b87f9c6c4a846c869379446e771a1a7c9d18914c331a603"
+   },
+   {
+    "path": "~/Desktop/Claude/cathmath_data/bodyparts3d/obj/isa_BP3D_4.0_obj_99/FJ3229.obj",
+    "sha256": "631b4f63625fa6cc89ad83961b2156abe5878d1baf4a8cb2b2acbaa06bc97f58"
+   },
+   {
+    "path": "~/Desktop/Claude/cathmath_data/bodyparts3d/obj/isa_BP3D_4.0_obj_99/FJ3230.obj",
+    "sha256": "8c097e93d79c610bed49d6c027d25c8439447c20bfb94fa64009b9c4db4d8f5b"
+   },
+   {
+    "path": "~/Desktop/Claude/cathmath_data/bodyparts3d/obj/isa_BP3D_4.0_obj_99/FJ3231.obj",
+    "sha256": "c1259fcdaf463bdecfc0868a3acc964edd4901ab03eb539b28e40462671be1fb"
+   },
+   {
+    "path": "~/Desktop/Claude/cathmath_data/bodyparts3d/obj/isa_BP3D_4.0_obj_99/FJ3232.obj",
+    "sha256": "c40bbcd5c2b98bb94161819a2cf824296289ce68eb62b37f3b175af4aadfd351"
+   },
+   {
+    "path": "~/Desktop/Claude/cathmath_data/bodyparts3d/obj/isa_BP3D_4.0_obj_99/FJ3233.obj",
+    "sha256": "8160b28fd649aadd705a05cc3e6e9cfd7035c44d8258b5a50977ec89fe8e7414"
+   },
+   {
+    "path": "~/Desktop/Claude/cathmath_data/bodyparts3d/obj/isa_BP3D_4.0_obj_99/FJ3234.obj",
+    "sha256": "372c650b2b7bc3f6767aa50a0f5b7e5dac6a15a17aeea5f5017166ba5d328757"
+   },
+   {
+    "path": "~/Desktop/Claude/cathmath_data/bodyparts3d/obj/isa_BP3D_4.0_obj_99/FJ3235.obj",
+    "sha256": "7d9525200958a9545391a2e135649580282108d77f7ae88a34003a56f48f4c8b"
+   },
+   {
+    "path": "~/Desktop/Claude/cathmath_data/bodyparts3d/obj/isa_BP3D_4.0_obj_99/FJ3236.obj",
+    "sha256": "ec09e201beaaa70c24a41eedcef4671118b453361f827be02fb73fc361208db8"
+   },
+   {
+    "path": "~/Desktop/Claude/cathmath_data/bodyparts3d/obj/isa_BP3D_4.0_obj_99/FJ3330.obj",
+    "sha256": "9e62a17a2ea9dc16797beec97bd0925c9692c2a4764391cbc1e289b0120e7aa4"
+   },
+   {
+    "path": "~/Desktop/Claude/cathmath_data/bodyparts3d/obj/isa_BP3D_4.0_obj_99/FJ3331.obj",
+    "sha256": "1fdce776ea65919bf9aa418ec91c872b3eb835daca57dc69a7caa40bb02707d7"
+   },
+   {
+    "path": "~/Desktop/Claude/cathmath_data/bodyparts3d/obj/isa_BP3D_4.0_obj_99/FJ3332.obj",
+    "sha256": "50dd4dac4ebb45fa245d700f7ceac89edd7503cb4caab154b644b0a808da2ecc"
+   },
+   {
+    "path": "~/Desktop/Claude/cathmath_data/bodyparts3d/obj/isa_BP3D_4.0_obj_99/FJ3334.obj",
+    "sha256": "3831c5c578d45fc491e7e72417cc436e04a1a3a1916138e51528ad0b0b212a54"
+   },
+   {
+    "path": "~/Desktop/Claude/cathmath_data/bodyparts3d/obj/isa_BP3D_4.0_obj_99/FJ3336.obj",
+    "sha256": "57084a626a91aa88782f2e836c75450cd90bf19717dfd3f31602b4c674b70c0c"
+   },
+   {
+    "path": "~/Desktop/Claude/cathmath_data/bodyparts3d/obj/isa_BP3D_4.0_obj_99/FJ3338.obj",
+    "sha256": "b239419743f7320b8b1d4f4d96ab41c1ff7fccdc921fa3a99c700a9d6dbd2a6c"
+   },
+   {
+    "path": "~/Desktop/Claude/cathmath_data/bodyparts3d/obj/isa_BP3D_4.0_obj_99/FJ3340.obj",
+    "sha256": "ffca17251de4f457c4952e9d913070eb7a6f767493925ac3d8c3c744941b5dbd"
+   },
+   {
+    "path": "~/Desktop/Claude/cathmath_data/bodyparts3d/obj/isa_BP3D_4.0_obj_99/FJ3342.obj",
+    "sha256": "b2d1f3bc9478c51524628f4e79524290add55800ae85b06ff657f17f4c0c6f1f"
+   },
+   {
+    "path": "~/Desktop/Claude/cathmath_data/bodyparts3d/obj/isa_BP3D_4.0_obj_99/FJ3344.obj",
+    "sha256": "5e45ea5a527d3b7df56c508213020265ed1c8a0d9a99f31454b92059f4f1a95f"
+   },
+   {
+    "path": "~/Desktop/Claude/cathmath_data/bodyparts3d/obj/isa_BP3D_4.0_obj_99/FJ3346.obj",
+    "sha256": "86cc62c1a0a754f2e01a30b5d7179c745f3c2404ef4031ae43568667c4041996"
+   },
+   {
+    "path": "~/Desktop/Claude/cathmath_data/bodyparts3d/obj/isa_BP3D_4.0_obj_99/FJ3347.obj",
+    "sha256": "388e8f3dd5c308fe1454daed2aa3a2fced280d4ec60f97b547b476ca6b0da930"
+   },
+   {
+    "path": "~/Desktop/Claude/cathmath_data/bodyparts3d/obj/isa_BP3D_4.0_obj_99/FJ3348.obj",
+    "sha256": "4ef4af4eb8a7ea76479b2d4a1b2973c7d950f6e3aa5593eca4377258222bdaf6"
+   },
+   {
+    "path": "~/Desktop/Claude/cathmath_data/bodyparts3d/obj/isa_BP3D_4.0_obj_99/FJ3154.obj",
+    "sha256": "abf073c0206696c3baa5cb389831b28a6ce2c6770091065e834b8e4ef50676b1"
+   },
+   {
+    "path": "~/Desktop/Claude/cathmath_data/bodyparts3d/obj/isa_BP3D_4.0_obj_99/FJ3155.obj",
+    "sha256": "1f9c9f6dfcd5585e09abc2cf9a8f54ba1c33df399c6d4dad1a92301d85cd88b3"
+   },
+   {
+    "path": "~/Desktop/Claude/cathmath_data/bodyparts3d/obj/isa_BP3D_4.0_obj_99/FJ3156.obj",
+    "sha256": "ffeebd0dead6ed95395e35c0843888b079acf67543e2820437e99978c69642a0"
+   },
+   {
+    "path": "~/Desktop/Claude/cathmath_data/bodyparts3d/obj/isa_BP3D_4.0_obj_99/FJ3157.obj",
+    "sha256": "67940f16382935851ebeb7a86c926dbf922070f390c438fdbbb56f7b7fb76057"
+   },
+   {
+    "path": "~/Desktop/Claude/cathmath_data/bodyparts3d/obj/isa_BP3D_4.0_obj_99/FJ3158.obj",
+    "sha256": "aa69c48def3434d6a3e1c56fc78af45f01545931fde5422af17d5f98ce9ed8a3"
+   },
+   {
+    "path": "~/Desktop/Claude/cathmath_data/bodyparts3d/obj/isa_BP3D_4.0_obj_99/FJ3159.obj",
+    "sha256": "5e6301d2020ba73167e71c274848ddcbec0f7936d9f26a78f2de8ffa82f095c7"
+   },
+   {
+    "path": "~/Desktop/Claude/cathmath_data/bodyparts3d/obj/isa_BP3D_4.0_obj_99/FJ3160.obj",
+    "sha256": "20c1322be138314f42bbd1be3e69f3f6b590bbca7a8a3cd3414476f207721300"
+   },
+   {
+    "path": "~/Desktop/Claude/cathmath_data/bodyparts3d/obj/isa_BP3D_4.0_obj_99/FJ3161.obj",
+    "sha256": "8f0de55a4feef85c256501a8afff7bb5aa3f77f4681af4c91801da87b54db103"
+   },
+   {
+    "path": "~/Desktop/Claude/cathmath_data/bodyparts3d/obj/isa_BP3D_4.0_obj_99/FJ3163.obj",
+    "sha256": "3080ed603c54120fa5201816d77695354c81ea57275c599e68543bfb6ecb89c1"
+   },
+   {
+    "path": "~/Desktop/Claude/cathmath_data/bodyparts3d/obj/isa_BP3D_4.0_obj_99/FJ3164.obj",
+    "sha256": "a883dd5929817f87eb366a32ca9d82463fd0db40286c49b8adc9e9d1a8cecc34"
+   },
+   {
+    "path": "~/Desktop/Claude/cathmath_data/bodyparts3d/obj/isa_BP3D_4.0_obj_99/FJ3166.obj",
+    "sha256": "cbd60a450a8b2f3ee90ccc655f79a63b090d8a3abf5e6849cf288a7b2d4207f2"
+   },
+   {
+    "path": "~/Desktop/Claude/cathmath_data/bodyparts3d/obj/isa_BP3D_4.0_obj_99/FJ3167.obj",
+    "sha256": "b2485c3707b04f1fd455ee4d3a7b69670ec9c85d4ef9a54463e5c6089f1a69a7"
+   },
+   {
+    "path": "~/Desktop/Claude/cathmath_data/bodyparts3d/obj/isa_BP3D_4.0_obj_99/FJ3169.obj",
+    "sha256": "20c3b1dfed3a2ac5e631838ae924379672dac2047186711cfaa819b9a1db6e5b"
+   },
+   {
+    "path": "~/Desktop/Claude/cathmath_data/bodyparts3d/obj/isa_BP3D_4.0_obj_99/FJ3170.obj",
+    "sha256": "ac100888f7e271851c138e8d41a52168070e4fe5c63e8876a4bcfba08f3b59aa"
+   },
+   {
+    "path": "~/Desktop/Claude/cathmath_data/bodyparts3d/obj/isa_BP3D_4.0_obj_99/FJ3171.obj",
+    "sha256": "ebee2a07751de0aa0b33974eea0a9228fed9980f740c619776003d5a38c370c5"
+   },
+   {
+    "path": "~/Desktop/Claude/cathmath_data/bodyparts3d/obj/isa_BP3D_4.0_obj_99/FJ3172.obj",
+    "sha256": "43bc0a1f9b3adffd5f45256b61f75affa15b56c85b387fa733b59de310216104"
+   },
+   {
+    "path": "~/Desktop/Claude/cathmath_data/bodyparts3d/obj/isa_BP3D_4.0_obj_99/FJ3173.obj",
+    "sha256": "3b66eb6444bc7b6ced9e32eacf2518861531b1296eff0e24db41a85bfdbaff66"
+   },
+   {
+    "path": "~/Desktop/Claude/cathmath_data/bodyparts3d/obj/isa_BP3D_4.0_obj_99/FJ3174.obj",
+    "sha256": "531253894a89d60c78a5235bfba826e0c30c21003267258fe1fca244d9090c1a"
+   },
+   {
+    "path": "~/Desktop/Claude/cathmath_data/bodyparts3d/obj/isa_BP3D_4.0_obj_99/FJ3175.obj",
+    "sha256": "34bd592e9f0282eea561a680697beeac655584ca9e4db9232b013535c57e7e61"
+   },
+   {
+    "path": "~/Desktop/Claude/cathmath_data/bodyparts3d/obj/isa_BP3D_4.0_obj_99/FJ3178.obj",
+    "sha256": "ec90f03f2ce1edebc8793a9e9973229b198d6367eb5eab1dff6e238110e94d9d"
+   },
+   {
+    "path": "~/Desktop/Claude/cathmath_data/bodyparts3d/obj/isa_BP3D_4.0_obj_99/FJ3153.obj",
+    "sha256": "371573a43e28506d674bf4999ee4c50c0497014aa8d69865f450a078d493a495"
+   },
+   {
+    "path": "~/Desktop/Claude/cathmath_data/bodyparts3d/obj/isa_BP3D_4.0_obj_99/FJ3290.obj",
+    "sha256": "e94f731d044131260947146ab79fa7c4712865e1aac36a1410003358b96e0692"
+   },
+   {
+    "path": "~/Desktop/Claude/cathmath_data/bodyparts3d/obj/isa_BP3D_4.0_obj_99/FJ3239.obj",
+    "sha256": "dd8bec4169a10d30c45bfb2dc1136bfa67bc4d359457d6b815fdfbe433f5dfb6"
+   },
+   {
+    "path": "~/Desktop/Claude/cathmath_data/bodyparts3d/obj/isa_BP3D_4.0_obj_99/FJ3242.obj",
+    "sha256": "edb9924bb7c01d1b0bfbbb05333f631e30db787e24951aeb86e19ded5678ed8a"
+   },
+   {
+    "path": "~/Desktop/Claude/cathmath_data/bodyparts3d/obj/isa_BP3D_4.0_obj_99/FJ3245.obj",
+    "sha256": "50a443a62da274da125475e6fa9b0653eec26880dd0cc22344f2c6ceb2ca0f4e"
+   },
+   {
+    "path": "~/Desktop/Claude/cathmath_data/bodyparts3d/obj/isa_BP3D_4.0_obj_99/FJ3248.obj",
+    "sha256": "bb9f9646cabaa97db7beb20f90c02065ece1ea935f4b86e57b5fb2666e33f7fe"
+   },
+   {
+    "path": "~/Desktop/Claude/cathmath_data/bodyparts3d/obj/isa_BP3D_4.0_obj_99/FJ3251.obj",
+    "sha256": "153994f11ea01b550386323452501ef37f698d768c5e7189e224ec429e87fd24"
+   },
+   {
+    "path": "~/Desktop/Claude/cathmath_data/bodyparts3d/obj/isa_BP3D_4.0_obj_99/FJ3254.obj",
+    "sha256": "117248128a238182e9a2585db775ba336eb8e5172523eff26882d094400d1183"
+   },
+   {
+    "path": "~/Desktop/Claude/cathmath_data/bodyparts3d/obj/isa_BP3D_4.0_obj_99/FJ3255.obj",
+    "sha256": "bdf5071c36fa01955489b83366100e0d44cf7594a65319506fd44a8e01e08b9c"
+   },
+   {
+    "path": "~/Desktop/Claude/cathmath_data/bodyparts3d/obj/isa_BP3D_4.0_obj_99/FJ3333.obj",
+    "sha256": "3d5d3e082d8125f35f1d13ee18db57260d81b692e7a4ab22c076b17421f6d1ac"
+   },
+   {
+    "path": "~/Desktop/Claude/cathmath_data/bodyparts3d/obj/isa_BP3D_4.0_obj_99/FJ3335.obj",
+    "sha256": "75c0c3b0164c789a27f2a72872e5ce5f958b82b732606be820b68f5f8330964d"
+   },
+   {
+    "path": "~/Desktop/Claude/cathmath_data/bodyparts3d/obj/isa_BP3D_4.0_obj_99/FJ3337.obj",
+    "sha256": "0dc64f1b1e8abd86ce8c345dae47ae9f14c9e3d3addee7a9e4fb07755033fff7"
+   },
+   {
+    "path": "~/Desktop/Claude/cathmath_data/bodyparts3d/obj/isa_BP3D_4.0_obj_99/FJ3339.obj",
+    "sha256": "8b023d2e8ff32ef995b6f4e3db2423787a8255fc994c5260b663b2145290d4c2"
+   },
+   {
+    "path": "~/Desktop/Claude/cathmath_data/bodyparts3d/obj/isa_BP3D_4.0_obj_99/FJ3341.obj",
+    "sha256": "78e34af57195fbade25925e556c858629c67e31213b75778252a4b000cc620d7"
+   },
+   {
+    "path": "~/Desktop/Claude/cathmath_data/bodyparts3d/obj/isa_BP3D_4.0_obj_99/FJ3343.obj",
+    "sha256": "22079c9ebfef0aafd27a366416e3e4a1a4c190a25ea5c6beac844eda78cbb42d"
+   },
+   {
+    "path": "~/Desktop/Claude/cathmath_data/bodyparts3d/obj/isa_BP3D_4.0_obj_99/FJ3345.obj",
+    "sha256": "0bce64747fc720452920d6aa9061cba35430e31074ca35c655a310466a3c30a7"
+   },
+   {
+    "path": "~/Desktop/Claude/cathmath_data/bodyparts3d/obj/isa_BP3D_4.0_obj_99/FJ3237.obj",
+    "sha256": "2491009d53eaed99ccb2a802b29402eec715eb8d207fb819fad67b0720195cf2"
+   },
+   {
+    "path": "~/Desktop/Claude/cathmath_data/bodyparts3d/obj/isa_BP3D_4.0_obj_99/FJ3362.obj",
+    "sha256": "9a111cac8351e79dd1315aea90108fe56f78e4bf0159473e6ad727ba91b60e6d"
+   },
+   {
+    "path": "~/Desktop/Claude/cathmath_data/bodyparts3d/obj/isa_BP3D_4.0_obj_99/FJ3131.obj",
+    "sha256": "db97e5f8f8d46928ea54b42fb50789e8f5523ef973cc744b2c2f17930fc33dc8"
+   }
+  ],
+  "script": "build_heart.py",
+  "sha256": "ca6c0da09927566cfee53bf92a82d1f6eccecef1b74e10c012e6d163f68e9a7c"
+ },
+ "thorax.glb": {
+  "bytes": 724628,
+  "inputs": [
+   {
+    "path": "~/Desktop/Claude/cathmath_data/bodyparts3d/obj/isa_BP3D_4.0_obj_99/FJ3225.obj",
+    "sha256": "40680b5a3556b5984a5006e01649ff20cb4c88d9d3a7fef79cbad0648a972d54"
+   },
+   {
+    "path": "~/Desktop/Claude/cathmath_data/bodyparts3d/obj/isa_BP3D_4.0_obj_99/FJ3226.obj",
+    "sha256": "24a27d42732af55ad1e7142179f2dd4f906de78b701fbe5c459d8884a026f250"
+   },
+   {
+    "path": "~/Desktop/Claude/cathmath_data/bodyparts3d/obj/isa_BP3D_4.0_obj_99/FJ3227.obj",
+    "sha256": "3b7e5d6673a1be5bc14d72a4ea659d361b143f3fda5bca3ec758c176daba16c5"
+   },
+   {
+    "path": "~/Desktop/Claude/cathmath_data/bodyparts3d/obj/isa_BP3D_4.0_obj_99/FJ3228.obj",
+    "sha256": "803a7134c1e69f640b87f9c6c4a846c869379446e771a1a7c9d18914c331a603"
+   },
+   {
+    "path": "~/Desktop/Claude/cathmath_data/bodyparts3d/obj/isa_BP3D_4.0_obj_99/FJ3229.obj",
+    "sha256": "631b4f63625fa6cc89ad83961b2156abe5878d1baf4a8cb2b2acbaa06bc97f58"
+   },
+   {
+    "path": "~/Desktop/Claude/cathmath_data/bodyparts3d/obj/isa_BP3D_4.0_obj_99/FJ3230.obj",
+    "sha256": "8c097e93d79c610bed49d6c027d25c8439447c20bfb94fa64009b9c4db4d8f5b"
+   },
+   {
+    "path": "~/Desktop/Claude/cathmath_data/bodyparts3d/obj/isa_BP3D_4.0_obj_99/FJ3231.obj",
+    "sha256": "c1259fcdaf463bdecfc0868a3acc964edd4901ab03eb539b28e40462671be1fb"
+   },
+   {
+    "path": "~/Desktop/Claude/cathmath_data/bodyparts3d/obj/isa_BP3D_4.0_obj_99/FJ3232.obj",
+    "sha256": "c40bbcd5c2b98bb94161819a2cf824296289ce68eb62b37f3b175af4aadfd351"
+   },
+   {
+    "path": "~/Desktop/Claude/cathmath_data/bodyparts3d/obj/isa_BP3D_4.0_obj_99/FJ3233.obj",
+    "sha256": "8160b28fd649aadd705a05cc3e6e9cfd7035c44d8258b5a50977ec89fe8e7414"
+   },
+   {
+    "path": "~/Desktop/Claude/cathmath_data/bodyparts3d/obj/isa_BP3D_4.0_obj_99/FJ3234.obj",
+    "sha256": "372c650b2b7bc3f6767aa50a0f5b7e5dac6a15a17aeea5f5017166ba5d328757"
+   },
+   {
+    "path": "~/Desktop/Claude/cathmath_data/bodyparts3d/obj/isa_BP3D_4.0_obj_99/FJ3235.obj",
+    "sha256": "7d9525200958a9545391a2e135649580282108d77f7ae88a34003a56f48f4c8b"
+   },
+   {
+    "path": "~/Desktop/Claude/cathmath_data/bodyparts3d/obj/isa_BP3D_4.0_obj_99/FJ3236.obj",
+    "sha256": "ec09e201beaaa70c24a41eedcef4671118b453361f827be02fb73fc361208db8"
+   },
+   {
+    "path": "~/Desktop/Claude/cathmath_data/bodyparts3d/obj/isa_BP3D_4.0_obj_99/FJ3330.obj",
+    "sha256": "9e62a17a2ea9dc16797beec97bd0925c9692c2a4764391cbc1e289b0120e7aa4"
+   },
+   {
+    "path": "~/Desktop/Claude/cathmath_data/bodyparts3d/obj/isa_BP3D_4.0_obj_99/FJ3331.obj",
+    "sha256": "1fdce776ea65919bf9aa418ec91c872b3eb835daca57dc69a7caa40bb02707d7"
+   },
+   {
+    "path": "~/Desktop/Claude/cathmath_data/bodyparts3d/obj/isa_BP3D_4.0_obj_99/FJ3332.obj",
+    "sha256": "50dd4dac4ebb45fa245d700f7ceac89edd7503cb4caab154b644b0a808da2ecc"
+   },
+   {
+    "path": "~/Desktop/Claude/cathmath_data/bodyparts3d/obj/isa_BP3D_4.0_obj_99/FJ3334.obj",
+    "sha256": "3831c5c578d45fc491e7e72417cc436e04a1a3a1916138e51528ad0b0b212a54"
+   },
+   {
+    "path": "~/Desktop/Claude/cathmath_data/bodyparts3d/obj/isa_BP3D_4.0_obj_99/FJ3336.obj",
+    "sha256": "57084a626a91aa88782f2e836c75450cd90bf19717dfd3f31602b4c674b70c0c"
+   },
+   {
+    "path": "~/Desktop/Claude/cathmath_data/bodyparts3d/obj/isa_BP3D_4.0_obj_99/FJ3338.obj",
+    "sha256": "b239419743f7320b8b1d4f4d96ab41c1ff7fccdc921fa3a99c700a9d6dbd2a6c"
+   },
+   {
+    "path": "~/Desktop/Claude/cathmath_data/bodyparts3d/obj/isa_BP3D_4.0_obj_99/FJ3340.obj",
+    "sha256": "ffca17251de4f457c4952e9d913070eb7a6f767493925ac3d8c3c744941b5dbd"
+   },
+   {
+    "path": "~/Desktop/Claude/cathmath_data/bodyparts3d/obj/isa_BP3D_4.0_obj_99/FJ3342.obj",
+    "sha256": "b2d1f3bc9478c51524628f4e79524290add55800ae85b06ff657f17f4c0c6f1f"
+   },
+   {
+    "path": "~/Desktop/Claude/cathmath_data/bodyparts3d/obj/isa_BP3D_4.0_obj_99/FJ3344.obj",
+    "sha256": "5e45ea5a527d3b7df56c508213020265ed1c8a0d9a99f31454b92059f4f1a95f"
+   },
+   {
+    "path": "~/Desktop/Claude/cathmath_data/bodyparts3d/obj/isa_BP3D_4.0_obj_99/FJ3346.obj",
+    "sha256": "86cc62c1a0a754f2e01a30b5d7179c745f3c2404ef4031ae43568667c4041996"
+   },
+   {
+    "path": "~/Desktop/Claude/cathmath_data/bodyparts3d/obj/isa_BP3D_4.0_obj_99/FJ3347.obj",
+    "sha256": "388e8f3dd5c308fe1454daed2aa3a2fced280d4ec60f97b547b476ca6b0da930"
+   },
+   {
+    "path": "~/Desktop/Claude/cathmath_data/bodyparts3d/obj/isa_BP3D_4.0_obj_99/FJ3348.obj",
+    "sha256": "4ef4af4eb8a7ea76479b2d4a1b2973c7d950f6e3aa5593eca4377258222bdaf6"
+   },
+   {
+    "path": "~/Desktop/Claude/cathmath_data/bodyparts3d/obj/isa_BP3D_4.0_obj_99/FJ3154.obj",
+    "sha256": "abf073c0206696c3baa5cb389831b28a6ce2c6770091065e834b8e4ef50676b1"
+   },
+   {
+    "path": "~/Desktop/Claude/cathmath_data/bodyparts3d/obj/isa_BP3D_4.0_obj_99/FJ3155.obj",
+    "sha256": "1f9c9f6dfcd5585e09abc2cf9a8f54ba1c33df399c6d4dad1a92301d85cd88b3"
+   },
+   {
+    "path": "~/Desktop/Claude/cathmath_data/bodyparts3d/obj/isa_BP3D_4.0_obj_99/FJ3156.obj",
+    "sha256": "ffeebd0dead6ed95395e35c0843888b079acf67543e2820437e99978c69642a0"
+   },
+   {
+    "path": "~/Desktop/Claude/cathmath_data/bodyparts3d/obj/isa_BP3D_4.0_obj_99/FJ3157.obj",
+    "sha256": "67940f16382935851ebeb7a86c926dbf922070f390c438fdbbb56f7b7fb76057"
+   },
+   {
+    "path": "~/Desktop/Claude/cathmath_data/bodyparts3d/obj/isa_BP3D_4.0_obj_99/FJ3158.obj",
+    "sha256": "aa69c48def3434d6a3e1c56fc78af45f01545931fde5422af17d5f98ce9ed8a3"
+   },
+   {
+    "path": "~/Desktop/Claude/cathmath_data/bodyparts3d/obj/isa_BP3D_4.0_obj_99/FJ3159.obj",
+    "sha256": "5e6301d2020ba73167e71c274848ddcbec0f7936d9f26a78f2de8ffa82f095c7"
+   },
+   {
+    "path": "~/Desktop/Claude/cathmath_data/bodyparts3d/obj/isa_BP3D_4.0_obj_99/FJ3160.obj",
+    "sha256": "20c1322be138314f42bbd1be3e69f3f6b590bbca7a8a3cd3414476f207721300"
+   },
+   {
+    "path": "~/Desktop/Claude/cathmath_data/bodyparts3d/obj/isa_BP3D_4.0_obj_99/FJ3161.obj",
+    "sha256": "8f0de55a4feef85c256501a8afff7bb5aa3f77f4681af4c91801da87b54db103"
+   },
+   {
+    "path": "~/Desktop/Claude/cathmath_data/bodyparts3d/obj/isa_BP3D_4.0_obj_99/FJ3163.obj",
+    "sha256": "3080ed603c54120fa5201816d77695354c81ea57275c599e68543bfb6ecb89c1"
+   },
+   {
+    "path": "~/Desktop/Claude/cathmath_data/bodyparts3d/obj/isa_BP3D_4.0_obj_99/FJ3164.obj",
+    "sha256": "a883dd5929817f87eb366a32ca9d82463fd0db40286c49b8adc9e9d1a8cecc34"
+   },
+   {
+    "path": "~/Desktop/Claude/cathmath_data/bodyparts3d/obj/isa_BP3D_4.0_obj_99/FJ3166.obj",
+    "sha256": "cbd60a450a8b2f3ee90ccc655f79a63b090d8a3abf5e6849cf288a7b2d4207f2"
+   },
+   {
+    "path": "~/Desktop/Claude/cathmath_data/bodyparts3d/obj/isa_BP3D_4.0_obj_99/FJ3167.obj",
+    "sha256": "b2485c3707b04f1fd455ee4d3a7b69670ec9c85d4ef9a54463e5c6089f1a69a7"
+   },
+   {
+    "path": "~/Desktop/Claude/cathmath_data/bodyparts3d/obj/isa_BP3D_4.0_obj_99/FJ3169.obj",
+    "sha256": "20c3b1dfed3a2ac5e631838ae924379672dac2047186711cfaa819b9a1db6e5b"
+   },
+   {
+    "path": "~/Desktop/Claude/cathmath_data/bodyparts3d/obj/isa_BP3D_4.0_obj_99/FJ3170.obj",
+    "sha256": "ac100888f7e271851c138e8d41a52168070e4fe5c63e8876a4bcfba08f3b59aa"
+   },
+   {
+    "path": "~/Desktop/Claude/cathmath_data/bodyparts3d/obj/isa_BP3D_4.0_obj_99/FJ3171.obj",
+    "sha256": "ebee2a07751de0aa0b33974eea0a9228fed9980f740c619776003d5a38c370c5"
+   },
+   {
+    "path": "~/Desktop/Claude/cathmath_data/bodyparts3d/obj/isa_BP3D_4.0_obj_99/FJ3172.obj",
+    "sha256": "43bc0a1f9b3adffd5f45256b61f75affa15b56c85b387fa733b59de310216104"
+   },
+   {
+    "path": "~/Desktop/Claude/cathmath_data/bodyparts3d/obj/isa_BP3D_4.0_obj_99/FJ3173.obj",
+    "sha256": "3b66eb6444bc7b6ced9e32eacf2518861531b1296eff0e24db41a85bfdbaff66"
+   },
+   {
+    "path": "~/Desktop/Claude/cathmath_data/bodyparts3d/obj/isa_BP3D_4.0_obj_99/FJ3174.obj",
+    "sha256": "531253894a89d60c78a5235bfba826e0c30c21003267258fe1fca244d9090c1a"
+   },
+   {
+    "path": "~/Desktop/Claude/cathmath_data/bodyparts3d/obj/isa_BP3D_4.0_obj_99/FJ3175.obj",
+    "sha256": "34bd592e9f0282eea561a680697beeac655584ca9e4db9232b013535c57e7e61"
+   },
+   {
+    "path": "~/Desktop/Claude/cathmath_data/bodyparts3d/obj/isa_BP3D_4.0_obj_99/FJ3178.obj",
+    "sha256": "ec90f03f2ce1edebc8793a9e9973229b198d6367eb5eab1dff6e238110e94d9d"
+   },
+   {
+    "path": "~/Desktop/Claude/cathmath_data/bodyparts3d/obj/isa_BP3D_4.0_obj_99/FJ3153.obj",
+    "sha256": "371573a43e28506d674bf4999ee4c50c0497014aa8d69865f450a078d493a495"
+   },
+   {
+    "path": "~/Desktop/Claude/cathmath_data/bodyparts3d/obj/isa_BP3D_4.0_obj_99/FJ3290.obj",
+    "sha256": "e94f731d044131260947146ab79fa7c4712865e1aac36a1410003358b96e0692"
+   },
+   {
+    "path": "~/Desktop/Claude/cathmath_data/bodyparts3d/obj/isa_BP3D_4.0_obj_99/FJ3239.obj",
+    "sha256": "dd8bec4169a10d30c45bfb2dc1136bfa67bc4d359457d6b815fdfbe433f5dfb6"
+   },
+   {
+    "path": "~/Desktop/Claude/cathmath_data/bodyparts3d/obj/isa_BP3D_4.0_obj_99/FJ3242.obj",
+    "sha256": "edb9924bb7c01d1b0bfbbb05333f631e30db787e24951aeb86e19ded5678ed8a"
+   },
+   {
+    "path": "~/Desktop/Claude/cathmath_data/bodyparts3d/obj/isa_BP3D_4.0_obj_99/FJ3245.obj",
+    "sha256": "50a443a62da274da125475e6fa9b0653eec26880dd0cc22344f2c6ceb2ca0f4e"
+   },
+   {
+    "path": "~/Desktop/Claude/cathmath_data/bodyparts3d/obj/isa_BP3D_4.0_obj_99/FJ3248.obj",
+    "sha256": "bb9f9646cabaa97db7beb20f90c02065ece1ea935f4b86e57b5fb2666e33f7fe"
+   },
+   {
+    "path": "~/Desktop/Claude/cathmath_data/bodyparts3d/obj/isa_BP3D_4.0_obj_99/FJ3251.obj",
+    "sha256": "153994f11ea01b550386323452501ef37f698d768c5e7189e224ec429e87fd24"
+   },
+   {
+    "path": "~/Desktop/Claude/cathmath_data/bodyparts3d/obj/isa_BP3D_4.0_obj_99/FJ3254.obj",
+    "sha256": "117248128a238182e9a2585db775ba336eb8e5172523eff26882d094400d1183"
+   },
+   {
+    "path": "~/Desktop/Claude/cathmath_data/bodyparts3d/obj/isa_BP3D_4.0_obj_99/FJ3255.obj",
+    "sha256": "bdf5071c36fa01955489b83366100e0d44cf7594a65319506fd44a8e01e08b9c"
+   },
+   {
+    "path": "~/Desktop/Claude/cathmath_data/bodyparts3d/obj/isa_BP3D_4.0_obj_99/FJ3333.obj",
+    "sha256": "3d5d3e082d8125f35f1d13ee18db57260d81b692e7a4ab22c076b17421f6d1ac"
+   },
+   {
+    "path": "~/Desktop/Claude/cathmath_data/bodyparts3d/obj/isa_BP3D_4.0_obj_99/FJ3335.obj",
+    "sha256": "75c0c3b0164c789a27f2a72872e5ce5f958b82b732606be820b68f5f8330964d"
+   },
+   {
+    "path": "~/Desktop/Claude/cathmath_data/bodyparts3d/obj/isa_BP3D_4.0_obj_99/FJ3337.obj",
+    "sha256": "0dc64f1b1e8abd86ce8c345dae47ae9f14c9e3d3addee7a9e4fb07755033fff7"
+   },
+   {
+    "path": "~/Desktop/Claude/cathmath_data/bodyparts3d/obj/isa_BP3D_4.0_obj_99/FJ3339.obj",
+    "sha256": "8b023d2e8ff32ef995b6f4e3db2423787a8255fc994c5260b663b2145290d4c2"
+   },
+   {
+    "path": "~/Desktop/Claude/cathmath_data/bodyparts3d/obj/isa_BP3D_4.0_obj_99/FJ3341.obj",
+    "sha256": "78e34af57195fbade25925e556c858629c67e31213b75778252a4b000cc620d7"
+   },
+   {
+    "path": "~/Desktop/Claude/cathmath_data/bodyparts3d/obj/isa_BP3D_4.0_obj_99/FJ3343.obj",
+    "sha256": "22079c9ebfef0aafd27a366416e3e4a1a4c190a25ea5c6beac844eda78cbb42d"
+   },
+   {
+    "path": "~/Desktop/Claude/cathmath_data/bodyparts3d/obj/isa_BP3D_4.0_obj_99/FJ3345.obj",
+    "sha256": "0bce64747fc720452920d6aa9061cba35430e31074ca35c655a310466a3c30a7"
+   },
+   {
+    "path": "~/Desktop/Claude/cathmath_data/bodyparts3d/obj/isa_BP3D_4.0_obj_99/FJ3237.obj",
+    "sha256": "2491009d53eaed99ccb2a802b29402eec715eb8d207fb819fad67b0720195cf2"
+   },
+   {
+    "path": "~/Desktop/Claude/cathmath_data/bodyparts3d/obj/isa_BP3D_4.0_obj_99/FJ3362.obj",
+    "sha256": "9a111cac8351e79dd1315aea90108fe56f78e4bf0159473e6ad727ba91b60e6d"
+   },
+   {
+    "path": "~/Desktop/Claude/cathmath_data/bodyparts3d/obj/isa_BP3D_4.0_obj_99/FJ3131.obj",
+    "sha256": "db97e5f8f8d46928ea54b42fb50789e8f5523ef973cc744b2c2f17930fc33dc8"
+   }
+  ],
+  "script": "build_heart.py",
+  "sha256": "79586ee77e7d4cc022dd86bfc77c923db3a3b8b37b5b31b1c7e1f8f6d8c6546b"
+ },
+ "views.json": {
+  "bytes": 40693,
+  "inputs": [
+   {
+    "path": "~/Desktop/Claude/cathmath/plans/angio_revamp/views_verified.json",
+    "sha256": "4b1441023b86f7c7818e23a71a31509c6d0d23cad3917094eea04178d8910749"
+   }
+  ],
+  "script": "build_views.py",
+  "sha256": "ab5c8e5260f27a91406ce0b2d485163a81bc78a58ec35e40d1a2a2a401d5e908"
+ }
+}

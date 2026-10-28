@@ -1,0 +1,1 @@
+{"_provenance":{"sources":["bodyparts3d_4.0"]},"axes":[[1.0,0.0,0.0],[0.0,1.0,0.0],[0.0,0.0,1.0]],"center_bp3d":[27.4059,-132.8768,1224.3823],"frame":"DICOM LPS (+x patient-left, +y posterior, +z head)","landmarks":{"aortic_root_base":[-10.3429,14.2795,8.8682],"lv_apex":[35.5178,-19.8852,-34.5123],"mitral_centre":[-3.5382,16.5188,23.9291]},"units":"mm"}

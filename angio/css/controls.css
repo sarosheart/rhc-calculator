@@ -1,0 +1,52 @@
+/* C-arm controls (ui-controls.js). Colours come from the page's custom properties, with dark defaults. */
+/* site design tokens when present (theme-aware), dark defaults otherwise; the accent is the angio amber in both themes */
+#controls, .angio-sys, .anatomy, .viewer-switch, .room-tools { --c-fg: var(--text-hi, #e6edf5); --c-dim: var(--text-dim, #8fa3b8); --c-line: var(--border, #2a3a50);
+  --c-acc: var(--angio-acc, #f0a63a); --c-bg2: var(--panel-bg, #111c2e); color: var(--c-fg); font: 14px/1.35 system-ui, -apple-system, sans-serif; }
+#controls .ctl-angles { display: grid; grid-template-columns: 1fr auto; gap: 14px 22px; align-items: start; }
+#controls .ctl-ang { display: grid; justify-items: center; }
+#controls .ang-end { font-size: 11px; color: var(--c-dim); letter-spacing: .05em; margin: 2px 0; }
+#controls .readout-k { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: .06em; color: var(--c-dim); }
+#controls .readout-row { display: flex; align-items: baseline; gap: 10px; margin-bottom: 6px; }
+/* beside the ruler the angulation column stays narrow: readout over its input */
+#controls .ctl-ang .readout-row { flex-direction: column; align-items: center; gap: 4px; }
+#controls .ctl-ang .angle-input { width: 5.6em; }
+#controls .readout { white-space: nowrap; font-size: 26px; font-weight: 650; letter-spacing: .01em; font-variant-numeric: tabular-nums; min-width: 5.4em; }
+#controls .ctl-ang .readout { font-size: 18px; min-width: 0; }
+#controls .angle-input { width: 6.5em; padding: 5px 7px; font: inherit; color: var(--c-fg); background: var(--c-bg2);
+  border: 1px solid var(--c-line); border-radius: 6px; }
+#controls .angle-input[aria-invalid="true"] { border-color: #e5484d; }
+#controls .scale-track { position: relative; touch-action: none; user-select: none; -webkit-user-select: none; cursor: pointer;
+  background: var(--c-bg2); border: 1px solid var(--c-line); border-radius: 8px; outline-offset: 2px; }
+#controls .scale-track:focus-visible { outline: 2px solid var(--c-acc); }
+#controls .ctl-rot .scale-track { height: 56px; }
+#controls .ctl-ang .scale-track { width: 64px; height: 132px; }
+#controls .scale-ticks { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; }
+#controls .tick { stroke: var(--c-dim); stroke-width: 1; }
+#controls .tick.big { stroke: var(--c-fg); stroke-width: 1.5; }
+#controls .tick-label { fill: var(--c-dim); font-size: 11px; }
+#controls .scale-thumb { position: absolute; pointer-events: none; background: var(--c-acc); border-radius: 2px; }
+#controls .ctl-rot .scale-thumb { top: 0; bottom: 0; width: 3px; transform: translateX(-50%); }
+#controls .ctl-ang .scale-thumb { left: 0; right: 0; height: 3px; transform: translateY(-50%); }
+.ctl-sys { display: inline-flex; margin: 14px 0 4px; border: 1px solid var(--c-line); border-radius: 8px; overflow: hidden; }
+.ctl-sys .seg { font: inherit; color: var(--c-fg); background: transparent; border: 0; padding: 7px 16px; cursor: pointer; min-height: 36px; }
+.ctl-sys .seg + .seg { border-left: 1px solid var(--c-line); }
+.ctl-sys .seg[aria-pressed="true"] { background: var(--c-acc); color: #111; font-weight: 600; }
+#controls .view-group h3 { font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: .06em; color: var(--c-dim); margin: 14px 0 6px; }
+#controls .view-cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(132px, 1fr)); gap: 6px; }
+#controls .view-card { display: flex; flex-direction: column; align-items: flex-start; gap: 2px; text-align: left; font: inherit;
+  color: var(--c-fg); background: var(--c-bg2); border: 1px solid var(--c-line); border-radius: 8px; padding: 7px 9px; cursor: pointer; min-height: 44px; }
+#controls .view-card .vc-angle { color: var(--c-dim); font-size: 12px; font-variant-numeric: tabular-nums; }
+#controls .view-card[aria-pressed="true"] { border-color: var(--c-acc); box-shadow: inset 0 0 0 1px var(--c-acc); }
+#controls .view-card:focus-visible, .ctl-sys .seg:focus-visible, #controls .angle-input:focus-visible { outline: 2px solid var(--c-acc); outline-offset: 1px; }
+/* phone: angulation becomes a horizontal bar under the ruler (the scale reads its own orientation from its box) */
+@media (max-width: 720px) {
+  #controls .ctl-angles { grid-template-columns: 1fr; }
+  #controls .ctl-ang { justify-items: stretch; }
+  #controls .ctl-ang .readout-row { flex-direction: row; align-items: baseline; gap: 10px; }
+  #controls .ctl-ang .angle-input { width: 6.5em; }
+  #controls .readout-k { margin-top: 2px; }
+  #controls .ang-end { display: none; }
+  #controls .ctl-ang .scale-track { width: auto; height: 48px; }
+  #controls .ctl-ang .scale-thumb { top: 0; bottom: 0; left: auto; right: auto; width: 3px; height: auto; transform: translateX(-50%); }
+  #controls .readout { font-size: 22px; }
+}
