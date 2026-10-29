@@ -6945,7 +6945,7 @@ if (typeof document !== 'undefined' && document.addEventListener) {
 // Edit those two files, then run: node scripts/sync-shared.mjs --write
 // CathMath "Test yourself" card — one board-style question matched to this tool, from CardioQFlow.
 // The questions are inlined at build time (shared/test-yourself.json, by scripts/sync-shared.mjs),
-// so the card needs no network: the only outbound traffic is a click on one of its two links.
+// so the card needs no network: the only outbound traffic is a click on its trial link.
 //
 // Colours come from the page's own theme variables (--card-bg exists in both families: the token
 // pages, dark by default with body.light, and ekg/pvloop, light by default with body.dark).
@@ -6958,7 +6958,6 @@ if (typeof document !== 'undefined' && document.addEventListener) {
   var QS = [{"id":"hf-acute-009","stem":"A 62-year-old man with cardiogenic shock from acute anterior STEMI (LVEF 20% on echo, CI 1.8 L/min/m²) has persistent hypotension (MAP 58) after fluid and low-dose dopamine 10 mcg/kg/min. Arrhythmia burden is increasing with frequent PVCs and runs of non-sustained VT.\nWhat is the most appropriate vasopressor strategy?","choices":[{"letter":"A","text":"Continue high-dose dopamine and add dobutamine for inotropy."},{"letter":"B","text":"Switch to phenylephrine to avoid β1-mediated arrhythmia."},{"letter":"C","text":"Transition to norepinephrine as first-line pressor in cardiogenic shock."},{"letter":"D","text":"Add low-dose vasopressin 0.04 U/min to dopamine to reduce catecholamine burden."},{"letter":"E","text":"Initiate milrinone bolus plus norepinephrine for combined inodilation."}],"answer":"C","keyPoint":"Norepinephrine is the first-line vasopressor in cardiogenic shock per SOAP-II; dopamine in this setting drives more tachyarrhythmia and higher mortality."},{"id":"hf-acute-010","stem":"A 64-year-old man with chronic HFrEF (LVEF 18%) presents with cold-wet ADHF. BP 100/62, CI 1.6 L/min/m², PCWP 28 mmHg, PVR elevated. He has been on chronic carvedilol at home. Creatinine 1.4 mg/dL (baseline 1.3).\nWhich inotrope is likely MORE appropriate given his chronic beta-blocker use, and what is the mechanistic reasoning?","choices":[{"letter":"A","text":"Dobutamine titrated to 10–15 mcg/kg/min to overcome β-receptor blockade."},{"letter":"B","text":"Norepinephrine plus low-dose epinephrine for MAP and inotropy."},{"letter":"C","text":"Isoproterenol as pure β1/β2 agonist to outcompete chronic carvedilol."},{"letter":"D","text":"Milrinone IV infusion to bypass β-blockade via PDE3 inhibition."},{"letter":"E","text":"Levosimendan IV infusion as calcium-sensitizing inodilator."}],"answer":"D","keyPoint":"Milrinone preferred over dobutamine in chronic beta-blockade (acts downstream of β-receptor) and with elevated PVR (pulmonary vasodilator)."}];
   var UTM = 'utm_source=cathmath&utm_medium=test_yourself&utm_campaign=' + TOOL;
   var TRIAL = 'https://cardioqflow.com/join?trial&' + UTM;
-  var GUIDE = 'https://cardioqflow.com/?' + UTM + '#guide';
 
   function track(action, target) {
     try { if (typeof cmTrack === 'function') cmTrack('tool_action', { action: action, target: target }); } catch (e) { /* never break a tool */ }
@@ -7049,11 +7048,7 @@ if (typeof document !== 'undefined' && document.addEventListener) {
         var a1 = el('a', null, 'More questions like this: free 7-day trial');
         a1.href = TRIAL; a1.target = '_blank'; a1.rel = 'noopener';
         a1.addEventListener('click', function () { track('ty_click', 'trial'); });
-        var a2 = el('a', null, 'Free PDF: 2025–26 guideline updates');
-        a2.href = GUIDE; a2.target = '_blank'; a2.rel = 'noopener';
-        a2.addEventListener('click', function () { track('ty_click', 'guide'); });
         cta.appendChild(a1);
-        cta.appendChild(a2);
         result.appendChild(cta);
         track(right ? 'ty_correct' : 'ty_incorrect', q.id);
       }

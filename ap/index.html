@@ -3111,7 +3111,7 @@ kick();
 // Edit those two files, then run: node scripts/sync-shared.mjs --write
 // CathMath "Test yourself" card — one board-style question matched to this tool, from CardioQFlow.
 // The questions are inlined at build time (shared/test-yourself.json, by scripts/sync-shared.mjs),
-// so the card needs no network: the only outbound traffic is a click on one of its two links.
+// so the card needs no network: the only outbound traffic is a click on its trial link.
 //
 // Colours come from the page's own theme variables (--card-bg exists in both families: the token
 // pages, dark by default with body.light, and ekg/pvloop, light by default with body.dark).
@@ -3124,7 +3124,6 @@ kick();
   var QS = [{"id":"arr-pharm-010","stem":"A 58-year-old man with paroxysmal atrial fibrillation is well-controlled on sotalol. He develops chronic pain and is referred to a pain specialist who considers starting methadone for long-term management. A consult is requested to clarify whether sotalol and methadone can be safely combined.\nWhich is the most appropriate response?","choices":[{"letter":"A","text":"Methadone blocks IKr, compounding sotalol QT effect."},{"letter":"B","text":"Combination is safe; methadone is not cardiac."},{"letter":"C","text":"Substitute hydromorphone if a pure-opioid alternative is needed."},{"letter":"D","text":"Methadone is safe if QTc remains under 500 ms on ECG monitoring."},{"letter":"E","text":"Discontinue sotalol and rely on methadone-induced beta-blockade."}],"answer":"A","keyPoint":"Methadone is a potent IKr (hERG) blocker; combining it with class IA/III antiarrhythmics (sotalol, dofetilide, quinidine) markedly raises torsades risk, so substitute a lower-risk opioid such as buprenorphine, morphine, hydromorphone, oxycodone, or fentanyl."},{"id":"arr-pharm-017","stem":"A 77-year-old man on long-term amiodarone for AF rhythm control has a resting QTc of 520 ms (baseline 420 ms). He is asymptomatic. His family physician is concerned about torsades de pointes and wants to discontinue the drug.\nWhich best explains the apparent paradox of marked QT prolongation without significant TdP risk on amiodarone?","choices":[{"letter":"A","text":"QTc unreliable in AF."},{"letter":"B","text":"Long half-life causes delayed TdP."},{"letter":"C","text":"Balanced IKr and IKs blockade."},{"letter":"D","text":"U-shaped dose-response."},{"letter":"E","text":"Long half-life mandates urgent discontinuation."}],"answer":"C","keyPoint":"Amiodarone has a torsades rate under 1% despite marked QT prolongation because its balanced IKr + IKs blockade produces homogeneous repolarization, in contrast to pure-IKr blockers (sotalol, dofetilide) that generate the transmural dispersion that drives torsades."}];
   var UTM = 'utm_source=cathmath&utm_medium=test_yourself&utm_campaign=' + TOOL;
   var TRIAL = 'https://cardioqflow.com/join?trial&' + UTM;
-  var GUIDE = 'https://cardioqflow.com/?' + UTM + '#guide';
 
   function track(action, target) {
     try { if (typeof cmTrack === 'function') cmTrack('tool_action', { action: action, target: target }); } catch (e) { /* never break a tool */ }
@@ -3215,11 +3214,7 @@ kick();
         var a1 = el('a', null, 'More questions like this: free 7-day trial');
         a1.href = TRIAL; a1.target = '_blank'; a1.rel = 'noopener';
         a1.addEventListener('click', function () { track('ty_click', 'trial'); });
-        var a2 = el('a', null, 'Free PDF: 2025–26 guideline updates');
-        a2.href = GUIDE; a2.target = '_blank'; a2.rel = 'noopener';
-        a2.addEventListener('click', function () { track('ty_click', 'guide'); });
         cta.appendChild(a1);
-        cta.appendChild(a2);
         result.appendChild(cta);
         track(right ? 'ty_correct' : 'ty_incorrect', q.id);
       }

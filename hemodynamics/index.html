@@ -4005,7 +4005,7 @@ setTimeout(() => document.getElementById('resizeHandle').classList.remove('pulse
 // Edit those two files, then run: node scripts/sync-shared.mjs --write
 // CathMath "Test yourself" card — one board-style question matched to this tool, from CardioQFlow.
 // The questions are inlined at build time (shared/test-yourself.json, by scripts/sync-shared.mjs),
-// so the card needs no network: the only outbound traffic is a click on one of its two links.
+// so the card needs no network: the only outbound traffic is a click on its trial link.
 //
 // Colours come from the page's own theme variables (--card-bg exists in both families: the token
 // pages, dark by default with body.light, and ekg/pvloop, light by default with body.dark).
@@ -4018,7 +4018,6 @@ setTimeout(() => document.getElementById('resizeHandle').classList.remove('pulse
   var QS = [{"id":"vhd-hemo-003","stem":"A 68-year-old woman with severe acute MR from posterior papillary muscle rupture (post-inferior MI) undergoes PA catheterization. Which hemodynamic finding is MOST characteristic of acute severe mitral regurgitation?","choices":[{"letter":"A","text":"Low PCWP with absent V waves."},{"letter":"B","text":"Giant V wave on PCWP tracing."},{"letter":"C","text":"Prominent C wave from transmitted TR."},{"letter":"D","text":"Square-root sign on RV pressure tracing."},{"letter":"E","text":"Dicrotic notch on PA tracing."}],"answer":"B","keyPoint":"Acute severe MR produces a giant V wave on PCWP because the small, non-compliant LA cannot accommodate sudden regurgitant volume."},{"id":"cad-complications-006","stem":"A 72-year-old man presents with inferior STEMI. ECG: ST-elevation II, III, aVF. He is taken to the cath lab where proximal RCA is the culprit lesion. Post-PCI, in the CCU, his HR is 120 bpm, BP 80/50, RR 18. Physical exam: JVP elevated at 13 cm, lungs clear bilaterally, prominent Y descent.\nWhat is the best initial management?","choices":[{"letter":"A","text":"Give IV furosemide 40 mg to reduce preload"},{"letter":"B","text":"Give IV fluids cautiously and add low-dose inotrope if needed"},{"letter":"C","text":"Perform emergent pericardiocentesis for tamponade"},{"letter":"D","text":"Start high-dose dobutamine as the first intervention"},{"letter":"E","text":"Initiate continuous intravenous nitroglycerin for chest discomfort"}],"answer":"B","keyPoint":"RV infarction (hypotension, clear lungs, elevated JVP, prominent Y descent) is treated with IV volume and low-dose inotrope; nitrates and diuretics are contraindicated."}];
   var UTM = 'utm_source=cathmath&utm_medium=test_yourself&utm_campaign=' + TOOL;
   var TRIAL = 'https://cardioqflow.com/join?trial&' + UTM;
-  var GUIDE = 'https://cardioqflow.com/?' + UTM + '#guide';
 
   function track(action, target) {
     try { if (typeof cmTrack === 'function') cmTrack('tool_action', { action: action, target: target }); } catch (e) { /* never break a tool */ }
@@ -4109,11 +4108,7 @@ setTimeout(() => document.getElementById('resizeHandle').classList.remove('pulse
         var a1 = el('a', null, 'More questions like this: free 7-day trial');
         a1.href = TRIAL; a1.target = '_blank'; a1.rel = 'noopener';
         a1.addEventListener('click', function () { track('ty_click', 'trial'); });
-        var a2 = el('a', null, 'Free PDF: 2025–26 guideline updates');
-        a2.href = GUIDE; a2.target = '_blank'; a2.rel = 'noopener';
-        a2.addEventListener('click', function () { track('ty_click', 'guide'); });
         cta.appendChild(a1);
-        cta.appendChild(a2);
         result.appendChild(cta);
         track(right ? 'ty_correct' : 'ty_incorrect', q.id);
       }

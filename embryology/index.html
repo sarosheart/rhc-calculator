@@ -2676,7 +2676,7 @@ window.__cathmathEmbryoReady = true;
 // Edit those two files, then run: node scripts/sync-shared.mjs --write
 // CathMath "Test yourself" card — one board-style question matched to this tool, from CardioQFlow.
 // The questions are inlined at build time (shared/test-yourself.json, by scripts/sync-shared.mjs),
-// so the card needs no network: the only outbound traffic is a click on one of its two links.
+// so the card needs no network: the only outbound traffic is a click on its trial link.
 //
 // Colours come from the page's own theme variables (--card-bg exists in both families: the token
 // pages, dark by default with body.light, and ekg/pvloop, light by default with body.dark).
@@ -2689,7 +2689,6 @@ window.__cathmathEmbryoReady = true;
   var QS = [{"id":"chd-conotruncal-001","stem":"A 2-week-old infant presents with tachypnea, poor feeding, diaphoresis, and a single second heart sound. Echo reveals a single great vessel arising from the heart (overriding a large VSD) that gives rise to the aorta, pulmonary arteries, and coronary arteries from a single common trunk. Microarray confirms 22q11.2 deletion.\nWhich is the appropriate diagnosis and management?","choices":[{"letter":"A","text":"d-TGA; arterial switch as neonate."},{"letter":"B","text":"Truncus arteriosus; observation only."},{"letter":"C","text":"Tetralogy of Fallot; repair at 1 year."},{"letter":"D","text":"Truncus arteriosus; repair in the neonatal period."},{"letter":"E","text":"Interrupted aortic arch type B; arch repair only."}],"answer":"D","keyPoint":"Truncus arteriosus is usually repaired in the neonatal period with VSD closure plus an RV-to-PA conduit, because delayed repair leads to pulmonary vascular disease."},{"id":"chd-asd-003","stem":"A 24-year-old woman with Down syndrome is evaluated for progressive exertional dyspnea. Echo shows a defect in the inferior portion of the atrial septum, just above the AV valves, a cleft in the anterior mitral leaflet with moderate MR, and both AV valves inserting at the same level. No VSD. LVEF normal. RV and LA dilated.\nWhich of the following best describes this defect?","choices":[{"letter":"A","text":"Secundum ASD in the fossa ovalis."},{"letter":"B","text":"Primum ASD with cleft mitral valve."},{"letter":"C","text":"Coronary sinus type ASD."},{"letter":"D","text":"Sinus venosus ASD at the SVC junction."},{"letter":"E","text":"Normal atrial septum variant."}],"answer":"B","keyPoint":"A primum ASD with a cleft anterior mitral leaflet sits in the inferior septum adjacent to the AV valves and falls within the atrioventricular septal defect (AVSD) spectrum."}];
   var UTM = 'utm_source=cathmath&utm_medium=test_yourself&utm_campaign=' + TOOL;
   var TRIAL = 'https://cardioqflow.com/join?trial&' + UTM;
-  var GUIDE = 'https://cardioqflow.com/?' + UTM + '#guide';
 
   function track(action, target) {
     try { if (typeof cmTrack === 'function') cmTrack('tool_action', { action: action, target: target }); } catch (e) { /* never break a tool */ }
@@ -2780,11 +2779,7 @@ window.__cathmathEmbryoReady = true;
         var a1 = el('a', null, 'More questions like this: free 7-day trial');
         a1.href = TRIAL; a1.target = '_blank'; a1.rel = 'noopener';
         a1.addEventListener('click', function () { track('ty_click', 'trial'); });
-        var a2 = el('a', null, 'Free PDF: 2025–26 guideline updates');
-        a2.href = GUIDE; a2.target = '_blank'; a2.rel = 'noopener';
-        a2.addEventListener('click', function () { track('ty_click', 'guide'); });
         cta.appendChild(a1);
-        cta.appendChild(a2);
         result.appendChild(cta);
         track(right ? 'ty_correct' : 'ty_incorrect', q.id);
       }
