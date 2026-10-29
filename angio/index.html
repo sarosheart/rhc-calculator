@@ -482,11 +482,7 @@ try { if (localStorage.getItem('cathmath_dark') === '0') document.body.classList
     <p class="caption" data-role="caption"></p>
   </section>
 
-  <section class="pane pane-controls" aria-label="C-arm controls">
-    <div id="controls"></div>
-  </section>
-
-  <section class="pane pane-teach" aria-label="What this angle shows">
+  <section class="pane pane-pad" aria-label="Angle pad">
     <details class="fold" data-fold="pad" open>
       <summary>Angle pad</summary>
       <div class="card-panel pad-panel">
@@ -496,6 +492,13 @@ try { if (localStorage.getItem('cathmath_dark') === '0') document.body.classList
         <button type="button" class="tool-btn small" data-role="pad-best" hidden>Go to best angle</button>
       </div>
     </details>
+  </section>
+
+  <section class="pane pane-controls" aria-label="C-arm controls">
+    <div id="controls"></div>
+  </section>
+
+  <section class="pane pane-teach" aria-label="What this angle shows">
     <details class="fold" data-fold="teach" open>
       <summary>Current view · Segments</summary>
       <div class="teach-grid">

@@ -23,13 +23,19 @@ body { font-family: -apple-system, "Helvetica Neue", Helvetica, Arial, sans-seri
 .page-head h1 { font-size: 21px; color: var(--text-hi); }
 .page-head .sub { color: var(--text-dim); font-size: 13px; margin-top: 2px; }
 
-/* ── app: desktop three columns  heart | angiogram | controls, the angle pad and the teaching panels straight under the
-   controls; the angiogram stays in view (sticky, under the sticky nav) while the pad and the segment list are used ── */
+/* ── app: desktop three columns  heart | angiogram | angle pad, the controls and the teaching panels straight under the
+   pad; the angiogram stays in view (sticky, under the sticky nav) while the pad and the segment list are used ── */
 .app { --angio-acc: #f0a63a; max-width: 1680px; margin: 0 auto; padding: 8px 20px 24px; display: grid; gap: 18px;
   grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.25fr) minmax(0, 1fr); align-items: start;
-  grid-template-areas: "heart angio controls" "heart angio teach"; grid-template-rows: auto 1fr; }
+  grid-template-areas: "heart angio pad" "heart angio controls" "heart angio teach"; grid-template-rows: auto auto 1fr; }
 .pane { min-width: 0; }
-.pane-heart { grid-area: heart; } .pane-controls { grid-area: controls; } .pane-teach { grid-area: teach; }
+.pane-heart { grid-area: heart; } .pane-pad { grid-area: pad; } .pane-controls { grid-area: controls; } .pane-teach { grid-area: teach; }
+/* beside the angiogram: the standard views, then rotation and angulation (a phone keeps the scales first, under the angiogram) */
+@media (min-width: 701px) {
+  #controls { display: flex; flex-direction: column; }
+  #controls .ctl-angles { order: 1; margin-top: 18px; }
+  #controls .ctl-views > .view-group:first-child h3 { margin-top: 0; }
+}
 .pane-angio { grid-area: angio; position: sticky; top: calc(var(--nav-h, 42px) + 8px); }
 .heart-box, .stage { position: relative; background: #0b1322; border: 1px solid var(--border); border-radius: 10px; overflow: hidden; }
 .heart-box canvas, .stage canvas { display: block; width: 100%; aspect-ratio: 1 / 1; height: auto; }
@@ -155,11 +161,11 @@ details.seo-section ul { padding-left: 20px; }
 .credits a, .real-note a { color: inherit; text-decoration: underline; text-underline-offset: 2px; }
 .foot { max-width: 1680px; margin: 0 auto; padding: 0 20px 30px; color: var(--text-muted); font-size: 12px; }
 
-/* ── tablet: angiogram | controls, then the heart, the pad and the teaching panels under the controls ── */
+/* ── tablet: angiogram | angle pad, then the controls, the heart and the teaching panels under the pad ── */
 @media (max-width: 1080px) {
   .site-nav { position: static; }
-  .app { grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr); grid-template-areas: "angio controls" "angio heart" "angio teach";
-    grid-template-rows: auto auto 1fr; padding: 8px 12px 20px; }
+  .app { grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr); grid-template-areas: "angio pad" "angio controls" "angio heart" "angio teach";
+    grid-template-rows: auto auto auto 1fr; padding: 8px 12px 20px; }
   .pane-angio { top: 8px; } .stage { max-width: min(100%, calc(100vh - 150px)); }   /* the nav scrolls away here */
   .page-head, .related, details.seo-section, .foot { padding-left: 12px; padding-right: 12px; }
 }
@@ -176,7 +182,8 @@ details.seo-section ul { padding-left: 20px; }
   .page-head .sub { font-size: 12.5px; }
   /* angiogram first (sticky), then the controls, then the 3D heart fold — whatever the markup order */
   .app { display: flex; flex-direction: column; align-items: stretch; padding: 0 0 20px; gap: 0; }
-  .pane-angio { order: 1; } .pane-controls { order: 2; } .pane-teach { order: 3; padding: 12px 12px 0; } .pane-heart { order: 4; }
+  .pane-angio { order: 1; } .pane-controls { order: 2; } .pane-heart { order: 4; }
+  .pane-pad, .pane-teach { order: 3; padding: 4px 12px 0; } .pane-pad { padding-top: 12px; }   /* the pad's fold, then current view's */
   .teach-grid { grid-template-columns: 1fr; gap: 10px; }
   .fold > summary { display: list-item; cursor: pointer; font-weight: 700; color: var(--text-hi); padding: 8px 0; }
   .fold + .fold { margin-top: 4px; }
