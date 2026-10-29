@@ -23,13 +23,18 @@ body { font-family: -apple-system, "Helvetica Neue", Helvetica, Arial, sans-seri
 .page-head h1 { font-size: 21px; color: var(--text-hi); }
 .page-head .sub { color: var(--text-dim); font-size: 13px; margin-top: 2px; }
 
-/* ── app: desktop three columns  heart | angiogram | controls ── */
+/* ── app: desktop three columns  heart | angiogram | controls, the angle pad and the teaching panels straight under the
+   controls; the angiogram stays in view (sticky, under the sticky nav) while the pad and the segment list are used ── */
 .app { --angio-acc: #f0a63a; max-width: 1680px; margin: 0 auto; padding: 8px 20px 24px; display: grid; gap: 18px;
-  grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.25fr) minmax(0, 1fr); align-items: start; }
+  grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.25fr) minmax(0, 1fr); align-items: start;
+  grid-template-areas: "heart angio controls" "heart angio teach"; grid-template-rows: auto 1fr; }
 .pane { min-width: 0; }
+.pane-heart { grid-area: heart; } .pane-controls { grid-area: controls; } .pane-teach { grid-area: teach; }
+.pane-angio { grid-area: angio; position: sticky; top: calc(var(--nav-h, 42px) + 8px); }
 .heart-box, .stage { position: relative; background: #0b1322; border: 1px solid var(--border); border-radius: 10px; overflow: hidden; }
 .heart-box canvas, .stage canvas { display: block; width: 100%; aspect-ratio: 1 / 1; height: auto; }
-.stage { max-width: min(100%, calc(100vh - 150px)); margin: 0 auto; }
+/* the whole pinned angiogram, its buttons and caption fit under the nav */
+.stage { max-width: min(100%, calc(100vh - 108px - var(--nav-h, 42px))); margin: 0 auto; }
 .swap { display: none; }
 .angio-wrap { position: relative; }
 .stage canvas.overlay { position: absolute; inset: 0; cursor: pointer; }
@@ -64,12 +69,11 @@ body { font-family: -apple-system, "Helvetica Neue", Helvetica, Arial, sans-seri
 .sw-beam { background: repeating-linear-gradient(90deg, #f0a63a 0 4px, transparent 4px 7px); }
 
 /* ── teaching panels ── */
-.pane-teach { grid-column: 2 / 4; }
-.teach-grid { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 14px; }
+.teach-grid { display: grid; grid-template-columns: minmax(0, 1fr); gap: 14px; }
 .fold > summary { display: none; }
 .fold + .fold { margin-top: 14px; }
 /* the pad is a dark panel in both themes, with its own colours for the grid and its labels (pad.js reads --pad-*) */
-canvas.pad { display: block; width: 100%; aspect-ratio: 240 / 100; max-height: 300px; touch-action: none; cursor: crosshair;
+canvas.pad { display: block; width: 100%; aspect-ratio: 2 / 1; max-height: 300px; touch-action: none; cursor: crosshair;
   background: #0b1322; border-radius: 6px;
   --pad-ink: #e8ecf2; --pad-halo: #0b1322; --pad-line: rgba(255,255,255,.10); --pad-axis: rgba(232,236,242,.45); }
 .pad-caption { margin-top: 6px; }
@@ -151,12 +155,12 @@ details.seo-section ul { padding-left: 20px; }
 .credits a, .real-note a { color: inherit; text-decoration: underline; text-underline-offset: 2px; }
 .foot { max-width: 1680px; margin: 0 auto; padding: 0 20px 30px; color: var(--text-muted); font-size: 12px; }
 
-/* ── tablet: angiogram | controls, heart under the controls ── */
+/* ── tablet: angiogram | controls, then the heart, the pad and the teaching panels under the controls ── */
 @media (max-width: 1080px) {
   .site-nav { position: static; }
-  .app { grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr); grid-template-areas: "angio controls" "angio heart"; padding: 8px 12px 20px; }
-  .pane-angio { grid-area: angio; } .pane-controls { grid-area: controls; } .pane-heart { grid-area: heart; }
-  .pane-teach { grid-column: 1 / -1; }
+  .app { grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr); grid-template-areas: "angio controls" "angio heart" "angio teach";
+    grid-template-rows: auto auto 1fr; padding: 8px 12px 20px; }
+  .pane-angio { top: 8px; } .stage { max-width: min(100%, calc(100vh - 150px)); }   /* the nav scrolls away here */
   .page-head, .related, details.seo-section, .foot { padding-left: 12px; padding-right: 12px; }
 }
 

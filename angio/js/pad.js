@@ -22,15 +22,23 @@ export function createPad(canvas, state, D, { caption, bestBtn, onUser = () => {
     return { id: v.id, name: v.name, side: v.side === 'right' ? 'right' : 'left', lao: [a, b], cra: [c, d] };
   });
 
-  // labels: the pad's ink over a halo of its ground, so they read on any shading; each one drawn this frame is kept,
-  // with its box in canvas pixels and its colour (for the legibility test)
+  // labels: the pad's ink over a halo of its ground, so they read on any shading; a label that would run off the pad (a
+  // zone at its edge) is nudged back inside it, and one that would cover a label already drawn takes the first free spot
+  // of its alternatives. Each one drawn this frame is kept, with its box in canvas pixels and its colour (for the tests)
   let drawn = [], ink = '#e8ecf2', halo = '#0b1322';
-  function put(t, x, y) {
-    g.save(); g.lineWidth = 3 * dpr; g.lineJoin = 'round'; g.strokeStyle = halo; g.setLineDash([]); g.strokeText(t, x, y); g.restore();
-    g.fillStyle = ink; g.fillText(t, x, y);
-    const m = g.measureText(t);
-    drawn.push({ t, colour: g.fillStyle, x: x - m.actualBoundingBoxLeft, y: y - m.actualBoundingBoxAscent,
-      w: m.actualBoundingBoxLeft + m.actualBoundingBoxRight, h: m.actualBoundingBoxAscent + m.actualBoundingBoxDescent });
+  function fit(t, x, y) {
+    const m = g.measureText(t), e = 2 * dpr;
+    const l = m.actualBoundingBoxLeft, r = m.actualBoundingBoxRight, a = m.actualBoundingBoxAscent, d = m.actualBoundingBoxDescent;
+    x += Math.max(0, e - (x - l)) - Math.max(0, x + r - (W - e));
+    y += Math.max(0, e - (y - a)) - Math.max(0, y + d - (H - e));
+    return { x, y, box: { x: x - l, y: y - a, w: l + r, h: a + d } };
+  }
+  const free = ({ box: b }) => !drawn.some(o => b.x < o.x + o.w && o.x < b.x + b.w && b.y < o.y + o.h && o.y < b.y + b.h);
+  function put(t, x, y, alts = []) {
+    const tries = [[x, y], ...alts].map(([px, py]) => fit(t, px, py)), { x: fx, y: fy, box } = tries.find(free) || tries[0];
+    g.save(); g.lineWidth = 3 * dpr; g.lineJoin = 'round'; g.strokeStyle = halo; g.setLineDash([]); g.strokeText(t, fx, fy); g.restore();
+    g.fillStyle = ink; g.fillText(t, fx, fy);
+    drawn.push({ t, colour: g.fillStyle, ...box });
   }
   function draw() {
     raf = 0; const s = state.get();
@@ -81,8 +89,13 @@ export function createPad(canvas, state, D, { caption, bestBtn, onUser = () => {
       const xa = X(z.lao[0]), xb = X(z.lao[1]), ya = Y(z.cra[1]), yb = Y(z.cra[0]);
       const x = Math.min(xa, xb), y = Math.min(ya, yb), w = Math.abs(xb - xa), h = Math.abs(yb - ya);
       g.beginPath(); g.roundRect(x, y, w, h, Math.min(w, h) / 2.5); g.stroke();
-      if (mine && !s.sel) { g.textAlign = 'center'; g.textBaseline = 'bottom';
-        put(zoneLabel(z, s.sys), x + w / 2, y - 2 * dpr); }
+      if (mine && !s.sel) {
+        g.textAlign = 'center'; g.textBaseline = 'bottom';
+        // above the zone; else below it, inside its top, beside it, then a line or two further out
+        const t = zoneLabel(z, s.sys), lw = g.measureText(t).width, lh = 13 * dpr, cx = x + w / 2, mid = y + h / 2 + lh / 2;
+        const out = (k) => [[cx, y - 2 * dpr - k * lh], [cx, y + h + (k + 1) * lh]];
+        put(t, cx, y - 2 * dpr, [[cx, y + h + lh], [cx, y + lh + 2 * dpr], [x + w + lw / 2 + 3 * dpr, mid], [x - lw / 2 - 3 * dpr, mid], ...out(1), ...out(2)]);
+      }
     }
     g.setLineDash([]);
     // current angle

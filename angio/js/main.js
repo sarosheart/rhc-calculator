@@ -24,6 +24,9 @@ function failed(e) {
   if (status) { status.setAttribute('role', 'alert'); status.textContent = 'The model could not load. Check the connection and reload the page.'; }
   throw e;
 }
+// the angiogram sticks just under the site nav, which wraps to a second row on narrower laptops (angio.css reads --nav-h)
+const nav = document.querySelector('.site-nav');
+if (nav) new ResizeObserver(() => document.documentElement.style.setProperty('--nav-h', `${nav.offsetHeight}px`)).observe(nav);
 // performance tier, before any model loads: low takes the lite meshes and 1× pixels (?tier=low|high overrides the probe)
 let tier = chooseTier({ ...probeGPU(), override: new URLSearchParams(location.search).get('tier') });
 const D = await loadAll('data/', fetch, { tier }).catch(failed);
