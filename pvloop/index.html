@@ -3938,5 +3938,140 @@ document.addEventListener('DOMContentLoaded', init);
           <p>A ghost loop is stored automatically before the first drug, disease or device is chosen, so each new loop is drawn against its own baseline; snapshots can also be taken manually. Toggles hide the ESPVR, EDPVR and Ea lines, the phase labels and the animated tracing; the tracing takes 60/HR seconds per revolution and dwells in each phase for that phase's real share of the cycle, and it does not run for a visitor whose system asks for reduced motion. The phase-label toggle also carries markers for mitral and aortic valve opening and closing, and renames any limb no longer isovolumic. Three worked examples load full scenarios, one of them cardiogenic shock supported with an Impella CP and dobutamine.</p>
         </div>
       </details>
+<script>
+// <shared:test-yourself v1>
+// GENERATED FROM shared/test-yourself.js + shared/test-yourself.json BY scripts/sync-shared.mjs — DO NOT EDIT HERE.
+// Edit those two files, then run: node scripts/sync-shared.mjs --write
+// CathMath "Test yourself" card — one board-style question matched to this tool, from CardioQFlow.
+// The questions are inlined at build time (shared/test-yourself.json, by scripts/sync-shared.mjs),
+// so the card needs no network: the only outbound traffic is a click on one of its two links.
+//
+// Colours come from the page's own theme variables (--card-bg exists in both families: the token
+// pages, dark by default with body.light, and ekg/pvloop, light by default with body.dark).
+//
+// THIS BLOCK MUST NEVER BE ABLE TO BREAK A TOOL. Everything is wrapped, nothing runs before the
+// DOM is ready, and the card is built with createElement/textContent only (no innerHTML), so the
+// node vm harness (scripts/lib/tool-vm.mjs) and the analytics test can load the page untouched.
+(function () {
+  var TOOL = 'pvloop';
+  var QS = [{"id":"anat-physiology-001","stem":"A 72-year-old man with heart failure with preserved ejection fraction is evaluated in the catheterization laboratory with simultaneous pressure-volume loop analysis. His LV end-systolic pressure is 140 mmHg, LV end-diastolic volume is 150 mL, LV end-systolic volume is 65 mL, and stroke volume is 85 mL.\nThe slope of the line connecting the end-systolic pressure-volume point to the end-diastolic volume point on the volume axis represents which of the following hemodynamic parameters?","choices":[{"letter":"A","text":"End-systolic elastance (Ees), a load-independent measure of LV contractility."},{"letter":"B","text":"Arterial elastance (Ea), a lumped measure of total arterial afterload."},{"letter":"C","text":"Effective arterial compliance, the ratio of stroke volume to pulse pressure."},{"letter":"D","text":"Diastolic stiffness constant (β), a measure of LV chamber compliance."},{"letter":"E","text":"Ventricular-arterial coupling ratio (Ees/Ea), reflecting cardiovascular efficiency."}],"answer":"B","keyPoint":"Arterial elastance (Ea) is the lumped representation of total afterload on the PV loop, integrating SVR, compliance, impedance, and heart rate; the Ees/Ea ratio quantifies ventricular-arterial coupling."},{"id":"hf-echo-008","stem":"A 58-year-old man with non-ischemic dilated cardiomyopathy (LVEF 22%, NYHA III) is undergoing invasive PV-loop assessment to evaluate ventriculo-arterial coupling. Pressure-volume loops are recorded at multiple preloads using transient IVC occlusion. His end-systolic pressure-volume relationship has a markedly reduced slope (Ees ~0.6 mmHg/mL) compared with a healthy adult control (Ees ~2.5 mmHg/mL), with a corresponding leftward shift of the upper PV-loop boundary in the control.\nWhich property is most directly reflected by the slope of the ESPVR?","choices":[{"letter":"A","text":"Intrinsic myocardial contractility."},{"letter":"B","text":"Preload (end-diastolic volume)."},{"letter":"C","text":"Afterload (arterial elastance)."},{"letter":"D","text":"Diastolic chamber compliance."},{"letter":"E","text":"Ejection fraction surrogate."}],"answer":"A","keyPoint":"The slope of the ESPVR (end-systolic elastance, Ees) is a load-independent index of intrinsic ventricular contractility."}];
+  var UTM = 'utm_source=cathmath&utm_medium=test_yourself&utm_campaign=' + TOOL;
+  var TRIAL = 'https://cardioqflow.com/join?trial&' + UTM;
+  var GUIDE = 'https://cardioqflow.com/?' + UTM + '#guide';
+
+  function track(action, target) {
+    try { if (typeof cmTrack === 'function') cmTrack('tool_action', { action: action, target: target }); } catch (e) { /* never break a tool */ }
+  }
+  function el(tag, cls, text) {
+    var n = document.createElement(tag);
+    if (cls) n.className = cls;
+    if (text) n.textContent = text;
+    return n;
+  }
+  function style() {
+    var s = el('style');
+    s.textContent = [
+      '.ty-card{box-sizing:border-box;max-width:760px;margin:40px auto 32px;padding:20px 22px;border:1px solid var(--border,#2a3340);border-radius:12px;background:var(--card-bg,var(--panel-bg,#131a26));color:var(--text,#d8dce4);font:15px/1.55 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;text-align:left}',
+      '.ty-card *{box-sizing:border-box}',
+      '.ty-head{display:flex;flex-wrap:wrap;align-items:baseline;justify-content:space-between;gap:4px 12px;margin:0 0 12px}',
+      '.ty-title{margin:0;font-size:17px;font-weight:700;color:var(--text-hi,var(--text,#e8ecf2))}',
+      '.ty-src{font-size:12.5px;color:var(--text-dim,var(--text-secondary,#8b95a7))}',
+      '.ty-stem p{margin:0 0 8px}',
+      '.ty-choices{display:flex;flex-direction:column;gap:6px;margin:12px 0 0}',
+      '.ty-choice{display:flex;gap:10px;align-items:flex-start;width:100%;padding:9px 12px;border:1px solid var(--border,#2a3340);border-radius:8px;background:transparent;color:inherit;font:inherit;text-align:left;cursor:pointer}',
+      '.ty-choice:hover:not([disabled]){border-color:var(--accent,var(--blue,#4a90d9))}',
+      '.ty-choice:focus-visible{outline:2px solid var(--accent,var(--blue,#4a90d9));outline-offset:2px}',
+      '.ty-choice[disabled]{cursor:default}',
+      '.ty-letter{flex:none;font-weight:700;min-width:1.2em}',
+      '.ty-choice.ty-right{border-color:var(--green,#66bb6a);background:var(--green-bg,rgba(102,187,106,.14))}',
+      '.ty-choice.ty-wrong{border-color:var(--red,#ef5350);background:rgba(239,83,80,.12)}',
+      '.ty-result{margin:14px 0 0}',
+      '.ty-verdict{margin:0 0 6px;font-weight:700}',
+      '.ty-key{margin:0}',
+      '.ty-cta{display:flex;flex-wrap:wrap;gap:8px 18px;margin:14px 0 0;padding-top:12px;border-top:1px solid var(--border,#2a3340)}',
+      '.ty-cta a{color:var(--accent,var(--blue,#4a90d9));font-weight:600;text-decoration:none}',
+      '.ty-cta a:hover{text-decoration:underline}',
+      '@media (max-width:600px){.ty-card{margin:28px 12px 24px;padding:16px}}',
+    ].join('\n');
+    return s;
+  }
+
+  function build() {
+    try {
+      if (typeof document === 'undefined' || !document.body || typeof document.createElement !== 'function') return;
+      if (document.getElementById('ty-card') || !QS || !QS.length) return;
+      var q = QS[Math.floor(Math.random() * QS.length)];
+
+      var card = el('section', 'ty-card');
+      card.id = 'ty-card';
+      card.setAttribute('aria-labelledby', 'ty-title');
+      var head = el('div', 'ty-head');
+      var h = el('h2', 'ty-title', 'Test yourself');
+      h.id = 'ty-title';
+      head.appendChild(h);
+      head.appendChild(el('span', 'ty-src', 'A board-style question from CardioQFlow'));
+      card.appendChild(head);
+
+      var stem = el('div', 'ty-stem');
+      String(q.stem).split('\n').forEach(function (line) { stem.appendChild(el('p', null, line)); });
+      card.appendChild(stem);
+
+      var group = el('div', 'ty-choices');
+      group.setAttribute('role', 'group');
+      group.setAttribute('aria-label', 'Answer choices');
+      var result = el('div', 'ty-result');
+      result.setAttribute('aria-live', 'polite');
+      var buttons = [];
+      q.choices.forEach(function (c) {
+        var b = el('button', 'ty-choice');
+        b.type = 'button';
+        b.appendChild(el('span', 'ty-letter', c.letter + '.'));
+        b.appendChild(el('span', null, c.text));
+        b.addEventListener('click', function () { answer(c.letter); });
+        buttons.push({ b: b, letter: c.letter });
+        group.appendChild(b);
+      });
+      card.appendChild(group);
+      card.appendChild(result);
+
+      function answer(letter) {
+        if (result.childNodes.length) return;
+        var right = letter === q.answer;
+        buttons.forEach(function (x) {
+          x.b.disabled = true;
+          if (x.letter === q.answer) x.b.className = 'ty-choice ty-right';
+          else if (x.letter === letter) x.b.className = 'ty-choice ty-wrong';
+        });
+        result.appendChild(el('p', 'ty-verdict', right ? 'Correct.' : 'The answer is ' + q.answer + '.'));
+        result.appendChild(el('p', 'ty-key', q.keyPoint));
+        var cta = el('div', 'ty-cta');
+        var a1 = el('a', null, 'More questions like this: free 7-day trial');
+        a1.href = TRIAL; a1.target = '_blank'; a1.rel = 'noopener';
+        a1.addEventListener('click', function () { track('ty_click', 'trial'); });
+        var a2 = el('a', null, 'Free PDF: 2025–26 guideline updates');
+        a2.href = GUIDE; a2.target = '_blank'; a2.rel = 'noopener';
+        a2.addEventListener('click', function () { track('ty_click', 'guide'); });
+        cta.appendChild(a1);
+        cta.appendChild(a2);
+        result.appendChild(cta);
+        track(right ? 'ty_correct' : 'ty_incorrect', q.id);
+      }
+
+      document.head.appendChild(style());
+      // Right after the tool itself: before its "About" section, else before the footer, else at the end.
+      var before = document.querySelector('.seo-section') || document.querySelector('footer.foot');
+      if (before && before.parentNode) before.parentNode.insertBefore(card, before);
+      else document.body.appendChild(card);
+    } catch (e) { /* never break a tool */ }
+  }
+
+  try {
+    if (typeof document === 'undefined') return;
+    if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', build);
+    else build();
+  } catch (e) { /* never break a tool */ }
+})();
+// </shared:test-yourself>
+</script>
 </body>
 </html>

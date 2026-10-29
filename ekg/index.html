@@ -2544,5 +2544,140 @@ function init() {
 
 init();
 </script>
+<script>
+// <shared:test-yourself v1>
+// GENERATED FROM shared/test-yourself.js + shared/test-yourself.json BY scripts/sync-shared.mjs — DO NOT EDIT HERE.
+// Edit those two files, then run: node scripts/sync-shared.mjs --write
+// CathMath "Test yourself" card — one board-style question matched to this tool, from CardioQFlow.
+// The questions are inlined at build time (shared/test-yourself.json, by scripts/sync-shared.mjs),
+// so the card needs no network: the only outbound traffic is a click on one of its two links.
+//
+// Colours come from the page's own theme variables (--card-bg exists in both families: the token
+// pages, dark by default with body.light, and ekg/pvloop, light by default with body.dark).
+//
+// THIS BLOCK MUST NEVER BE ABLE TO BREAK A TOOL. Everything is wrapped, nothing runs before the
+// DOM is ready, and the card is built with createElement/textContent only (no innerHTML), so the
+// node vm harness (scripts/lib/tool-vm.mjs) and the analytics test can load the page untouched.
+(function () {
+  var TOOL = 'ekg';
+  var QS = [{"id":"cad-ami-019","stem":"A 64-year-old man presents with acute chest pain. Standard 12-lead ECG shows 2-mm ST DEPRESSION in V1-V3 with prominent R waves (R/S ratio >1 in V1-V2) and tall upright T waves in those leads. There is no ST elevation in any standard 12-lead recording. Initial troponin is mildly elevated. The ED physician initially considers this as NSTE-ACS.\nWhich is the most appropriate next step?","choices":[{"letter":"A","text":"Manage as NSTE-ACS with invasive strategy within 24 hours."},{"letter":"B","text":"CT pulmonary angiogram."},{"letter":"C","text":"Discharge with outpatient stress testing."},{"letter":"D","text":"Obtain posterior leads V7-V9."},{"letter":"E","text":"Repeat the 12-lead ECG in 1–2 hours and trend serial troponin."}],"answer":"D","keyPoint":"In suspected posterior STEMI, place posterior leads V7–V9 to confirm; ≥0.5 mm of ST elevation in any of these leads is diagnostic."},{"id":"cad-ami-021","stem":"A 70-year-old man with hypertension and prior smoking presents with acute substernal chest pain, nausea, and dyspnea. ECG shows ST elevation of 1.5 mm in lead aVR with diffuse ST DEPRESSION ≥1 mm in 7 leads (I, II, aVF, V3-V6). Initial troponin is significantly elevated. Hemodynamics show BP 95/55, HR 110, signs of low-output state.\nWhich interpretation and management approach is most appropriate?","choices":[{"letter":"A","text":"Emergent coronary angiography."},{"letter":"B","text":"Conservative NSTE-ACS with invasive strategy in 24-48 hours."},{"letter":"C","text":"CT pulmonary angiogram."},{"letter":"D","text":"NSAIDs for pericarditis."},{"letter":"E","text":"Emergent fibrinolysis."}],"answer":"A","keyPoint":"aVR ST elevation with diffuse reciprocal ST depression reflects global subendocardial ischemia — not a specific diagnosis; in the setting of ACS it flags a high-risk patient who requires emergent coronary angiography, not fibrinolysis."}];
+  var UTM = 'utm_source=cathmath&utm_medium=test_yourself&utm_campaign=' + TOOL;
+  var TRIAL = 'https://cardioqflow.com/join?trial&' + UTM;
+  var GUIDE = 'https://cardioqflow.com/?' + UTM + '#guide';
+
+  function track(action, target) {
+    try { if (typeof cmTrack === 'function') cmTrack('tool_action', { action: action, target: target }); } catch (e) { /* never break a tool */ }
+  }
+  function el(tag, cls, text) {
+    var n = document.createElement(tag);
+    if (cls) n.className = cls;
+    if (text) n.textContent = text;
+    return n;
+  }
+  function style() {
+    var s = el('style');
+    s.textContent = [
+      '.ty-card{box-sizing:border-box;max-width:760px;margin:40px auto 32px;padding:20px 22px;border:1px solid var(--border,#2a3340);border-radius:12px;background:var(--card-bg,var(--panel-bg,#131a26));color:var(--text,#d8dce4);font:15px/1.55 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;text-align:left}',
+      '.ty-card *{box-sizing:border-box}',
+      '.ty-head{display:flex;flex-wrap:wrap;align-items:baseline;justify-content:space-between;gap:4px 12px;margin:0 0 12px}',
+      '.ty-title{margin:0;font-size:17px;font-weight:700;color:var(--text-hi,var(--text,#e8ecf2))}',
+      '.ty-src{font-size:12.5px;color:var(--text-dim,var(--text-secondary,#8b95a7))}',
+      '.ty-stem p{margin:0 0 8px}',
+      '.ty-choices{display:flex;flex-direction:column;gap:6px;margin:12px 0 0}',
+      '.ty-choice{display:flex;gap:10px;align-items:flex-start;width:100%;padding:9px 12px;border:1px solid var(--border,#2a3340);border-radius:8px;background:transparent;color:inherit;font:inherit;text-align:left;cursor:pointer}',
+      '.ty-choice:hover:not([disabled]){border-color:var(--accent,var(--blue,#4a90d9))}',
+      '.ty-choice:focus-visible{outline:2px solid var(--accent,var(--blue,#4a90d9));outline-offset:2px}',
+      '.ty-choice[disabled]{cursor:default}',
+      '.ty-letter{flex:none;font-weight:700;min-width:1.2em}',
+      '.ty-choice.ty-right{border-color:var(--green,#66bb6a);background:var(--green-bg,rgba(102,187,106,.14))}',
+      '.ty-choice.ty-wrong{border-color:var(--red,#ef5350);background:rgba(239,83,80,.12)}',
+      '.ty-result{margin:14px 0 0}',
+      '.ty-verdict{margin:0 0 6px;font-weight:700}',
+      '.ty-key{margin:0}',
+      '.ty-cta{display:flex;flex-wrap:wrap;gap:8px 18px;margin:14px 0 0;padding-top:12px;border-top:1px solid var(--border,#2a3340)}',
+      '.ty-cta a{color:var(--accent,var(--blue,#4a90d9));font-weight:600;text-decoration:none}',
+      '.ty-cta a:hover{text-decoration:underline}',
+      '@media (max-width:600px){.ty-card{margin:28px 12px 24px;padding:16px}}',
+    ].join('\n');
+    return s;
+  }
+
+  function build() {
+    try {
+      if (typeof document === 'undefined' || !document.body || typeof document.createElement !== 'function') return;
+      if (document.getElementById('ty-card') || !QS || !QS.length) return;
+      var q = QS[Math.floor(Math.random() * QS.length)];
+
+      var card = el('section', 'ty-card');
+      card.id = 'ty-card';
+      card.setAttribute('aria-labelledby', 'ty-title');
+      var head = el('div', 'ty-head');
+      var h = el('h2', 'ty-title', 'Test yourself');
+      h.id = 'ty-title';
+      head.appendChild(h);
+      head.appendChild(el('span', 'ty-src', 'A board-style question from CardioQFlow'));
+      card.appendChild(head);
+
+      var stem = el('div', 'ty-stem');
+      String(q.stem).split('\n').forEach(function (line) { stem.appendChild(el('p', null, line)); });
+      card.appendChild(stem);
+
+      var group = el('div', 'ty-choices');
+      group.setAttribute('role', 'group');
+      group.setAttribute('aria-label', 'Answer choices');
+      var result = el('div', 'ty-result');
+      result.setAttribute('aria-live', 'polite');
+      var buttons = [];
+      q.choices.forEach(function (c) {
+        var b = el('button', 'ty-choice');
+        b.type = 'button';
+        b.appendChild(el('span', 'ty-letter', c.letter + '.'));
+        b.appendChild(el('span', null, c.text));
+        b.addEventListener('click', function () { answer(c.letter); });
+        buttons.push({ b: b, letter: c.letter });
+        group.appendChild(b);
+      });
+      card.appendChild(group);
+      card.appendChild(result);
+
+      function answer(letter) {
+        if (result.childNodes.length) return;
+        var right = letter === q.answer;
+        buttons.forEach(function (x) {
+          x.b.disabled = true;
+          if (x.letter === q.answer) x.b.className = 'ty-choice ty-right';
+          else if (x.letter === letter) x.b.className = 'ty-choice ty-wrong';
+        });
+        result.appendChild(el('p', 'ty-verdict', right ? 'Correct.' : 'The answer is ' + q.answer + '.'));
+        result.appendChild(el('p', 'ty-key', q.keyPoint));
+        var cta = el('div', 'ty-cta');
+        var a1 = el('a', null, 'More questions like this: free 7-day trial');
+        a1.href = TRIAL; a1.target = '_blank'; a1.rel = 'noopener';
+        a1.addEventListener('click', function () { track('ty_click', 'trial'); });
+        var a2 = el('a', null, 'Free PDF: 2025–26 guideline updates');
+        a2.href = GUIDE; a2.target = '_blank'; a2.rel = 'noopener';
+        a2.addEventListener('click', function () { track('ty_click', 'guide'); });
+        cta.appendChild(a1);
+        cta.appendChild(a2);
+        result.appendChild(cta);
+        track(right ? 'ty_correct' : 'ty_incorrect', q.id);
+      }
+
+      document.head.appendChild(style());
+      // Right after the tool itself: before its "About" section, else before the footer, else at the end.
+      var before = document.querySelector('.seo-section') || document.querySelector('footer.foot');
+      if (before && before.parentNode) before.parentNode.insertBefore(card, before);
+      else document.body.appendChild(card);
+    } catch (e) { /* never break a tool */ }
+  }
+
+  try {
+    if (typeof document === 'undefined') return;
+    if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', build);
+    else build();
+  } catch (e) { /* never break a tool */ }
+})();
+// </shared:test-yourself>
+</script>
 </body>
 </html>
