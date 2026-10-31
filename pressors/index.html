@@ -588,6 +588,7 @@ table.grid tr.has-detail td { border-bottom: none; }
     <a class="nav-tab" href="/echocalc/">Echo Calc</a>
     <a class="nav-tab" href="/intracoronary/">Intracoronary</a>
     <a class="nav-tab" href="/angio/">Angio Views</a>
+    <a class="nav-tab" href="/closure/">Closure</a>
     <a class="nav-tab" href="/ap/">Action Potential</a>
     <a class="nav-tab" href="/ekg/">EKG</a>
     <a class="nav-tab" href="/embryology/">Embryology</a>
@@ -824,6 +825,7 @@ table.grid tr.has-detail td { border-bottom: none; }
     <a href="/echocalc/">Echo Hemodynamics Calculator</a>
     <a href="/intracoronary/">Intracoronary Physiology</a>
     <a href="/angio/">Coronary Angiography Views</a>
+    <a href="/closure/">Closure Devices</a>
     <a href="/ap/">Action Potential Simulator</a>
     <a href="/ekg/">EKG Simulator</a>
     <a href="/embryology/">Cardiac Embryology</a>
@@ -7045,7 +7047,7 @@ if (typeof document !== 'undefined' && document.addEventListener) {
         result.appendChild(el('p', 'ty-verdict', right ? 'Correct.' : 'The answer is ' + q.answer + '.'));
         result.appendChild(el('p', 'ty-key', q.keyPoint));
         var cta = el('div', 'ty-cta');
-        var a1 = el('a', null, 'More questions like this: free 7-day trial');
+        var a1 = el('a', null, 'For more questions like this, check out our partners at CardioQFlow');
         a1.href = TRIAL; a1.target = '_blank'; a1.rel = 'noopener';
         a1.addEventListener('click', function () { track('ty_click', 'trial'); });
         cta.appendChild(a1);

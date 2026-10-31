@@ -59,7 +59,8 @@
     {"@type": "ListItem", "position": 7, "url": "https://cathmath.org/echocalc/", "name": "Echo Hemodynamics Calculator"},
     {"@type": "ListItem", "position": 8, "url": "https://cathmath.org/angio/", "name": "Coronary Angiography Views Simulator"},
     {"@type": "ListItem", "position": 9, "url": "https://cathmath.org/intracoronary/", "name": "Intracoronary Physiology & Imaging Simulator"},
-    {"@type": "ListItem", "position": 10, "url": "https://cathmath.org/pressors/", "name": "Vasopressor & Inotrope Simulator"}
+    {"@type": "ListItem", "position": 10, "url": "https://cathmath.org/pressors/", "name": "Vasopressor & Inotrope Simulator"},
+    {"@type": "ListItem", "position": 11, "url": "https://cathmath.org/closure/", "name": "Closure Devices Simulator"}
   ]
 }
 </script>
@@ -828,6 +829,24 @@ body {
       </div>
     </a>
 
+    <!-- Closure Devices -->
+    <a class="tool-card" id="cardClosure" href="/closure/">
+      <div class="card-canvas-wrap">
+        <canvas id="canvasClosure" role="img"
+               aria-label="A femoral artery cut lengthwise under the skin with a hole in its front wall: a blue stitch passes down through the wall on each side of the hole, a knot slides down the tract at 45 degrees and the hole closes."></canvas>
+      </div>
+      <div class="card-info">
+        <div class="card-title">Closure Devices <span class="card-arrow">&rarr;</span></div>
+        <div class="card-desc">ProGlide, pre-close, Angio-Seal and the figure-of-8, step by step: watch the foot, needles, suture and knot inside the groin while your hands work the device.</div>
+        <div class="card-tags">
+          <span class="card-tag">ProGlide</span>
+          <span class="card-tag">Pre-close</span>
+          <span class="card-tag">Angio-Seal</span>
+          <span class="card-tag">Figure-of-8</span>
+        </div>
+      </div>
+    </a>
+
     <!-- Vasopressor & Inotrope Simulator -->
     <a class="tool-card" id="cardPressors" href="/pressors/">
       <div class="card-canvas-wrap">
@@ -886,7 +905,7 @@ body {
   <div class="footer-about">
     <h2>About CathMath</h2>
     <p>CathMath is a free suite of interactive cardiology teaching tools — hemodynamic calculators, simulators, and visualisations built around the calculations and pattern recognition exercises a cardiology fellow uses every day on rounds and in the cath lab. Every tool is browser-based, requires no login, and works on a phone the night before call.</p>
-    <p>The tools cover invasive hemodynamics (Fick CO, PVR/SVR, Gorlin, PH classification, RHC waveforms, PV loops), electrophysiology (12-lead EKG, action potentials with antiarrhythmic effects), echocardiography (PISA, continuity, PASP, diastolic algorithm, valvular pattern atlases), coronary intervention (LAO/RAO angiographic projections, FFR / iFR / NHPRs, IVUS, OCT), and cardiac embryology. Each tool surfaces formulas, cut-offs, and the trial evidence that anchors them, with common pitfalls explicitly called out.</p>
+    <p>The tools cover invasive hemodynamics (Fick CO, PVR/SVR, Gorlin, PH classification, RHC waveforms, PV loops), electrophysiology (12-lead EKG, action potentials with antiarrhythmic effects), echocardiography (PISA, continuity, PASP, diastolic algorithm, valvular pattern atlases), coronary intervention (LAO/RAO angiographic projections, FFR / iFR / NHPRs, IVUS, OCT), femoral access closure (ProGlide, pre-close, Angio-Seal, the figure-of-8 stitch), and cardiac embryology. Each tool surfaces formulas, cut-offs, and the trial evidence that anchors them, with common pitfalls explicitly called out.</p>
     <p>Developed by <a class="credit-link" href="https://x.com/Sarotonin_" target="_blank" rel="noopener">Dr. Saro Avedikian, MD, MPH</a>. The site is intended for educational reference — not a substitute for clinical judgment, complete imaging, or invasive measurements when they are required.</p>
     <p style="margin-top:14px"><a class="credit-link" href="/worksheets/">Reference worksheets</a> &mdash; printable single-page sheets for Gorlin valve area, RHC hemodynamics, PISA quantification of MR, iatrogenic-ASD left atrial pressure, and non-holosystolic MR.</p>
   </div>
@@ -1154,6 +1173,7 @@ body {
       startAngioAnimation(loops);
       startIntraAnimation(loops);
       startPressorsAnimation(loops);
+      startClosureAnimation(loops);
     }, instant ? 100 : 600);
   }
 
@@ -1253,6 +1273,7 @@ body {
       angioSetup = setupCanvas('canvasAngio');
       intraSetup = setupCanvas('canvasIntra');
       pressorsSetup = setupCanvas('canvasPressors');
+      closureSetup = setupCanvas('canvasClosure');
       // Redraw final frames if animations completed
       if (hemoDone) drawHemoFrame(hemoSetup, 1);
       if (rhcDone) drawRhcFrame(rhcSetup, 1);
@@ -1264,13 +1285,14 @@ body {
       if (angioDone) drawAngioFrame(angioSetup, 1);
       if (intraDone) drawIntraFrame(intraSetup, 1);
       if (pressorsDone) drawPressorsFrame(pressorsSetup, 1);
+      if (closureDone) drawClosureFrame(closureSetup, 1);
     }, 200);
   });
 
   // Lazy init — canvases may not have dimensions yet
-  var hemoSetup, rhcSetup, pvSetup, ekgSetup, embryoSetup, apSetup, echoSetup, angioSetup, intraSetup, pressorsSetup;
-  var hemoDone = false, rhcDone = false, pvDone = false, ekgDone = false, embryoDone = false, apDone = false, echoDone = false, angioDone = false, intraDone = false, pressorsDone = false;
-  var hemoRunning = false, rhcRunning = false, pvRunning = false, ekgRunning = false, embryoRunning = false, apRunning = false, echoRunning = false, angioRunning = false, intraRunning = false, pressorsRunning = false;
+  var hemoSetup, rhcSetup, pvSetup, ekgSetup, embryoSetup, apSetup, echoSetup, angioSetup, intraSetup, pressorsSetup, closureSetup;
+  var hemoDone = false, rhcDone = false, pvDone = false, ekgDone = false, embryoDone = false, apDone = false, echoDone = false, angioDone = false, intraDone = false, pressorsDone = false, closureDone = false;
+  var hemoRunning = false, rhcRunning = false, pvRunning = false, ekgRunning = false, embryoRunning = false, apRunning = false, echoRunning = false, angioRunning = false, intraRunning = false, pressorsRunning = false, closureRunning = false;
 
   function ensureSetup() {
     if (!hemoSetup) hemoSetup = setupCanvas('canvasHemo');
@@ -1283,6 +1305,7 @@ body {
     if (!angioSetup) angioSetup = setupCanvas('canvasAngio');
     if (!intraSetup) intraSetup = setupCanvas('canvasIntra');
     if (!pressorsSetup) pressorsSetup = setupCanvas('canvasPressors');
+    if (!closureSetup) closureSetup = setupCanvas('canvasClosure');
   }
 
 
@@ -2535,6 +2558,107 @@ body {
     runLoop();
   }
 
+  /* ══════════════════════════════════════
+     CLOSURE DEVICES CARD — a stitch through the front wall of the artery, the knot slid down the tract, the hole closed
+     ══════════════════════════════════════ */
+  function drawClosureFrame(s, progress) {
+    var ctx = s.ctx, W = s.w, H = s.h;
+    ctx.clearRect(0, 0, W, H);
+    function clamp01(x) { return x < 0 ? 0 : x > 1 ? 1 : x; }
+    function ease(x) { x = clamp01(x); return x * x * (3 - 2 * x); }
+    function lerp(a, b, f) { return a + (b - a) * f; }
+    // a polyline drawn from its start up to fraction f of its length
+    function partial(pts, f) {
+      var L = 0, i, seg = [];
+      for (i = 1; i < pts.length; i++) { seg.push(Math.hypot(pts[i][0] - pts[i - 1][0], pts[i][1] - pts[i - 1][1])); L += seg[i - 1]; }
+      var left = f * L;
+      ctx.beginPath(); ctx.moveTo(pts[0][0], pts[0][1]);
+      for (i = 1; i < pts.length && left > 0; i++) {
+        var k = Math.min(1, left / seg[i - 1]);
+        ctx.lineTo(lerp(pts[i - 1][0], pts[i][0], k), lerp(pts[i - 1][1], pts[i][1], k)); left -= seg[i - 1];
+      }
+      ctx.stroke();
+    }
+    var u = Math.min(W, H) / 100;
+    var skinY = H * 0.18, wallY = H * 0.58, backY = wallY + 26 * u, cx = W * 0.40;
+    var close = ease((progress - 0.78) / 0.2);
+    var hole = lerp(5 * u, 0.6 * u, close), bite = lerp(13 * u, 7 * u, close);
+
+    // skin and the tract at 45° (caudal is to the right)
+    ctx.strokeStyle = 'rgba(211,155,128,0.55)'; ctx.lineWidth = 1.5;
+    ctx.beginPath(); ctx.moveTo(10, skinY); ctx.lineTo(W - 10, skinY); ctx.stroke();
+    var tx = cx + (wallY - skinY);
+    ctx.strokeStyle = 'rgba(148,163,184,0.35)'; ctx.lineWidth = 1; ctx.setLineDash([3, 3]);
+    ctx.beginPath(); ctx.moveTo(cx, wallY); ctx.lineTo(tx, skinY); ctx.stroke(); ctx.setLineDash([]);
+
+    // the artery cut lengthwise: front wall with the hole, back wall
+    ctx.save();
+    ctx.lineCap = 'round';
+    ctx.strokeStyle = 'rgba(220,60,60,0.88)'; ctx.lineWidth = 3;
+    ctx.shadowColor = 'rgba(220,50,50,0.35)'; ctx.shadowBlur = 6;
+    ctx.beginPath();
+    ctx.moveTo(10, wallY); ctx.lineTo(cx - hole, wallY);
+    ctx.moveTo(cx + hole, wallY); ctx.lineTo(W - 10, wallY);
+    ctx.moveTo(10, backY); ctx.lineTo(W - 10, backY);
+    ctx.stroke();
+    ctx.restore();
+
+    // the stitch: down through the wall beside the hole, under it, up through the other side
+    ctx.save();
+    ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+    ctx.strokeStyle = '#5b7cf0'; ctx.lineWidth = 1.6;
+    ctx.shadowColor = 'rgba(91,124,240,0.5)'; ctx.shadowBlur = 4;
+    var dip = wallY + 7 * u;
+    var loop = [[cx - bite, wallY - 2 * u], [cx - bite, wallY + 3 * u], [cx - bite * 0.5, dip], [cx + bite * 0.5, dip],
+                [cx + bite, wallY + 3 * u], [cx + bite, wallY - 2 * u]];
+    var fLoop = ease((progress - 0.12) / 0.4);
+    if (fLoop > 0) partial(loop, fLoop);
+    // both strands up the tract to the skin, and the knot sliding down them
+    var fUp = ease((progress - 0.5) / 0.12), knot = ease((progress - 0.6) / 0.22);
+    if (fUp > 0) {
+      var top = [cx + (tx - cx) * 0.98, skinY + 1];
+      var ky = lerp(top[1], wallY - 3 * u, knot), kx = cx + (ky - wallY) * -1;
+      partial([[cx - bite, wallY - 2 * u], [kx - 1.5, ky], [top[0] - 2, top[1]]], fUp);
+      partial([[cx + bite, wallY - 2 * u], [kx + 1.5, ky], [top[0] + 2, top[1]]], fUp);
+      if (knot > 0) {
+        ctx.shadowBlur = 0; ctx.fillStyle = '#e8ecf2';
+        ctx.beginPath(); ctx.arc(kx, ky, 2.4, 0, Math.PI * 2); ctx.fill();
+      }
+    }
+    ctx.restore();
+
+    if (progress > 0.55) {
+      ctx.font = '500 9px DM Sans, sans-serif';
+      ctx.fillStyle = 'rgba(91,124,240,0.75)';
+      ctx.textAlign = 'right';
+      ctx.fillText(close > 0.5 ? 'closed' : 'ProGlide', W - 8, 14);
+    }
+  }
+
+  function startClosureAnimation(loops) {
+    if (closureRunning) return;
+    loops = loops || 1;
+    ensureSetup();
+    if (!closureSetup) return;
+    closureDone = false; closureRunning = true;
+    var dur = 3200, loopIdx = 0;
+    function runLoop() {
+      var t0 = performance.now();
+      function frame() {
+        var p = Math.min((performance.now() - t0) / dur, 1);
+        drawClosureFrame(closureSetup, p);
+        if (p < 1) requestAnimationFrame(frame);
+        else {
+          loopIdx++;
+          if (loopIdx < loops) { setTimeout(runLoop, 200); }
+          else { closureDone = true; closureRunning = false; }
+        }
+      }
+      requestAnimationFrame(frame);
+    }
+    runLoop();
+  }
+
   // Wait for images to load before setting up hover
   window.addEventListener('load', function() {
     addHoverReplay('cardHemo', startHemoAnimation);
@@ -2547,6 +2671,7 @@ body {
     addHoverReplay('cardAngio', startAngioAnimation);
     addHoverReplay('cardIntra', startIntraAnimation);
     addHoverReplay('cardPressors', startPressorsAnimation);
+    addHoverReplay('cardClosure', startClosureAnimation);
   });
 
   // Auto-skip animation if already seen on this device within 48 hours

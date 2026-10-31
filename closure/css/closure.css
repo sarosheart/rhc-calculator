@@ -1,0 +1,132 @@
+/* Closure Devices page. Colours from the shared design tokens (inlined in index.html); the two 3D windows keep a dark
+   ground in both themes — tissue and metal read better on dark, and they are scenes, not page surfaces. */
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: -apple-system, "Helvetica Neue", Helvetica, Arial, sans-serif; font-size: 14px; line-height: 1.45;
+  color: var(--text); background: var(--bg); min-height: 100vh; overflow-y: auto; }
+
+/* ── site nav (same as the other tools) ── */
+.site-nav { background: var(--navy-deep); color: #fff; display: flex; align-items: center; padding: 0 16px; min-height: 42px;
+  position: sticky; top: 0; z-index: 200; border-bottom: 1px solid var(--border); flex-wrap: wrap; }
+.nav-brand { font-size: 16px; font-weight: 800; letter-spacing: .5px; margin-right: 20px; color: #fff; text-decoration: none; }
+.nav-tabs { display: flex; flex-wrap: wrap; gap: 2px; }
+.nav-tab { display: flex; align-items: center; padding: 6px 10px; color: rgba(255,255,255,.72); text-decoration: none;
+  font-size: 12px; font-weight: 600; border-radius: 6px; }
+.nav-tab:hover { color: #fff; background: rgba(255,255,255,.08); }
+.nav-tab.active { color: #fff; background: rgba(255,255,255,.14); }
+.nav-right { margin-left: auto; display: flex; align-items: center; gap: 8px; padding: 4px 0; }
+.mode-toggle { background: rgba(255,255,255,.10); color: #fff; border: 1px solid rgba(255,255,255,.18); border-radius: 6px;
+  padding: 5px 10px; font-size: 12px; font-weight: 600; cursor: pointer; }
+.mode-toggle:hover { background: rgba(255,255,255,.18); }
+.mode-toggle:focus-visible { outline: 2px solid var(--blue-light); outline-offset: 2px; }
+
+.page-head { max-width: 1680px; margin: 0 auto; padding: 14px 20px 6px; }
+.page-head h1 { font-size: 21px; color: var(--text-hi); }
+.page-head .sub { color: var(--text-dim); font-size: 13px; margin-top: 2px; }
+
+/* ── app: mode bar, the two windows side by side, guide and actions under them ── */
+.app { --win-bg: #0a0e15; --win-edge: #263043; --act: #3b82f6; max-width: 1680px; margin: 0 auto; padding: 8px 20px 24px;
+  display: grid; gap: 12px; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  grid-template-areas: "modes modes" "inside hands" "guide guide" "bar bar" "parts parts" "steps steps"; }
+.modes { grid-area: modes; display: flex; gap: 6px; flex-wrap: wrap; }
+.seg { font: inherit; font-size: 13px; font-weight: 600; color: var(--text-hi); background: var(--panel-bg);
+  border: 1px solid var(--border); border-radius: 8px; padding: 7px 14px; cursor: pointer; }
+.seg[aria-pressed="true"] { background: var(--act); border-color: var(--act); color: #fff; }
+
+.win { position: relative; background: var(--win-bg); border: 1px solid var(--win-edge); border-radius: 10px; overflow: hidden;
+  height: min(64vh, 680px); min-height: 280px; }
+#inside { grid-area: inside; } #hands { grid-area: hands; }
+.win canvas { display: block; width: 100%; height: 100%; touch-action: none; }
+.win-label { position: absolute; top: 8px; left: 10px; font: 700 11px system-ui, sans-serif; letter-spacing: .08em;
+  text-transform: uppercase; color: #c9d3e3; background: rgba(10,14,21,.66); border-radius: 6px; padding: 3px 7px;
+  pointer-events: none; }
+.expand { position: absolute; top: 6px; right: 6px; width: 34px; height: 34px; border-radius: 8px; cursor: pointer;
+  background: rgba(10,14,21,.66) center / 16px no-repeat; border: 1px solid rgba(255,255,255,.18);
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke='%23d8dee9' stroke-width='1.6'%3E%3Cpath d='M10 2h4v4M6 14H2v-4M14 2l-5 5M2 14l5-5'/%3E%3C/svg%3E"); }
+.win.expanded .expand { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke='%23d8dee9' stroke-width='1.6'%3E%3Cpath d='M9 3v4h4M7 13V9H3M9 7l5-5M7 9l-5 5'/%3E%3C/svg%3E"); }
+.app.has-expanded .win:not(.expanded) { display: none; }
+.app.has-expanded .win.expanded { grid-column: 1 / -1; grid-row: 2; }
+.win.no-webgl canvas { display: none; }
+.win .notice { position: absolute; inset: 0; display: grid; place-items: center; padding: 20px; text-align: center;
+  color: #c9d3e3; font-size: 13px; }
+
+.guide { grid-area: guide; background: var(--panel-bg); border: 1px solid var(--border); border-radius: 10px; padding: 10px 14px; }
+.guide-head { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; }
+.step-count { font-size: 11.5px; font-weight: 700; color: var(--text-dim); text-transform: uppercase; letter-spacing: .06em; }
+.guide-title { font-size: 15px; font-weight: 700; color: var(--text-hi); }
+.guide-text { font-size: 13.5px; margin-top: 3px; }
+.guide-cue { font-size: 12.5px; color: var(--text-dim); margin-top: 3px; }
+.guide-cue:empty { display: none; }
+
+.actionbar { grid-area: bar; display: flex; gap: 8px; align-items: center; }
+/* the moves on offer: the correct one blue, the wrong ones plain; more than fit scroll inside the strip, never the page */
+.actions { display: flex; gap: 8px; flex: 1 1 auto; min-width: 0; overflow-x: auto; scrollbar-width: none; }
+.actions::-webkit-scrollbar { display: none; }
+.btn, .act { font: inherit; font-size: 13.5px; font-weight: 600; border-radius: 9px; padding: 10px 14px; cursor: pointer;
+  border: 1px solid var(--border); background: var(--panel-bg); color: var(--text-hi); }
+.btn.ghost { background: transparent; }
+.btn:disabled { opacity: .45; cursor: default; }
+.act { flex: 0 0 auto; background: var(--act); border-color: var(--act); color: #fff; text-align: left; white-space: nowrap; }
+.actions.single .act { flex: 1 1 auto; min-width: 0; white-space: normal; line-height: 1.25; }   /* a lone move wraps, never truncates */
+.act.alt { background: var(--panel-bg); border-color: var(--border); color: var(--text-hi); }
+.guide.failed { border-color: var(--red); border-left-width: 4px; background: var(--red-bg); }
+.guide.failed .step-count { color: var(--red); }
+.guide.failed .guide-cue { color: var(--text); }
+.btn:focus-visible, .act:focus-visible, .seg:focus-visible, .expand:focus-visible { outline: 2px solid var(--blue-light); outline-offset: 2px; }
+
+.steps { grid-area: steps; }
+.parts { grid-area: parts; display: flex; flex-wrap: wrap; align-items: center; gap: 6px 8px; min-width: 0; }
+.parts-k { font-size: 12px; font-weight: 600; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.04em; }
+.parts-list { display: flex; flex-wrap: wrap; gap: 6px; min-width: 0; }
+.part { font: inherit; font-size: 12.5px; color: var(--text); background: var(--panel-bg); border: 1px solid var(--border); border-radius: 999px;
+  padding: 4px 10px; cursor: pointer; }
+.part[aria-pressed="true"] { border-color: var(--act); color: var(--text-hi); box-shadow: inset 0 0 0 1px var(--act); }
+.part:focus-visible { outline: 2px solid var(--blue-light); outline-offset: 2px; }
+.actionbar[aria-busy="true"] { opacity: 0.6; }
+.steps > summary { cursor: pointer; font-weight: 700; color: var(--text-hi); padding: 6px 0; }
+.steps ol { padding-left: 22px; display: grid; gap: 2px; }
+.steps li button { font: inherit; font-size: 13px; color: var(--text); background: none; border: 0; padding: 4px 0; cursor: pointer;
+  text-align: left; }
+.steps li.current button { color: var(--text-hi); font-weight: 700; }
+.steps li.done button { color: var(--text-dim); }
+
+/* ── below the app ── */
+.related { max-width: 1680px; margin: 0 auto; padding: 0 20px 28px; }
+.related h2 { font-size: 12px; text-transform: uppercase; letter-spacing: .7px; color: var(--text-dim); margin-bottom: 8px; }
+.related .links { display: flex; flex-wrap: wrap; gap: 8px; }
+.related a { font-size: 12.5px; padding: 6px 10px; border: 1px solid var(--border); border-radius: 7px; background: var(--panel-bg);
+  color: var(--accent); text-decoration: none; font-weight: 600; }
+.related a:hover { border-color: var(--border-active); background: var(--card-hover); }
+details.seo-section { max-width: 1680px; margin: 0 auto 40px; padding: 0 20px; }
+details.seo-section > summary { cursor: pointer; font-weight: 700; color: var(--text-hi); padding: 10px 0; }
+details.seo-section h2 { font-size: 17px; margin: 16px 0 6px; color: var(--text-hi); }
+details.seo-section p, details.seo-section li { font-size: 13px; color: var(--text); margin-bottom: 8px; max-width: 900px; }
+.foot { max-width: 1680px; margin: 0 auto; padding: 0 20px 30px; color: var(--text-muted); font-size: 12px; }
+
+@media (max-width: 1080px) {
+  .site-nav { position: static; }
+  .page-head, .related, details.seo-section, .foot { padding-left: 12px; padding-right: 12px; }
+  .app { padding: 8px 12px 20px; }
+}
+
+/* ── phone: one column — modes, Inside, Hands, guide, actions — all in one screen once the header has scrolled away ── */
+@media (max-width: 700px) {
+  .site-nav { flex-wrap: nowrap; padding: 0 0 0 12px; }
+  .nav-brand { margin-right: 10px; }
+  .nav-tabs { flex-wrap: nowrap; overflow-x: auto; -webkit-overflow-scrolling: touch; scrollbar-width: none; flex: 1 1 auto; min-width: 0; }
+  .nav-tabs::-webkit-scrollbar { display: none; }
+  .nav-tab { white-space: nowrap; padding: 10px 9px; }
+  .nav-right { margin-left: 0; padding: 4px 8px; flex: 0 0 auto; }
+  .page-head h1 { font-size: 19px; }
+  .page-head .sub { font-size: 12.5px; }
+  .app { grid-template-columns: minmax(0, 1fr); grid-template-areas: "modes" "inside" "hands" "guide" "bar" "parts" "steps";
+    gap: 6px; padding: 4px 8px 16px; }
+  .seg { padding: 6px 12px; }
+  .win { min-height: 0; border-radius: 8px; }
+  #inside { height: 42svh; } #hands { height: 31svh; }
+  .app.has-expanded .win.expanded { height: 75svh; }
+  .guide { padding: 7px 10px; border-radius: 8px; }
+  .guide-title { font-size: 14px; } .guide-text { font-size: 13px; margin-top: 1px; } .guide-cue { font-size: 12px; margin-top: 1px; }
+  .btn, .act { padding: 9px 11px; font-size: 13px; }
+}
+details.seo-section ul { padding-left: 20px; }
+.refs li { font-size: 12.5px; }

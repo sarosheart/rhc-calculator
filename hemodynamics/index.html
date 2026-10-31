@@ -724,6 +724,7 @@ input[type="checkbox"]:focus-visible,
     <a href="/ap/" class="nav-tab">Action Potential</a>
     <a href="/echocalc/" class="nav-tab">Echo Calc</a>
     <a href="/angio/" class="nav-tab">Angio Views</a>
+    <a href="/closure/" class="nav-tab">Closure</a>
     <a href="/intracoronary/" class="nav-tab">Intracoronary</a>
   </div>
   <div class="nav-right">
@@ -4105,7 +4106,7 @@ setTimeout(() => document.getElementById('resizeHandle').classList.remove('pulse
         result.appendChild(el('p', 'ty-verdict', right ? 'Correct.' : 'The answer is ' + q.answer + '.'));
         result.appendChild(el('p', 'ty-key', q.keyPoint));
         var cta = el('div', 'ty-cta');
-        var a1 = el('a', null, 'More questions like this: free 7-day trial');
+        var a1 = el('a', null, 'For more questions like this, check out our partners at CardioQFlow');
         a1.href = TRIAL; a1.target = '_blank'; a1.rel = 'noopener';
         a1.addEventListener('click', function () { track('ty_click', 'trial'); });
         cta.appendChild(a1);
