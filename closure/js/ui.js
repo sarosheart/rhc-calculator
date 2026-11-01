@@ -1,10 +1,10 @@
 // The guide, the step list and the buttons under the two windows. It shows what the page tells it and reports taps.
-export function createUI(initial, { onAction, onShowMe, onUndo, onRestart, onJump, onExpand, onPick = () => {} }) {
+export function createUI(initial, { onAction, onShowMe, onPlay = () => {}, onUndo, onRestart, onJump, onExpand, onPick = () => {} }) {
   let { steps, actions, done } = initial;
   const guide = document.querySelector('#guide');
   const $ = (s) => document.querySelector(s);
   const title = $('#guide .guide-title'), text = $('#guide .guide-text'), cue = $('#guide .guide-cue'), count = $('#guide .step-count');
-  const acts = $('#actions'), undo = $('#undo'), showme = $('#showme'), restart = $('#restart'), list = $('#steps ol');
+  const acts = $('#actions'), undo = $('#undo'), showme = $('#showme'), play = $('#play'), restart = $('#restart'), list = $('#steps ol');
   function buildList() {
     list.textContent = '';
     steps.forEach((s, i) => {
@@ -35,10 +35,11 @@ export function createUI(initial, { onAction, onShowMe, onUndo, onRestart, onJum
   // while a device's code and models load nothing can be tapped
   function loading(on) {
     $('.actionbar').setAttribute('aria-busy', String(!!on));
-    if (on) { showme.disabled = true; for (const b of acts.children) b.disabled = true; }
+    if (on) { showme.disabled = true; play.disabled = true; for (const b of acts.children) b.disabled = true; }
   }
   const notice = (t) => { cue.textContent = t; };
-  showme.addEventListener('click', onShowMe); undo.addEventListener('click', onUndo); restart.addEventListener('click', onRestart);
+  showme.addEventListener('click', onShowMe); play.addEventListener('click', onPlay);
+  undo.addEventListener('click', onUndo); restart.addEventListener('click', onRestart);
   for (const win of document.querySelectorAll('.win')) {
     const btn = win.querySelector('.expand');
     btn.addEventListener('click', () => onExpand(win.classList.contains('expanded') ? null : win.id));
@@ -59,7 +60,7 @@ export function createUI(initial, { onAction, onShowMe, onUndo, onRestart, onJum
       b.textContent = actions[a].label; b.addEventListener('click', () => onAction(a)); acts.appendChild(b);
     }
     acts.classList.toggle('single', available.length === 1);
-    showme.disabled = !next; undo.disabled = !canUndo;
+    showme.disabled = !next; play.disabled = !next && !closed; undo.disabled = !canUndo;   // at the end Play replays it
     [...list.children].forEach((li, i) => { li.className = i < stepIndex ? 'done' : i === stepIndex ? 'current' : ''; });
   }
   function expand(id) {
@@ -70,5 +71,10 @@ export function createUI(initial, { onAction, onShowMe, onUndo, onRestart, onJum
     }
     app.classList.toggle('has-expanded', !!id);
   }
-  return { show, expand, setMode, showParts, pick, loading, notice };
+  // Play turns to Pause while the moves play
+  function playing(on) {
+    play.dataset.playing = String(!!on); play.setAttribute('aria-label', on ? 'Pause' : 'Play all steps');
+    play.querySelector('.play-k').textContent = on ? 'Pause' : 'Play';
+  }
+  return { show, expand, setMode, showParts, pick, loading, notice, playing };
 }

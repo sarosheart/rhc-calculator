@@ -68,6 +68,14 @@ body { font-family: -apple-system, "Helvetica Neue", Helvetica, Arial, sans-seri
 .act { flex: 0 0 auto; background: var(--act); border-color: var(--act); color: #fff; text-align: left; white-space: nowrap; }
 .actions.single .act { flex: 1 1 auto; min-width: 0; white-space: normal; line-height: 1.25; }   /* a lone move wraps, never truncates */
 .act.alt { background: var(--panel-bg); border-color: var(--border); color: var(--text-hi); }
+/* Play: every step in a row, in the step box's corner (the words flow around it); the icon turns to Pause while it
+   plays, the word drops on a phone */
+.guide .play { float: right; display: inline-flex; align-items: center; gap: 6px; margin: -3px -6px 4px 12px; padding: 6px 11px;
+  font-size: 12.5px; }
+.play svg { width: 14px; height: 14px; fill: currentColor; flex: 0 0 auto; }
+.play .i-pause, .play[data-playing="true"] .i-play { display: none; }
+.play[data-playing="true"] .i-pause { display: block; }
+.play[data-playing="true"] { border-color: var(--act); box-shadow: inset 0 0 0 1px var(--act); }
 .guide.failed { border-color: var(--red); border-left-width: 4px; background: var(--red-bg); }
 .guide.failed .step-count { color: var(--red); }
 .guide.failed .guide-cue { color: var(--text); }
@@ -127,6 +135,8 @@ details.seo-section p, details.seo-section li { font-size: 13px; color: var(--te
   .guide { padding: 7px 10px; border-radius: 8px; }
   .guide-title { font-size: 14px; } .guide-text { font-size: 13px; margin-top: 1px; } .guide-cue { font-size: 12px; margin-top: 1px; }
   .btn, .act { padding: 9px 11px; font-size: 13px; }
+  .play-k { display: none; }
+  .guide .play { margin: -3px -5px 2px 8px; padding: 8px 10px; }
 }
 details.seo-section ul { padding-left: 20px; }
 .refs li { font-size: 12.5px; }

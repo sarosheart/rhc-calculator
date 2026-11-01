@@ -1,5 +1,5 @@
 // Closure Devices page: builds the two windows, loads a device mode (its code and models on first use), runs its steps
-// (Show me / Undo / Restart / jump to a step, and the wrong moves it offers) and keeps both windows on the same pose.
+// (Show me / Play / Undo / Restart / jump to a step, and the wrong moves it offers) and keeps both windows on the same pose.
 // The mode is in the address (#angioseal; none = ProGlide). With ?debug, window.__closure exposes hooks for the tests.
 import * as THREE from '../vendor/three/three-closure.min.js';
 import { createView } from './render/view.js';
@@ -7,6 +7,7 @@ import { createInside } from './render/inside.js';
 import { createHands } from './render/hands.js';
 import { MODES, modeFromHash, loadMode } from './modes/index.js';
 import { createAnimator } from './anim.js';
+import { createPlayer } from './play.js';
 import { createUI } from './ui.js';
 
 // theme: dark by default; the site-wide key cathmath_dark ('0' = light)
@@ -87,25 +88,46 @@ function refresh() {
   if (picked) { picked = null; ui.pick(null); inside?.glow([]); }
   focusStep();
 }
-async function work() {
-  if (working) return; working = true;
-  const serial = modeSerial;
-  while (queue.length && serial === modeSerial) {
-    const a = queue.shift();
-    if (!M.available(state).includes(a)) continue;        // judged when its turn comes: right moves advance, wrong ones fail
-    history.push(state); state = M.apply(state, a); refresh();
-    await anim.to(pose(state), mode.duration(a));
-  }
-  working = false;
+// resolves once the queue is empty and its last move has played
+let running = Promise.resolve();
+function work() {
+  if (working) return running;
+  working = true;
+  running = (async () => {
+    const serial = modeSerial;
+    while (queue.length && serial === modeSerial) {
+      const a = queue.shift();
+      if (!M.available(state).includes(a)) continue;        // judged when its turn comes: right moves advance, wrong ones fail
+      history.push(state); state = M.apply(state, a); refresh();
+      await anim.to(pose(state), mode.duration(a));
+    }
+    working = false;
+  })();
+  return running;
 }
 const act = (a) => { if (loading) return Promise.resolve(); queue.push(a); return work(); };
+// Play: the correct moves in a row, paced by play.js; anything else the user does stops it (the move under way finishes)
+let pace = 1;                                                  // ?debug: the tests shorten the pauses
+const player = createPlayer({
+  next: () => (loading || !M ? null : M.nextAction(state)),
+  stepIndex: () => M.stepIndex(state),
+  words: () => { const s = mode.steps[M.stepIndex(state)]; return s ? [s.text, s.cue].filter(Boolean).join(' ') : ''; },
+  perform: (a) => act(a),
+  wait: (ms) => new Promise((r) => setTimeout(r, ms * pace)),
+  onChange: (on) => ui?.playing(on),
+});
+function togglePlay() {
+  if (!player.playing() && M && !M.nextAction(state) && !state.failed) restart();   // at the end: again from the first step
+  return player.toggle();
+}
 // Show me: the action after everything already queued, so five quick taps are five steps
 function showMe() {
+  player.stop();
   if (loading) return Promise.resolve();
   let s = state; for (const a of queue) if (M.available(s).includes(a)) s = M.apply(s, a);
   const n = M.nextAction(s); return n ? act(n) : Promise.resolve();
 }
-function settleNow() { queue = []; anim.finish(); }
+function settleNow() { player.stop(); queue = []; anim.finish(); }
 function undo() {
   settleNow(); if (!history.length) return;
   state = history.pop(); anim.set(pose(state)); refresh();
@@ -121,7 +143,7 @@ function jump(i) {
 function setMode(id) {
   switching = switching.then(async () => {
     if (mode?.id === id) return;
-    const serial = ++modeSerial; queue = []; anim?.finish();
+    const serial = ++modeSerial; player.stop(); queue = []; anim?.finish();
     let next, mods;
     loading = true; ui.loading(true);
     try {
@@ -157,7 +179,7 @@ async function boot() {
   gl = webglOK();
   anim = createAnimator({ reduced: () => !gl || reducedMotion(), onFrame: draw });   // no WebGL: nothing ticks, so moves land at once
   ui = createUI({ steps: [], actions: {}, done: { title: '', text: '' } }, {
-    onAction: act, onShowMe: showMe, onUndo: undo, onRestart: restart, onJump: jump,
+    onAction: (a) => { player.stop(); return act(a); }, onShowMe: showMe, onPlay: togglePlay, onUndo: undo, onRestart: restart, onJump: jump,
     onExpand: (id) => { ui.expand(id); iv?.resize(); hv?.resize(); }, onPick: pickPart });
   if (gl) {
     const pr = pixelRatio();
@@ -183,6 +205,7 @@ async function boot() {
   if (debug) Object.assign(window.__closure, {
     mode: () => mode.id, setMode, state: () => state, pose: () => anim.pose, nextAction: () => M.nextAction(state),
     available: () => M.available(state), poseOf: (s) => pose(s), busy: () => working || anim.busy(),
+    playing: () => player.playing(), pace: (k) => { pace = k; },
     act, showMe, undo, restart, jump,
     instant: (a) => { settleNow(); history.push(state); state = M.apply(state, a); anim.set(pose(state)); refresh(); },
     nodeWorld: (name) => { const o = inLayer?.node(name); if (!o) return null; o.updateWorldMatrix(true, false);
