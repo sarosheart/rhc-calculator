@@ -439,8 +439,16 @@ body {
   .overlay-info .overlay-pearls li { font-size: 9px; }
   .overlay-info .overlay-defect p { font-size: 9px; }
 
+  /* The app fills the first screen under the nav and the stage bar (--chrome-h: their height, measured by the page, as
+     the bar wraps to a second row in defect mode); the Test yourself card and the About section follow below it. As the
+     leftover space of a one-screen body it shrank to nothing once the card sat under it. */
+  .main-container { flex: none; height: calc(100vh - var(--chrome-h, 85px)); height: calc(100dvh - var(--chrome-h, 85px)); }
+
   /* Viewport stacks vertically */
   .viewport-row { flex-direction: column; }
+  /* the closed cross-section panel is hidden by its width beside the 3D view; stacked under it that hides nothing (its
+     text stands one word to a line and takes the 3D view's height), so it goes */
+  .viewport-row:not(.has-xs) .xsection-panel { display: none; }
 
   /* PIP mode on mobile: strip at top instead of floating corner */
   .viewport-row.has-xs .canvas-wrap {
@@ -2614,6 +2622,10 @@ function onResize(){
 }
 window.addEventListener('resize',onResize);
 new ResizeObserver(onResize).observe(wrap);
+// phone and tablet: the app's height is the screen less the nav and the stage bar (CSS --chrome-h)
+const chromeBars=[document.querySelector('.site-nav'),document.getElementById('mobileBar')];
+function sizeApp(){document.documentElement.style.setProperty('--chrome-h',chromeBars.reduce((s,e)=>s+(e?e.offsetHeight:0),0)+'px');}
+const chromeRO=new ResizeObserver(sizeApp);chromeBars.forEach(e=>e&&chromeRO.observe(e));sizeApp();
 
 // ===== ANIMATE =====
 function animate(time){
