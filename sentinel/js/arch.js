@@ -7,7 +7,7 @@ import { geometry, deliveryRadius, DEVICE } from './seq.js';
 export const COLORS = Object.freeze({
   wall: '#a9443f', wallOut: '#963b36', wallCut: '#d99484', leaflet: '#e6d3bd', calcium: '#f3efe4',
   outer_sheath: '#2a2c31', shaft: '#8e9298', art_sheath: '#2f5fd0', wire: '#d7dbe2', hoop: '#c9a960', bag: '#f4f7fb',
-  core: '#6b7079', tip: '#3c4048', pigtail: '#7fc4bf', delivery: '#c9d1da', tray: '#2a3038', glow: '#ffb020',
+  core: '#6b7079', tip: '#3c4048', pigtail: '#7fc4bf', delivery: '#c9d1da', drape: '#2f6fa8', drapeEdge: '#285f92', glow: '#ffb020',
   thrombus: '#8c3a3a', wallDebris: '#e2cc9c', valveDebris: '#f1e8d6', foreign: '#a8b8d0',
 });
 // "What's inside": what each legend button lights
@@ -112,14 +112,49 @@ export function createArch(THREE, view, model, seq, labelBox) {
   // on the table: the tray, the device's end as on the bench, both filters cut open, what they caught
   const table = new THREE.Group(); table.visible = false; root.add(table);
   { const T = seq.table;
-    const tray = new THREE.Mesh(new THREE.BoxGeometry(200, 3, 90), std(COLORS.tray, { metalness: 0.5, roughness: 0.45 }));
-    tray.position.set(-20, -16, 0); table.add(tray);
+    table.add(backTable(lowest(T)));
     for (const [k, mat, r] of [['shaft', 'outer_sheath', R.outer_sheath], ['core', 'shaft', R.shaft], ['art', 'art_sheath', R.art_sheath]])
       table.add(new THREE.Mesh(tubeGeom(triples(T[k]), r), mats[mat]));
     for (const [k, mat, r] of [['ph', 'ph', R.hoop], ['dh', 'dh', R.hoop]]) if (T[k]) table.add(new THREE.Mesh(tubeGeom(triples(T[k]), r, { closed: true, sides: 8 }), mats[mat]));
     for (const [k, mat, r] of [['dc', 'dc', R.core], ['dt', 'dt', R.tip]]) if (T[k]) table.add(new THREE.Mesh(tubeGeom(triples(T[k]), r), mats[mat]));
     for (const [k, mat] of [['pb', 'pb'], ['db', 'db']]) if (T[k]) table.add(new THREE.Mesh(bagGeom(T[k], seq.nRing, T.open), mats[mat]));
     for (const [i, p] of T.deb) { const m = flake(seq.debris[i].r, seq.debris[i].kind); m.position.set(p[0], p[1], p[2]); m.visible = true; table.add(m); }
+  }
+
+  // the cath-lab back table under the device (Saro: "it is not clear that the device is on the cath lab table"): a blue
+  // sterile drape falling over the table's front edge, a steel saline bowl, folded towels, gauze, a syringe. The drape's
+  // top is just under the device's lowest point, so the device lies on it. Layout: x along the device, z toward the viewer.
+  function lowest(T) {
+    let y = Infinity;
+    for (const [k, v] of Object.entries(T)) if (v && v.length && typeof v[0] === 'number') for (let i = 1; i < v.length; i += 3) y = Math.min(y, v[i]);
+    for (const [, p] of T.deb) y = Math.min(y, p[1]);
+    return y - 0.6;
+  }
+  function backTable(top) {
+    const g = new THREE.Group();
+    const drape = std(COLORS.drape, { roughness: 0.9 }), drapeEdge = std(COLORS.drapeEdge, { roughness: 0.9 });
+    const steel = std('#c9ced6', { metalness: 0.85, roughness: 0.28, side: THREE.DoubleSide }), white = std('#f2f3f1', { roughness: 0.95 });
+    const top_ = new THREE.Mesh(new THREE.BoxGeometry(340, 2, 210), drape); top_.position.set(-10, top - 1, -20); g.add(top_);
+    const skirt = new THREE.Mesh(new THREE.BoxGeometry(340, 70, 2), drapeEdge); skirt.position.set(-10, top - 36, 85); g.add(skirt);
+    for (const x of [-120, -55, 15, 85]) {                                   // the drape's soft folds over the edge
+      const f = new THREE.Mesh(new THREE.CylinderGeometry(2.2, 2.2, 70, 8), drapeEdge); f.position.set(x, top - 36, 86.5); g.add(f);
+    }
+    const bowl = new THREE.Mesh(new THREE.CylinderGeometry(42, 33, 26, 40, 1, true), steel); bowl.position.set(-125, top + 13, -60); g.add(bowl);
+    const base = new THREE.Mesh(new THREE.CylinderGeometry(33, 33, 1.5, 40), steel); base.position.set(-125, top + 0.8, -60); g.add(base);
+    const rim = new THREE.Mesh(new THREE.CylinderGeometry(43.5, 43.5, 2.2, 40, 1, true), steel); rim.position.set(-125, top + 26, -60); g.add(rim);
+    const saline = new THREE.Mesh(new THREE.CylinderGeometry(39, 39, 0.5, 40),
+      std('#bcd7ea', { roughness: 0.1, metalness: 0.1, transparent: true, opacity: 0.55 })); saline.position.set(-125, top + 19, -60); g.add(saline);
+    for (const [y, dx] of [[0, 0], [7, 3], [14, -2]]) {                       // a stack of folded towels
+      const t = new THREE.Mesh(new THREE.BoxGeometry(80, 6.5, 52), white); t.position.set(115 + dx, top + 3.3 + y, -70); g.add(t);
+    }
+    for (const [x, z, a] of [[95, 40, 0.25], [118, 52, -0.18], [104, 62, 0.5]]) {   // gauze squares
+      const q = new THREE.Mesh(new THREE.BoxGeometry(40, 1, 40), white); q.position.set(x, top + 0.6, z); q.rotation.y = a; g.add(q);
+    }
+    const barrel = new THREE.Mesh(new THREE.CylinderGeometry(7, 7, 70, 24), std('#e8f0f6', { roughness: 0.15, transparent: true, opacity: 0.7 }));
+    barrel.rotation.z = Math.PI / 2; barrel.position.set(-85, top + 7, 55); g.add(barrel);
+    const plunger = new THREE.Mesh(new THREE.CylinderGeometry(2.5, 2.5, 45, 12), white);
+    plunger.rotation.z = Math.PI / 2; plunger.position.set(-35, top + 7, 55); g.add(plunger);
+    return g;
   }
 
   let shownParts = [];

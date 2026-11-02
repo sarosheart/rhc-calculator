@@ -10,6 +10,7 @@ import { decode, frameAt, geometry } from './seq.js';
 import { createMachine, stepLabel } from './machine.js';
 import { createArch, PARTS } from './arch.js';
 import { createHandle } from './handle.js';
+import { createScrubber } from './scrub.js';
 
 // theme: dark by default; the site-wide key cathmath_dark ('0' = light)
 const modeBtn = document.getElementById('modeToggle');
@@ -48,13 +49,13 @@ async function loadGLB(name) {
 // ── the run: moves made so far, history for Undo, a queue so taps during a move are kept in order ──
 let seq, M, state, history = [], queue = [], working = false, moving = null, anim, ui, gl = false;
 let av = null, hv = null, arch = null, handle = null, picked = null, archKey = null, handleKey = null;
-let handleOnScreen = true, renders = { arch: 0, handle: 0 };
+let handleOnScreen = true, renders = { arch: 0, handle: 0 }, scrub = null;
 const pose = (s) => ({ x: s.k });
 let frame = null;
 function draw(p) {
   if (!seq || !p) return;
   frame = frameAt(seq, p.x);
-  arch?.update(frame); handle?.update(frame.h);
+  arch?.update(frame); handle?.update(frame.h); scrub?.set(p.x);
   if (ui && arch) ui.showParts(arch.visibleParts());
 }
 // the step the guide shows: the one being moved through, else the one whose move comes next
@@ -115,6 +116,19 @@ function jump(i) {
   for (let j = 0; j < k; j++) h.push({ k: j });
   history = h; state = { k }; anim.set(pose(state)); resetViews(); refresh();
 }
+// the scrub bar: dragging runs the sequence to that point (the guide follows); letting go settles on the nearest move
+const pastTo = (k) => Array.from({ length: k }, (_, j) => ({ k: j }));
+function scrubTo(x) {
+  player.stop(); queue = []; if (anim.busy()) anim.finish();
+  const k = Math.min(Math.floor(x), M.count);
+  state = { k }; history = pastTo(k); moving = x < M.count && x - k > 1e-6 ? k : null;
+  anim.set({ x }); refresh();
+}
+function scrubEnd(x) {
+  const k = Math.min(Math.max(Math.round(x), 0), M.count);
+  player.stop(); queue = []; moving = null; state = { k }; history = pastTo(k);
+  anim.set({ x: k }); refresh();
+}
 function pickPart(id) {
   picked = picked === id ? null : id; ui.pick(picked); arch?.glow(picked);
 }
@@ -130,6 +144,12 @@ async function boot() {
     onAction: (a) => { player.stop(); return act(a); }, onPlay: togglePlay, onUndo: undo, onRestart: restart, onJump: jump,
     onExpand: (id) => { ui.expand(id); av?.resize(); hv?.resize(); }, onPick: pickPart });
   ui.setParts(PARTS);
+  const SHORT = { Position: 'Position', Deployment: 'Deployment', 'During TAVR': 'TAVR', Retrieval: 'Retrieval', 'On the table': 'Table' };
+  scrub = createScrubber(document.querySelector('#scrub'), { onScrub: scrubTo, onRelease: scrubEnd,
+    text: (x) => { const i = Math.min(M.stepIndex({ k: Math.min(Math.floor(x), M.count) }), seq.steps.length - 1);
+      return `${stepLabel(seq.steps, i)}: ${seq.steps[i].title}`; } });
+  scrub.setMarks(M.count, seq.steps.map((st, i) => ({ at: M.startOf(i),
+    group: i === 0 || seq.steps[i - 1].group !== st.group ? SHORT[st.group] || st.group : null })));
   if (gl) {
     const pr = pixelRatio();
     av = createView(THREE, document.querySelector('#arch canvas'), { pixelRatio: pr });
