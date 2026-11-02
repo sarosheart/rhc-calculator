@@ -1,10 +1,12 @@
 // Poses one instance of the ProGlide model for a pose: places the whole device in the groin (deviceFrame) and moves its
 // pivots — lever, foot, needles, plunger — and swaps what is drawn by the page (the link and cuffs once they are hauled,
-// the knot once it leaves the device, the distal sheath always).
+// the knot once it leaves the device, the distal guide and sheath always). The white link, which loops along the distal
+// guide, is bent with it (bendGuide: the guide's current shape, from proglide/guide.js).
 // glTF is Y-up: a model point (x, y, z) is the device-frame point (x, −z, y) — device X → glTF X, device Z → glTF Y,
 // device Y → glTF −Z.
 import { W, computeSeat, deviceFrame, tractPoint } from '../scene/world.js';
 import { STROKE, DEFLECT, knotAxis } from '../proglide/suture.js';
+import { makeBender } from '../proglide/guide.js';
 
 export const LEVER_DEG = -62, PLUNGER_IN = -17, PLUNGER_OUT = 46;
 const deviceToGltf = (v) => [v[0], v[2], -v[1]];
@@ -24,6 +26,27 @@ export function makeRig(THREE, model, geom) {
   const turn = (o, deg) => { if (!o) return; const r = rest.get(o); o.quaternion.copy(r.q).premultiply(q.setFromAxisAngle(axisY, deg * Math.PI / 180)); };
   const slide = (o, dx, dy = 0) => { if (!o) return; const r = rest.get(o); o.position.copy(r.p); o.position.x += dx; o.position.z -= dy; };   // device y = glTF −z
   if (N.DistalSheath) N.DistalSheath.visible = false;             // drawn by the page, bending with the tract
+  const oldGuide = node('DistalGuide'); if (oldGuide) oldGuide.visible = false;   // (a model from before the guide was the page's)
+  // each link mesh: its own copy of the geometry, its rest vertices in the device frame, mapped onto the guide's shape
+  root.updateWorldMatrix(true, true);
+  const inv = root.matrixWorld.clone().invert(), links = [], v3 = new THREE.Vector3();
+  for (const o of [N.LinkOpen, N.LinkClosed]) o?.traverse((m) => {
+    if (!m.isMesh) return;
+    m.geometry = m.geometry.clone();
+    const rel = inv.clone().multiply(m.matrixWorld), pos = m.geometry.getAttribute('position'), dev = [];
+    for (let i = 0; i < pos.count; i++) { v3.fromBufferAttribute(pos, i).applyMatrix4(rel); dev.push([v3.x, -v3.z, v3.y]); }
+    links.push({ m, back: rel.clone().invert(), bend: makeBender(dev, geom.guide) });
+  });
+  let guideKey = '';
+  // shape: the guide's centreline in the device frame, from its start (geom.guide.x0) to its end
+  function bendGuide(shape) {
+    const k = shape.map((q) => q.map((v) => v.toFixed(2)).join(',')).join(';'); if (k === guideKey) return; guideKey = k;
+    for (const l of links) {
+      const P = l.bend(shape), pos = l.m.geometry.getAttribute('position');
+      P.forEach((d, i) => { v3.set(d[0], d[2], -d[1]).applyMatrix4(l.back); pos.setXYZ(i, v3.x, v3.y, v3.z); });
+      pos.needsUpdate = true; l.m.geometry.computeVertexNormals(); l.m.geometry.computeBoundingSphere();
+    }
+  }
 
   function update(pose) {
     holder.visible = pose.deviceShown > 0;
@@ -45,7 +68,7 @@ export function makeRig(THREE, model, geom) {
     if (N.KnotCoil) N.KnotCoil.visible = pose.knotS < 0;
     return F;
   }
-  return { holder, root, node: (n) => N[n] || node(n), update, seat };
+  return { holder, root, node: (n) => N[n] || node(n), update, seat, bendGuide };
 }
 
 // the Suture Trimmer: tip at the model origin, shaft along model +X; its tip rides the tract at pusherS (on top of the knot

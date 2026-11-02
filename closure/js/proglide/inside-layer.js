@@ -1,8 +1,9 @@
 // ProGlide's layer in the Inside window: the device (posed by the rig), its flexible catheter, the suture chain, loop,
 // rail and white-tipped strand, the knot's coils, the trimmer, and the failure pictures (torn catheter, blood up the tract).
 import { tractPoint } from '../scene/world.js';
-import { distalSheathPath, tornAt } from '../scene/paths.js';
+import { tornAt } from '../scene/paths.js';
 import { suturePaths } from './suture.js';
+import { distalPath, guidePiece, sheathPiece, toDevice } from './guide.js';
 import { makeStrand, coilPoints } from '../render/strands.js';
 import { makeRig, poseTrimmer } from '../render/rig.js';
 import { COLORS, sheathRadius } from '../render/look.js';
@@ -18,6 +19,8 @@ export const insidePresetName = (stepIndex) => (stepIndex <= 2 ? 'wide' : stepIn
 export function proglideInside(view, root, { model, trimmer, geom }) {
   const { THREE } = view;
   const rig = makeRig(THREE, model, geom); root.add(rig.holder);
+  // the distal guide (black, the model's colour) and the catheter: one path, drawn by the page (guide.js)
+  const guide = makeStrand(THREE, { color: '#151517', radius: geom.guide.r, sides: 16, rough: 0.42 });
   const distal = makeStrand(THREE, { color: COLORS.sheath, radius: sheathRadius(geom), sides: 16, rough: 0.35, physical: true });
   const distalTip = makeStrand(THREE, { color: COLORS.sheath, radius: 1.2, sides: 16, rough: 0.35, physical: true });
   const chain = { suture: [], link: [], cuff: [] };
@@ -30,12 +33,13 @@ export function proglideInside(view, root, { model, trimmer, geom }) {
   const coil = makeStrand(THREE, { color: COLORS.suture, radius: 0.125, step: 0.08, sides: 6 });
   // blood tracking up the tract past a loose stitch
   const bleed = makeStrand(THREE, { color: COLORS.blood, radius: 1.2, sides: 14, rough: 0.25, opacity: 0.72 });
-  for (const s of [distal, distalTip, loop, rail, nonRail, coil, bleed]) root.add(s.group);
+  for (const s of [guide, distal, distalTip, loop, rail, nonRail, coil, bleed]) root.add(s.group);
   const trim = trimmer ? trimmer.clone(true) : null; if (trim) root.add(trim);
 
   function update(pose) {
     const F = rig.update(pose);
-    const cath = pose.deviceShown ? distalSheathPath(F.toWorld(geom.sheathStartLocal), geom.sheathLen) : null;
+    const D = pose.deviceShown ? distalPath(pose, geom) : null, gp = D && guidePiece(D), cath = D && sheathPiece(D);
+    guide.update(gp); if (gp) rig.bendGuide(gp.map((q) => toDevice(F, q)));
     const torn = cath && pose.sheathTorn ? tornAt(cath) : null;           // tightened on the device: the tip tears off at the wall
     distal.update(torn ? torn[0] : cath); distalTip.update(torn ? torn[1] : null);
     const S = suturePaths(pose, geom);

@@ -10,6 +10,7 @@ import { INSIDE_PRESETS } from '../proglide/inside-layer.js';
 import { handsPreset as oneHands } from '../proglide/hands-layer.js';
 import { tractPoint } from '../scene/world.js';
 import { TRACT_LEN } from '../scene/paths.js';
+import { wireRoute } from '../proglide/guide.js';
 
 const SQ = Math.SQRT1_2;
 const INSIDE = { ...INSIDE_PRESETS, top: { target: [0, -30.5, -0.5], dir: [0.02, 1, 0.16], radius: 12 } };
@@ -29,7 +30,8 @@ export default {
     { id: 'clamp', label: 'Hemostats' }, { id: 'bigSheath', label: 'Large sheath' }],
   readGeom: ([model]) => readGeom(model),
   poseOf,
-  shared: (p) => ({ holeOpen: p.holeOpen, gather: p.gather, bites: [-4, 4], wireShown: p.wireShown, sheathShown: p.sheathShown, topView: p.topView }),
+  shared: (p, geom) => ({ holeOpen: p.holeOpen, gather: p.gather, bites: [-4, 4], wireShown: p.wireShown, sheathShown: p.sheathShown, topView: p.topView,
+    wire: (geom && (wireRoute(devicePose(p, 'a'), geom) || wireRoute(devicePose(p, 'b'), geom))) || null }),   // the device riding it routes it
   insideLayer: (view, root, models, geom) => precloseInside(view, root, models, geom),
   handsLayer: (view, root, models, geom) => precloseHands(view, root, models, geom),
   insidePreset: (i) => INSIDE[insideName(i)],

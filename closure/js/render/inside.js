@@ -92,7 +92,7 @@ export function createInside(view) {
     plug.visible = !top && close > 0.01;
     const vk = `${shared.holeOpen.toFixed(2)}|${shared.gather.toFixed(2)}|${shared.bites.join(',')}|${top}`;
     if (vk !== vkey) { vkey = vk; vessel.geometry.dispose(); vessel.geometry = geo(THREE, vesselGeometry({ ...shared, frontWall: top ? 1 : 0 })); }
-    wire.update(shared.wireShown ? wirePath(140, 70) : null);
+    wire.update(shared.wireShown ? (shared.wire || wirePath(140, 70)) : null);   // a device on the wire routes it (exit port)
     sheath.update(shared.sheathShown ? sheathPath(14, 14) : null);
     hub.visible = shared.sheathShown > 0;
     view.markDirty();

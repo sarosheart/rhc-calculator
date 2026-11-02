@@ -4,6 +4,7 @@ import { W, tractPoint } from './world.js';
 
 export const TRACT_LEN = (W.SKIN_Y - W.WALL_OUT_Y) / Math.sin(W.ANGLE * Math.PI / 180);   // 42.4 mm
 const RUN_Y = W.VESSEL_CY + 0.9;                       // a wire or sheath in the lumen rides a little above the axis
+export const TRACK_RUN_Y = RUN_Y;
 const dist = (a, b) => Math.hypot(a[0] - b[0], a[1] - b[1], a[2] - b[2]);
 
 // the track as a polyline from `outside` mm beyond the skin to `inside` mm cranial of the hole

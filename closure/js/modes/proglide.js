@@ -8,6 +8,7 @@ import { readGeom } from '../proglide/geom.js';
 import { bites } from '../proglide/suture.js';
 import { proglideInside, INSIDE_PRESETS, insidePresetName } from '../proglide/inside-layer.js';
 import { proglideHands, handsPreset } from '../proglide/hands-layer.js';
+import { wireRoute } from '../proglide/guide.js';
 
 const SLOW = new Set(['backload', 'plungerOut', 'retractToPort', 'removeDevice', 'advanceKnot', 'harvest']);
 
@@ -25,7 +26,8 @@ export default {
   // what the shared groin needs from a pose: the hole, the stitch's bites, the wire and the procedure sheath
   shared(pose, geom) {
     const B = bites(geom);
-    return { holeOpen: pose.holeOpen, gather: pose.gather, bites: [B.A.out[0], B.P.out[0]], wireShown: pose.wireShown, sheathShown: pose.sheathShown };
+    return { holeOpen: pose.holeOpen, gather: pose.gather, bites: [B.A.out[0], B.P.out[0]], wireShown: pose.wireShown, sheathShown: pose.sheathShown,
+      wire: wireRoute(pose, geom) };            // riding the device: in its catheter up to the exit port, then out beside it
   },
   insideLayer: (view, root, [model, trimmer], geom) => proglideInside(view, root, { model, trimmer, geom }),
   handsLayer: (view, root, [model, trimmer], geom) => proglideHands(view, root, { model, trimmer, geom }),

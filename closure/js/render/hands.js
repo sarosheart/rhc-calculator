@@ -73,7 +73,7 @@ export function createHands(view) {
     view.markDirty();
   }
   function update(shared) {
-    wire.update(shared.wireShown ? wirePath(140, 70) : null);
+    wire.update(shared.wireShown ? (shared.wire || wirePath(140, 70)) : null);   // a device on the wire routes it (exit port)
     sheath.update(shared.sheathShown ? sheathPath(14, 14) : null);
     hub.visible = shared.sheathShown > 0;
     const [rx, rz] = nickSize(shared); nick.scale.set(rx, rz, 1);

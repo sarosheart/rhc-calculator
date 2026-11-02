@@ -4,6 +4,7 @@
 import { W, computeSeat, deviceFrame } from '../scene/world.js';
 import { TRACT_LEN } from '../scene/paths.js';
 import { haulPerStroke } from './suture.js';
+import { GUIDE_DEFAULT, guideLen } from './guide.js';
 
 export const GEOM_DEFAULTS = Object.freeze({
   footTopLocal: [0.30, 0, 0.30],              // a point on the open foot's upper face, between the cuffs
@@ -13,6 +14,7 @@ export const GEOM_DEFAULTS = Object.freeze({
   markerPortLocal: [2.5, 0, -1.35],
   sheathStartLocal: [-14.14, 0, 10.0],        // where the flexible distal sheath leaves the distal guide (spike: arc end + C·10)
   sheathLen: 90, portArc: 34,
+  guide: GUIDE_DEFAULT,                       // the distal guide's shape as modelled; the page draws it, bent by the vessel (guide.js)
   sheathProfile: [[0, 1.5], [60, 1.45], [84, 1.15], [88.5, 0.95], [90, 0.55]],
   footParkedDeg: -45, footRestDeg: -45,       // the foot's rotation about device y when parked, and as exported
   toeLocal: [-3.24, 0, 3.83],                 // the open foot's toe on its upper face (C·5 + up·0.42): it stays on the wall
@@ -33,10 +35,11 @@ export function readGeom(model) {
     for (const k of Object.keys(GEOM_DEFAULTS)) if (extras[k] !== undefined) g[k] = extras[k];
     const mp = local('MarkerPort'); if (mp) g.markerPortLocal = mp;
   }
-  // where the exit port reaches the skin: the port is portArc along the sheath, which runs down the tract
-  const F0 = deviceFrame({ insert: 0 }, computeSeat(g)), s0 = F0.toWorld(g.sheathStartLocal);
+  // where the exit port reaches the skin: outside the vessel the guide and catheter run straight down the tract from the
+  // guide's start, and the port is portArc along the catheter, past the guide
+  const F0 = deviceFrame({ insert: 0 }, computeSeat(g)), s0 = F0.toWorld([g.guide.x0, 0, 0]);
   const a = W.ANGLE * Math.PI / 180, along = (p) => p[0] * Math.cos(a) + (p[1] - W.WALL_OUT_Y) * Math.sin(a);
-  g.portAtSkinInsert = along(s0) - g.portArc - TRACT_LEN;
+  g.portAtSkinInsert = along(s0) - guideLen(g.guide) - g.portArc - TRACT_LEN;
   g.haulPerStroke = haulPerStroke(g);
   return Object.freeze(g);
 }

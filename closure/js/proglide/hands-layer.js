@@ -2,8 +2,9 @@
 // catheter, the strands once they are out, and the trimmer. Strands are drawn a little thicker than true (0.25 mm) so they
 // stay visible at this window's distance.
 import { tractPoint, deviceFrame } from '../scene/world.js';
-import { distalSheathPath, tornAt, TRACT_LEN } from '../scene/paths.js';
+import { tornAt, TRACT_LEN } from '../scene/paths.js';
 import { suturePaths } from './suture.js';
+import { distalPath, guidePiece, sheathPiece, toDevice } from './guide.js';
 import { makeStrand } from '../render/strands.js';
 import { makeRig, poseTrimmer } from '../render/rig.js';
 import { COLORS, sheathRadius } from '../render/look.js';
@@ -21,17 +22,20 @@ export function proglideHands(view, root, { model, trimmer, geom }) {
   const rig = makeRig(THREE, model, geom);
   rig.root.traverse((o) => { if (o.isMesh) o.material = o.material.clone(); });
   root.add(rig.holder);
+  // the distal guide (black, the model's colour) and the catheter: one path, drawn by the page (guide.js)
+  const guide = makeStrand(THREE, { color: '#151517', radius: geom.guide.r, sides: 16, rough: 0.42 });
   const distal = makeStrand(THREE, { color: COLORS.sheath, radius: sheathRadius(geom), sides: 16, rough: 0.35, physical: true });
   const distalTip = makeStrand(THREE, { color: COLORS.sheath, radius: 1.2, sides: 16, rough: 0.35, physical: true });
   const rail = makeStrand(THREE, { color: COLORS.suture, radius: 0.3 });
   const nonRail = makeStrand(THREE, { color: COLORS.suture, radius: 0.3, tipColor: COLORS.whiteTip, tipLen: 10 });
-  for (const s of [distal, distalTip, rail, nonRail]) root.add(s.group);
+  for (const s of [guide, distal, distalTip, rail, nonRail]) root.add(s.group);
   const trim = trimmer ? trimmer.clone(true) : null;
   if (trim) { trim.traverse((o) => { if (o.isMesh) o.material = o.material.clone(); }); root.add(trim); }
 
   function update(pose) {
     const F = rig.update(pose);
-    const cath = pose.deviceShown ? distalSheathPath(F.toWorld(geom.sheathStartLocal), geom.sheathLen) : null;
+    const D = pose.deviceShown ? distalPath(pose, geom) : null, gp = D && guidePiece(D), cath = D && sheathPiece(D);
+    guide.update(gp); if (gp) rig.bendGuide(gp.map((q) => toDevice(F, q)));
     const torn = cath && pose.sheathTorn ? tornAt(cath) : null;
     distal.update(torn ? torn[0] : cath); distalTip.update(torn ? torn[1] : null);
     const S = suturePaths(pose, geom);
