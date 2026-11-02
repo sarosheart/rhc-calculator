@@ -1,0 +1,56 @@
+// Mini-crush of the LAD / D1 bifurcation, step by step (design §6.4; brief §A3: Galassi's positioning, the contemporary
+// single-kiss sequence, and how classic crush differs). Teal goes to D1, gold to the LAD.
+
+export const ACTIONS = Object.freeze({
+  wireD1: { label: 'Wire D1 (teal)' },
+  wireLAD: { label: 'Wire the LAD (gold)' },
+  predilLAD: { label: 'Predilate the LAD' },
+  predilD1: { label: 'Predilate D1' },
+  placeStent: { label: 'Position the LAD stent' },
+  placeSB: { label: 'Position the D1 stent' },
+  deploySB: { label: 'Deploy the D1 stent' },
+  removeSB: { label: 'Remove its balloon and wire' },
+  deployStent: { label: 'Deploy the LAD stent' },
+  removeStentBalloon: { label: 'Remove its balloon' },
+  pot: { label: 'POT' },
+  rewireBoth: { label: 'Recross through both layers' },
+  small: { label: 'Small balloon first' },
+  kissIn: { label: 'Position both balloons' },
+  kissInflate: { label: 'Kiss' },
+  kissOut: { label: 'Remove both balloons' },
+  rePot: { label: 'Final POT' },
+  wiresOut: { label: 'Remove the wires' },
+});
+
+export const STEPS = Object.freeze([
+  { id: 'prep', title: 'Wire and prepare both branches', actions: ['wireD1', 'wireLAD', 'predilLAD', 'predilD1'],
+    text: 'Wire the harder branch first, here the tight D1, then the LAD, and predilate both: the LAD across the bifurcation, D1 with a non-compliant balloon.',
+    cue: 'Teal wire in D1, gold in the distal LAD, both lesions predilated.' },
+  { id: 'position', title: 'Position both stents', actions: ['placeStent', 'placeSB'],
+    text: 'Both stents go in together, which needs a 7F guide (in 6F a balloon does the crush instead). The 3.0 × 22 mm LAD stent across D1, not deployed; the 2.5 × 16 mm D1 stent with its proximal marker about 2 mm into the LAD (Galassi 1–2 mm).',
+    cue: 'At this angle that is just enough to cover the upper edge of the D1 ostium: Hall warns that 1–2 mm can miss it.' },
+  { id: 'deploy', title: 'Deploy the D1 stent', actions: ['deploySB'],
+    text: 'Deploy the D1 stent while the LAD stent waits, undeployed, beside it. Its balloon can be pulled back a little and re-inflated to optimise the D1 ostium, as in DK crush.',
+    cue: 'Inject and check distal D1 now: once the LAD stent is deployed it is hard to reach.' },
+  { id: 'remove', title: 'Remove its balloon and wire', actions: ['removeSB'],
+    text: 'Take out the D1 stent’s balloon and the D1 wire. Nothing may stay between the D1 stent and the LAD stent that is about to be deployed over it.',
+    cue: 'Only the gold wire is left, inside the LAD stent.' },
+  { id: 'crush', title: 'Deploy the LAD stent: the crush', actions: ['deployStent', 'removeStentBalloon'],
+    text: 'Deploy the LAD stent: as it expands it crushes the protruding part of the D1 stent against the LAD’s D1 side. Classic crush did this with a 4–5 mm protrusion; mini-crush keeps it short, so less metal is crushed.',
+    cue: 'The stent is small for the 3.75 mm proximal LAD; the POT completes the crush.' },
+  { id: 'pot', title: 'POT', actions: ['pot'],
+    text: 'POT with a 3.75 × 8 mm non-compliant balloon, 1:1 to the proximal LAD, its distal end at the carina. It presses the LAD stent and the crushed struts behind it flat to the wall.',
+    cue: 'Check with stent enhancement that nothing floats in the proximal LAD.' },
+  { id: 'rewire', title: 'Rewire D1 through both layers', actions: ['rewireBoth'],
+    text: 'Recross into D1 through a non-distal cell. The wire has to pass two layers: the LAD stent and the crushed D1 stent behind it. A distal recross can pass outside the crushed struts and leave a gap on the carina side of D1.',
+    cue: 'Confirm in two views that the wire is inside the D1 stent.' },
+  { id: 'kiss', title: 'Small balloon, then the final kiss', actions: ['small', 'kissIn', 'kissInflate', 'kissOut'],
+    text: 'Open the way with a 1.25 mm balloon, then kiss: non-compliant 3.0 in the LAD and 2.5 in D1, each alone at high pressure, then both together, deflated together. Mini-crush has a single kiss.',
+    cue: 'The kiss opens D1 through both layers. It leaves the proximal LAD oval.' },
+  { id: 'finalpot', title: 'Final POT', actions: ['rePot', 'wiresOut'],
+    text: 'A final POT with the 3.75 mm balloon, proximal to the carina, rounds the proximal LAD after the kiss and presses the struts back to the wall.',
+    cue: 'Two stents, one kiss, two POTs: the mini-crush sequence.' },
+]);
+
+export const DONE = Object.freeze({ title: 'Mini-crush: the result',
+  text: 'Two stents, one kiss: the last wire crossed two layers into D1, leaving more metal over it than DK crush.' });

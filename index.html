@@ -61,7 +61,8 @@
     {"@type": "ListItem", "position": 9, "url": "https://cathmath.org/intracoronary/", "name": "Intracoronary Physiology & Imaging Simulator"},
     {"@type": "ListItem", "position": 10, "url": "https://cathmath.org/pressors/", "name": "Vasopressor & Inotrope Simulator"},
     {"@type": "ListItem", "position": 11, "url": "https://cathmath.org/closure/", "name": "Closure Devices Simulator"},
-    {"@type": "ListItem", "position": 12, "url": "https://cathmath.org/sentinel/", "name": "Sentinel Cerebral Protection Simulator"}
+    {"@type": "ListItem", "position": 12, "url": "https://cathmath.org/sentinel/", "name": "Sentinel Cerebral Protection Simulator"},
+    {"@type": "ListItem", "position": 13, "url": "https://cathmath.org/bifurcation/", "name": "Bifurcation Stenting Simulator"}
   ]
 }
 </script>
@@ -866,6 +867,24 @@ body {
       </div>
     </a>
 
+    <!-- Bifurcation Stenting -->
+    <a class="tool-card" id="cardBifurcation" href="/bifurcation/">
+      <div class="card-canvas-wrap">
+        <canvas id="canvasBifurcation" role="img"
+               aria-label="The LAD with a diagonal branching off it: two wires go in, a stent opens across the diagonal's origin, a short balloon presses it to the wall above the carina, and two balloons kiss through its side cell into both branches."></canvas>
+      </div>
+      <div class="card-info">
+        <div class="card-title">Bifurcation Stenting <span class="card-arrow">&rarr;</span></div>
+        <div class="card-desc">Provisional, DK crush, mini-crush, culotte and TAP on an LAD and diagonal, cut open and on fluoro, step by step, then their results side by side.</div>
+        <div class="card-tags">
+          <span class="card-tag">Provisional</span>
+          <span class="card-tag">DK crush</span>
+          <span class="card-tag">Culotte</span>
+          <span class="card-tag">TAP</span>
+        </div>
+      </div>
+    </a>
+
     <!-- Vasopressor & Inotrope Simulator -->
     <a class="tool-card" id="cardPressors" href="/pressors/">
       <div class="card-canvas-wrap">
@@ -924,7 +943,7 @@ body {
   <div class="footer-about">
     <h2>About CathMath</h2>
     <p>CathMath is a free suite of interactive cardiology teaching tools — hemodynamic calculators, simulators, and visualisations built around the calculations and pattern recognition exercises a cardiology fellow uses every day on rounds and in the cath lab. Every tool is browser-based, requires no login, and works on a phone the night before call.</p>
-    <p>The tools cover invasive hemodynamics (Fick CO, PVR/SVR, Gorlin, PH classification, RHC waveforms, PV loops), electrophysiology (12-lead EKG, action potentials with antiarrhythmic effects), echocardiography (PISA, continuity, PASP, diastolic algorithm, valvular pattern atlases), coronary intervention (LAO/RAO angiographic projections, FFR / iFR / NHPRs, IVUS, OCT), femoral access closure (ProGlide, pre-close, Angio-Seal, the figure-of-8 stitch), cerebral embolic protection during TAVR (the Sentinel, deployment to retrieval), and cardiac embryology. Each tool surfaces formulas, cut-offs, and the trial evidence that anchors them, with common pitfalls explicitly called out.</p>
+    <p>The tools cover invasive hemodynamics (Fick CO, PVR/SVR, Gorlin, PH classification, RHC waveforms, PV loops), electrophysiology (12-lead EKG, action potentials with antiarrhythmic effects), echocardiography (PISA, continuity, PASP, diastolic algorithm, valvular pattern atlases), coronary intervention (LAO/RAO angiographic projections, FFR / iFR / NHPRs, IVUS, OCT), coronary bifurcation stenting (provisional, DK crush, mini-crush, culotte and TAP, cut open and on fluoro), femoral access closure (ProGlide, pre-close, Angio-Seal, the figure-of-8 stitch), cerebral embolic protection during TAVR (the Sentinel, deployment to retrieval), and cardiac embryology. Each tool surfaces formulas, cut-offs, and the trial evidence that anchors them, with common pitfalls explicitly called out.</p>
     <p>Developed by <a class="credit-link" href="https://x.com/Sarotonin_" target="_blank" rel="noopener">Dr. Saro Avedikian, MD, MPH</a>. The site is intended for educational reference — not a substitute for clinical judgment, complete imaging, or invasive measurements when they are required.</p>
     <p style="margin-top:14px"><a class="credit-link" href="/worksheets/">Reference worksheets</a> &mdash; printable single-page sheets for Gorlin valve area, RHC hemodynamics, PISA quantification of MR, iatrogenic-ASD left atrial pressure, and non-holosystolic MR.</p>
   </div>
@@ -1194,6 +1213,7 @@ body {
       startPressorsAnimation(loops);
       startClosureAnimation(loops);
       startSentinelAnimation(loops);
+      startBifurcationAnimation(loops);
     }, instant ? 100 : 600);
   }
 
@@ -1295,6 +1315,7 @@ body {
       pressorsSetup = setupCanvas('canvasPressors');
       closureSetup = setupCanvas('canvasClosure');
       sentinelSetup = setupCanvas('canvasSentinel');
+      bifurcationSetup = setupCanvas('canvasBifurcation');
       // Redraw final frames if animations completed
       if (hemoDone) drawHemoFrame(hemoSetup, 1);
       if (rhcDone) drawRhcFrame(rhcSetup, 1);
@@ -1308,13 +1329,14 @@ body {
       if (pressorsDone) drawPressorsFrame(pressorsSetup, 1);
       if (closureDone) drawClosureFrame(closureSetup, 1);
       if (sentinelDone) drawSentinelFrame(sentinelSetup, 1);
+      if (bifurcationDone) drawBifurcationFrame(bifurcationSetup, 1);
     }, 200);
   });
 
   // Lazy init — canvases may not have dimensions yet
-  var hemoSetup, rhcSetup, pvSetup, ekgSetup, embryoSetup, apSetup, echoSetup, angioSetup, intraSetup, pressorsSetup, closureSetup, sentinelSetup;
-  var hemoDone = false, rhcDone = false, pvDone = false, ekgDone = false, embryoDone = false, apDone = false, echoDone = false, angioDone = false, intraDone = false, pressorsDone = false, closureDone = false, sentinelDone = false;
-  var hemoRunning = false, rhcRunning = false, pvRunning = false, ekgRunning = false, embryoRunning = false, apRunning = false, echoRunning = false, angioRunning = false, intraRunning = false, pressorsRunning = false, closureRunning = false, sentinelRunning = false;
+  var hemoSetup, rhcSetup, pvSetup, ekgSetup, embryoSetup, apSetup, echoSetup, angioSetup, intraSetup, pressorsSetup, closureSetup, sentinelSetup, bifurcationSetup;
+  var hemoDone = false, rhcDone = false, pvDone = false, ekgDone = false, embryoDone = false, apDone = false, echoDone = false, angioDone = false, intraDone = false, pressorsDone = false, closureDone = false, sentinelDone = false, bifurcationDone = false;
+  var hemoRunning = false, rhcRunning = false, pvRunning = false, ekgRunning = false, embryoRunning = false, apRunning = false, echoRunning = false, angioRunning = false, intraRunning = false, pressorsRunning = false, closureRunning = false, sentinelRunning = false, bifurcationRunning = false;
 
   function ensureSetup() {
     if (!hemoSetup) hemoSetup = setupCanvas('canvasHemo');
@@ -1329,6 +1351,7 @@ body {
     if (!pressorsSetup) pressorsSetup = setupCanvas('canvasPressors');
     if (!closureSetup) closureSetup = setupCanvas('canvasClosure');
     if (!sentinelSetup) sentinelSetup = setupCanvas('canvasSentinel');
+    if (!bifurcationSetup) bifurcationSetup = setupCanvas('canvasBifurcation');
   }
 
 
@@ -2796,6 +2819,112 @@ body {
     runLoop();
   }
 
+  /* Bifurcation Stenting: the LAD and a diagonal; the wires go in, a stent opens across the diagonal's origin, a POT balloon
+     presses it to the wall above the carina, and two balloons kiss through its side cell, which opens into the diagonal */
+  function drawBifurcationFrame(s, progress) {
+    var ctx = s.ctx, W = s.w, H = s.h;
+    ctx.clearRect(0, 0, W, H);
+    function clamp01(x) { return x < 0 ? 0 : x > 1 ? 1 : x; }
+    function ease(x) { x = clamp01(x); return x * x * (3 - 2 * x); }
+    function lerp(a, b, f) { return a + (b - a) * f; }
+    function path(pts, f) {
+      var L = 0, i, seg = [];
+      for (i = 1; i < pts.length; i++) { seg.push(Math.hypot(pts[i][0] - pts[i - 1][0], pts[i][1] - pts[i - 1][1])); L += seg[i - 1]; }
+      var left = f * L;
+      ctx.beginPath(); ctx.moveTo(pts[0][0], pts[0][1]);
+      for (i = 1; i < pts.length && left > 0; i++) {
+        var k = Math.min(1, left / seg[i - 1]);
+        ctx.lineTo(lerp(pts[i - 1][0], pts[i][0], k), lerp(pts[i - 1][1], pts[i][1], k)); left -= seg[i - 1];
+      }
+      ctx.stroke();
+    }
+    var u = Math.min(W, H) / 100;
+    // the carina, the proximal LAD in from the left, the distal LAD on down to the right, the diagonal up to the right
+    var C = [W * 0.5, H * 0.6], P0 = [W * 0.04, H * 0.66], D1 = [W * 0.96, H * 0.82];
+    var dl = [Math.cos(-0.82), Math.sin(-0.82)], S1 = [C[0] + dl[0] * 60 * u, C[1] + dl[1] * 60 * u];
+    ctx.save(); ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+    ctx.strokeStyle = 'rgba(220,60,60,0.30)';
+    ctx.lineWidth = 13 * u; path([P0, C], 1);
+    ctx.lineWidth = 10.5 * u; path([C, D1], 1);
+    ctx.lineWidth = 9 * u; path([[C[0] - 3 * u, C[1] + 1 * u], S1], 1);
+    ctx.restore();
+    // the wires: gold down the LAD, teal into the diagonal
+    ctx.save(); ctx.lineCap = 'round'; ctx.lineWidth = 1.4;
+    ctx.strokeStyle = 'rgba(227,179,65,0.95)'; path([P0, C, D1], ease(progress / 0.16));
+    ctx.strokeStyle = 'rgba(63,193,201,0.95)'; path([[P0[0], P0[1] - 1.5 * u], [C[0] - 2 * u, C[1] - 1.5 * u], S1], ease((progress - 0.04) / 0.16));
+    ctx.restore();
+    // the LAD stent: a lattice of diamond cells across the diagonal's origin, opening from crimped to the wall; the kiss pushes
+    // the struts in front of the diagonal's mouth aside, toward either edge of it
+    var fOpen = ease((progress - 0.22) / 0.16), fKiss = ease((progress - 0.64) / 0.14);
+    if (progress > 0.2) {
+      var lad = [[W * 0.24, lerp(P0[1], C[1], (W * 0.24 - P0[0]) / (C[0] - P0[0]))], C, [W * 0.74, lerp(C[1], D1[1], (W * 0.74 - C[0]) / (D1[0] - C[0]))]];
+      var N = 14, M = 4, nodes = [], r, j;
+      for (r = 0; r <= N; r++) {
+        var t = r / N, a = t < 0.5 ? lad[0] : lad[1], b = t < 0.5 ? lad[1] : lad[2], f = t < 0.5 ? t * 2 : t * 2 - 1;
+        var p = [lerp(a[0], b[0], f), lerp(a[1], b[1], f)], tx = b[0] - a[0], ty = b[1] - a[1], tl = Math.hypot(tx, ty);
+        tx /= tl; ty /= tl;
+        var R = lerp(1.4, t < 0.5 ? 5.4 : 4.4, fOpen) * u, dx = p[0] - C[0], ring = [];
+        for (j = 0; j <= M; j++) {
+          var w = (j / M) * 2 - 1, push = w < 0 && Math.abs(dx) < 6.5 * u ? (dx < 0 ? -1 : 1) * (6.5 * u - Math.abs(dx)) * 0.85 * fKiss : 0;
+          ring.push([p[0] - ty * R * w + tx * push, p[1] + tx * R * w + ty * push]);
+        }
+        nodes.push(ring);
+      }
+      ctx.save(); ctx.strokeStyle = 'rgba(200,205,214,0.92)'; ctx.lineWidth = 1; ctx.lineJoin = 'round';
+      ctx.beginPath();
+      for (r = 0; r < N; r++) for (j = 0; j <= M; j++) {
+        if ((r + j) % 2) continue;
+        for (var dj = -1; dj <= 1; dj += 2) {
+          var jj = j + dj; if (jj < 0 || jj > M) continue;
+          ctx.moveTo(nodes[r][j][0], nodes[r][j][1]); ctx.lineTo(nodes[r + 1][jj][0], nodes[r + 1][jj][1]);
+        }
+      }
+      ctx.stroke(); ctx.restore();
+    }
+    // balloons: the POT in the proximal LAD, its distal end at the carina; then the kiss in both branches
+    function balloon(pts, rad, f) {
+      if (f <= 0) return;
+      ctx.save(); ctx.lineCap = 'round';
+      ctx.strokeStyle = 'rgba(170,190,215,' + (0.42 * f) + ')'; ctx.lineWidth = 2 * rad * f; path(pts, 1);
+      ctx.restore();
+    }
+    var fPot = Math.min(ease((progress - 0.42) / 0.07), 1 - ease((progress - 0.55) / 0.06));
+    balloon([[W * 0.27, lerp(P0[1], C[1], (W * 0.27 - P0[0]) / (C[0] - P0[0]))], [C[0] - 2 * u, C[1] + 0.2 * u]], 6 * u, fPot);
+    var fK = Math.min(fKiss, 1 - ease((progress - 0.84) / 0.06));
+    balloon([[C[0] - 6 * u, C[1] + 0.4 * u], [C[0] + 26 * u, lerp(C[1], D1[1], 26 * u / (D1[0] - C[0]))]], 4.8 * u, fK);
+    balloon([[C[0] - 5 * u, C[1] - 1 * u], [C[0] + dl[0] * 26 * u, C[1] + dl[1] * 26 * u]], 4 * u, fK);
+    if (progress > 0.3) {
+      ctx.font = '500 9px DM Sans, sans-serif';
+      ctx.fillStyle = 'rgba(91,124,240,0.75)';
+      ctx.textAlign = 'right';
+      ctx.fillText('Bifurcation', W - 8, 14);
+    }
+  }
+
+  function startBifurcationAnimation(loops) {
+    if (bifurcationRunning) return;
+    loops = loops || 1;
+    ensureSetup();
+    if (!bifurcationSetup) return;
+    bifurcationDone = false; bifurcationRunning = true;
+    var dur = 3600, loopIdx = 0;
+    function runLoop() {
+      var t0 = performance.now();
+      function frame() {
+        var p = Math.min((performance.now() - t0) / dur, 1);
+        drawBifurcationFrame(bifurcationSetup, p);
+        if (p < 1) requestAnimationFrame(frame);
+        else {
+          loopIdx++;
+          if (loopIdx < loops) { setTimeout(runLoop, 200); }
+          else { bifurcationDone = true; bifurcationRunning = false; }
+        }
+      }
+      requestAnimationFrame(frame);
+    }
+    runLoop();
+  }
+
   // Wait for images to load before setting up hover
   window.addEventListener('load', function() {
     addHoverReplay('cardHemo', startHemoAnimation);
@@ -2810,6 +2939,7 @@ body {
     addHoverReplay('cardPressors', startPressorsAnimation);
     addHoverReplay('cardClosure', startClosureAnimation);
     addHoverReplay('cardSentinel', startSentinelAnimation);
+    addHoverReplay('cardBifurcation', startBifurcationAnimation);
   });
 
   // Auto-skip animation if already seen on this device within 48 hours

@@ -1,0 +1,644 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Bifurcation Stenting — Provisional, DK Crush, Mini-Crush, Culotte and TAP, Step by Step | CathMath</title>
+<meta name="description" content="Coronary bifurcation stenting step by step, cut open and on fluoro: provisional, DK crush, mini-crush, culotte and TAP, and their results compared side by side.">
+<meta name="keywords" content="bifurcation stenting, provisional stenting, proximal optimization technique, POT, kissing balloon, DK crush, double kissing crush, mini-crush, culotte, inverted culotte, T stenting, T and protrusion, TAP, Finet law, side branch, Medina classification, coronary bifurcation, PCI, interventional cardiology, cath lab">
+<meta name="author" content="Dr. Saro Avedikian, MD, MPH">
+<meta name="robots" content="index, follow">
+<link rel="canonical" href="https://cathmath.org/bifurcation/">
+<link rel="icon" type="image/x-icon" href="/favicon.ico">
+<link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+<link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://cathmath.org/bifurcation/">
+<meta property="og:title" content="Bifurcation Stenting, Step by Step | CathMath">
+<meta property="og:description" content="Provisional, DK crush, mini-crush, culotte and TAP on an LAD/diagonal bifurcation, cut open and on fluoro, with their results compared side by side.">
+<meta property="og:image" content="https://cathmath.org/og-image.png">
+<meta property="og:site_name" content="CathMath">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Bifurcation Stenting, Step by Step | CathMath">
+<meta name="twitter:description" content="Provisional, DK crush, mini-crush, culotte and TAP, step by step, cut open and on fluoro. Free teaching tool.">
+<meta name="twitter:image" content="https://cathmath.org/og-image.png">
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "WebApplication",
+  "name": "Bifurcation Stenting",
+  "url": "https://cathmath.org/bifurcation/",
+  "description": "Step-by-step 3D simulator of coronary bifurcation stenting on an LAD and first diagonal, shown cut open and on fluoroscopy: provisional stenting, DK crush, mini-crush, culotte and T / TAP, each result measured from its struts and compared side by side.",
+  "applicationCategory": "HealthApplication",
+  "operatingSystem": "Any",
+  "offers": {"@type": "Offer", "price": "0", "priceCurrency": "USD"},
+  "author": {"@type": "Person", "name": "Dr. Saro Avedikian", "honorificSuffix": "MD, MPH"},
+  "isPartOf": {"@type": "WebSite", "name": "CathMath", "url": "https://cathmath.org"}
+}
+</script>
+<script>
+// <shared:analytics v1>
+// GENERATED FROM shared/analytics.js BY scripts/sync-shared.mjs — DO NOT EDIT HERE.
+// Edit shared/analytics.js, then run: node scripts/sync-shared.mjs --write
+// CathMath analytics — GA4, property 555096463, stream G-ZME4G2EYJS.
+// Design and the reasons for every choice: plans/2026-09-21-analytics-design.md
+//
+// THIS BLOCK MUST NEVER BE ABLE TO BREAK A TOOL. It runs first, so it is wrapped whole, and
+// cmTrack() exists as a no-op before anything that can throw is attempted.
+//
+// HOST GUARD. Unless the page is being served from cathmath.org, nothing loads and nothing is
+// sent: not from file://, not from localhost, not in the node vm harness, not in CardioDoc's
+// fixture capture, not from a copy of this page hosted somewhere else. That is what keeps the
+// house rule true — every tool works with zero runtime dependencies and no network. Analytics is
+// an enhancement that exists only on the production host.
+//
+// NOTHING A USER TYPES IS EVER SENT. Parameters are fixed id strings that already exist in the
+// source (module ids, preset ids, drug ids). cmTrack drops any parameter that is not a short
+// string, so a number read from an input cannot leave even if a caller passes one by mistake.
+(function () {
+  var TOOL = 'bifurcation';
+  var ID = 'G-ZME4G2EYJS';
+  window.cmTrack = function () {};
+  try {
+    var host = String((window.location && window.location.hostname) || '');
+    if (host !== 'cathmath.org' && host !== 'www.cathmath.org') return;
+
+    // Own-traffic flag, as on CardioQFlow: visit once with ?internal=1 (clear with ?internal=0)
+    // and every event from this browser carries traffic_type=internal for a GA4 data filter.
+    var internal = false;
+    try {
+      var q = new URLSearchParams(window.location.search).get('internal');
+      if (q === '1' || q === 'on') window.localStorage.setItem('cathmath_internal', '1');
+      else if (q === '0' || q === 'off') window.localStorage.removeItem('cathmath_internal');
+      internal = window.localStorage.getItem('cathmath_internal') === '1';
+    } catch (e) { internal = false; }
+
+    window.dataLayer = window.dataLayer || [];
+    window.gtag = window.gtag || function () { window.dataLayer.push(arguments); };
+    var base = { tool: TOOL };
+    if (internal) base.traffic_type = 'internal';
+    window.gtag('js', new Date());
+    window.gtag('config', ID, base);           // parameters in config ride on every event, page_view included
+
+    // Injected, never a static <script src>: gtag.js is regenerated by Google constantly, so an
+    // integrity= hash cannot be pinned to it. scripts/lint.mjs DEP-1 allow-lists this one origin
+    // by name rather than failing to notice it.
+    var s = document.createElement('script');
+    s.async = true;
+    s.src = 'https://www.googletagmanager.com/gtag/js?id=' + ID;
+    document.head.appendChild(s);
+
+    var once = {};
+    // cmTrack(name, params, onceKey) — fire-and-forget. onceKey, when given, sends the event at
+    // most once per page load for that key (calc_used: once per module).
+    window.cmTrack = function (name, params, onceKey) {
+      try {
+        if (onceKey) { if (once[onceKey]) return; once[onceKey] = 1; }
+        var p = { tool: TOOL };
+        if (internal) p.traffic_type = 'internal';
+        for (var k in (params || {})) {
+          var v = params[k];
+          if (typeof v === 'string' && v.length > 0 && v.length <= 64) p[k] = v;   // enum ids only
+        }
+        window.gtag('event', String(name), p);
+      } catch (e) { /* analytics must never throw into a tool */ }
+    };
+  } catch (e) { /* blocked, offline, private mode — the tool carries on */ }
+})();
+// </shared:analytics>
+</script>
+<style>
+/* <shared:design-tokens v1> */
+/* GENERATED FROM shared/design-tokens.css BY scripts/sync-shared.mjs — DO NOT EDIT HERE. */
+/* Edit shared/design-tokens.css, then run: node scripts/sync-shared.mjs --write   */
+/* ═══════════════════════════════════════════════════════════════════════════
+   CathMath canonical design tokens — v1
+   SOURCE OF TRUTH. Do not edit the copy inlined in a tool; edit this file and
+   run `node scripts/sync-shared.mjs --write`.
+
+   Theme mechanism (canonical, site-wide):
+     :root      → DARK. Dark is the default, per CLAUDE.md.
+     body.light → LIGHT overrides. The `light` class is added ONLY when
+                  localStorage 'cathmath_dark' === '0'.
+   Tools that also carry `body.dark` rules (echocalc, angio, ap, intracoronary)
+   keep the `dark` class on <body> so those rules still match; the two classes
+   are kept mutually exclusive by the theme toggle.
+
+   Every value below passes WCAG AA (>= 4.5:1) for normal text against its own
+   theme's --bg, and — for the severity trio — against the tinted pill
+   background it is actually painted on. Ratios were measured, not assumed;
+   see shared/design-tokens.md-less note in clinical-constants.json "notes".
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* ───────────────────────────── DARK (default) ───────────────────────────── */
+:root {
+  /* surfaces */
+  --bg: #0a1220;
+  --bg2: #101520;
+  --bg3: #161b26;
+  --panel-bg: #131a26;
+  --panel-bg-2: #0f1722;
+  --panel: #131a26;          /* alias of --panel-bg (hemodynamics naming)  */
+  --panel2: #0f1722;         /* alias of --panel-bg-2                      */
+  --card-bg: #131a26;        /* alias (ekg / pvloop / rhc naming)          */
+  --card-hover: #1a2334;
+  --light-bg: #0a1220;       /* legacy alias of --bg (ekg / pvloop / rhc)  */
+  --canvas-bg: #0d141f;
+
+  /* borders */
+  --border: #2a3340;
+  --border2: #3a4453;
+  --border-active: rgba(74,144,217,0.40);
+
+  /* type */
+  --text: #d8dce4;
+  --text-hi: #e8ecf2;
+  --text-dim: #9aa3b3;
+  --text-secondary: #9aa3b3; /* alias of --text-dim (pvloop naming)        */
+  --text-muted: #8b95a7;
+
+  /* brand / accent */
+  --navy: #4a90d9;
+  --navy-deep: #1e2740;
+  --navy-card: #0c1f3a;
+  --accent: #4a90d9;
+  --accent-glow: rgba(74,144,217,0.15);
+  --blue: #4a90d9;
+  --blue-light: #6eb0f7;
+
+  /* status */
+  --green: #66bb6a;
+  --red: #ef5350;
+  --amber: #ffa726;
+  --green-bg: rgba(102,187,106,0.14);
+  --red-bg: rgba(239,83,80,0.14);
+  --yellow-bg: rgba(255,167,38,0.14);
+
+  /* severity (painted as TEXT on a 15-18% tint of itself) */
+  --severity-mild: #34d399;
+  --severity-mod: #fbbf24;
+  --severity-severe: #f87171;
+  --threshold: #f87171;
+
+  /* controls */
+  --slider-track: #2a3340;
+  --slider-thumb: #4a90d9;
+
+  /* chamber / waveform identity (hemodynamics, pvloop, rhc figures) */
+  --ecg-green: #00e676;
+  --right-blue: #42a5f5;
+  --left-red: #ef5350;
+  --clr-ra: #26c6da;
+  --clr-rv: #42a5f5;
+  --clr-pa: #ce93d8;
+  --clr-pcwp: #ec407a;
+  --clr-lv: #ef5350;
+  --clr-ao: #ffa726;
+  --gradient-fill: rgba(255,193,7,0.18);
+  --normal-ghost: rgba(255,255,255,0.55);
+
+  /* PV-loop curve identity */
+  --espvr-color: #66bb6a;
+  --edpvr-color: #ba68c8;
+  --ea-color: #90a4ae;
+  --loop-color: #ff6b6b;
+  --ghost-color: rgba(100,180,255,0.55);
+  --dot-color: #ffeb3b;
+
+  /* angiographic projections */
+  --rao: #8b8ff0;
+  --lao: #ff8a8a;
+  --cra: #2dd4bf;
+  --cau: #fbbf24;
+  --lca: #ff7b7b;
+  --rca: #6eb0f7;
+
+  /* antiarrhythmic classes (ap simulator) */
+  --c-IA: #8b8ff0;
+  --c-IB: #2dd4bf;
+  --c-IC: #fbbf24;
+  --c-II: #f87171;
+  --c-III: #c084fc;
+  --c-IV: #34d399;
+  --c-V:  #94a3b8;
+  --rest: #94a3b8;
+
+  /* cardiac embryology lineages */
+  --fhf: #4a90d9;
+  --shf: #66bb6a;
+  --defect: #ff5c78;
+  --cushion: #ffa726;
+  --septum-1: #64b5f6;
+  --septum-2: #42a5f5;
+
+  /* ECG paper (ekg simulator) */
+  --ekg-bg: #1a1e24;
+  --ekg-minor: #252a32;
+  --ekg-major: #2e3440;
+  --ekg-trace: #00e676;
+  --panel-left-bg: #131a26;
+  --panel-right-bg: #0a1220;
+
+  /* grid + elevation (theme-independent in feel, theme-dependent in value) */
+  --grid-minor: rgba(255,255,255,0.04);
+  --grid-major: rgba(255,255,255,0.09);
+  --grid-color: rgba(255,255,255,0.04);
+  --shadow-sm: 0 1px 3px rgba(0,0,0,0.40);
+  --shadow-md: 0 2px 8px rgba(0,0,0,0.45);
+  --shadow-lg: 0 4px 16px rgba(0,0,0,0.50);
+  --section-radius: 10px;
+}
+
+/* ─────────────────────────────── LIGHT ──────────────────────────────────── */
+body.light {
+  /* surfaces */
+  --bg: #f4f6f9;
+  --bg2: #e4e8ec;
+  --bg3: #dce0e6;
+  --panel-bg: #ffffff;
+  --panel-bg-2: #f9fafc;
+  --panel: #ffffff;
+  --panel2: #f9fafc;
+  --card-bg: #ffffff;
+  --card-hover: #eef2f7;
+  --light-bg: #f4f6f9;
+  --canvas-bg: #fafbfd;
+
+  /* borders */
+  --border: #d8dfe8;
+  --border2: #c2ccd8;
+  --border-active: rgba(21,101,192,0.45);
+
+  /* type */
+  --text: #1a1a2e;
+  --text-hi: #0d0d1a;
+  --text-dim: #5a6478;
+  --text-secondary: #5a6478;
+  --text-muted: #5f6a7d;
+
+  /* brand / accent */
+  --navy: #0d2240;
+  --navy-deep: #091a33;
+  --navy-card: #0c1f3a;
+  --accent: #1565c0;
+  --accent-glow: rgba(21,101,192,0.12);
+  --blue: #1565c0;
+  --blue-light: #4a90d9;
+
+  /* status */
+  --green: #2e7d32;
+  --red: #c62828;
+  --amber: #b45309;
+  --green-bg: #e8f5e9;
+  --red-bg: #fce4ec;
+  --yellow-bg: #fffde7;
+
+  /* severity */
+  --severity-mild: #047857;
+  --severity-mod: #92400e;
+  --severity-severe: #b91c1c;
+  --threshold: #b91c1c;
+
+  /* controls */
+  --slider-track: #e3e7ee;
+  --slider-thumb: #0d2240;
+
+  /* chamber / waveform identity */
+  --ecg-green: #2e7d32;
+  --right-blue: #1565c0;
+  --left-red: #c62828;
+  --clr-ra: #00646e;
+  --clr-rv: #1565c0;
+  --clr-pa: #7b1fa2;
+  --clr-pcwp: #ad1457;
+  --clr-lv: #c62828;
+  --clr-ao: #a64500;
+  --gradient-fill: rgba(255,152,0,0.22);
+  --normal-ghost: rgba(0,0,0,0.40);
+
+  /* PV-loop curve identity */
+  --espvr-color: #2e7d32;
+  --edpvr-color: #7b1fa2;
+  --ea-color: #546e7a;
+  --loop-color: #0d2240;
+  --ghost-color: rgba(70,140,220,0.55);
+  --dot-color: #c62828;
+
+  /* angiographic projections */
+  --rao: #4f46e5;
+  --lao: #c0392b;
+  --cra: #0f766e;
+  --cau: #92400e;
+  --lca: #a4262c;
+  --rca: #1565c0;
+
+  /* antiarrhythmic classes */
+  --c-IA: #4338ca;
+  --c-IB: #0f766e;
+  --c-IC: #92400e;
+  --c-II: #b91c1c;
+  --c-III: #7e22ce;
+  --c-IV: #047857;
+  --c-V:  #475569;
+  --rest: #475569;
+
+  /* cardiac embryology lineages */
+  --fhf: #1565c0;
+  --shf: #2e7d32;
+  --defect: #c62828;
+  --cushion: #b45309;
+  --septum-1: #1565c0;
+  --septum-2: #0d47a1;
+
+  /* ECG paper */
+  --ekg-bg: #fff5f5;
+  --ekg-minor: #ffdddd;
+  --ekg-major: #ffbbbb;
+  --ekg-trace: #111111;
+  --panel-left-bg: #ffffff;
+  --panel-right-bg: #f4f6f9;
+
+  /* grid + elevation */
+  --grid-minor: rgba(0,0,0,0.05);
+  --grid-major: rgba(0,0,0,0.12);
+  --grid-color: rgba(0,0,0,0.04);
+  --shadow-sm: 0 1px 3px rgba(0,0,0,0.06);
+  --shadow-md: 0 2px 8px rgba(0,0,0,0.08);
+  --shadow-lg: 0 4px 16px rgba(0,0,0,0.10);
+  --section-radius: 10px;
+}
+/* </shared:design-tokens> */
+</style>
+<link rel="stylesheet" href="css/bifurcation.css">
+</head>
+<body>
+<script>
+// theme before first paint: dark is the default; light only when the site key says so
+try { if (localStorage.getItem('cathmath_dark') === '0') document.body.classList.add('light'); } catch (e) {}
+</script>
+
+<nav class="site-nav" aria-label="CathMath tools">
+  <a class="nav-brand" href="/">CathMath</a>
+  <div class="nav-tabs">
+    <a class="nav-tab" href="/rhc/">RHC</a>
+    <a class="nav-tab" href="/pvloop/">PV Loop</a>
+    <a class="nav-tab" href="/hemodynamics/">Waveforms</a>
+    <a class="nav-tab" href="/echocalc/">Echo Calc</a>
+    <a class="nav-tab" href="/intracoronary/">Intracoronary</a>
+    <a class="nav-tab" href="/angio/">Angio Views</a>
+    <a class="nav-tab" href="/closure/">Closure</a>
+    <a class="nav-tab" href="/sentinel/">Sentinel</a>
+    <a class="nav-tab active" href="/bifurcation/" aria-current="page">Bifurcation</a>
+    <a class="nav-tab" href="/ap/">Action Potential</a>
+    <a class="nav-tab" href="/ekg/">EKG</a>
+    <a class="nav-tab" href="/embryology/">Embryology</a>
+    <a class="nav-tab" href="/pressors/">Pressors</a>
+    <a class="nav-tab" href="/worksheets/">Worksheets</a>
+  </div>
+  <div class="nav-right">
+    <button type="button" class="mode-toggle" id="modeToggle" aria-pressed="false" aria-label="Switch to light mode">Light Mode</button>
+  </div>
+</nav>
+
+<header class="page-head">
+  <h1>Bifurcation Stenting</h1>
+</header>
+
+<main class="app">
+  <div id="modes" class="modes" role="group" aria-label="Technique">
+    <button type="button" class="seg" data-mode="provisional" aria-pressed="true">Provisional</button>
+    <button type="button" class="seg" data-mode="dk-crush" aria-pressed="false">DK crush</button>
+    <button type="button" class="seg" data-mode="mini-crush" aria-pressed="false">Mini-crush</button>
+    <button type="button" class="seg" data-mode="culotte" aria-pressed="false">Culotte</button>
+    <button type="button" class="seg" data-mode="tap" aria-pressed="false">T / TAP</button>
+  </div>
+
+  <section id="cut" class="win" aria-label="The bifurcation cut open">
+    <canvas role="img" aria-label="The LAD and its first diagonal with the front half of the wall cut away, so the lumen, the plaque, the stent struts and the carina can be seen. Drag to turn, pinch to zoom."></canvas>
+    <span class="win-label">Cut open</span>
+    <div class="legend" hidden><span><i class="sw l1"></i>1</span><span><i class="sw l2"></i>2</span><span><i class="sw l3"></i>3+ layers</span></div>
+    <div id="fpviews" class="fpviews" role="group" aria-label="The result" hidden>
+      <button type="button" class="seg" data-view="cut" aria-pressed="true">Cut open</button>
+      <button type="button" class="seg" data-view="end" aria-pressed="false">End view</button>
+      <button type="button" class="seg" data-view="layers" aria-pressed="false">Layers</button>
+    </div>
+    <button type="button" class="expand" aria-label="Expand" aria-pressed="false"></button>
+  </section>
+
+  <section id="fluoro" class="win" aria-label="Fluoroscopy">
+    <canvas role="img" aria-label="The same moment on fluoroscopy, left anterior oblique 15 degrees, cranial 33 degrees: the guide, the wires, the balloon markers and the stent, with contrast when it is injected."></canvas>
+    <span class="win-label">Fluoro</span>
+    <button type="button" id="boost" class="boost" aria-pressed="false">Stent enhancement</button>
+    <button type="button" class="expand" aria-label="Expand" aria-pressed="false"></button>
+  </section>
+
+  <div id="scrub" class="scrub"></div>
+
+  <section id="guide" class="guide" aria-live="polite">
+    <div class="guide-head"><span class="step-count"></span><span class="guide-title">Provisional stenting</span></div>
+    <p class="guide-text">One stent across the side branch, then the side branch only if it needs it.</p>
+    <p class="guide-cue"></p>
+    <ul class="final" hidden></ul>
+  </section>
+
+  <div class="actionbar">
+    <button type="button" id="undo" class="btn ghost" disabled>Undo</button>
+    <div id="actions" class="actions"></div>
+    <button type="button" id="showme" class="btn">Show me</button>
+    <button type="button" id="restart" class="btn ghost">Restart</button>
+  </div>
+
+  <details id="steps" class="steps" open>
+    <summary>All steps</summary>
+    <ol></ol>
+  </details>
+</main>
+
+<section id="compare" class="compare" aria-labelledby="cmpHead">
+  <h2 id="cmpHead">Compare the results</h2>
+  <p class="cmp-intro">Two techniques’ results side by side, in the same view: turn either and both turn. The numbers under each
+  are measured from its struts as drawn. A plain T, the D1 stent placed with no protrusion, can be set beside TAP.</p>
+  <div class="cmp-bar">
+    <label class="cmp-pick">Compare <select id="cmpA"></select></label>
+    <label class="cmp-pick">with <select id="cmpB"></select></label>
+    <div id="cmpViews" class="cmp-views" role="group" aria-label="View">
+      <button type="button" class="seg" data-view="cut" aria-pressed="true">Cut open</button>
+      <button type="button" class="seg" data-view="end" aria-pressed="false">End view</button>
+      <button type="button" class="seg" data-view="layers" aria-pressed="false">Layers</button>
+    </div>
+  </div>
+  <div class="cmp-panes">
+    <figure class="cmp-pane">
+      <div class="cmp-win">
+        <canvas role="img" aria-label="The first technique's result, cut open as after its last step; it turns with the other. Drag to turn, pinch to zoom."></canvas>
+        <span class="win-label"></span>
+        <div class="legend" hidden><span><i class="sw l1"></i>1</span><span><i class="sw l2"></i>2</span><span><i class="sw l3"></i>3+ layers</span></div>
+        <div class="gap-key" hidden><i class="sw gap"></i>Bare wall at D1’s heel</div>
+      </div>
+      <figcaption><ul class="final"></ul></figcaption>
+    </figure>
+    <figure class="cmp-pane">
+      <div class="cmp-win">
+        <canvas role="img" aria-label="The second technique's result, cut open as after its last step; it turns with the other. Drag to turn, pinch to zoom."></canvas>
+        <span class="win-label"></span>
+        <div class="legend" hidden><span><i class="sw l1"></i>1</span><span><i class="sw l2"></i>2</span><span><i class="sw l3"></i>3+ layers</span></div>
+        <div class="gap-key" hidden><i class="sw gap"></i>Bare wall at D1’s heel</div>
+      </div>
+      <figcaption><ul class="final"></ul></figcaption>
+    </figure>
+  </div>
+</section>
+
+<section class="related">
+  <h2>Related tools</h2>
+  <div class="links">
+    <a href="/rhc/">RHC Calculator</a>
+    <a href="/pvloop/">PV Loop Simulator</a>
+    <a href="/hemodynamics/">Hemodynamic Waveforms</a>
+    <a href="/echocalc/">Echo Hemodynamics Calculator</a>
+    <a href="/intracoronary/">Intracoronary Physiology</a>
+    <a href="/angio/">Coronary Angiography Views</a>
+    <a href="/closure/">Closure Devices</a>
+    <a href="/sentinel/">Sentinel Cerebral Protection</a>
+    <a href="/ap/">Action Potential Simulator</a>
+    <a href="/ekg/">EKG Simulator</a>
+    <a href="/embryology/">Cardiac Embryology</a>
+    <a href="/pressors/">Vasopressor &amp; Inotrope Simulator</a>
+    <a href="/worksheets/">Reference Worksheets</a>
+  </div>
+</section>
+
+<details class="seo-section">
+  <summary>About this simulator — the techniques, sizing, the model, and references</summary>
+  <h2>Why bifurcation stenting is hard to picture</h2>
+  <p>Where a side branch leaves a coronary artery, a stent cannot simply be laid across the lesion: its struts cover the
+  side-branch ostium, the carina can shift into the side branch, and every balloon that follows reshapes the metal. Each
+  technique, from provisional stenting to the two-stent strategies, is a different sequence of wires, balloons and stents,
+  and each leaves a different arrangement of metal behind. This page plays each sequence step by step on one LAD and first
+  diagonal bifurcation, cut open so every strut and the carina can be seen, beside the same moment on fluoroscopy, and
+  Compare sets two results side by side.</p>
+
+  <h2>Provisional stenting, and when two stents are planned</h2>
+  <p>The European Bifurcation Club's (EBC) 16th consensus sets out provisional stenting step by step: one stent in the main
+  vessel across the side branch, a proximal optimisation (POT), after which the procedure may end, and further steps for the
+  side branch only if it needs them. The same consensus puts the need for a second stent after provisional at 5 to 25 % of
+  procedures; in the provisional group of the EBC TWO trial it was
+  16 %. The 18th consensus lists the reasons to stent the side branch after provisional: impaired flow, a stenosis above 70 %
+  with angina or ECG changes, or a dissection beyond type B.</p>
+  <p>The DEFINITION criteria call a bifurcation outside the left main complex when the side branch has a stenosis of at least
+  90 % over at least 10 mm (the major criterion) and at least two minor criteria are present: moderate or severe calcium, multiple lesions, an angle under 45° or over 70°, a main-vessel reference
+  under 2.5 mm, thrombus, or a main-vessel lesion of 25 mm or more. The EBC reads DEFINITION II as favouring an upfront
+  two-stent strategy in complex true bifurcations with a side-branch lesion longer than 10 mm; with shorter side-branch
+  lesions provisional remains appropriate. The lesion on this page, a 90 % diagonal lesion over 10 mm with none of the minor
+  criteria, meets the major criterion only, so by DEFINITION it is not complex and provisional would be the strategy. It is a
+  teaching case: every technique runs on the same anatomy so their results can be compared like for like.</p>
+
+  <h2>Provisional stenting</h2>
+  <p>One stent sized 1:1 to the distal main vessel crosses the side branch, with the side-branch wire jailed, and leaves at
+  least the length of the shortest POT balloon (6 to 8 mm) above the carina. The POT balloon is sized 1:1 to the proximal
+  main vessel with its distal shoulder at the carina; on the bench a shoulder exactly at the carina cut plane did better than
+  one 1 mm before or past it (Dérimay 2019). If the side branch needs more, it is rewired through a distal cell, next to the
+  carina, opened by kissing balloons, and the POT is repeated. On a bench model, kissing alone left the proximal main vessel
+  with an ellipticity index of 1.23, against 1.04 with POT, side-branch dilation and a final POT (Finet 2015).</p>
+
+  <h2>T and TAP</h2>
+  <p>When the side branch needs a stent after provisional (this page bails out for a dissection), the stent goes in through
+  the main-vessel stent's opened distal cell. A T places it at the ostium with no protrusion, which the EBC finds feasible
+  when the angle is close to 90°; in a micro-CT bench study, angles under 70° left a gap in the scaffolding at the side
+  branch's take-off with a T (Foin 2013). TAP (T and small protrusion) covers the upper edge of the ostium with a protrusion
+  described as 1 to 2 mm or less, then kisses the side-branch stent's balloon with a balloon in the main vessel. It leaves a
+  single layer of metal as a new carina, 2.7 ± 1.4 mm long on IVUS (Hahn 2009, as cited by Burzotta 2015). At this page's 50°
+  angle the model's TAP stent protrudes 2.3 mm into the LAD, measured along the LAD from the carina, the least that covers the
+  diagonal's upper ostial edge. A plain T, placed with no protrusion, leaves the first 1.8 mm of the diagonal's wall past that
+  edge bare, measured along the diagonal. Compare shows the two side by side.</p>
+
+  <h2>DK crush</h2>
+  <p>In the EBC's ten steps, the side-branch stent is placed with a protrusion of 2 to 3 mm into the main vessel (Chen's group
+  describes 1 to 2 mm) and deployed beside a balloon parked in the main vessel. Its balloon and wire come out, the parked
+  balloon and a POT crush the protrusion, the side branch is rewired through a proximal cell and a first kiss clears the
+  crushed struts from the ostium. Then the main-vessel stent, a POT, a second rewire through a central cell, a final kiss and
+  a final POT: two kisses, three POTs, and the last wire crosses one layer of metal. In DKCRUSH-1, final kissing was achieved
+  in 100 % of DK crush procedures against 76 % of classic crush.</p>
+
+  <h2>Mini-crush</h2>
+  <p>Classic crush placed the side-branch stent's proximal marker 4 to 5 mm into the main vessel and crushed the protrusion
+  with the main-vessel stent (Colombo 2003). Mini-crush keeps the protrusion to 1 to 2 mm proximal to the carina (Galassi 2008).
+  Both stents go in together through a 7F guide (in 6F a balloon does the crush), the side-branch wire comes out before the
+  main-vessel stent is deployed, and there is one kiss, so the last wire crosses the main-vessel stent and the crushed struts
+  behind it. On a micro-CT bench, residual side-branch ostial stenosis was 36 % after mini-crush against 47 % after classic
+  crush (Ormiston 2008).</p>
+
+  <h2>Culotte</h2>
+  <p>The EBC recommends the inverted culotte: the side-branch stent first, from the proximal main vessel into the side branch,
+  a POT, the distal main vessel rewired through a distal cell and opened, then the main-vessel stent through that cell,
+  overlapping the first in the proximal main vessel, a POT, the side branch rewired through a distal cell, a final kiss and
+  a final POT. It leaves two layers of metal all round the proximal main vessel over the overlap and a double layer at the
+  carina. It suits a side branch close in size to the distal main vessel, and both stents must expand to the proximal main
+  vessel: manufacturer charts reproduced by the 18th EBC consensus give small-vessel designs an on-label maximum of 3.0 to
+  3.75 mm, and here the 2.5 mm stent opens to 3.75 mm. The side-branch wire comes out before the main-vessel stent and
+  re-crosses through it afterwards, so no wire is left between the two layers (Frampton; the BBK 3 protocol; Toth 2020).
+  In a DK-culotte the first opening toward the main vessel is a kiss instead of a single balloon.</p>
+
+  <h2>Sizing</h2>
+  <p>Each stent is sized 1:1 to the vessel distal to it: the main-vessel stent to the distal main vessel, the side-branch
+  stent to the side branch. The proximal LAD is sized here by Finet's law, 0.678 × (distal main vessel + side branch), which
+  agrees with measured bifurcations when the smaller daughter branch is at least 0.75 of the larger (Huo 2012; here 2.5 / 3.0
+  = 0.83) and holds for Y-shaped, not T-shaped, bifurcations (Ormiston 2018): 0.678 × (3.0 + 2.5) = 3.73, so the proximal LAD
+  is 3.75 mm and every POT uses a 3.75 mm non-compliant balloon. Kissing
+  balloons are short non-compliant balloons sized 1:1 to each branch with minimal overlap, inflated alone at high pressure,
+  then together, and deflated together.</p>
+
+  <h2>About the model</h2>
+  <p>The bifurcation is an LAD and first diagonal: proximal LAD 3.75 mm, distal LAD 3.0 mm, diagonal 2.5 mm, and 50° between
+  the distal LAD and the diagonal (CT and 3D-QCA series of LAD-diagonal bifurcations report 46 ± 19° and 48 ± 16°), with a
+  lesion in each of the three segments (Medina 1,1,1). The fluoro view is LAO 15°, cranial 33°, close to the obtainable
+  optimal LAD-diagonal view in 3D-QCA (14 ± 28° LAO, 33 ± 5° cranial; Tu 2012), and the coronary tree around it is a
+  population-average model. The stent is a generic open-cell design, not any brand's: rings of eight crowns joined by three
+  connectors. These are estimates: the plaque and how much of it remodels outward, the recoil after predilation, how far the
+  carina shifts, the stent's cells and struts, where the balloon markers sit, and the dissection flap's size and place. The
+  protrusions are measured along the LAD from the carina and chosen near the published ranges: 3.0 mm in DK crush (the EBC
+  gives 2 to 3 mm), and 2.3 mm in mini-crush and TAP, the least that covers the diagonal's upper ostial edge at this angle, a little more than the 1 to 2 mm
+  described for those two. Stents bend and open by geometry, not by a mechanical simulation. The layer colours and the
+  numbers under each result are measured from the struts as drawn.</p>
+
+  <h2>References</h2>
+  <ul class="refs">
+    <li>Albiero R, et al. EuroIntervention 2022;18:e362–76 (16th EBC consensus, part I: provisional stenting). PMID 35570748.</li>
+    <li>Lassen JF, et al. EuroIntervention 2022;18:457–70 (16th EBC consensus, part II: two-stent techniques). PMID 35570753.</li>
+    <li>Burzotta F, et al. EuroIntervention 2024;20:e915–26 (18th EBC consensus: angiographic guidance). PMID 38752714.</li>
+    <li>Burzotta F, et al. Catheter Cardiovasc Interv 2020;96:1067–79 (EBC white paper: step sequences). PMID 32579300.</li>
+    <li>Arunothayaraj S, et al. EuroIntervention 2023;19:e297–304 (EBC TWO, five years). PMID 37946522.</li>
+    <li>Zhang JJ, et al. BMJ Open 2018;8:e020019 (DEFINITION II design). PMID 29511018.</li>
+    <li>Lunardi M, et al. EuroIntervention 2023;19:e807–31 (Bif-ARC). PMID 35583108.</li>
+    <li>Chen SL, et al. Eur J Clin Invest 2008;38:361–71 (DKCRUSH-1). PMID 18489398.</li>
+    <li>Hall AB, et al. EuroIntervention 2021;17:e317–25 (DK crush, step by step). PMID 32310131.</li>
+    <li>Colombo A, et al. Catheter Cardiovasc Interv 2003;60:145–51 (crush). PMID 14517916.</li>
+    <li>Galassi AR, et al. Catheter Cardiovasc Interv 2007;69:976–83 (mini-crush). PMID 17295334.</li>
+    <li>Galassi AR, et al. EuroIntervention 2008;4:358–64 (mini-crush in trifurcations). PMID 19110810.</li>
+    <li>Ormiston JA, et al. JACC Cardiovasc Interv 2008;1:351–7 (crush techniques on micro-CT). PMID 19463329.</li>
+    <li>Burzotta F, et al. Catheter Cardiovasc Interv 2007;70:75–82 (TAP). PMID 17585382.</li>
+    <li>Burzotta F, et al. EuroIntervention 2015;11 Suppl V:V91–5 (TAP, technical aspects). PMID 25983182.</li>
+    <li>Hahn JY, et al. J Am Coll Cardiol 2009;54:110–7 (T-stenting on IVUS). PMID 19573726.</li>
+    <li>Foin N, et al. Circ J 2013;77:73–80 (crush, culotte, T and TAP on micro-CT). PMID 23006784.</li>
+    <li>Chevalier B, et al. Am J Cardiol 1998;82:943–9 (culotte). PMID 9794349.</li>
+    <li>Toth GG, et al. EuroIntervention 2020;16:e724–33 (double-kissing culotte). PMID 32338608.</li>
+    <li>Frampton J, Rothstein E, Kaplan AV. Considerations and step-by-step approaches to bifurcation stenting. ACC Coronary
+    Interventions Handbook, chapter 10.</li>
+    <li>Ferenc M, Neumann F-J. BBK 3 trial protocol, culotte technique. ClinicalTrials.gov NCT04192760.</li>
+    <li>Finet G, et al. EuroIntervention 2008;3:490–8 (the fractal law of coronary bifurcations). PMID 19736093.</li>
+    <li>Huo Y, et al. EuroIntervention 2012;7:1310–6 (the Huo–Kassab model). PMID 22433194.</li>
+    <li>Ormiston JA, et al. EuroIntervention 2018;13:e1794–803 (EBC bench consensus). PMID 29131803.</li>
+    <li>Finet G, et al. JACC Cardiovasc Interv 2015;8:1308–17 (re-POT on the bench). PMID 26315733.</li>
+    <li>Dérimay F, et al. Int J Cardiol 2019;292:95–7 (POT balloon position). PMID 31130279.</li>
+    <li>Pflederer T, et al. Invest Radiol 2006;41:793–8 (bifurcation angles on CT). PMID 17035869.</li>
+    <li>Tu S, et al. Int J Cardiovasc Imaging 2012;28:1617–25 (3D-QCA views and angles). PMID 22169957.</li>
+  </ul>
+  <p>Built by Dr. Saro Avedikian, MD, MPH, for teaching. Not for clinical decisions.</p>
+</details>
+
+
+<footer class="foot">© CathMath · a free teaching site</footer>
+
+<script type="module" src="js/main.js"></script>
+</body>
+</html>

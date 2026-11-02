@@ -100,6 +100,17 @@ body {
 }
 .nav-tab:hover { color: rgba(255,255,255,0.85); }
 .nav-tab.active { color: #fff; border-bottom-color: var(--accent); }
+/* the tabs scroll sideways inside the bar when they outrun the window, so the page is never wider than it (2026-11-02,
+   when the Bifurcation tab joined); tighter below 1500 and 1340 px so every tab still shows at 1440 and 1280; above 1000 px
+   the strip's right edge fades out, the cue that it scrolls */
+.nav-tabs { flex: 1 1 auto; min-width: 0; overflow-x: auto; overflow-y: hidden; scrollbar-width: none; }
+.nav-tabs::-webkit-scrollbar { display: none; }
+.nav-brand, .nav-right { flex-shrink: 0; }
+.nav-tab { flex-shrink: 0; white-space: nowrap; }
+@media (max-width: 1500px) { .nav-brand { margin-right: 18px; } .nav-tab { padding: 0 11px; } }
+@media (max-width: 1340px) { .nav-brand { margin-right: 14px; } .nav-tab { padding: 0 8px; font-size: 12px; } }
+@media (min-width: 1000px) { .nav-tabs { margin-right: 10px; -webkit-mask-image: linear-gradient(to right, #000 calc(100% - 24px), transparent);
+  mask-image: linear-gradient(to right, #000 calc(100% - 24px), transparent); } }
 
 .main-container { display: flex; flex: 1; min-height: 0; }
 
@@ -500,6 +511,7 @@ body {
     <a href="/angio/" class="nav-tab">Angio Views</a>
     <a href="/closure/" class="nav-tab">Closure</a>
     <a href="/sentinel/" class="nav-tab">Sentinel</a>
+    <a href="/bifurcation/" class="nav-tab">Bifurcation</a>
     <a href="/intracoronary/" class="nav-tab">Intracoronary</a>
   </div>
   <!-- No light/dark toggle here on purpose. This tool is DARK-ONLY: the 3D scene, the PIP
@@ -2681,6 +2693,7 @@ window.__cathmathEmbryoReady = true;
             <a href="/angio/">Angio Views</a>
             <a href="/closure/">Closure Devices</a>
             <a href="/sentinel/">Sentinel Cerebral Protection</a>
+            <a href="/bifurcation/">Bifurcation Stenting</a>
             <a href="/intracoronary/">Intracoronary Imaging</a>
             <a href="/worksheets/">Printable Worksheets</a>
           </nav>
