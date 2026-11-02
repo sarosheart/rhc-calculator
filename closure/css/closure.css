@@ -44,7 +44,8 @@ body { font-family: -apple-system, "Helvetica Neue", Helvetica, Arial, sans-seri
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke='%23d8dee9' stroke-width='1.6'%3E%3Cpath d='M10 2h4v4M6 14H2v-4M14 2l-5 5M2 14l5-5'/%3E%3C/svg%3E"); }
 .win.expanded .expand { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke='%23d8dee9' stroke-width='1.6'%3E%3Cpath d='M9 3v4h4M7 13V9H3M9 7l5-5M7 9l-5 5'/%3E%3C/svg%3E"); }
 .app.has-expanded .win:not(.expanded) { display: none; }
-.app.has-expanded .win.expanded { grid-column: 1 / -1; grid-row: 2; }
+/* the ids carry the grid areas, so the expanded window needs id weight to take the windows' whole row */
+.app.has-expanded #inside.expanded, .app.has-expanded #hands.expanded { grid-area: 2 / 1 / 3 / -1; }
 .win.no-webgl canvas { display: none; }
 .win .notice { position: absolute; inset: 0; display: grid; place-items: center; padding: 20px; text-align: center;
   color: #c9d3e3; font-size: 13px; }
@@ -146,7 +147,7 @@ details.seo-section p, details.seo-section li { font-size: 13px; color: var(--te
   .win { min-height: 0; border-radius: 8px; }
   #inside { height: 40.4svh; } #hands { height: 30.3svh; }
   .scrub-labels { display: none; }
-  .app.has-expanded .win.expanded { height: 75svh; }
+  .app.has-expanded #inside.expanded, .app.has-expanded #hands.expanded { height: 75svh; }   /* id weight, as above */
   .guide { padding: 7px 10px; border-radius: 8px; }
   .guide-title { font-size: 14px; } .guide-text { font-size: 13px; margin-top: 1px; } .guide-cue { font-size: 12px; margin-top: 1px; }
   .btn, .act { padding: 9px 11px; font-size: 13px; }
