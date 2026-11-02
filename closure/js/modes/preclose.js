@@ -21,6 +21,7 @@ const SLOW = new Set(['backload', 'backload2', 'plungerOut', 'plungerOut2', 'ret
 export default {
   id: 'preclose', label: 'Pre-close', intro: { title: 'ProGlide pre-close', text: 'Two devices placed before a large-bore sheath, knotted at the end of the case.' },
   steps: STEPS, actions: ACTIONS, done: DONE, mistakes: MISTAKES, machine,
+  phases: [{ from: 0, label: 'Device 1' }, { from: 7, label: 'Device 2' }, { from: 10, label: 'Sheath' }, { from: 11, label: 'Close' }],
   models: ['proglide.glb', 'trimmer.glb', 'hemostat.glb'],
   parts: [{ id: 'Foot', label: 'Foot' }, { id: 'cuff', label: 'Cuffs' }, { id: 'link', label: 'Link' },
     { id: 'rail', label: 'Blue strand (rail)' }, { id: 'nonRail', label: 'White-tipped strand (lock)' }, { id: 'knot', label: 'Knot' },

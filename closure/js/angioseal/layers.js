@@ -46,8 +46,10 @@ function common(THREE, root, model, { lettered }) {
     const C = collagenShape(p), t = C ? Math.min(1, Math.max(0, p.collagen - 1)) : 0;
     P.CollagenPlug.visible = !!C && t < 0.6 && !p.collagenIn && !p.split;
     if (P.CollagenPlug.visible) { place(THREE, P.CollagenPlug, C.center, OUT, [-SQ, SQ, 0]); P.CollagenPlug.scale.set(1 - 0.5 * t, 1, 1); }
-    const moundOn = !!C && (t >= 0.6 || p.collagenIn || p.split);
-    P.CollagenMound.visible = moundOn; P.mound2.visible = moundOn && !!p.split;
+    // a boolean: three.js hides only visible === false, so a 0 here drew the mound, never placed, at the world origin (a
+    // white dome on the skin 30 mm cranial of the puncture while the collagen was still a plug)
+    const moundOn = !!C && (t >= 0.6 || p.collagenIn > 0 || p.split > 0);
+    P.CollagenMound.visible = moundOn; P.mound2.visible = moundOn && p.split > 0;
     if (moundOn) {
       const k = p.split ? 0.62 : 0.7 + 0.3 * Math.min(1, (t - 0.6) / 0.4 || 1);
       const base = [C.center[0] - (p.split ? 1.9 : 0), C.bottom, 0];

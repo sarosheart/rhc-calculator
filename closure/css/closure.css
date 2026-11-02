@@ -26,7 +26,7 @@ body { font-family: -apple-system, "Helvetica Neue", Helvetica, Arial, sans-seri
 /* ── app: mode bar, the two windows side by side, guide and actions under them ── */
 .app { --win-bg: #0a0e15; --win-edge: #263043; --act: #3b82f6; max-width: 1680px; margin: 0 auto; padding: 8px 20px 24px;
   display: grid; gap: 12px; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
-  grid-template-areas: "modes modes" "inside hands" "guide guide" "bar bar" "parts parts" "steps steps"; }
+  grid-template-areas: "modes modes" "inside hands" "scrub scrub" "guide guide" "bar bar" "parts parts" "steps steps"; }
 .modes { grid-area: modes; display: flex; gap: 6px; flex-wrap: wrap; }
 .seg { font: inherit; font-size: 13px; font-weight: 600; color: var(--text-hi); background: var(--panel-bg);
   border: 1px solid var(--border); border-radius: 8px; padding: 7px 14px; cursor: pointer; }
@@ -76,6 +76,18 @@ body { font-family: -apple-system, "Helvetica Neue", Helvetica, Arial, sans-seri
 .play .i-pause, .play[data-playing="true"] .i-play { display: none; }
 .play[data-playing="true"] .i-pause { display: block; }
 .play[data-playing="true"] { border-color: var(--act); box-shadow: inset 0 0 0 1px var(--act); }
+/* the scrub bar (js/scrub.js, Sentinel's): the mode's correct moves, filled to where it is now; drag it to run forward or back */
+.scrub { grid-area: scrub; padding: 0 2px; }
+.scrub-track { position: relative; height: 26px; cursor: pointer; touch-action: none; outline: none; }
+.scrub-rail { position: absolute; left: 0; right: 0; top: 10px; height: 6px; border-radius: 3px; background: var(--border); }
+.scrub-fill { position: absolute; left: 0; top: 0; bottom: 0; width: 0; border-radius: 3px; background: var(--act); }
+.scrub-tick { position: absolute; top: 0; bottom: 0; width: 2px; margin-left: -1px; background: var(--bg); }
+.scrub-thumb { position: absolute; top: 5px; left: 0; width: 16px; height: 16px; margin-left: -8px; border-radius: 50%;
+  background: #fff; border: 2px solid var(--act); box-shadow: 0 1px 4px rgba(0,0,0,.45); }
+.scrub-track:focus-visible .scrub-thumb { outline: 2px solid var(--blue-light); outline-offset: 2px; }
+.scrub-track.dragging .scrub-thumb { transform: scale(1.2); }
+.scrub-labels { position: relative; height: 15px; }
+.scrub-label { position: absolute; top: 0; font-size: 11px; line-height: 15px; color: var(--text-dim); white-space: nowrap; }
 .guide.failed { border-color: var(--red); border-left-width: 4px; background: var(--red-bg); }
 .guide.failed .step-count { color: var(--red); }
 .guide.failed .guide-cue { color: var(--text); }
@@ -126,11 +138,14 @@ details.seo-section p, details.seo-section li { font-size: 13px; color: var(--te
   .nav-right { margin-left: 0; padding: 4px 8px; flex: 0 0 auto; }
   .page-head h1 { font-size: 19px; }
   .page-head .sub { font-size: 12.5px; }
-  .app { grid-template-columns: minmax(0, 1fr); grid-template-areas: "modes" "inside" "hands" "guide" "bar" "parts" "steps";
-    gap: 6px; padding: 4px 8px 16px; }
+  /* the scrub bar takes a row: the windows give up a little (still ≥ 40 % and ≥ 30 % of the screen), the rows sit closer,
+     and the phase names drop (the ticks stay, and the step box names the step under the thumb) */
+  .app { grid-template-columns: minmax(0, 1fr); grid-template-areas: "modes" "inside" "hands" "scrub" "guide" "bar" "parts" "steps";
+    gap: 4px; padding: 4px 8px 16px; }
   .seg { padding: 6px 12px; }
   .win { min-height: 0; border-radius: 8px; }
-  #inside { height: 42svh; } #hands { height: 31svh; }
+  #inside { height: 40.4svh; } #hands { height: 30.3svh; }
+  .scrub-labels { display: none; }
   .app.has-expanded .win.expanded { height: 75svh; }
   .guide { padding: 7px 10px; border-radius: 8px; }
   .guide-title { font-size: 14px; } .guide-text { font-size: 13px; margin-top: 1px; } .guide-cue { font-size: 12px; margin-top: 1px; }

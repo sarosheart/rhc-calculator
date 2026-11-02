@@ -1,6 +1,6 @@
 // What goes wrong with the figure-of-8 (plans/closure/research/angioseal_fig8.md §2A–2C). The deep bite is what every
-// published description warns against; the shallow bite and tying on the sheath follow from the mechanism the papers
-// describe, so their words say what would happen.
+// published description warns against; the shallow bite and cinching with the sheath in follow from the mechanism the
+// papers describe, so their words say what would happen.
 export const MISTAKES = Object.freeze({
   biteDeep: {
     title: 'Too deep: through the vein',
@@ -12,12 +12,12 @@ export const MISTAKES = Object.freeze({
     title: 'Too shallow: skin only',
     what: 'The bite caught only skin. Tightening it would pucker the skin without pressing down on the tract or the venotomy.',
     why: 'The tamponade comes from gathering subcutaneous tissue; the stitch has failed where there was too little of it.',
-    fix: 'Take a full subcutaneous bite, about 1 to 1.5 cm deep.',
+    fix: 'Take a full subcutaneous bite, about 1 to 1.5 cm deep under the sheath.',
   },
   tiedOnSheath: {
-    title: 'Tied down with the sheath in',
-    what: 'The knot was pulled down with the sheath still in, so the stitch would cinch round the sheath.',
+    title: 'Cinched with the sheath in',
+    what: 'The knot was pulled down tight with the sheath still in, so the stitch would cinch round the sheath.',
     why: 'The figure of eight closes on whatever runs through it; tightened now, it grips the sheath instead of the tissue over the venotomy.',
-    fix: 'Hold the ends up, taut, take the sheath out, then tie.',
+    fix: 'Leave the knot loose, pull the sheath, and let the knot follow it down; snug it once the sheath is out.',
   },
 });

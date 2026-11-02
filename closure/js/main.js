@@ -1,5 +1,6 @@
 // Closure Devices page: builds the two windows, loads a device mode (its code and models on first use), runs its steps
-// (Show me / Play / Undo / Restart / jump to a step, and the wrong moves it offers) and keeps both windows on the same pose.
+// (Show me / Play / Undo / Restart / jump to a step, the scrub bar, and the wrong moves it offers) and keeps both windows on
+// the same pose.
 // The mode is in the address (#angioseal; none = ProGlide). With ?debug, window.__closure exposes hooks for the tests.
 import * as THREE from '../vendor/three/three-closure.min.js';
 import { createView } from './render/view.js';
@@ -9,6 +10,8 @@ import { MODES, modeFromHash, loadMode } from './modes/index.js';
 import { createAnimator } from './anim.js';
 import { createPlayer } from './play.js';
 import { createUI } from './ui.js';
+import { createScrubber } from './scrub.js';
+import { correctPath, courseMarks, poseAlong } from './course.js';
 
 // theme: dark by default; the site-wide key cathmath_dark ('0' = light)
 const modeBtn = document.getElementById('modeToggle');
@@ -54,10 +57,14 @@ function loadGLB(name) {
 let mode = null, M = null, geom = null, models = [], state, history = [], queue = [], working = false, anim, ui;
 let iv = null, hv = null, inside = null, hands = null, inLayer = null, handLayer = null, inRoot = null, handRoot = null, gl = false;
 let switching = Promise.resolve(), modeSerial = 0, loading = false, picked = null;
+// the scrub bar: the mode's correct path (course[k] = after k correct moves), the move under way (for the thumb), where it is
+let scrub = null, course = [], moveBar = null, barX = 0;
 
 const pose = (s) => mode.poseOf(s, geom);
 function draw(p) {
   if (!mode || !p) return;
+  if (scrub && !scrub.dragging()) setBar(moveBar ? moveBar.from + (moveBar.to - moveBar.from)
+    * Math.min(1, (performance.now() - moveBar.t0) / moveBar.ms) : state ? state.done : 0);
   if (inside) { inside.update(mode.shared(p, geom)); inLayer?.update(p); }
   if (hands) { hands.update(mode.shared(p, geom)); handLayer?.update(p); }
   if (ui && gl) ui.showParts((mode.parts || []).filter((pt) => partObjs(pt).some(shown)).map((pt) => pt.id));
@@ -79,12 +86,19 @@ function focusStep() {
   const next = M.nextAction(state);
   if (hands && handLayer) hands.focus(next ? mode.focusFor(next, pose(state), handLayer) : null, handLayer.resolve);
 }
-function refresh() {
+// each move puts both cameras back on the step's preset; while the scrub bar is dragged only a preset that changed does
+// (a camera restarted on every pointer move would never get anywhere)
+const presetKey = (q) => (q ? [q.target, q.dir, q.radius].flat().map((v) => Math.round(v * 2) / 2).join(',') : '');
+let shownPresets = ['', ''];
+function refresh(scrubbing = false) {
   const next = M.nextAction(state), si = M.stepIndex(state), last = mode.steps.length - 1;
   ui.show({ stepIndex: si, next, available: M.available(state), failed: state.failed ? mode.mistakes[state.failed] : null,
     canUndo: history.length > 0 });
-  if (iv) iv.setPreset(mode.insidePreset(Math.min(si, last)));
-  if (hv && handLayer) hv.setPreset(mode.handsPreset(Math.min(si, last), pose(state), handLayer));
+  const ip = iv ? mode.insidePreset(Math.min(si, last)) : null;
+  const hp = hv && handLayer ? mode.handsPreset(Math.min(si, last), pose(state), handLayer) : null;
+  if (ip && (!scrubbing || presetKey(ip) !== shownPresets[0])) iv.setPreset(ip);
+  if (hp && (!scrubbing || presetKey(hp) !== shownPresets[1])) hv.setPreset(hp);
+  shownPresets = [presetKey(ip), presetKey(hp)];
   if (picked) { picked = null; ui.pick(null); inside?.glow([]); }
   focusStep();
 }
@@ -98,8 +112,11 @@ function work() {
     while (queue.length && serial === modeSerial) {
       const a = queue.shift();
       if (!M.available(state).includes(a)) continue;        // judged when its turn comes: right moves advance, wrong ones fail
+      const from = state.done;
       history.push(state); state = M.apply(state, a); refresh();
+      moveBar = { from, to: state.done, t0: performance.now(), ms: mode.duration(a) };
       await anim.to(pose(state), mode.duration(a));
+      moveBar = null; if (state && !scrub?.dragging()) setBar(state.done);
     }
     working = false;
   })();
@@ -127,7 +144,7 @@ function showMe() {
   let s = state; for (const a of queue) if (M.available(s).includes(a)) s = M.apply(s, a);
   const n = M.nextAction(s); return n ? act(n) : Promise.resolve();
 }
-function settleNow() { player.stop(); queue = []; anim.finish(); }
+function settleNow() { player.stop(); queue = []; moveBar = null; anim.finish(); }
 function undo() {
   settleNow(); if (!history.length) return;
   state = history.pop(); anim.set(pose(state)); refresh();
@@ -138,6 +155,24 @@ function jump(i) {
   while (M.stepIndex(s) < i && M.nextAction(s)) { h.push(s); s = M.apply(s, M.nextAction(s)); }
   history = h; state = s; anim.set(pose(state)); refresh();
 }
+// the scrub bar: dragging runs the correct path to that point — the in-between pose, the guide and the camera follow —
+// and stops Play; letting go settles on the nearest state, with the history rebuilt so Undo steps back along the path.
+// From a wrong move it comes back onto the correct path.
+function setBar(x) { barX = x; scrub?.set(x); }
+function scrubTo(x) {
+  if (loading || !course.length) return;
+  player.stop(); queue = []; moveBar = null; if (anim.busy()) anim.finish();
+  const n = course.length - 1, k = Math.min(Math.floor(Math.max(x, 0)), n);
+  state = course[k]; history = course.slice(0, k);
+  barX = x; anim.set(poseAlong(course, pose, x)); refresh(true);
+}
+function scrubEnd(x) {
+  if (loading || !course.length) return;
+  const k = Math.min(Math.max(Math.round(x), 0), course.length - 1);
+  player.stop(); queue = []; moveBar = null; if (anim.busy()) anim.finish();
+  state = course[k]; history = course.slice(0, k); anim.set(pose(state)); setBar(k); refresh();
+}
+const stepName = (i) => { const st = mode.steps[Math.min(i, mode.steps.length - 1)]; return i >= mode.steps.length ? mode.done.title : `Step ${i + 1}: ${st.title}`; };
 
 // a device mode: its code and models (once each), new layers in both windows, its first step
 function setMode(id) {
@@ -164,7 +199,9 @@ function setMode(id) {
     }
     ui.setMode(mode);
     for (const b of document.querySelectorAll('#modes [data-mode]')) b.setAttribute('aria-pressed', String(b.dataset.mode === mode.id));
-    history = []; state = M.initialState(geom); anim.set(pose(state)); refresh();
+    history = []; state = M.initialState(geom); moveBar = null;
+    course = correctPath(M, geom); scrub.setMarks(course.length - 1, courseMarks(M, course, mode.steps, mode.phases));
+    anim.set(pose(state)); setBar(0); refresh();
     if (gl) { iv.fit(iv.preset); hv.fit(hv.preset); }
     const want = mode.id === MODES[0].id ? '' : `#${mode.id}`;
     if (location.hash !== want) try { history_.replaceState(null, '', location.pathname + location.search + want); } catch (e) {}
@@ -181,6 +218,8 @@ async function boot() {
   ui = createUI({ steps: [], actions: {}, done: { title: '', text: '' } }, {
     onAction: (a) => { player.stop(); return act(a); }, onShowMe: showMe, onPlay: togglePlay, onUndo: undo, onRestart: restart, onJump: jump,
     onExpand: (id) => { ui.expand(id); iv?.resize(); hv?.resize(); }, onPick: pickPart });
+  scrub = createScrubber(document.querySelector('#scrub'), { onScrub: scrubTo, onRelease: scrubEnd,
+    text: (x) => (M && course.length ? stepName(M.stepIndex(course[Math.min(Math.floor(x), course.length - 1)])) : '') });
   if (gl) {
     const pr = pixelRatio();
     iv = createView(THREE, document.querySelector('#inside canvas'), { pixelRatio: pr });
@@ -206,13 +245,22 @@ async function boot() {
     mode: () => mode.id, setMode, state: () => state, pose: () => anim.pose, nextAction: () => M.nextAction(state),
     available: () => M.available(state), poseOf: (s) => pose(s), busy: () => working || anim.busy(),
     playing: () => player.playing(), pace: (k) => { pace = k; },
-    act, showMe, undo, restart, jump,
+    act, showMe, undo, restart, jump, scrubTo, scrubEnd, bar: () => barX, courseLength: () => course.length - 1,
+    courseState: (k) => course[k],
+    historyLength: () => history.length,
     instant: (a) => { settleNow(); history.push(state); state = M.apply(state, a); anim.set(pose(state)); refresh(); },
     nodeWorld: (name) => { const o = inLayer?.node(name); if (!o) return null; o.updateWorldMatrix(true, false);
       const v = new THREE.Vector3(); o.getWorldPosition(v); return v.toArray(); },
     knotWorld: () => inLayer?.knotWorld?.(anim.pose),
     stats: () => [iv, hv].map((v) => v ? pixelStats(v) : null),
     geom: () => geom, fetched: () => [...glbCache.keys()],
+    // objects whose visible is not a boolean: three.js hides only visible === false, so a 0 is drawn (wherever it was left)
+    badVisible: () => { const out = []; for (const v of [iv, hv]) v?.scene.traverse((o) => { if (typeof o.visible !== 'boolean') out.push(o.name || o.type); }); return out; },
+    // the colour drawn where a world point lands in a window (camera settled first)
+    pixelAt: (w, p) => { const v = w === 'hands' ? hv : iv; if (!v) return null; v.fit(v.preset); v.markDirty(); v.frame();
+      const q = new THREE.Vector3(...p).project(v.camera), g = v.renderer.getContext(), px = new Uint8Array(4);
+      g.readPixels(Math.round((q.x + 1) / 2 * g.drawingBufferWidth), Math.round((q.y + 1) / 2 * g.drawingBufferHeight), 1, 1, g.RGBA, g.UNSIGNED_BYTE, px);
+      return [px[0], px[1], px[2]]; },
     insideDebug: () => inside?.debug?.(),
     focusNames: () => (hands?.focused() || []).map((o) => o.name || Object.entries(handLayerNames()).find(([, v]) => flat(v).includes(o))?.[0]).filter(Boolean),
     focusDevice: () => [...new Set((hands?.focused() || []).map((o) => { let x = o; while (x && !x.userData.device) x = x.parent; return x?.userData.device; }).filter(Boolean))],

@@ -14,6 +14,8 @@ const SLOW = new Set(['backload', 'plungerOut', 'retractToPort', 'removeDevice',
 export default {
   id: 'proglide', label: 'ProGlide', intro: { title: 'Perclose ProGlide', text: 'Closing a 5–8F femoral artery puncture with one device.' },
   steps: STEPS, actions: ACTIONS, done: DONE, mistakes: MISTAKES, machine,
+  // the scrub bar's names: where each phase of the IFU sequence starts (step indices)
+  phases: [{ from: 0, label: 'Exchange' }, { from: 2, label: 'Foot' }, { from: 5, label: 'Needles' }, { from: 9, label: 'Strands' }, { from: 11, label: 'Knot' }],
   models: ['proglide.glb', 'trimmer.glb'],
   parts: [{ id: 'Foot', label: 'Foot' }, { id: 'cuff', label: 'Cuffs' }, { id: 'link', label: 'Link' },
     { id: 'rail', label: 'Blue strand (rail)' }, { id: 'nonRail', label: 'White-tipped strand (lock)' }, { id: 'knot', label: 'Knot' },

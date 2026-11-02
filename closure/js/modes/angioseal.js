@@ -22,6 +22,8 @@ const SLOW = new Set(['advanceToDrip', 'toWall', 'deployCollagen', 'tamp', 'devi
 export default {
   id: 'angioseal', label: 'Angio-Seal', intro: { title: 'Angio-Seal VIP', text: 'Closing a 6–8F femoral artery puncture with an anchor and a collagen plug.' },
   steps: STEPS, actions: ACTIONS, done: DONE, mistakes: MISTAKES, machine,
+  // the IFU's own three parts: A locate the artery (A-1…A-9), B set the anchor (B-1…B-5), C seal the puncture (C-1…C-6)
+  phases: [{ from: 0, label: 'Locate' }, { from: 5, label: 'Anchor' }, { from: 7, label: 'Seal' }],
   models: ['angioseal.glb'],
   parts: [{ id: 'Anchor', label: 'Anchor' }, { id: 'collagen', label: 'Collagen' }, { id: 'TamperTube', label: 'Tamper tube' }],
   readGeom: () => ({}),

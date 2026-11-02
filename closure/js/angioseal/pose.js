@@ -19,7 +19,9 @@ export function poseOf(s) {
   const tipArc = TRACK_HOLE + s.tipIn;
   const p = {
     holeOpen: 1, gather: 0, wireShown: s.wire === 'in' ? 1 : 0, sheathShown: s.proc === 'in' ? 1 : 0,   // shared groin
-    insShown: s.ins === 'removed' ? 0 : 1, tipArc, locatorShown: s.locator === 'in' ? 1 : 0, drip: 0,
+    // the insertion sheath comes out of the kit once the angiogram is checked: held up at step 1 its hub was out of the
+    // wide view, so it read as a lettered rod floating over the groin, apart from everything (Saro: "angioseal has a defect")
+    insShown: s.ins === 'removed' || !s.checked ? 0 : 1, tipArc, locatorShown: s.locator === 'in' ? 1 : 0, drip: 0,
     deviceShown: s.device === 'in' ? 1 : 0, capBack: s.capBack, anchorStage: STAGE[s.anchor],
     collagen: COLLAGEN[s.collagen], tamperShown: s.tamper === 'shown' || s.tamper === 'down' ? 1 : 0,
     tamperS: s.tamper === 'down' ? AS.MOUND_H / Math.SQRT1_2 * 0.5 + 2.2 : AS.PLUG_LEN + 1.5,
