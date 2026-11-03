@@ -1,36 +1,43 @@
-// The figure-of-8 ("fellow's stitch") in the world frame, mm. Saro: "it's a figure of 8 needle bites, but a fisherman's
-// knot on top". As Kumar 2019 describes it (PMID 31636798, full text PMC6785297): a deep bite a little caudal to where the
-// sheath enters the skin, passing BELOW the sheath; needle and suture crossed OVER the sheath; a superficial bite a little
-// cranial to the entry, passing ABOVE the sheath — entry, exit and course make a Z — and the two free ends tied in a
-// fisherman's knot over the entry point, which gives the stitch its figure-of-eight look; the knot is pushed down while
-// the sheath comes out. The knot is tied as Saro ties it: cross the ends, twist one round the other three times, one end
-// back through the loop, pull and bring the knot down. Bites run medial (−Z) to lateral (+Z) on this right groin; the
-// sheath leaves the skin at x = 30 (the 45° tract from the venotomy on the anterior wall at x = 0).
+// The figure-of-8 over the puncture after a pre-close, as Saro draws it (plans/closure/research/saro_fig8_fisherman_knot.pdf;
+// plans/closure/fig8_2026-11-02.md): the large venous sheath is out and both pre-close sutures are tied, but the puncture
+// still oozes. Two bites, caudal then cranial, each medial to lateral, crossed over the puncture; then a fisherman's knot
+// tied on the needle end (his "leading edge") with the other (his "starting edge"): three wraps, over then under, working
+// away from the stitch; the end back under the needle end through the first loop, by the stitch, and back over it; then
+// under its own return strand, through the big loop, and pulled; the knot set, then slid up the needle end onto the
+// puncture. World frame, mm: +X caudal, +Y anterior, +Z lateral on this right groin; the skin puncture at x = 30, the
+// 24F tract running cranially from it at 45° down to the venotomy at x = 0.
 import { W } from '../scene/world.js';
-import { piece, track, arcs, TRACK_AT } from '../scene/paths.js';
+import { skinY } from '../render/hands.js';
 
-export const SHEATH_R = 4.0;                                       // 24F
 export const STRAND_R = 0.5;                                       // the silk as the Hands window draws it (thick, to be seen)
 export const SURF = 0.5;                                           // a strand lying on the skin: its centre this far up
 export const PUNCTURE = Object.freeze([30, 0, 0]);
 export const VENOTOMY = Object.freeze([0, W.WALL_OUT_Y, 0]);
+export const TRACT_R = 4.0;                                        // the 24F sheath's tract
 export const HANDS_TOP = Object.freeze({ target: [28, 2, 0], dir: [0.3, 1, 0], radius: 26 });
+// while the knot is tied, caudal to the stitch: the stitch and the knot both in view
+export const HANDS_KNOT = Object.freeze({ target: [45, 5, 0], dir: [0.3, 1, 0], radius: 27 });
+// near the end the strands crowd together, so the camera closes in on them (Saro: "zoomed up towards the crowded
+// components near the end"): on the knot while the end threads back through it and it is set, then on the puncture
+export const HANDS_TIE = Object.freeze({ target: [54, 8, -0.5], dir: [0.3, 1, 0], radius: 11 });
+export const HANDS_DOWN = Object.freeze({ target: [30.5, 3.5, 0], dir: [0.3, 1, 0], radius: 10 });
 // a ½-circle needle, 48 mm (Alnaimi 2025): radius 15.3 mm. A bite is the part of its circle under the skin, so a deeper
 // bite enters and leaves the skin farther apart.
 export const NEEDLE_R = 48 / Math.PI;
-// Caudal bite: 7 mm caudal of the skin entry (Kumar: 5–10 mm), 12 mm deep (Lakshmanadoss 2017: 1–1.5 cm), under the sheath
-// where it rises out of the skin. Cranial bite: superficial, over the sheath where it runs under the skin (Kumar: "above
-// the sheath"); the 24F sheath at 45° lies only 0–4 mm under the skin 5–10 mm cranial of its entry, so the bite is taken
-// 13 mm cranial, 5 mm deep, where it clears the sheath's wall.
-export const BITE = Object.freeze({ caudal: Object.freeze({ x: 37, depth: 12 }), cranial: Object.freeze({ x: 17, depth: 5 }) });
+// The two bites 7 mm either side of the puncture (Kumar 2019: 5–10 mm), at one depth (the drawing's two bites are alike),
+// 14 mm (Lakshmanadoss 2017: 1–1.5 cm): 7 mm cranial of the puncture the tract's lower wall is 12.7 mm deep, so a bite there
+// passes under the tract, not through it.
+export const BITE = Object.freeze({ caudal: Object.freeze({ x: 37, depth: 14 }), cranial: Object.freeze({ x: 23, depth: 14 }) });
 
 const add = (a, b) => a.map((v, i) => v + b[i]), sub = (a, b) => a.map((v, i) => v - b[i]), mul = (a, k) => a.map((v) => v * k);
 const lerp = (a, b, t) => a.map((v, i) => v + (b[i] - v) * t);
 const norm = (a) => { const n = Math.hypot(...a) || 1; return a.map((v) => v / n); };
 const cross = (a, b) => [a[1] * b[2] - a[2] * b[1], a[2] * b[0] - a[0] * b[2], a[0] * b[1] - a[1] * b[0]];
+const dot = (a, b) => a[0] * b[0] + a[1] * b[1] + a[2] * b[2];
 const clamp01 = (t) => Math.min(1, Math.max(0, t));
 const smoothstep = (t) => { const u = clamp01(t); return u * u * (3 - 2 * u); };
-const onSkin = (q) => [q[0], SURF, q[2]];
+// a point lying on the skin (the groin's gentle dome), the strand's centre SURF above it
+export const onSkin = (q) => [q[0], skinY(q[0], q[2]) + SURF, q[2]];
 
 // ── the bites ──
 // a bite's circle, in the plane x = const: centre (x, cy, 0), radius R; point(θ) = [x, cy − R cos θ, R sin θ], θ = 0 at
@@ -55,43 +62,17 @@ export function screenRightIsMedial() {
   const right = [f[1] * up[2] - f[2] * up[1], f[2] * up[0] - f[0] * up[2], f[0] * up[1] - f[1] * up[0]];
   return right[2] < 0;                                     // −Z is medial on a right groin
 }
-
-// ── the sheath ──
-// the 24F sheath: 14 mm into the vein, a 9 mm stub outside the skin (no hub, so it does not hide the stitch from above);
-// pulling it out slides it along the track until its tip is 4 mm out of the skin
-const TRACK = track(), TL = arcs(TRACK);
-export const SHEATH = Object.freeze({ inside: 14, stub: 9, pull: (TRACK_AT.hole - TRACK_AT.skin) + 14 + 4 });
-export function sheathPath(p) {
-  if (!p.sheathShown) return null;
-  const m = (p.sheathPull || 0) * SHEATH.pull;
-  return piece(TRACK, TL, TRACK_AT.skin - SHEATH.stub - m, TRACK_AT.hole + SHEATH.inside - m);
-}
-const segDist = (q, a, b) => { const ab = sub(b, a), t = clamp01(ab.reduce((s, v, i) => s + v * (q[i] - a[i]), 0) / (ab.reduce((s, v) => s + v * v, 0) || 1));
-  return Math.hypot(...sub(q, add(a, mul(ab, t)))); };
+// the tract the sheath left: its axis from the skin puncture to the venotomy
+export const tractAxis = () => [PUNCTURE, VENOTOMY];
+const segDist = (q, a, b) => { const ab = sub(b, a), t = clamp01(dot(ab, sub(q, a)) / (dot(ab, ab) || 1)); return Math.hypot(...sub(q, add(a, mul(ab, t)))); };
 export const distToPath = (q, P) => { let d = Infinity; for (let i = 1; i < P.length; i++) d = Math.min(d, segDist(q, P[i - 1], P[i])); return d; };
 
-// the strand across the skin from a to b, drawn taut over the sheath if the sheath is under it: the upper hull of the
-// height each point needs to clear the sheath's wall (a string pulled over a cylinder runs straight to it and over it)
-const CLEAR = SHEATH_R + STRAND_R + 0.5;
-function needHeight(q, S) {
-  if (!S) return SURF;
-  if (distToPath(onSkin(q), S) >= CLEAR) return SURF;
-  let lo = SURF, hi = 40;                                    // the lowest height from which the point is clear, all the way up
-  for (let k = 0; k < 30; k++) { const mid = (lo + hi) / 2; if (distToPath([q[0], mid, q[2]], S) >= CLEAR) hi = mid; else lo = mid; }
-  return hi;
-}
-export function tautAcross(a, b, S, n = 48) {
-  const prof = [];
-  for (let k = 0; k <= n; k++) { const t = k / n, q = lerp(a, b, t); prof.push([t, Math.max(SURF, needHeight(q, S))]); }
-  prof[0][1] = prof[n][1] = SURF;
-  const hull = [];                                           // upper hull, left to right
-  for (const p of prof) {
-    while (hull.length >= 2) { const [o, m] = hull.slice(-2); if ((m[0] - o[0]) * (p[1] - o[1]) - (m[1] - o[1]) * (p[0] - o[0]) >= 0) hull.pop(); else break; }
-    hull.push(p);
-  }
-  const yAt = (t) => { for (let i = 1; i < hull.length; i++) if (t <= hull[i][0] + 1e-12) { const [t0, y0] = hull[i - 1], [t1, y1] = hull[i]; return y0 + (y1 - y0) * (t - t0) / ((t1 - t0) || 1); } return SURF; };
-  const out = [];
-  for (let k = 0; k <= n; k++) { const t = k / n, q = lerp(a, b, t); out.push([q[0], yAt(t), q[2]]); }
+// ── smooth curves ──
+// cubic Hermite from a (leaving along ta) to b (arriving along tb), tangents scaled by the chord × k; n points after a
+function hermite(a, ta, b, tb, n = 16, k = 1) {
+  const L = Math.hypot(...sub(b, a)) * k, A = mul(norm(ta), L), B = mul(norm(tb), L), out = [];
+  for (let i = 1; i <= n; i++) { const t = i / n, t2 = t * t, t3 = t2 * t;
+    out.push(add(add(mul(a, 2 * t3 - 3 * t2 + 1), mul(A, t3 - 2 * t2 + t)), add(mul(b, -2 * t3 + 3 * t2), mul(B, t3 - t2)))); }
   return out;
 }
 
@@ -99,9 +80,10 @@ export function tautAcross(a, b, S, n = 48) {
 // a ½-circle on the bite's circle with its tip at θ (its swaged end, where the suture is, at θ − π)
 const needleOn = (C, tip, off = [0, 0, 0]) => arcPts(C, tip - Math.PI, tip, 24).map((q) => add(q, off));
 // a pass, f ∈ [0, 1]: the needle turns through the tissue on its own curve until its swaged end is out of the exit
-// (f ≤ PASS), then it is lifted clear, away from the stitch (caudally for the caudal bite, cranially for the cranial one)
+// (f ≤ PASS), then it is lifted clear: after the caudal bite laterally (out of the top view's way), after the cranial bite
+// cranially and medially, where the drawing leaves it (step 1)
 const PASS = 0.85;
-const liftOf = (C) => [C.which === 'caudal' ? 6 : -6, 6, 20];          // lateral, clear of the stitch (mostly out of the top view)
+const liftOf = (C) => (C.which === 'caudal' ? [6, 6, 20] : [-12, 8, -8]);
 function passOf(C, f) {
   const turn = Math.min(1, f / PASS), tip = -C.t0 + turn * (2 * C.t0 + Math.PI), tail = tip - Math.PI;
   const off = mul(liftOf(C), smoothstep((f - PASS) / (1 - PASS)));
@@ -116,105 +98,197 @@ function passOf(C, f) {
 // the needle poised to take the cranial bite: its point on the medial entry
 const poised = (C) => needleOn(C, -C.t0);
 
-// ── the knot: a fisherman's knot, the A end tied round the B end ──
-// A is the end left at the caudal bite's entry (medial), B the end out of the cranial bite's exit (lateral), which stays
-// straight; A crosses B at the knot's base, twists round it (one coil per twist), and goes back down through the loop.
-// Loose it sits above the skin, cranial of the sheath; pulled down it slides along B to the skin over the puncture.
+// ── the knot ──
+// Built in a frame on the needle end (B): u along B away from the stitch, v medial (the drawing's right), w over (toward
+// the viewer above: B's "over" side). Held off the skin caudal to the stitch while it is tied (the drawing's steps 2–5);
+// set (pulled snug on B); then slid up B onto the skin over the puncture, standing up from it.
 export const KNOT = Object.freeze({
-  loose: Object.freeze({ base: [24, 9, 0], up: [-0.3, 1, 0], r: 2.2, pitch: 2.0, h0: 1.4 }),
-  snug: Object.freeze({ base: [30, SURF + 0.1, 0], up: [0, 1, 0], r: 1.05, pitch: 1.05, h0: 0.7 }),
-  onSheath: Object.freeze({ base: [21.5, SURF + 0.1, 0], up: [0, 1, 0], r: 1.05, pitch: 1.05, h0: 0.7 }),
+  // held: the needle end runs caudally and a little down toward the hand, square to the top view, so the wraps and passes
+  // read side by side as the drawing has them (tilted up toward the camera, each wrap hid half the next)
+  held: Object.freeze({ base: [50, 9, 0], u: [1, -0.2, 0], r: 2.4, pitch: 2.6, h0: 1.8 }),
+  set: Object.freeze({ r: 1.15, pitch: 1.15, h0: 1.1 }),
+  // down on the puncture, where the stitch's diagonal lies on the skin: the knot sits on it, its base a strand's width up
+  down: Object.freeze({ base: [30, 2.4, 0], u: [0.45, 1, 0] }),
 });
 export function knotFrame(p) {
-  const L = KNOT.loose, S = p.cinchOnSheath ? KNOT.onSheath : KNOT.snug, t = clamp01(p.down || 0);
-  const u = norm(lerp(L.up, S.up, t)), v = [0, 0, 1], w = norm(cross(u, v));
-  return { base: lerp(L.base, S.base, t), u, v, w, r: L.r + (S.r - L.r) * t, pitch: L.pitch + (S.pitch - L.pitch) * t, h0: L.h0 + (S.h0 - L.h0) * t };
+  // (p.down is already eased by the animator: eased again here the knot crept, rushed, then crept, out of step with the
+  // bites gathering under it)
+  const H = KNOT.held, S = KNOT.set, D = KNOT.down, s = clamp01(p.set || 0), t = clamp01(p.down || 0);
+  const u = norm(lerp(norm(H.u), norm(D.u), t)), v = [0, 0, -1], w = cross(u, v);
+  return { base: lerp(H.base, D.base, t), u, v, w, r: H.r + (S.r - H.r) * s, pitch: H.pitch + (S.pitch - H.pitch) * s, h0: H.h0 + (S.h0 - H.h0) * s, set: s };
 }
 export const knotAt = (p) => knotFrame(p).base;
-const radial = (F, th) => add(mul(F.v, Math.cos(th)), mul(F.w, Math.sin(th)));
-const TH0 = Math.PI / 2;                                    // the first coil starts on the +w side, where A crossed B
-// the fisherman's knot, A's side: from A's free end to where A leaves the skin; wraps: coils so far (fractional while one
-// forms); tuck: how far the end has gone back through the loop
-function knotA(F, wraps, tuck, exitA) {
-  const rise = add(exitA, [0, 3 * clamp01((F.base[1] - SURF) / 8), 0]);        // lifted toward the knot; flat once it is down
-  const Pa = add(F.base, add(mul(F.v, -(F.r + 0.8)), mul(F.u, 0.2)));              // A comes in from the medial side …
-  const Pc = add(F.base, add(mul(F.w, 0.9), mul(F.u, 0.35)));                      // … and crosses in front of B
-  const coils = [];
-  const n = Math.max(1, Math.ceil(wraps * 24));
-  for (let k = 0; k <= n; k++) { const t = wraps * k / n, th = TH0 + 2 * Math.PI * t;
-    coils.push(add(add(F.base, mul(F.u, F.h0 + F.pitch * t)), mul(radial(F, th), F.r))); }
-  const end = coils[coils.length - 1], thEnd = TH0 + 2 * Math.PI * wraps;
-  // held up and out, or tucked: down outside the coils, through the loop below them, out the far side and up
-  const free = [add(end, mul(F.u, 3)), add(add(F.base, mul(F.u, F.h0 + F.pitch * wraps + 12)), mul(radial(F, thEnd), 5))];
-  const loop = add(F.base, add(mul(F.u, 0.3), add(mul(sub(Pa, F.base), 0.35), mul(sub(Pc, F.base), 0.35))));
-  const tucked = [add(add(F.base, mul(F.u, F.h0 * 0.6)), mul(radial(F, thEnd), F.r + 0.9)), loop,
-    add(F.base, add(mul(F.u, 0.15), mul(F.v, -(F.r + 2.2)))), add(F.base, add(mul(F.u, 10), add(mul(F.v, -6), mul(F.w, -2))))];
-  const lead = morph(free, tucked, tuck);
-  return { pts: [...lead.slice().reverse(), ...coils.slice().reverse(), Pc, Pa, rise, onSkin(exitA)], coils, loop, lead };
+// a point in the frame: a along v (medial), b along w (over), h along u
+const at = (F, a, b, h) => add(F.base, add(add(mul(F.v, a), mul(F.w, b)), mul(F.u, h)));
+const radial = (F, phi) => add(mul(F.v, Math.cos(phi)), mul(F.w, Math.sin(phi)));
+// a wrap: φ from 0 at +v (the drawing's right) over B (+w, φ = π/2) to the left, under B and back — one wrap per 2π, each
+// a pitch farther from the stitch
+const coil = (F, phi) => add(add(F.base, mul(F.u, F.h0 + F.pitch * phi / (2 * Math.PI))), mul(radial(F, phi), F.r));
+
+// The end's route through the two passes, from the third wrap's end (each point [along v, along w, along u], sized by the
+// coil radius r so the passes tighten with it): back up the right side outside the coils (the return strand) to the top,
+// over the incoming starting end; down between it and B — the first loop, nearest the stitch — and under B to the left;
+// round and back over B to the right, a little farther from the stitch than it went under (so the end never crosses its
+// own path, as in the drawing); out over the first wrap and down between the coils and the return strand — the big loop —
+// under the return strand, and out to the right, pulled (the drawing's arrow).
+function passRoute(F) {
+  const r = F.r, h0 = F.h0, p = F.pitch, s = F.set, ret = r + 2.0 + 0.2 * (1 - s), thr = r + 1.0 + 0.1 * (1 - s), gap = r + 1.1;
+  const pts = [
+    [r + 0.4, 0.2, h0 + 3 * p + 0.25], [ret, 0.4, h0 + 2.6 * p], [ret, 0.45, h0 + 1.5 * p], [ret, 0.45, h0 + 0.3 * p],
+    [ret - 0.3, 1.35, h0 - 1.6],                                                                // the top, over the incoming end
+    [r + 0.2, 1.3, h0 - 1.8], [gap * 0.6, -0.1, h0 - 1.9],                                      // down into the first loop
+    [0.45, -1.15, h0 - 1.85], [-1.15, -0.3, h0 - 1.6],                                          // under B, to the left
+    [-0.6, 1.1, h0 - 1.05], [0.75, 1.2, h0 - 0.85],                                             // round and back over B
+    [r, 1.5, h0 - 0.7], [thr, 1.6, h0 + 0.3],                                                   // out, before the first wrap begins
+    [thr, 0.55, h0 + 0.9 * p], [thr + 0.1, -0.7, h0 + 1.15 * p],                                // down into the big loop
+    [ret + 1.0, -1.05, h0 + 1.35 * p], [ret + 4.0, -0.6, h0 + 1.6 * p], [ret + 10, 0, h0 + 2.2 * p],   // under the return strand, out
+  ];
+  return pts.map(([a, b, h]) => at(F, a, b, h));
 }
-// B's side: from where B leaves the skin, straight up through the coils to B's free end, held up
-function knotB(F, exitB) {
-  const rise = add(exitB, [0, 3 * clamp01((F.base[1] - SURF) / 8), 0]);
-  return [onSkin(exitB), rise, add(F.base, mul(F.u, -0.3)), add(F.base, mul(F.u, F.h0 + 3 * F.pitch + 3)), add(add(F.base, mul(F.u, 22)), mul(F.v, -2))];
-}
-// two polylines blended point for point (each resampled to the same count by arc length)
-function resample(P, n) {
-  const L = [0]; for (let i = 1; i < P.length; i++) L.push(L[i - 1] + Math.hypot(...sub(P[i], P[i - 1])));
-  const T = L[L.length - 1] || 1, out = [];
-  for (let k = 0; k < n; k++) { const s = T * k / (n - 1); let i = 1; while (i < L.length - 1 && L[i] < s) i++;
-    const t = (s - L[i - 1]) / ((L[i] - L[i - 1]) || 1); out.push(lerp(P[i - 1], P[i], clamp01(t))); }
+// where along the route the first pass ends (back over B, to the right) and the second begins; the first TURN of a pass
+// swings the held-out end round onto the route (the two meet at the coil's end, on its right, outside the coils)
+const PASS1_END = 10, TURN = 0.15;   // (route point 9, back over B: the control list starts with the coil's end)
+// a polyline's length and the point at length s along it, and the polyline up to s
+const lengths = (P) => { const L = [0]; for (let i = 1; i < P.length; i++) L.push(L[i - 1] + Math.hypot(...sub(P[i], P[i - 1]))); return L; };
+function upTo(P, s) {
+  const L = lengths(P), out = [P[0]];
+  for (let i = 1; i < P.length; i++) {
+    if (L[i] <= s) { out.push(P[i]); continue; }
+    const t = (s - L[i - 1]) / ((L[i] - L[i - 1]) || 1); out.push(lerp(P[i - 1], P[i], clamp01(t))); break;
+  }
   return out;
 }
-function morph(a, b, t) {
-  if (t <= 0) return a; if (t >= 1) return b;
-  const n = Math.max(a.length, b.length, 24), A = resample(a, n), B = resample(b, n);
-  return A.map((q, i) => lerp(q, B[i], t));
+// Catmull-Rom through the control points, so the route is the smooth curve the end follows (centripetal enough at this
+// spacing: the points are ≥ 0.8 mm apart)
+function smoothThrough(P, n = 8) {
+  const out = [P[0]];
+  for (let i = 0; i < P.length - 1; i++) {
+    const p0 = P[Math.max(0, i - 1)], p1 = P[i], p2 = P[i + 1], p3 = P[Math.min(P.length - 1, i + 2)];
+    for (let k = 1; k <= n; k++) { const t = k / n, t2 = t * t, t3 = t2 * t;
+      out.push([0, 1, 2].map((c) => 0.5 * (2 * p1[c] + (-p0[c] + p2[c]) * t + (2 * p0[c] - 5 * p1[c] + 4 * p2[c] - p3[c]) * t2 + (-p0[c] + 3 * p1[c] - 3 * p2[c] + p3[c]) * t3))); }
+  }
+  return out;
+}
+
+// The starting end (A), from its entry to its free end: up off the skin (the drawing's small hook) and down to the knot on
+// B's right, in to the first wrap; the wraps so far (fractional while one forms); then its end — held out, or threaded
+// along the passes as far as `tuck` (0–2) has taken it. down: 0 held, 1 on the skin (the approach flattens onto it).
+function strandA(F, wraps, tuck, entry, down) {
+  const f = 1 - down, e = onSkin(entry), hook = add(e, [-1.6, 2.2 * f + 0.25, 0.3]);
+  const pin = at(F, F.r + 1.1, 0, F.h0 - 1.4), c0 = coil(F, 0);
+  const t0 = norm(lerp([-0.4, 1, 0.25], sub(pin, hook), down));
+  const approach = [e, hook, ...hermite(hook, t0, pin, F.u, 14, 0.9)];
+  const n = Math.max(1, Math.ceil(wraps * 36)), coils = [];
+  for (let k = 0; k <= n; k++) coils.push(coil(F, 2 * Math.PI * wraps * k / n));
+  // held out: before the first wrap along B on its right (the drawing's step 2); once wrapping, out from the coil (the
+  // hand carries the end round B)
+  const phi = 2 * Math.PI * wraps, E = coils[coils.length - 1], k = smoothstep(wraps / 0.25);
+  const d = norm(add(mul(radial(F, phi), k), mul(F.u, 1 - k * 0.85)));
+  // (never below the skin: carried under B, the end swings no lower than 1 mm above it)
+  const above = (q) => { const floor = skinY(q[0], q[2]) + SURF + 1; return q[1] >= floor ? q : [q[0], floor, q[2]]; };
+  const out = [E, ...[add(E, mul(d, 3)), add(E, mul(d, 7)), add(add(E, mul(d, 10)), mul(F.u, 1.5))].map(above)];
+  let end;
+  if (tuck <= 0) end = out.slice(1);
+  else {
+    // threaded: the end has gone along the route as far as tuck takes it (the strand behind it follows the route, so it
+    // never cuts through the strand it passes)
+    const R = smoothThrough([E, ...passRoute(F)]), L = lengths(R), lead = 7;
+    const i1 = (PASS1_END + 1) * 8, s1 = L[Math.min(i1, L.length - 1)], s2 = L[L.length - 1];
+    if (tuck < TURN) end = morph(out, upTo(R, lead), tuck / TURN).slice(1);
+    else end = upTo(R, tuck <= 1 ? lead + (s1 - lead) * (tuck - TURN) / (1 - TURN) : s1 + (s2 - s1) * (tuck - 1)).slice(1);
+  }
+  return { pts: [...approach, c0, ...coils.slice(1), ...end], coils };
+}
+// The needle end (B), from its exit to the needle: up off the skin and cranially (the drawing's step 2: up, over to the
+// middle), down across the stitch to the knot, straight through it and on to the needle, held up
+// As the knot slides down, the needle end is the strand pulled: between its exit and the knot it straightens, and it comes
+// onto the knot from the side, above the stitch's diagonal under the knot.
+function strandB(F, exit, down, tail) {
+  const f = 1 - down, x = onSkin(exit), rise = add(x, [-2.2, 2.4 * f + 0.2, -0.9]);
+  const q = sub(F.base, mul(F.u, 1.5 - 0.7 * down)), chord = sub(q, rise), side = norm([chord[0], 0, chord[2]]);
+  const taut = smoothstep(down * 1.6), t0 = norm(lerp([-1, 0.7, -0.55], chord, taut)), t1 = norm(lerp(F.u, side, 0.6 * down));
+  // out of the knot the free end runs on along B while it is held; once the knot is down it is laid off caudally and
+  // laterally, toward the operator, so the needle on it lies beside the knot, not across it
+  const top = add(F.base, mul(F.u, F.h0 + 3 * F.pitch + 2)), out = norm(lerp(F.u, [0.8, 0.35, 0.5], down));
+  return [x, rise, ...hermite(rise, t0, q, t1, 20, 1.15 - 0.75 * taut).slice(0, -1), q, F.base, top, add(top, mul(out, tail))];
+}
+
+// ── the ooze ──
+// blood welling at the puncture and running a little caudally on the skin: its outline (closed polyline on the skin) for a
+// given amount (1 at the start, 0 once the knot is down and the tissue gathered)
+export function oozeOutline(amount) {
+  const a = clamp01(amount); if (a < 0.02) return null;
+  const out = [];
+  for (let k = 0; k < 40; k++) {
+    const th = 2 * Math.PI * k / 40, lobe = 1 + 0.18 * Math.sin(3 * th + 0.7) + 0.1 * Math.sin(5 * th + 2.1);
+    const rx = (3.2 + 1.6 * Math.max(0, Math.cos(th))) * lobe * a, rz = 2.6 * lobe * a;      // longer caudally (+x)
+    const q = [PUNCTURE[0] + 0.8 * a + rx * Math.cos(th), 0, PUNCTURE[2] + rz * Math.sin(th)];
+    out.push([q[0], skinY(q[0], q[2]) + 0.06, q[2]]);
+  }
+  return out;
 }
 
 // ── the whole stitch for a pose ──
-// pose: stitch 0…3 (0–1 the caudal bite, 1–2 across the sheath, 2–3 the cranial bite), needleOn, cross 0…1 (the ends
-// crossed), wraps 0…3, tuck 0…1, down 0…1 (the knot slid down), gather, sheathShown, sheathPull, bite depths, cinchOnSheath
-// → { strand: one polyline from A's free end to B's free end (or the needle), buried: the parts under the skin, needle,
-//     knot: { base, coils, loop } | null }
+// pose: stitch 0…3 (0–1 the caudal bite, 1–2 across the puncture, 2–3 the cranial bite), needleOn, ends 0…1 (both ends
+// brought down), wraps 0…3, tuck 0…2, set 0…1, down 0…1 (slid onto the puncture; the tissue gathers with it), tails 0…1
+// (cut short), bite depths → { strand: one polyline from A's free end to B's free end (or the needle), buried: the parts
+// under the skin, needle, knot: { base, u, r, coils, wraps } | null }
 export function stitchPaths(p) {
-  const s = p.stitch || 0;
-  if (s <= 0) return { strand: null, buried: [], needle: null, knot: null };
-  const g = p.gather || 0, C1 = biteCircle('caudal', p.bite1Depth ?? BITE.caudal.depth, g), C2 = biteCircle('cranial', p.bite2Depth ?? BITE.cranial.depth, g);
-  const S = sheathPath(p);
+  const s = Math.max(0, p.stitch || 0);
+  const g = clamp01(p.down || 0), C1 = biteCircle('caudal', p.bite1Depth ?? BITE.caudal.depth, g), C2 = biteCircle('cranial', p.bite2Depth ?? BITE.cranial.depth, g);
   const e1 = C1.at(-C1.t0), x1 = C1.at(C1.t0), e2 = C2.at(-C2.t0), x2 = C2.at(C2.t0);
-  const restA = [[e1[0] + 10, SURF, e1[2] - 20], onSkin(e1)];   // A's tail, left lying on the skin caudal-medially
+  const restA = [onSkin([e1[0] - 10, 0, e1[2] - 16]), onSkin(e1)];   // A's tail, left on the skin cranially and medially
   const buried = [];
-  let needle = null, strandA, mid, strandB = [];
-  if (s < 1) {                                               // the caudal bite, being taken
+  if (s < 1) {                                               // the caudal bite: poised at its entry (from the start, so
+                                                             // nothing appears when it begins), then taken
     const P = passOf(C1, s); if (P.buried.length) buried.push(P.buried);
     return { strand: [restA[0], ...P.thread], buried, needle: P.needle, knot: null };
   }
   buried.push(arcPts(C1, -C1.t0, C1.t0, 30));
-  const across = tautAcross(onSkin(x1), onSkin(e2), S);
-  const rest1 = passOf(C1, 1).needle, poised2 = poised(C2);
-  if (s < 2) {                                               // carried across over the sheath
-    const f = s - 1, k = Math.max(1, Math.round(f * (across.length - 1)));
-    const nd = rest1.map((q, i) => add(lerp(q, poised2[i], smoothstep(f)), [0, 8 * Math.sin(Math.PI * f), 0]));
-    return { strand: [restA[0], onSkin(e1), ...arcPts(C1, -C1.t0, C1.t0, 30), onSkin(x1), ...across.slice(1, k + 1), nd[0]], buried, needle: nd, knot: null };
+  const across = [];                                         // over the skin, the diagonal across the puncture
+  for (let k = 0; k <= 48; k++) across.push(onSkin(lerp(x1, e2, k / 48)));
+  const rest1 = passOf(C1, 1).needle, poised2 = poised(C2), bite1 = [restA[0], onSkin(e1), ...arcPts(C1, -C1.t0, C1.t0, 30), onSkin(x1)];
+  // carried across: the suture runs from the caudal bite's exit straight up to the needle; the diagonal over the puncture
+  // lies down only when the needle's swaged end goes in at the cranial bite's entry (laid along the skin ahead of the
+  // needle, it doubled back over itself)
+  if (s < 2) {
+    const f = s - 1, nd = rest1.map((q, i) => add(lerp(q, poised2[i], f), [0, 8 * Math.sin(Math.PI * f), 0]));
+    return { strand: [...bite1, nd[0]], buried, needle: nd, knot: null };
   }
-  mid = [...arcPts(C1, -C1.t0, C1.t0, 30), ...across, ...arcPts(C2, -C2.t0, C2.t0, 30)];
+  const mid = [...arcPts(C1, -C1.t0, C1.t0, 30), ...across, ...arcPts(C2, -C2.t0, C2.t0, 30)];
   if (s < 3) {                                               // the cranial bite, being taken
-    const P = passOf(C2, s - 2); if (P.buried.length) buried.push(P.buried);
-    return { strand: [restA[0], onSkin(e1), ...arcPts(C1, -C1.t0, C1.t0, 30), ...across, ...P.thread.slice(1)], buried, needle: P.needle, knot: null };
+    const P = passOf(C2, s - 2);
+    if (!P.buried.length) return { strand: [...bite1, P.needle[0]], buried, needle: P.needle, knot: null };
+    buried.push(P.buried);
+    return { strand: [...bite1.slice(0, -1), ...across, ...P.thread.slice(1)], buried, needle: P.needle, knot: null };
   }
   buried.push(arcPts(C2, -C2.t0, C2.t0, 30));
-  // both bites taken: the needle lifted clear on B, until it is cut off; then the knot
   const restNeedle = passOf(C2, 1).needle, restB = [onSkin(x2), restNeedle[0]];
-  const cross = Math.min(1, Math.max(0, p.cross || 0));
-  if (cross <= 0) {
-    strandA = restA; strandB = restB;
-    if ((p.needleOn ?? 1) >= 0.5) needle = restNeedle;
-    return { strand: [...strandA, ...mid, ...strandB], buried, needle, knot: null };
-  }
-  const F = knotFrame(p), K = knotA(F, cross < 1 ? 0 : Math.max(0, p.wraps || 0), cross < 1 ? 0 : Math.max(0, p.tuck || 0), e1);
-  const KB = knotB(F, x2);
-  strandA = morph(restA, K.pts, cross); strandB = morph(restB, KB, cross);
-  if ((p.needleOn ?? 1) >= 0.5) needle = restNeedle.map((q) => add(q, sub(strandB[strandB.length - 1], restB[1])));
-  return { strand: [...strandA, ...mid, ...strandB], buried, needle,
-    knot: cross >= 1 ? { base: F.base, u: F.u, r: F.r, coils: K.coils, loop: K.loop, lead: K.lead, wraps: p.wraps || 0 } : null };
+  const ends = clamp01(p.ends || 0), needleShown = (p.needleOn ?? 1) >= 0.5;
+  if (ends <= 0) return { strand: [...restA, ...mid.slice(1), ...restB.slice(1)], buried, needle: needleShown ? restNeedle : null, knot: null };
+  const F = knotFrame(p), tail = 12 - 6 * clamp01(p.tails || 0);
+  const A = strandA(F, ends < 1 ? 0 : Math.max(0, p.wraps || 0), ends < 1 ? 0 : Math.max(0, p.tuck || 0), e1, g);
+  const B = strandB(F, x2, g, tail);
+  // both ends brought down together (the drawing's step 2): each from where it lay to where it is held
+  const Af = morph(restA.slice().reverse(), A.pts, ends), Bf = morph(restB, B, ends);
+  const strand = [...Af.slice().reverse(), ...mid.slice(1, -1), ...Bf];
+  // the needle on the needle end, carried with it, never into the skin
+  let needle = null;
+  if (needleShown) { needle = restNeedle.map((q) => add(q, sub(Bf[Bf.length - 1], restNeedle[0])));
+    const low = Math.min(...needle.map((q) => q[1] - skinY(q[0], q[2]) - SURF)); if (low < 0) needle = needle.map((q) => add(q, [0, -low, 0])); }
+  return { strand, buried, needle, a: Af, b: Bf, knot: ends >= 1 ? { base: F.base, u: F.u, v: F.v, w: F.w, r: F.r, coils: A.coils, wraps: p.wraps || 0 } : null };
+}
+// two polylines blended point for point (each resampled to the same count by arc length)
+function resample(P, n) {
+  const L = lengths(P), T = L[L.length - 1] || 1, out = [];
+  for (let k = 0; k < n; k++) { const s = T * k / (n - 1); let i = 1; while (i < L.length - 1 && L[i] < s) i++;
+    const t = (s - L[i - 1]) / ((L[i] - L[i - 1]) || 1); out.push(lerp(P[i - 1], P[i], clamp01(t))); }
+  return out;
+}
+// (t comes eased by the animator; eased again, a move stalled then rushed — and the end threading on from a morph stopped
+// dead before it set off along its route)
+function morph(a, b, t) {
+  if (t <= 0) return a; if (t >= 1) return b;
+  const n = Math.max(a.length, b.length, 24), A = resample(a, n), B = resample(b, n);
+  return A.map((q, i) => lerp(q, B[i], t));
 }

@@ -60,7 +60,7 @@ export function createHands(view) {
   const hub = buildHub(THREE); scene.add(hub);
   const arrow = makeArrow(THREE, 24); arrow.visible = false; scene.add(arrow);
 
-  // target: { nodes: [names], tip, dir }; resolve(name) → an Object3D of the current device layer
+  // target: { nodes: [names], tip, dir, scale? }; resolve(name) → an Object3D of the current device layer
   let glowing = [], focused = [];
   function focus(target, resolve = () => null) {
     for (const m of glowing) { m.emissive?.set('#000000'); m.emissiveIntensity = 0; }
@@ -69,7 +69,7 @@ export function createHands(view) {
     const objs = target.nodes.flatMap((n) => (n === 'wire' ? wire.group : n === 'sheath' ? hub : resolve(n, target))).filter(Boolean);
     focused = objs;
     for (const o of objs) o.traverse((m) => { if (m.isMesh && m.material.emissive) { m.material.emissive.set(COLORS.glow); m.material.emissiveIntensity = 0.16; glowing.push(m.material); } });
-    if (target.tip && target.dir) { arrow.point(target.tip, target.dir); arrow.visible = true; }
+    if (target.tip && target.dir) { arrow.point(target.tip, target.dir); arrow.scale.setScalar(target.scale || 1); arrow.visible = true; }
     view.markDirty();
   }
   function update(shared) {

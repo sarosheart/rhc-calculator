@@ -85,25 +85,27 @@ function pickPart(id) {
   inside?.glow(flat(inLayer?.resolve?.(pt.id, ALL)));
   hands?.focus({ nodes: [pt.id], device: 'both' }, handLayer.resolve);
 }
-function focusStep() {
+function focusStep(along = null) {
   const next = M.nextAction(state);
-  if (hands && handLayer) hands.focus(next ? mode.focusFor(next, pose(state), handLayer) : null, handLayer.resolve);
+  if (hands && handLayer) hands.focus(next ? mode.focusFor(next, pose(state), handLayer, along) : null, handLayer.resolve);
 }
 // each move puts both cameras back on the step's preset; while the scrub bar is dragged only a preset that changed does
-// (a camera restarted on every pointer move would never get anywhere)
+// (a camera restarted on every pointer move would never get anywhere). Between two moves on the bar (dragged or let go)
+// the mode is also handed the pose drawn there (along), so a camera that rides along with a move can follow it.
 const presetKey = (q) => (q ? [q.target, q.dir, q.radius].flat().map((v) => Math.round(v * 2) / 2).join(',') : '');
 let shownPresets = ['', ''];
-function refresh(scrubbing = false) {
+function refresh(scrubbing = false, along = null) {
   const next = M.nextAction(state), si = M.stepIndex(state), last = mode.steps.length - 1;
   ui.show({ stepIndex: si, next, available: M.available(state), failed: state.failed ? mode.mistakes[state.failed] : null,
     canUndo: history.length > 0 || parkX !== null });
-  const ip = iv ? mode.insidePreset(Math.min(si, last)) : null;
-  const hp = hv && handLayer ? mode.handsPreset(Math.min(si, last), pose(state), handLayer) : null;
-  if (ip && (!scrubbing || presetKey(ip) !== shownPresets[0])) iv.setPreset(ip);
-  if (hp && (!scrubbing || presetKey(hp) !== shownPresets[1])) hv.setPreset(hp);
+  const ip = iv ? mode.insidePreset(Math.min(si, last), pose(state), along) : null;
+  const hp = hv && handLayer ? mode.handsPreset(Math.min(si, last), pose(state), handLayer, along) : null;
+  // a preset may say how long its camera flies (one that rides along with a move flies as long as the move)
+  if (ip && (!scrubbing || presetKey(ip) !== shownPresets[0])) iv.setPreset(ip, ip.ms);
+  if (hp && (!scrubbing || presetKey(hp) !== shownPresets[1])) hv.setPreset(hp, hp.ms);
   shownPresets = [presetKey(ip), presetKey(hp)];
   if (picked) { picked = null; ui.pick(null); inside?.glow([]); }
-  focusStep();
+  focusStep(along);
 }
 // resolves once the queue is empty and its last move has played
 let running = Promise.resolve();
@@ -174,14 +176,16 @@ function scrubTo(x) {
   player.stop(); queue = []; moveBar = null; parkX = null; if (anim.busy()) anim.finish();
   const n = course.length - 1, k = Math.min(Math.floor(Math.max(x, 0)), n);
   state = course[k]; history = course.slice(0, k);
-  barX = x; anim.set(poseAlong(course, pose, x)); refresh(true);
+  const p = poseAlong(course, pose, x);
+  barX = x; anim.set(p); refresh(true, x > k && k < n ? p : null);
 }
 function scrubEnd(x) {
   if (loading || !course.length) return;
   const n = course.length - 1, X = Math.min(Math.max(x, 0), n), k = Math.min(Math.floor(X + 1e-6), n);
   player.stop(); queue = []; moveBar = null; if (anim.busy()) anim.finish();
   state = course[k]; history = course.slice(0, k); parkX = X - k > 1e-6 ? X : null;
-  anim.set(parkX === null ? pose(state) : poseAlong(course, pose, X)); setBar(parkX === null ? k : X); refresh();
+  const p = parkX === null ? null : poseAlong(course, pose, X);
+  anim.set(p || pose(state)); setBar(parkX === null ? k : X); refresh(false, p);
 }
 const stepName = (i) => { const st = mode.steps[Math.min(i, mode.steps.length - 1)]; return i >= mode.steps.length ? mode.done.title : `Step ${i + 1}: ${st.title}`; };
 
@@ -273,6 +277,9 @@ async function boot() {
       const q = new THREE.Vector3(...p).project(v.camera), g = v.renderer.getContext(), px = new Uint8Array(4);
       g.readPixels(Math.round((q.x + 1) / 2 * g.drawingBufferWidth), Math.round((q.y + 1) / 2 * g.drawingBufferHeight), 1, 1, g.RGBA, g.UNSIGNED_BYTE, px);
       return [px[0], px[1], px[2]]; },
+    // where a world point is on a window's screen now (−1…1 across), and how far its camera stands from what it looks at
+    ndc: (w, p) => { const v = w === 'hands' ? hv : iv; if (!v) return null; const q = new THREE.Vector3(...p).project(v.camera); return [q.x, q.y]; },
+    camDist: (w) => { const v = w === 'hands' ? hv : iv; return v ? v.camera.position.distanceTo(v.controls.target) : null; },
     insideDebug: () => inside?.debug?.(),
     focusNames: () => (hands?.focused() || []).map((o) => o.name || Object.entries(handLayerNames()).find(([, v]) => flat(v).includes(o))?.[0]).filter(Boolean),
     focusDevice: () => [...new Set((hands?.focused() || []).map((o) => { let x = o; while (x && !x.userData.device) x = x.parent; return x?.userData.device; }).filter(Boolean))],
