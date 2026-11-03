@@ -40,7 +40,7 @@ export const STEPS = Object.freeze([
     cue: 'The stent is small for the 3.75 mm proximal LAD; the POT completes the crush.' },
   { id: 'pot', title: 'POT', actions: ['pot'],
     text: 'POT with a 3.75 × 8 mm non-compliant balloon, 1:1 to the proximal LAD, its distal end at the carina. It presses the LAD stent and the crushed struts behind it flat to the wall.',
-    cue: 'Check with stent enhancement that nothing floats in the proximal LAD.' },
+    cue: 'Check with stent boost that nothing floats in the proximal LAD.' },
   { id: 'rewire', title: 'Rewire D1 through both layers', actions: ['rewireBoth'],
     text: 'Recross into D1 through a non-distal cell. The wire has to pass two layers: the LAD stent and the crushed D1 stent behind it. A distal recross can pass outside the crushed struts and leave a gap on the carina side of D1.',
     cue: 'Confirm in two views that the wire is inside the D1 stent.' },

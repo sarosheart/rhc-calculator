@@ -24,7 +24,7 @@ export const STEPS = Object.freeze([
     cue: 'In Provisional the same kiss leaves D1 open: the two techniques part here.' },
   { id: 'position', title: 'Position the D1 stent', actions: ['parkMV', 'placeSB'],
     text: 'A 3.0 mm balloon parked uninflated in the LAD across D1 for the kiss; then a 2.5 × 16 mm stent on the gold wire through the opened cell, its proximal marker about 2 mm into the LAD, the least that covers the upper edge of D1’s ostium here.',
-    cue: 'Published protrusions are 1–2 mm: the best TAP is a T. Check it with stent enhancement.' },
+    cue: 'Published protrusions are 1–2 mm: the best TAP is a T. Check it with stent boost.' },
   { id: 'deploy', title: 'Deploy, pull back, re-inflate', actions: ['deploySB', 'psoTap'],
     text: 'Deploy the D1 stent with the LAD balloon uninflated. Then pull its balloon back a little, level with the LAD balloon, and inflate it again at high pressure.',
     cue: 'Too proximal, the stent would block the LAD (then internal crush or culotte); too distal, it leaves the ostium bare.' },
