@@ -59,12 +59,15 @@ let iv = null, hv = null, inside = null, hands = null, inLayer = null, handLayer
 let switching = Promise.resolve(), modeSerial = 0, loading = false, picked = null;
 // the scrub bar: the mode's correct path (course[k] = after k correct moves), the move under way (for the thumb), where it is
 let scrub = null, course = [], moveBar = null, barX = 0;
+// let go between two moves, the page stays there (Saro, 2026-11-02: "if i drag to the middle of the two points it doesnt
+// stay there it goes back to the prior step"): parkX is that point; the state is the one before the move under way
+let parkX = null;
 
 const pose = (s) => mode.poseOf(s, geom);
 function draw(p) {
   if (!mode || !p) return;
   if (scrub && !scrub.dragging()) setBar(moveBar ? moveBar.from + (moveBar.to - moveBar.from)
-    * Math.min(1, (performance.now() - moveBar.t0) / moveBar.ms) : state ? state.done : 0);
+    * Math.min(1, (performance.now() - moveBar.t0) / moveBar.ms) : parkX !== null ? parkX : state ? state.done : 0);
   if (inside) { inside.update(mode.shared(p, geom)); inLayer?.update(p); }
   if (hands) { hands.update(mode.shared(p, geom)); handLayer?.update(p); }
   if (ui && gl) ui.showParts((mode.parts || []).filter((pt) => partObjs(pt).some(shown)).map((pt) => pt.id));
@@ -93,7 +96,7 @@ let shownPresets = ['', ''];
 function refresh(scrubbing = false) {
   const next = M.nextAction(state), si = M.stepIndex(state), last = mode.steps.length - 1;
   ui.show({ stepIndex: si, next, available: M.available(state), failed: state.failed ? mode.mistakes[state.failed] : null,
-    canUndo: history.length > 0 });
+    canUndo: history.length > 0 || parkX !== null });
   const ip = iv ? mode.insidePreset(Math.min(si, last)) : null;
   const hp = hv && handLayer ? mode.handsPreset(Math.min(si, last), pose(state), handLayer) : null;
   if (ip && (!scrubbing || presetKey(ip) !== shownPresets[0])) iv.setPreset(ip);
@@ -112,10 +115,13 @@ function work() {
     while (queue.length && serial === modeSerial) {
       const a = queue.shift();
       if (!M.available(state).includes(a)) continue;        // judged when its turn comes: right moves advance, wrong ones fail
-      const from = state.done;
+      // the move under way where the bar was let go runs on from that point, for the time it has left
+      const resume = parkX !== null && Math.floor(parkX) === state.done && !state.failed && a === M.nextAction(state);
+      const from = resume ? parkX : state.done, ms = mode.duration(a) * (resume ? 1 - (parkX - state.done) : 1);
+      parkX = null;
       history.push(state); state = M.apply(state, a); refresh();
-      moveBar = { from, to: state.done, t0: performance.now(), ms: mode.duration(a) };
-      await anim.to(pose(state), mode.duration(a));
+      moveBar = { from, to: state.done, t0: performance.now(), ms };
+      await anim.to(pose(state), ms);
       moveBar = null; if (state && !scrub?.dragging()) setBar(state.done);
     }
     working = false;
@@ -144,9 +150,12 @@ function showMe() {
   let s = state; for (const a of queue) if (M.available(s).includes(a)) s = M.apply(s, a);
   const n = M.nextAction(s); return n ? act(n) : Promise.resolve();
 }
-function settleNow() { player.stop(); queue = []; moveBar = null; anim.finish(); }
+function settleNow() { player.stop(); queue = []; moveBar = null; parkX = null; anim.finish(); }
+// Undo from a point between two moves goes back to the start of the move under way; from a move's end, one move back
 function undo() {
-  settleNow(); if (!history.length) return;
+  const parked = parkX !== null; settleNow();
+  if (parked) { anim.set(pose(state)); setBar(state.done); refresh(); return; }
+  if (!history.length) return;
   state = history.pop(); anim.set(pose(state)); refresh();
 }
 function restart() { settleNow(); history = []; state = M.initialState(geom); anim.set(pose(state)); refresh(); }
@@ -156,21 +165,23 @@ function jump(i) {
   history = h; state = s; anim.set(pose(state)); refresh();
 }
 // the scrub bar: dragging runs the correct path to that point — the in-between pose, the guide and the camera follow —
-// and stops Play; letting go settles on the nearest state, with the history rebuilt so Undo steps back along the path.
-// From a wrong move it comes back onto the correct path.
+// and stops Play; letting go leaves the page there — between two moves, the in-between pose with the state before the move
+// under way (parkX) — with the history rebuilt so Undo steps back along the path. From a wrong move it comes back onto the
+// correct path.
 function setBar(x) { barX = x; scrub?.set(x); }
 function scrubTo(x) {
   if (loading || !course.length) return;
-  player.stop(); queue = []; moveBar = null; if (anim.busy()) anim.finish();
+  player.stop(); queue = []; moveBar = null; parkX = null; if (anim.busy()) anim.finish();
   const n = course.length - 1, k = Math.min(Math.floor(Math.max(x, 0)), n);
   state = course[k]; history = course.slice(0, k);
   barX = x; anim.set(poseAlong(course, pose, x)); refresh(true);
 }
 function scrubEnd(x) {
   if (loading || !course.length) return;
-  const k = Math.min(Math.max(Math.round(x), 0), course.length - 1);
+  const n = course.length - 1, X = Math.min(Math.max(x, 0), n), k = Math.min(Math.floor(X + 1e-6), n);
   player.stop(); queue = []; moveBar = null; if (anim.busy()) anim.finish();
-  state = course[k]; history = course.slice(0, k); anim.set(pose(state)); setBar(k); refresh();
+  state = course[k]; history = course.slice(0, k); parkX = X - k > 1e-6 ? X : null;
+  anim.set(parkX === null ? pose(state) : poseAlong(course, pose, X)); setBar(parkX === null ? k : X); refresh();
 }
 const stepName = (i) => { const st = mode.steps[Math.min(i, mode.steps.length - 1)]; return i >= mode.steps.length ? mode.done.title : `Step ${i + 1}: ${st.title}`; };
 
@@ -199,7 +210,7 @@ function setMode(id) {
     }
     ui.setMode(mode);
     for (const b of document.querySelectorAll('#modes [data-mode]')) b.setAttribute('aria-pressed', String(b.dataset.mode === mode.id));
-    history = []; state = M.initialState(geom); moveBar = null;
+    history = []; state = M.initialState(geom); moveBar = null; parkX = null;
     course = correctPath(M, geom); scrub.setMarks(course.length - 1, courseMarks(M, course, mode.steps, mode.phases));
     anim.set(pose(state)); setBar(0); refresh();
     if (gl) { iv.fit(iv.preset); hv.fit(hv.preset); }
@@ -246,6 +257,7 @@ async function boot() {
     available: () => M.available(state), poseOf: (s) => pose(s), busy: () => working || anim.busy(),
     playing: () => player.playing(), pace: (k) => { pace = k; },
     act, showMe, undo, restart, jump, scrubTo, scrubEnd, bar: () => barX, courseLength: () => course.length - 1,
+    poseAt: (x) => poseAlong(course, pose, x),
     courseState: (k) => course[k],
     historyLength: () => history.length,
     instant: (a) => { settleNow(); history.push(state); state = M.apply(state, a); anim.set(pose(state)); refresh(); },

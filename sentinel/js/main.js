@@ -50,6 +50,9 @@ async function loadGLB(name) {
 let seq, M, state, history = [], queue = [], working = false, moving = null, anim, ui, gl = false;
 let av = null, hv = null, arch = null, handle = null, picked = null, archKey = null, handleKey = null;
 let handleOnScreen = true, renders = { arch: 0, handle: 0 }, scrub = null;
+// let go between two moves, the page stays there (Saro, 2026-11-02: "if i drag to the middle of the two points it doesnt
+// stay there it goes back to the prior step"): parkX is that point; the state is the one before the move under way
+let parkX = null;
 const pose = (s) => ({ x: s.k });
 let frame = null;
 function draw(p) {
@@ -63,7 +66,7 @@ const shownStep = () => (moving !== null ? seq.moves[moving].step : Math.min(M.s
 function refresh() {
   const next = M.nextAction(state), si = shownStep();
   ui.show({ stepIndex: si, next: next === null ? null : { id: next, label: seq.moves[M.index(next)].label }, locks: M.locksAt(moving ?? state.k),
-    canUndo: history.length > 0 });
+    canUndo: history.length > 0 || parkX !== null });
   // the cameras go back to a preset only when the framing changes (a new step, a new control): a view the user turned
   // or zoomed stays put through the moves of a step, as on Closure
   const st = seq.steps[si], V = seq.views, key = V.archFor[st.id], pr = V.arch[key];
@@ -84,8 +87,11 @@ function work() {
     while (queue.length) {
       const a = queue.shift();
       if (!M.available(state).includes(a)) continue;
+      // the move under way where the bar was let go runs on from that point, for the time it has left
+      const left = parkX !== null && Math.floor(parkX) === state.k && a === M.nextAction(state) ? 1 - (parkX - state.k) : 1;
+      parkX = null;
       history.push(state); state = M.apply(state, a); moving = M.index(a); refresh();
-      await anim.to(pose(state), M.duration(a));
+      await anim.to(pose(state), M.duration(a) * left);
       moving = null; refresh();
     }
     working = false;
@@ -106,28 +112,34 @@ function togglePlay() {
   if (!player.playing() && M && M.nextAction(state) === null) restart();   // at the end: again from the start
   return player.toggle();
 }
-function settleNow() { player.stop(); queue = []; anim.finish(); moving = null; }
+function settleNow() { player.stop(); queue = []; anim.finish(); moving = null; parkX = null; }
 // Undo, Restart and a jump put both cameras back on their preset, as on Closure
 const resetViews = () => { archKey = handleKey = null; };
-function undo() { settleNow(); if (!history.length) return; state = history.pop(); anim.set(pose(state)); resetViews(); refresh(); }
+// Undo from a point between two moves goes back to the start of the move under way; from a move's end, one move back
+function undo() {
+  const parked = parkX !== null; settleNow();
+  if (parked) { anim.set(pose(state)); refresh(); return; }
+  if (!history.length) return; state = history.pop(); anim.set(pose(state)); resetViews(); refresh();
+}
 function restart() { settleNow(); history = []; state = M.initialState(); anim.set(pose(state)); resetViews(); refresh(); }
 function jump(i) {
   settleNow(); const k = M.startOf(i), h = [];
   for (let j = 0; j < k; j++) h.push({ k: j });
   history = h; state = { k }; anim.set(pose(state)); resetViews(); refresh();
 }
-// the scrub bar: dragging runs the sequence to that point (the guide follows); letting go settles on the nearest move
+// the scrub bar: dragging runs the sequence to that point (the guide follows); letting go leaves it there — between two
+// moves, at that point with the state before the move under way (parkX)
 const pastTo = (k) => Array.from({ length: k }, (_, j) => ({ k: j }));
 function scrubTo(x) {
-  player.stop(); queue = []; if (anim.busy()) anim.finish();
+  player.stop(); queue = []; parkX = null; if (anim.busy()) anim.finish();
   const k = Math.min(Math.floor(x), M.count);
   state = { k }; history = pastTo(k); moving = x < M.count && x - k > 1e-6 ? k : null;
   anim.set({ x }); refresh();
 }
 function scrubEnd(x) {
-  const k = Math.min(Math.max(Math.round(x), 0), M.count);
-  player.stop(); queue = []; moving = null; state = { k }; history = pastTo(k);
-  anim.set({ x: k }); refresh();
+  const X = Math.min(Math.max(x, 0), M.count), k = Math.min(Math.floor(X + 1e-6), M.count);
+  player.stop(); queue = []; moving = null; state = { k }; history = pastTo(k); parkX = X - k > 1e-6 ? X : null;
+  anim.set({ x: parkX === null ? k : X }); refresh();
 }
 function pickPart(id) {
   picked = picked === id ? null : id; ui.pick(picked); arch?.glow(picked);
@@ -183,7 +195,7 @@ async function boot() {
   if (debug) Object.assign(window.__sentinel, {
     state: () => state, x: () => anim.pose.x, moves: () => seq.moves.length, steps: () => seq.steps.map((s) => s.id),
     stepIndex: () => M.stepIndex(state), shownStep, busy: () => working || anim.busy(), playing: () => player.playing(),
-    pace: (k) => { pace = k; }, act, undo, restart, jump, next: () => M.nextAction(state),
+    pace: (k) => { pace = k; }, act, undo, restart, jump, next: () => M.nextAction(state), historyLength: () => history.length,
     instant: (k) => { settleNow(); state = { k }; history = Array.from({ length: k }, (_, j) => ({ k: j })); anim.set(pose(state)); resetViews(); refresh(); },
     renders: () => ({ ...renders }),
     frame: () => { const G = geometry(seq, frame); return { tab: G.tab, tubes: G.tab ? [] : Object.keys(G.tubes),

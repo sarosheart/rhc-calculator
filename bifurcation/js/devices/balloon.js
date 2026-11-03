@@ -6,7 +6,7 @@ import { PREDIL } from '../scene/vessel.js';
 import { BALLOON_IDS, BALLOONS, SHOULDER, NECK, STENT, SBSTENT, CUSTENT, KISS_PROX_X } from './kinds.js';
 import { POT_IN, POT_LEN } from './cu-stent.js';
 import { ladFrameOf } from './paths.js';
-import { routePolyline, routeAt } from './wires.js';
+import { routePolyline, routeAt, perPose } from './wires.js';
 
 export { BALLOON_IDS, BALLOONS };
 const SB = axis('sb').dir, sbProj = (p) => p[0] * SB[0] + p[1] * SB[1];
@@ -14,8 +14,11 @@ const smoothstep = (t) => { t = Math.max(0, Math.min(1, t)); return t * t * (3 -
 const wireOf = (pose, which) => (pose[`b${which}_wire`] === 2 ? 'B' : 'A');     // 1 = wire A, 2 = wire B
 const routeOf = (pose, which, ctx) => { const w = wireOf(pose, which); return routePolyline(pose[`w${w}_route`], pose, ctx, w); };
 
-// { kind, spec, inf, path, s, s0, s1, markers: [proximal, distal], radiusAt(s) } or null
+// { kind, spec, inf, path, s, s0, s1, markers: [proximal, distal], radiusAt(s), outerAt(s) } or null
 export function balloonPlace(pose, which, ctx) {
+  return perPose(pose, ctx, `b${which}`, () => { const b = placeOf(pose, which, ctx); return b && Object.freeze(b); });
+}
+function placeOf(pose, which, ctx) {
   const kind = BALLOON_IDS[pose[`b${which}_kind`]];
   if (!kind) return null;
   const spec = BALLOONS[kind], route = routeOf(pose, which, ctx), s1 = pose[`b${which}_dist`], s0 = s1 - spec.len, inf = pose[`b${which}_inf`] || 0;
@@ -27,7 +30,14 @@ export function balloonPlace(pose, which, ctx) {
     const k = s < s0 ? (s - (s0 - SHOULDER)) / SHOULDER : s > s1 ? (s1 + SHOULDER - s) / SHOULDER : 1;
     return R * inf * smoothstep(k);
   };
-  return { kind, spec, inf, route, path, s: ss, s0, s1, markers: [routeAt(route, s0).p, routeAt(route, s1).p], radiusAt };
+  // the outline as drawn (tools/bifurcation/blender/balloon.py, scaled by d: folded 0.16 d over the working length, 0.12 d at
+  // the necks; inflated 0.5 d; render/cut.js morphs between them by inf) — what a wire beside it has to clear
+  const outerAt = (s) => {
+    const k = s < s0 ? Math.max(0, 1 - (s0 - s) / SHOULDER) : s > s1 ? Math.max(0, 1 - (s - s1) / SHOULDER) : 1;
+    const rf = 0.12 + 0.04 * k, ri = 0.12 + 0.38 * smoothstep(k);
+    return spec.d * (rf + (ri - rf) * inf);
+  };
+  return { kind, spec, inf, route, path, s: ss, s0, s1, markers: [routeAt(route, s0).p, routeAt(route, s1).p], radiusAt, outerAt };
 }
 
 // the route coordinate where a balloon's distal working end belongs (design §6.1, kinds.js)

@@ -1,7 +1,7 @@
 // The cut-open window: the bifurcation with the front half of its wall removed (vessel.js builds the back half, cut face and
 // window ends once; each frame moves its vertices with the lumen), the stent's struts, the balloons (Blender's folded balloon
 // with its morph to inflated, stretched to each balloon's length and bent along its wire), their markers, and the two wires
-// clipped to the window, each with its 30 mm radiopaque tip in a pale tint of its colour. Two stents: the LAD stent and,
+// clipped to the window, each a 0.014″ wire in its own colour with its 30 mm radiopaque tip a wound metal coil. Two stents: the LAD stent and,
 // in the two-stent techniques, the D1 stent (sb-stent.js), the same strut and metal.
 import { A, axis, axisDist, CARINA, OSTIUM } from '../scene/anatomy.js';
 import { buildVesselAsync, bindVerticesAsync, deformVertices, lumenRadius, flapLift, FLAP, radial } from '../scene/vessel.js';
@@ -25,6 +25,16 @@ export const CUT_PRESETS = Object.freeze({
 });
 const smoothstep = (a, b, x) => { const t = Math.max(0, Math.min(1, (x - a) / (b - a))); return t * t * (3 - 2 * t); };
 // inside the window (and a little beyond, so wires meet the cut ends)
+// the radiopaque coil's winding as a texture along a wire (uv.y is the length in mm): a bright turn and a dark groove every
+// COIL_PITCH mm (a 0.014″ coil's real pitch, ~0.07 mm, would only shimmer at this scale)
+const COIL_PITCH = 0.13;
+function coilTexture(THREE) {
+  const c = document.createElement('canvas'); c.width = 2; c.height = 16;
+  const g = c.getContext('2d');
+  for (let y = 0; y < 16; y++) { const l = Math.round(160 + 95 * (0.5 + 0.5 * Math.cos(2 * Math.PI * (y + 0.5) / 16))); g.fillStyle = `rgb(${l},${l},${l})`; g.fillRect(0, y, 2, 1); }
+  const t = new THREE.CanvasTexture(c); t.wrapS = t.wrapT = THREE.RepeatWrapping; t.repeat.set(1, 1 / COIL_PITCH);
+  return t;
+}
 const inWindow = (p) => p[0] >= -A.WIN.pmv - 0.3 && axisDist('dmv', p).s <= A.WIN.dmv + 0.3 && axisDist('sb', p).s <= A.WIN.sb + 0.3 &&
   Math.min(axisDist('pmv', p).d, axisDist('dmv', p).d, axisDist('sb', p).d) < 4;
 
@@ -143,19 +153,38 @@ export async function createCut(view, ctx, models, { step = 0.15 } = {}) {
   }
 
   // ── wires: body and radiopaque tip, clipped to the window ──
+  // a wire, not a catheter (fixes 2026-11-02, Saro: "the wires arent wires they look like catheters"): the coated body
+  // satin in its colour; the 30 mm radiopaque tip — nearly all of a wire in the window — a metal coil in the same colour,
+  // its winding a fine banding along it (uv.y is the length in mm); the two meet at one point
+  // each wire its own coil texture: its offset keeps the stripes on the wire as it moves (below)
   const wires = { A: [COLORS.wireA, COLORS.tipA], B: [COLORS.wireB, COLORS.tipB] };
   const strands = Object.fromEntries(Object.entries(wires).map(([w, [cb, ct]]) => {
-    const body = makeStrand(THREE, { color: cb, radius: WIRE_R, sides: 8, rough: 0.32, metal: 0.25 });
-    const tip = makeStrand(THREE, { color: ct, radius: WIRE_R * 1.02, sides: 8, rough: 0.3, metal: 0.6 });
+    const coil = coilTexture(THREE);
+    const body = makeStrand(THREE, { color: cb, radius: WIRE_R, sides: 10, rough: 0.5, metal: 0.15 });
+    const tip = makeStrand(THREE, { color: ct, radius: WIRE_R * 1.02, sides: 10, rough: 0.3, metal: 0.8, map: coil });
+    Object.assign(tip.material, { bumpMap: coil, bumpScale: 0.4 });
     group.add(body.group, tip.group); return [w, { body, tip }];
   }));
-  const tips = {};
+  const tips = {}, paths = {};
   function drawWire(w, path) {
     const L = [0]; for (let i = 1; i < path.length; i++) L.push(L[i - 1] + Math.hypot(...[0, 1, 2].map(k => path[i][k] - path[i - 1][k])));
     const cut = (L[L.length - 1] || 0) - TIP_LEN, clip = (pts) => pts.filter(inWindow);
-    strands[w].body.update(clip(path.filter((_, i) => L[i] <= cut + 0.3)));
-    strands[w].tip.update(clip(path.filter((_, i) => L[i] >= cut)));
-    tips[w] = path.length ? path[path.length - 1] : null;
+    // the point where the coil starts, on the wire, so body and tip share it (filtering by length alone left a gap where
+    // the points are sparse)
+    const j = L.findIndex((l) => l > cut), at = j > 0 ? [0, 1, 2].map((k) => path[j - 1][k] + (path[j][k] - path[j - 1][k]) * (cut - L[j - 1]) / (L[j] - L[j - 1])) : null;
+    strands[w].body.update(clip(at ? [...path.slice(0, j), at] : path.filter((_, i) => L[i] <= cut)));
+    const tipPts = at ? [[at, cut], ...path.slice(j).map((q, k) => [q, L[j + k]])] : path.map((q, i) => [q, L[i]]).filter(([, l]) => l >= cut);
+    const kept = tipPts.filter(([q]) => inWindow(q));
+    strands[w].tip.update(kept.map(([q]) => q));
+    // the drawn coil's texture runs from its first point in the window along the curve as drawn (smoothed); offset it so
+    // the stripes are counted from the wire's tip — that drawn length plus the rest of the wire beyond the window — and a
+    // stripe stays at its place on the wire as the wire advances or is pulled back (the pattern is symmetric, so counting
+    // back from the tip reads the same). Fixed: the stripes stood still while the wire slid through them.
+    const uv = strands[w].tip.group.children[0]?.geometry.attributes.uv;
+    if (kept.length > 1 && uv) { let drawn = 0; for (let i = 0; i < uv.count; i++) drawn = Math.max(drawn, uv.getY(i));
+      const beyond = (L[L.length - 1] || 0) - kept[kept.length - 1][1];
+      strands[w].tip.material.map.offset.y = ((-(drawn + beyond) / COIL_PITCH) % 1 + 1) % 1; }
+    tips[w] = path.length ? path[path.length - 1] : null; paths[w] = path;
   }
 
   // ── TAP's dissection flap (vessel.js FLAP): a tongue of intima lifted off D1's back wall into the lumen, its free edge
@@ -215,6 +244,27 @@ export async function createCut(view, ctx, models, { step = 0.15 } = {}) {
   function node(name) {
     const m = /^marker([AB])([01])$/.exec(name);
     if (m) return placed[m[1]] ? placed[m[1]].markers[+m[2]].slice() : null;
+    // the coil's texture phase 12 mm back from a wire's tip, read off the drawn mesh (its uv where the wire is that far from
+    // its tip, and the texture's repeat and offset): a stripe stays on the wire, so this holds as the wire moves
+    if (name === 'coilPhaseA' || name === 'coilPhaseB') {
+      const w = name.at(-1), m = strands[w].tip.group.children[0], P = paths[w];
+      if (!m?.visible || !P || P.length < 2) return null;
+      const L = [0]; for (let i = 1; i < P.length; i++) L.push(L[i - 1] + Math.hypot(...[0, 1, 2].map((k) => P[i][k] - P[i - 1][k])));
+      const s = L.at(-1) - 12, j = L.findIndex((l) => l >= s); if (j < 1) return null;
+      const q = [0, 1, 2].map((k) => P[j - 1][k] + (P[j][k] - P[j - 1][k]) * (s - L[j - 1]) / ((L[j] - L[j - 1]) || 1));
+      const pos = m.geometry.attributes.position, uv = m.geometry.attributes.uv; if (!uv) return null;
+      // the rings' centres (10 sides each, before the caps) and their uv; q's foot on that polyline, its uv interpolated
+      const C = [], V = [];
+      for (let i = 0; i + 10 <= pos.count; i += 10) { const v0 = uv.getY(i); if (C.length && v0 < V.at(-1) - 1e-6) break;
+        const c = [0, 0, 0]; for (let k = 0; k < 10; k++) { c[0] += pos.getX(i + k) / 10; c[1] += pos.getY(i + k) / 10; c[2] += pos.getZ(i + k) / 10; }
+        C.push(c); V.push(v0); }
+      let best = Infinity, v = 0;
+      for (let i = 1; i < C.length; i++) { const a = C[i - 1], e = [0, 1, 2].map((k) => C[i][k] - a[k]), L2 = e[0] * e[0] + e[1] * e[1] + e[2] * e[2] || 1e-12;
+        const t = Math.max(0, Math.min(1, ((q[0] - a[0]) * e[0] + (q[1] - a[1]) * e[1] + (q[2] - a[2]) * e[2]) / L2));
+        const d = Math.hypot(...[0, 1, 2].map((k) => a[k] + e[k] * t - q[k])); if (d < best) { best = d; v = V[i - 1] + (V[i] - V[i - 1]) * t; } }
+      if (best > 0.3) return null;                                                       // the point is not on the drawn coil
+      const t = m.material.map; return ((v * t.repeat.y + t.offset.y) % 1 + 1) % 1;
+    }
     if (name === 'tipA') return tips.A ? tips.A.slice() : null;
     if (name === 'tipB') return tips.B ? tips.B.slice() : null;
     if (name === 'carina') return CARINA.tip.slice();

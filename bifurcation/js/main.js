@@ -54,11 +54,14 @@ let mode = null, M = null, state, history = [], queue = [], working = false, ani
 let cv = null, cut = null, fl = null, gl = false, loading = false, modeSerial = 0, switching = Promise.resolve(), trace = null, windowsReady = false;
 // the scrub bar: the technique's correct path (course[k] = after k actions), the action under way (for the thumb), where it is
 let scrub = null, course = [], moveBar = null, barX = 0;
+// let go between two moves, the page stays there (Saro, 2026-11-02: "if i drag to the middle of the two points it doesnt
+// stay there it goes back to the prior step"): parkX is that point; the state is the one before the move under way
+let parkX = null;
 const poseOf = (s) => mode.poseOf(s, ctx);
 function draw(p) {
   if (!p) return;
   if (scrub && !scrub.dragging() && mode) setBar(moveBar ? moveBar.from + (moveBar.to - moveBar.from)
-    * Math.min(1, (performance.now() - moveBar.t0) / Math.max(1, moveBar.ms)) : state ? state.done : 0);
+    * Math.min(1, (performance.now() - moveBar.t0) / Math.max(1, moveBar.ms)) : parkX !== null ? parkX : state ? state.done : 0);
   cut?.update(p); fl?.draw(p);
 }
 // a new step puts the camera back on its preset, and a drag holds until then (design §4.1: "a drag takes over until the
@@ -68,7 +71,7 @@ const presetKey = (q) => (q ? [q.target, q.dir, q.radius].flat().map((v) => Math
 let shownPreset = '', shownStep = -1;
 function refresh(scrubbing = false, force = false) {
   const next = M.nextAction(state), si = M.stepIndex(state);
-  ui.show({ stepIndex: si, next, available: M.available(state), canUndo: history.length > 0 });
+  ui.show({ stepIndex: si, next, available: M.available(state), canUndo: history.length > 0 || parkX !== null });
   if (cv && cut) { const q = cut.presetFor(mode.cutPreset(Math.min(si, mode.steps.length - 1))), key = presetKey(q);
     if (force || key !== shownPreset || (!scrubbing && si !== shownStep)) cv.setPreset(q);
     shownPreset = key; shownStep = si; }
@@ -154,10 +157,18 @@ async function work() {
   while (queue.length && serial === modeSerial) {
     const a = queue.shift();
     if (!M.available(state).includes(a)) continue;
-    const ks = M.keyframes(state, a), from = state.done;
+    const ks = M.keyframes(state, a), from = state.done, ms = ks.map((_, i) => Math.max(0, mode.duration(a, i)));
+    // the move under way where the bar was let go runs on from that point: from its keyframe, for the time it has left
+    let i0 = 0, x0 = from;
+    if (parkX !== null && Math.floor(parkX) === from && a === M.nextAction(state)) {
+      let t = (parkX - from) * ms.reduce((p, q) => p + q, 0);
+      while (i0 < ks.length - 1 && t > ms[i0]) { t -= ms[i0]; i0++; }
+      ms[i0] -= t; x0 = parkX;
+    }
+    parkX = null;
     history.push(state); state = ks[ks.length - 1]; refresh();
-    moveBar = { from, to: state.done, t0: performance.now(), ms: ks.reduce((t, _, i) => t + (reducedMotion() || !gl ? 0 : mode.duration(a, i)), 0) };
-    for (let i = 0; i < ks.length && serial === modeSerial; i++) { trace?.push([a, i]); await anim.to(poseOf(ks[i]), mode.duration(a, i)); }
+    moveBar = { from: x0, to: state.done, t0: performance.now(), ms: reducedMotion() || !gl ? 0 : ms.slice(i0).reduce((p, q) => p + q, 0) };
+    for (let i = i0; i < ks.length && serial === modeSerial; i++) { trace?.push([a, i]); await anim.to(poseOf(ks[i]), ms[i]); }
     if (serial === modeSerial) { moveBar = null; if (!scrub?.dragging()) setBar(state.done); }
     if (serial === modeSerial && mode.puffAfter.has(a)) { trace?.push([a, 'puff']); await puff(poseOf(state)); }
   }
@@ -169,8 +180,13 @@ function showMe() {
   let s = state; for (const a of queue) if (M.available(s).includes(a)) s = M.apply(s, a);
   const n = M.nextAction(s); return n ? act(n) : Promise.resolve();
 }
-function settleNow() { queue = []; modeSerial++; working = false; moveBar = null; anim.finish(); }
-function undo() { settleNow(); if (!history.length) return; state = history.pop(); anim.set(poseOf(state)); refresh(); }
+function settleNow() { queue = []; modeSerial++; working = false; moveBar = null; parkX = null; anim.finish(); }
+// Undo from a point between two moves goes back to the start of the move under way; from a move's end, one move back
+function undo() {
+  const parked = parkX !== null; settleNow();
+  if (parked) { anim.set(poseOf(state)); setBar(state.done); refresh(); return; }
+  if (!history.length) return; state = history.pop(); anim.set(poseOf(state)); refresh();
+}
 function restart() { settleNow(); history = []; state = M.initialState(); anim.set(poseOf(state)); refresh(false, true); puff(poseOf(state)); }
 function jump(i) {
   settleNow(); let s = M.initialState(); const h = [];
@@ -178,8 +194,9 @@ function jump(i) {
   history = h; state = s; anim.set(poseOf(state)); refresh(false, true);
 }
 // the scrub bar: dragging runs the correct path to that point — the in-between pose, the guide and the camera follow — and
-// stops what was running (the action under way, its puff); letting go settles on the nearest state, with the history
-// rebuilt so Undo steps back along the path
+// stops what was running (the action under way, its puff); letting go leaves the page there — between two moves, the
+// in-between pose with the state before the move under way (parkX) — with the history rebuilt so Undo steps back along
+// the path
 function setBar(x) { barX = x; scrub?.set(x); }
 const poseAt = (x) => poseAlong(course, M, poseOf, mode.duration, mode.switches, x);
 function scrubTo(x) {
@@ -192,8 +209,9 @@ function scrubTo(x) {
 function scrubEnd(x) {
   if (loading || !course.length) return;
   settleNow();
-  const k = Math.min(Math.max(Math.round(x), 0), course.length - 1);
-  state = course[k]; history = course.slice(0, k); anim.set(poseOf(state)); setBar(k); refresh();
+  const n = course.length - 1, X = Math.min(Math.max(x, 0), n), k = Math.min(Math.floor(X + 1e-6), n);
+  state = course[k]; history = course.slice(0, k); parkX = X - k > 1e-6 ? X : null;
+  anim.set(parkX === null ? poseOf(state) : poseAt(X)); setBar(parkX === null ? k : X); refresh();
 }
 const stepName = (i) => (i >= mode.steps.length ? mode.done.title : `Step ${i + 1}: ${mode.steps[i].title}`);
 
@@ -211,7 +229,7 @@ function setMode(id) {
     anim = createAnimator({ reduced: () => !gl || reducedMotion(), onFrame: draw, switches: mode.switches });
     ui.setMode(mode);
     for (const b of document.querySelectorAll('#modes [data-mode]')) b.setAttribute('aria-pressed', String(b.dataset.mode === mode.id));
-    history = []; state = M.initialState(); moveBar = null;
+    history = []; state = M.initialState(); moveBar = null; parkX = null;
     course = correctPath(M); scrub.setMarks(course.length - 1, courseMarks(M, course, mode.steps, mode.phases));
     anim.set(poseOf(state)); setBar(0); refresh(false, true);
     if (cv && cut) cv.fit(cut.presetFor(mode.cutPreset(0)));
