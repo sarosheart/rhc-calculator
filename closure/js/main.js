@@ -189,6 +189,9 @@ function scrubEnd(x) {
 }
 const stepName = (i) => { const st = mode.steps[Math.min(i, mode.steps.length - 1)]; return i >= mode.steps.length ? mode.done.title : `Step ${i + 1}: ${st.title}`; };
 
+// the old layers leave the GPU with their mode: geometry and materials (a cached model used again is uploaded again; the
+// textures stay, few and shared with the cache)
+function release(root) { root.traverse((o) => { o.geometry?.dispose(); for (const m of [].concat(o.material || [])) m.dispose(); }); }
 // a device mode: its code and models (once each), new layers in both windows, its first step
 function setMode(id) {
   switching = switching.then(async () => {
@@ -207,7 +210,7 @@ function setMode(id) {
     loading = false; ui.loading(false);
     if (serial !== modeSerial) return;
     mode = next; M = mode.machine; models = mods; geom = mode.readGeom(models); picked = null; inside?.glow([]);
-    for (const [root, view] of [[inRoot, iv], [handRoot, hv]]) if (root) { view.scene.remove(root); }
+    for (const [root, view] of [[inRoot, iv], [handRoot, hv]]) if (root) { view.scene.remove(root); release(root); }
     if (gl) {
       inRoot = new THREE.Group(); handRoot = new THREE.Group(); iv.scene.add(inRoot); hv.scene.add(handRoot);
       inLayer = mode.insideLayer(iv, inRoot, models, geom); handLayer = mode.handsLayer(hv, handRoot, models, geom);
@@ -270,6 +273,8 @@ async function boot() {
     knotWorld: () => inLayer?.knotWorld?.(anim.pose),
     stats: () => [iv, hv].map((v) => v ? pixelStats(v) : null),
     geom: () => geom, fetched: () => [...glbCache.keys()],
+    // geometries and textures each window's renderer holds on the GPU now
+    gpu: () => [iv, hv].map((v) => (v ? { ...v.renderer.info.memory } : null)),
     // objects whose visible is not a boolean: three.js hides only visible === false, so a 0 is drawn (wherever it was left)
     badVisible: () => { const out = []; for (const v of [iv, hv]) v?.scene.traverse((o) => { if (typeof o.visible !== 'boolean') out.push(o.name || o.type); }); return out; },
     // the colour drawn where a world point lands in a window (camera settled first)

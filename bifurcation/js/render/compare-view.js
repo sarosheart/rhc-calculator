@@ -4,6 +4,7 @@
 // (position and target, so zoom too) on every change, and again after a resize. Without WebGL, or if a pane cannot draw,
 // each pane still names its technique and lists its numbers.
 const PRESET = (v) => (v === 'end' ? 'end' : 'core');
+const VIEW_WORDS = { cut: 'cut open', end: 'in End view', layers: 'in Layers' };
 
 export async function createCompare(root, { gl, THREE, createView, createCut, ctx, models, step, pixelRatio }) {
   const panes = [...root.querySelectorAll('.cmp-pane')].map((el) => ({ el, win: el.querySelector('.cmp-win'), canvas: el.querySelector('canvas'),
@@ -11,6 +12,8 @@ export async function createCompare(root, { gl, THREE, createView, createCut, ct
     view: null, cut: null, map: null, shown: null }));
   const notice = (p, text) => { p.win.classList.add('no-webgl'); const n = document.createElement('p'); n.className = 'notice'; n.textContent = text; p.win.appendChild(n); };
   let view = 'cut', leader = null;
+  // what a screen reader hears for a pane: the technique it shows and the view
+  const describe = (p) => { if (p.name) p.canvas.setAttribute('aria-label', `${p.name}: the result ${VIEW_WORDS[view]}, as after its last step; it turns with the other. Drag to turn, pinch to zoom.`); };
   for (const p of panes) {
     if (!gl) { notice(p, 'This view needs WebGL, which this browser has turned off.'); continue; }
     try { p.view = createView(THREE, p.canvas, { pixelRatio }); p.cut = await createCut(p.view, ctx, models, { step }); }
@@ -41,13 +44,14 @@ export async function createCompare(root, { gl, THREE, createView, createCut, ct
     const p = panes[i];
     p.label.textContent = label; p.list.textContent = '';
     for (const t of lines) { const li = document.createElement('li'); li.textContent = t; p.list.appendChild(li); }
-    p.key.hidden = !(gap > 0); p.map = map; p.shown = id;
+    p.key.hidden = !(gap > 0); p.map = map; p.shown = id; p.name = label; describe(p);
     if (p.cut) { p.cut.update(done); p.cut.markGap(gap); p.cut.setView(view, map); }
   }
   // both panes on the same view, and that view's camera
   function setView(v) {
     view = v;
     for (const p of panes) {
+      describe(p);
       p.legend.hidden = v !== 'layers' || !p.cut;
       if (!p.cut) continue;
       p.cut.setView(v, p.map); p.view.setPreset(p.cut.presetFor(PRESET(v)));

@@ -14,7 +14,7 @@ export const MISTAKES = Object.freeze({
   },
   prematureCatch: {
     title: 'Caught too early: the anchor is crooked',
-    what: 'Pulling the cap back fast caught one end of the anchor on the sheath tip, so it sits at an angle instead of flat. The cap\'s edge covers the coloured band.',
+    what: 'The cap was not pulled back slowly, and one end of the anchor caught on the sheath tip, so it sits at an angle instead of flat. The cap\'s edge covers the coloured band.',
     why: 'A crooked anchor will not sit flat on the inside of the wall and can pull through.',
     fix: 'Push the device back into the sheath and pull again slowly until the cap\'s edge stops within the coloured bands. Do not go on until it has caught properly.',
   },

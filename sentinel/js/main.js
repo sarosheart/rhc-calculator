@@ -118,7 +118,7 @@ const resetViews = () => { archKey = handleKey = null; };
 // Undo from a point between two moves goes back to the start of the move under way; from a move's end, one move back
 function undo() {
   const parked = parkX !== null; settleNow();
-  if (parked) { anim.set(pose(state)); refresh(); return; }
+  if (parked) { anim.set(pose(state)); resetViews(); refresh(); return; }
   if (!history.length) return; state = history.pop(); anim.set(pose(state)); resetViews(); refresh();
 }
 function restart() { settleNow(); history = []; state = M.initialState(); anim.set(pose(state)); resetViews(); refresh(); }

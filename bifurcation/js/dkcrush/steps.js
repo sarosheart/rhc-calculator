@@ -49,7 +49,7 @@ export const STEPS = Object.freeze([
     text: 'Recross into D1 with the teal wire through a proximal cell of the crushed stent, not a distal one. A distal recross can pass outside the crushed struts at the ostium, and the kiss then leaves a gap on the carina side of D1 that cannot be fixed.',
     cue: 'Confirm in two views that the wire is inside the D1 stent.' },
   { id: 'kiss1', title: 'First kiss', actions: ['small', 'kissIn', 'kissInflate1', 'kissOut', 'tealOut'],
-    text: 'A 1.25 mm balloon first, then the kiss: non-compliant 3.0 in the LAD and 2.5 in D1, each alone at high pressure (16 atm or more), then both together (12 atm or more), deflated together. Both balloons and the D1 wire then come out.',
+    text: 'A 1.25 mm balloon first, then the kiss: non-compliant 3.0 (LAD) and 2.5 (D1), each alone at 16 atm or more (Hall: 20 or more), then together at 12 or more (Hall: 12–14), deflated together. Both balloons and the D1 wire come out.',
     cue: 'It clears the crushed struts from D1’s ostium, leaving one layer of metal there.' },
   { id: 'stent', title: 'Stent the LAD', actions: ['placeStent', 'deployStent', 'removeStentBalloon'],
     text: 'A 3.0 × 22 mm stent, 1:1 to the distal LAD, across D1, covering the whole crushed segment and reaching 8 mm above the carina for the POT. The D1 wire is already out, so it cannot be caught between two layers of stent.',

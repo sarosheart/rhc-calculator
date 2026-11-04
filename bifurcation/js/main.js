@@ -99,7 +99,12 @@ const cmpSerial = [0, 0], cmpSelects = () => [document.getElementById('cmpA'), d
 const idle = async () => { while (working || anim?.busy()) await new Promise((r) => setTimeout(r, 50)); };
 async function cmpShow(i, id) {
   const serial = ++cmpSerial[i], c = CHOICES.find((x) => x.id === id);
-  let m; try { m = await loadMode(c.mode); } catch (e) { console.warn(e); return; }
+  let m; try { m = await loadMode(c.mode); }
+  catch (e) {   // it could not load: the picker goes back to what the pane still shows
+    console.warn(e); const shown = cmp?.debug().shown[i];
+    if (serial === cmpSerial[i] && shown) { cmpPicks[i] = shown; cmpSelects()[i].value = shown; }
+    return;
+  }
   await new Promise((r) => setTimeout(r, 0));
   await idle();
   if (serial !== cmpSerial[i] || !cmp) return;
@@ -200,14 +205,14 @@ function jump(i) {
 function setBar(x) { barX = x; scrub?.set(x); }
 const poseAt = (x) => poseAlong(course, M, poseOf, mode.duration, mode.switches, x);
 function scrubTo(x) {
-  if (loading || !course.length) return;
+  if (loading || !course.length) { scrub?.set(barX); return; }   // mid-load the thumb stays with the page
   settleNow();
   const n = course.length - 1, k = Math.min(Math.floor(Math.max(x, 0)), n);
   state = course[k]; history = course.slice(0, k);
   barX = x; anim.set(poseAt(x)); refresh(true);
 }
 function scrubEnd(x) {
-  if (loading || !course.length) return;
+  if (loading || !course.length) { scrub?.set(barX); return; }
   settleNow();
   const n = course.length - 1, X = Math.min(Math.max(x, 0), n), k = Math.min(Math.floor(X + 1e-6), n);
   state = course[k]; history = course.slice(0, k); parkX = X - k > 1e-6 ? X : null;
@@ -303,12 +308,14 @@ async function boot() {
     if (cmp || cmpBuilding) return; cmpBuilding = true;
     await idle();
     try { cmp = await createCompare(cmpRoot, { gl, THREE, createView, createCut, ctx, models, step, pixelRatio: gl ? pixelRatio() : 1 }); }
-    catch (e) { console.warn(e); return; }
+    catch (e) { console.warn(e); cmpBuilding = false; return false; }
     cmp.setView(cmpView); cmpPicks.forEach((id, i) => cmpShow(i, id));
     if (gl) { const ro = new ResizeObserver(() => cmp.resize()); for (const w of cmpRoot.querySelectorAll('.cmp-win')) ro.observe(w); }
+    return true;
   };
   if ('IntersectionObserver' in window) {
-    const io = new IntersectionObserver((es) => { if (es.some((e) => e.isIntersecting)) { io.disconnect(); buildCompare(); } }, { rootMargin: '100px 0px' });
+    // watched until it builds: a failed build is tried again the next time the section comes near
+    const io = new IntersectionObserver((es) => { if (es.some((e) => e.isIntersecting)) buildCompare().then((done) => { if (done) io.disconnect(); }); }, { rootMargin: '100px 0px' });
     io.observe(cmpRoot);
   } else buildCompare();
 

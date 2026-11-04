@@ -23,7 +23,7 @@ export function createScrubber(root, { onScrub, onRelease, text = () => '' }) {
   function set(v) {
     x = clamp(v); const pct = `${(100 * x / count).toFixed(3)}%`;
     fill.style.width = pct; thumb.style.left = pct;
-    track.setAttribute('aria-valuenow', String(Math.round(x))); track.setAttribute('aria-valuetext', text(x));
+    track.setAttribute('aria-valuenow', String(Math.floor(x))); track.setAttribute('aria-valuetext', text(x));   // now = the move under way, as the step text names it
   }
   function setMarks(n, marks) {
     count = Math.max(1, n); ticks.textContent = ''; labels.textContent = '';

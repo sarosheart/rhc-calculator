@@ -22,7 +22,7 @@ export const ACTIONS = Object.freeze({
   // wrong moves the page offers
   slip: { label: 'Let the sheath slide back' },
   force: { label: 'Force it in against resistance' },
-  pullFast: { label: 'Pull the cap back fast' },
+  pullFast: { label: 'Pull the cap back without going slowly' },
   tampSlack: { label: 'Tamp without holding the suture' },
   tampMore: { label: 'Keep tamping past the black marker' },
 });

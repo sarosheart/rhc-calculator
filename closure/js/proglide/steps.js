@@ -51,7 +51,7 @@ export const STEPS = Object.freeze([
     cue: 'The two needles cross the front wall from outside in, one on each side of the hole, and lock into the cuffs at the ends of the foot.' },
   { id: 'plungerOut', title: 'Plunger out (3): bring the suture through', actions: ['plungerOut'],
     text: 'Pull the plunger and needles straight back out until the suture is taut.',
-    cue: 'The front needle brings back its cuff, the white link and the other cuff, and the suture follows: down through one bite, under the hole, up through the other. The back needle comes out bare.' },
+    cue: 'The anterior needle brings back its cuff, the white link and the other cuff, and the suture follows: down through one bite, under the hole, up through the other. The posterior needle comes out bare.' },
   { id: 'quickCut', title: 'Cut the suture free (QuickCut)', actions: ['quickCut'],
     text: 'Lay the suture in the QuickCut slot on the body and cut it from the needle.',
     cue: 'The needles, cuffs and link are done; the suture now runs through the device.' },
