@@ -74,8 +74,8 @@ export default {
   tags(p, next) {
     if (!(p.tuck > 1.98) || p.down > 0.98 || p.dressed > 0.5) return [];   // (down on the puncture: done, and the ends splay over the stitch)
     const T = endTags(p);
-    return [{ id: 'cinch', text: 'Needle end: pull to cinch', p: T.cinch, side: -1, now: next === 'slideDown' },
-      { id: 'lock', text: 'Other end: pull to lock', p: T.lock, side: 1, now: next === 'setKnot' }];
+    return [{ id: 'cinch', text: 'Needle end: pull to cinch', short: 'Pull to cinch', p: T.cinch, side: -1, now: next === 'slideDown' },
+      { id: 'lock', text: 'Other end: pull to lock', short: 'Pull to lock', p: T.lock, side: 1, now: next === 'setKnot' }];
   },
   duration: (a) => (a === 'bite1' || a === 'bite2' ? 2600 : a === 'slideDown' ? SLIDE_MS : a === 'crossOver' ? 2200
     : a === 'throughLoop' || a === 'throughBigLoop' || a === 'bringDown' ? LONG_MS : 1300),

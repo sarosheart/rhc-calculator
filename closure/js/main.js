@@ -81,12 +81,16 @@ function placeTags() {
   for (const t of tags) {
     let el = tagEls[t.id];
     if (!el) { el = tagEls[t.id] = document.createElement('div'); el.className = 'tag'; box.appendChild(el); }
-    if (el.textContent !== t.text) el.textContent = t.text;
-    el.dataset.side = String(t.side); el.classList.toggle('now', !!t.now); seen.add(t.id);
-    const v = new THREE.Vector3(...t.p).project(hv.camera), x = (v.x + 1) / 2 * w, y = (1 - v.y) / 2 * h, tw = el.offsetWidth + 10;
-    const x0 = t.side < 0 ? x - tw : x, x1 = t.side < 0 ? x : x + tw;
-    el.style.visibility = v.z < 1 && x0 > 4 && x1 < w - 4 && y > 40 && y < h - 12 ? '' : 'hidden';   // (still measured when hidden)
-    el.style.transform = `translate(${x.toFixed(1)}px, ${y.toFixed(1)}px)`;
+    const text = w < 520 && t.short ? t.short : t.text;   // a phone's window: the short form, on its own strand
+    if (el.textContent !== text) el.textContent = text;
+    el.classList.toggle('now', !!t.now); seen.add(t.id);
+    const v = new THREE.Vector3(...t.p).project(hv.camera), x = (v.x + 1) / 2 * w, y = (1 - v.y) / 2 * h, tw = el.offsetWidth;
+    // on its own side of the point (left of it, level; or right of it, above the strand), slid along to stay in the window
+    // (a phone's narrow window): flipped across, it would sit on the knot
+    const want = t.side < 0 ? x - tw - 10 : x + 6, left = Math.min(Math.max(want, 4), w - 4 - tw);
+    el.dataset.side = String(t.side);
+    el.style.visibility = v.z < 1 && x > 0 && x < w && y > 40 && y < h - 12 && tw < w - 8 ? '' : 'hidden';   // (still measured when hidden)
+    el.style.transform = `translate(${left.toFixed(1)}px, ${y.toFixed(1)}px)`;
   }
   for (const id in tagEls) if (!seen.has(id)) tagEls[id].style.visibility = 'hidden';
 }
