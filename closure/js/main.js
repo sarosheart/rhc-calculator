@@ -72,6 +72,24 @@ function draw(p) {
   if (hands) { hands.update(mode.shared(p, geom)); handLayer?.update(p); }
   if (ui && gl) ui.showParts((mode.parts || []).filter((pt) => partObjs(pt).some(shown)).map((pt) => pt.id));
 }
+// labels a mode pins to points in the Hands window (the figure-of-8's two ends), placed every frame — the camera can move
+// between poses — and only where the whole label fits inside the window
+const tagEls = {}, tagV = { x: 0, y: 0, z: 0 };
+function placeTags() {
+  const box = document.querySelector('#hands .tags'); if (!box || !hv || !anim) return;
+  const tags = (mode?.tags?.(anim.pose, M && state ? M.nextAction(state) : null)) || [], w = box.clientWidth, h = box.clientHeight, seen = new Set();
+  for (const t of tags) {
+    let el = tagEls[t.id];
+    if (!el) { el = tagEls[t.id] = document.createElement('div'); el.className = 'tag'; box.appendChild(el); }
+    if (el.textContent !== t.text) el.textContent = t.text;
+    el.dataset.side = String(t.side); el.classList.toggle('now', !!t.now); seen.add(t.id);
+    const v = new THREE.Vector3(...t.p).project(hv.camera), x = (v.x + 1) / 2 * w, y = (1 - v.y) / 2 * h, tw = el.offsetWidth + 10;
+    const x0 = t.side < 0 ? x - tw : x, x1 = t.side < 0 ? x : x + tw;
+    el.style.visibility = v.z < 1 && x0 > 4 && x1 < w - 4 && y > 40 && y < h - 12 ? '' : 'hidden';   // (still measured when hidden)
+    el.style.transform = `translate(${x.toFixed(1)}px, ${y.toFixed(1)}px)`;
+  }
+  for (const id in tagEls) if (!seen.has(id)) tagEls[id].style.visibility = 'hidden';
+}
 // a legend part's objects in both windows; an object is in view when it and every parent are visible
 const ALL = { device: 'both' };
 const flat = (o) => [o].flat(Infinity).filter(Boolean);
@@ -220,7 +238,7 @@ function setMode(id) {
     history = []; state = M.initialState(geom); moveBar = null; parkX = null;
     course = correctPath(M, geom); scrub.setMarks(course.length - 1, courseMarks(M, course, mode.steps, mode.phases));
     anim.set(pose(state)); setBar(0); refresh();
-    if (gl) { iv.fit(iv.preset); hv.fit(hv.preset); }
+    if (gl) { iv.setZoom(1, 0); hv.setZoom(1, 0); iv.fit(iv.preset); hv.fit(hv.preset); }   // a new device starts at the presets' own zoom
     const want = mode.id === MODES[0].id ? '' : `#${mode.id}`;
     if (location.hash !== want) try { history_.replaceState(null, '', location.pathname + location.search + want); } catch (e) {}
   });
@@ -235,18 +253,19 @@ async function boot() {
   anim = createAnimator({ reduced: () => !gl || reducedMotion(), onFrame: draw });   // no WebGL: nothing ticks, so moves land at once
   ui = createUI({ steps: [], actions: {}, done: { title: '', text: '' } }, {
     onAction: (a) => { player.stop(); return act(a); }, onShowMe: showMe, onPlay: togglePlay, onUndo: undo, onRestart: restart, onJump: jump,
-    onExpand: (id) => { ui.expand(id); iv?.resize(); hv?.resize(); }, onPick: pickPart });
+    onExpand: (id) => { ui.expand(id); iv?.resize(); hv?.resize(); }, onPick: pickPart,
+    onZoom: (id, k) => { const v = id === 'hands' ? hv : iv; v?.setZoom(v.zoom * k); } });
   scrub = createScrubber(document.querySelector('#scrub'), { onScrub: scrubTo, onRelease: scrubEnd,
     text: (x) => (M && course.length ? stepName(M.stepIndex(course[Math.min(Math.floor(x), course.length - 1)])) : '') });
   if (gl) {
     const pr = pixelRatio();
-    iv = createView(THREE, document.querySelector('#inside canvas'), { pixelRatio: pr });
-    hv = createView(THREE, document.querySelector('#hands canvas'), { pixelRatio: pr });
+    iv = createView(THREE, document.querySelector('#inside canvas'), { pixelRatio: pr, stickyZoom: true });
+    hv = createView(THREE, document.querySelector('#hands canvas'), { pixelRatio: pr, stickyZoom: true });
     inside = createInside(iv); hands = createHands(hv);
     const ro = new ResizeObserver(() => { iv.resize(); hv.resize(); });
     ro.observe(document.querySelector('#inside')); ro.observe(document.querySelector('#hands'));
     iv.resize(); hv.resize();
-    const loop = (now) => { anim.tick(now); iv.frame(now); hv.frame(now); requestAnimationFrame(loop); };
+    const loop = (now) => { anim.tick(now); iv.frame(now); hv.frame(now); placeTags(); requestAnimationFrame(loop); };
     requestAnimationFrame(loop);
   } else {
     for (const w of document.querySelectorAll('.win')) {
@@ -285,6 +304,8 @@ async function boot() {
     // where a world point is on a window's screen now (−1…1 across), and how far its camera stands from what it looks at
     ndc: (w, p) => { const v = w === 'hands' ? hv : iv; if (!v) return null; const q = new THREE.Vector3(...p).project(v.camera); return [q.x, q.y]; },
     camDist: (w) => { const v = w === 'hands' ? hv : iv; return v ? v.camera.position.distanceTo(v.controls.target) : null; },
+    zoom: (w) => (w === 'hands' ? hv : iv)?.zoom ?? null,
+    tags: () => [...document.querySelectorAll('#hands .tag')].filter((e) => e.style.visibility !== 'hidden').map((e) => { const r = e.getBoundingClientRect(); return { text: e.textContent, now: e.classList.contains('now'), left: r.left, right: r.right, top: r.top, bottom: r.bottom }; }),
     insideDebug: () => inside?.debug?.(),
     focusNames: () => (hands?.focused() || []).map((o) => o.name || Object.entries(handLayerNames()).find(([, v]) => flat(v).includes(o))?.[0]).filter(Boolean),
     focusDevice: () => [...new Set((hands?.focused() || []).map((o) => { let x = o; while (x && !x.userData.device) x = x.parent; return x?.userData.device; }).filter(Boolean))],

@@ -5,7 +5,7 @@ import { poseOf } from '../fig8/pose.js';
 import { STEPS, ACTIONS, DONE } from '../fig8/steps.js';
 import { MISTAKES } from '../fig8/mistakes.js';
 import { fig8Inside, fig8Hands } from '../fig8/layers.js';
-import { HANDS_TOP, HANDS_KNOT, HANDS_TIE, HANDS_DOWN, BITE, knotFrame } from '../fig8/geometry.js';
+import { HANDS_TOP, HANDS_KNOT, HANDS_TIE, HANDS_DOWN, BITE, knotFrame, endTags } from '../fig8/geometry.js';
 
 // the side cutaway: the bites' depth against the skin, the tract and the vein; from the knot on, framed higher and wider
 // to take in the knot off the skin caudal to the stitch; close on the knot, then on the puncture, as in the Hands window
@@ -59,12 +59,23 @@ export default {
     const F = knotFrame(p), at = (h, side) => F.base.map((v, i) => v + F.u[i] * h - F.v[i] * side), near = close(p);
     const scale = near ? 0.25 : 1;
     const toward = [0, 1, 2].map((i) => 0.7 * F.u[i] + F.v[i]);
-    if (['bringDown', 'wrap1', 'wrap2', 'wrap3', 'throughLoop', 'throughBigLoop', 'setKnot'].includes(a)) return { nodes: [], tip: near ? at(F.h0 - 0.6, F.r + 0.7) : at(F.h0 - 1.2, F.r + 1.4), dir: toward, scale };
+    // (the passes and the set: beside the middle wrap instead, pointing in at the coils — the passes swing wide over the
+    // knot's upper left, where the wraps' arrow sits)
+    if (['throughLoop', 'throughBigLoop', 'setKnot'].includes(a)) return { nodes: [], tip: at(F.h0 + F.pitch, F.r + 1.0), dir: [0, 1, 2].map((i) => F.v[i] - 0.25 * F.u[i]), scale };
+    if (['bringDown', 'wrap1', 'wrap2', 'wrap3'].includes(a)) return { nodes: [], tip: near ? at(F.h0 - 0.6, F.r + 0.7) : at(F.h0 - 1.2, F.r + 1.4), dir: toward, scale };
     // sliding down: beside the knot on its lateral side, pointing the way it slides — cranially, toward the stitch (along
     // the skin, so it never turns end-on to the camera as the knot stands up on the puncture); once it is well on its way
     // the strands come in to it from every side, so no arrow
     if (a === 'slideDown') return p.down > 0.25 ? { nodes: [] } : { nodes: [], tip: at(F.h0 - 1.5, F.r + 1.6), dir: [-1, -0.2, 0], scale };
     return null;
+  },
+  // the two ends named in the Hands window once the end is out through the big loop, until the needle is cut off: the one
+  // the next move pulls stands out
+  tags(p, next) {
+    if (!(p.tuck > 1.98) || p.down > 0.98 || p.dressed > 0.5) return [];   // (down on the puncture: done, and the ends splay over the stitch)
+    const T = endTags(p);
+    return [{ id: 'cinch', text: 'Needle end: pull to cinch', p: T.cinch, side: -1, now: next === 'slideDown' },
+      { id: 'lock', text: 'Other end: pull to lock', p: T.lock, side: 1, now: next === 'setKnot' }];
   },
   duration: (a) => (a === 'bite1' || a === 'bite2' ? 2600 : a === 'slideDown' ? SLIDE_MS : a === 'crossOver' ? 2200
     : a === 'throughLoop' || a === 'throughBigLoop' || a === 'bringDown' ? LONG_MS : 1300),

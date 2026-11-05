@@ -202,6 +202,9 @@ async function boot() {
       filters: G.tab ? [] : ['ph', 'pb', 'dh', 'db'].filter((k) => G[k]), debris: G.tab ? 0 : G.debris.length, h: frame.h }; },
     focus: () => handle?.focused()?.control || null, parts: () => arch?.visibleParts() || [],
     stats: () => [av, hv].map((v) => v ? pixelStats(v) : null),
+    // a handle part's extent along the handle (mm, in the handle model's own frame)
+    handleSpan: (n) => { const o = handle?.node(n); if (!o) return null; const b = new THREE.Box3().setFromObject(o), m = handle.node('Handle') || o.parent;
+      const lo = m.worldToLocal(b.min.clone()), hi = m.worldToLocal(b.max.clone()); return [Math.min(lo.x, hi.x), Math.max(lo.x, hi.x)]; },
     camera: (w) => { const v = w === 'handle' ? hv : av; return v ? { target: v.controls.target.toArray(), pos: v.camera.position.toArray() } : null; },
   });
 }

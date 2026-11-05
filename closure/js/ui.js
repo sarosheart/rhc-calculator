@@ -1,5 +1,5 @@
 // The guide, the step list and the buttons under the two windows. It shows what the page tells it and reports taps.
-export function createUI(initial, { onAction, onShowMe, onPlay = () => {}, onUndo, onRestart, onJump, onExpand, onPick = () => {} }) {
+export function createUI(initial, { onAction, onShowMe, onPlay = () => {}, onUndo, onRestart, onJump, onExpand, onPick = () => {}, onZoom = () => {} }) {
   let { steps, actions, done } = initial;
   const guide = document.querySelector('#guide');
   const $ = (s) => document.querySelector(s);
@@ -43,6 +43,9 @@ export function createUI(initial, { onAction, onShowMe, onPlay = () => {}, onUnd
   for (const win of document.querySelectorAll('.win')) {
     const btn = win.querySelector('.expand');
     btn.addEventListener('click', () => onExpand(win.classList.contains('expanded') ? null : win.id));
+    // Saro (2026-11-04): "should be easier to zoom out of the two panels" — each step of zoom holds until a double tap
+    win.querySelector('.zoom-out')?.addEventListener('click', () => onZoom(win.id, 1.5));
+    win.querySelector('.zoom-in')?.addEventListener('click', () => onZoom(win.id, 1 / 1.5));
   }
   document.addEventListener('keydown', (e) => { if (e.key === 'Escape') onExpand(null); });
 

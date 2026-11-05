@@ -416,12 +416,17 @@ try { if (localStorage.getItem('cathmath_dark') === '0') document.body.classList
   <section id="inside" class="win" aria-label="Inside the groin">
     <canvas role="img" aria-label="Cutaway of the right groin seen from the patient's right side, head to the left: skin, fat, the tissue tract and the femoral artery cut lengthwise. Drag to turn, pinch to zoom."></canvas>
     <span class="win-label">Inside</span>
+    <button type="button" class="zoom zoom-out" aria-label="Zoom out">−</button>
+    <button type="button" class="zoom zoom-in" aria-label="Zoom in">+</button>
     <button type="button" class="expand" aria-label="Expand" aria-pressed="false"></button>
   </section>
 
   <section id="hands" class="win" aria-label="The device in your hands">
     <canvas role="img" aria-label="The device as you hold it, with the part you are working highlighted. Drag to turn, pinch to zoom."></canvas>
     <span class="win-label">Hands</span>
+    <div class="tags" aria-hidden="true"></div>
+    <button type="button" class="zoom zoom-out" aria-label="Zoom out">−</button>
+    <button type="button" class="zoom zoom-in" aria-label="Zoom in">+</button>
     <button type="button" class="expand" aria-label="Expand" aria-pressed="false"></button>
   </section>
 
