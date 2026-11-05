@@ -242,9 +242,12 @@ function setMode(id) {
     history = []; state = M.initialState(geom); moveBar = null; parkX = null;
     course = correctPath(M, geom); scrub.setMarks(course.length - 1, courseMarks(M, course, mode.steps, mode.phases));
     anim.set(pose(state)); setBar(0); refresh();
-    if (gl) { iv.setZoom(1, 0); hv.setZoom(1, 0); iv.fit(iv.preset); hv.fit(hv.preset); }   // a new device starts at the presets' own zoom
+    // a new device starts at the presets' own zoom (setZoom?.: just after a deploy a browser may still hold an older view.js)
+    if (gl) { iv.setZoom?.(1, 0); hv.setZoom?.(1, 0); iv.fit(iv.preset); hv.fit(hv.preset); }
     const want = mode.id === MODES[0].id ? '' : `#${mode.id}`;
     if (location.hash !== want) try { history_.replaceState(null, '', location.pathname + location.search + want); } catch (e) {}
+  }).catch((e) => {   // one switch that throws must not freeze every later tab click
+    console.warn(e); loading = false; ui?.loading(false); if (mode) refresh();
   });
   return switching;
 }
@@ -258,7 +261,7 @@ async function boot() {
   ui = createUI({ steps: [], actions: {}, done: { title: '', text: '' } }, {
     onAction: (a) => { player.stop(); return act(a); }, onShowMe: showMe, onPlay: togglePlay, onUndo: undo, onRestart: restart, onJump: jump,
     onExpand: (id) => { ui.expand(id); iv?.resize(); hv?.resize(); }, onPick: pickPart,
-    onZoom: (id, k) => { const v = id === 'hands' ? hv : iv; v?.setZoom(v.zoom * k); } });
+    onZoom: (id, k) => { const v = id === 'hands' ? hv : iv; v?.setZoom?.((v.zoom ?? 1) * k); } });
   scrub = createScrubber(document.querySelector('#scrub'), { onScrub: scrubTo, onRelease: scrubEnd,
     text: (x) => (M && course.length ? stepName(M.stepIndex(course[Math.min(Math.floor(x), course.length - 1)])) : '') });
   if (gl) {

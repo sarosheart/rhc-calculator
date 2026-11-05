@@ -242,6 +242,8 @@ function setMode(id) {
     const want = mode.id === MODES[0].id ? '' : `#${mode.id}`;
     if (location.hash !== want) try { window.history.replaceState(null, '', location.pathname + location.search + want); } catch (e) {}
     cmpFollow();
+  }).catch((e) => {   // one switch that throws must not freeze every later tab click
+    console.warn(e); loading = false; ui?.loading(false); if (mode) refresh();
   });
   return switching;
 }
