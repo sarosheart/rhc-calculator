@@ -145,13 +145,6 @@ body {
   filter: drop-shadow(0 0 30px rgba(0,230,118,0.06));
 }
 
-.logo-ekg {
-  position: absolute;
-  top: 0; left: 0;
-  width: 100%; height: auto;
-  pointer-events: none;
-  clip-path: polygon(0% 58%, 100% 58%, 100% 76%, 0% 76%);
-}
 
 @keyframes breathe {
   0%,100% { filter:drop-shadow(0 0 30px rgba(0,230,118,0.06)); }
@@ -601,8 +594,12 @@ body {
 <!-- ══════ HERO ══════ -->
 <section class="hero">
   <h1 class="logo-wrap">
-    <img src="logo/single_2_no_ekg.png" alt="CathMath — Hemodynamics Visualized" class="logo-base" id="logoBase">
-    <img src="logo/single_2_transparent.png" alt="" class="logo-ekg" id="logoEkg">
+    <picture>
+      <source type="image/webp" srcset="logo/cathmath_logo_1000.webp 1000w, logo/cathmath_logo_1600.webp 1600w"
+        sizes="(max-width: 889px) 90vw, 800px">
+      <img src="logo/cathmath_logo_1600.png" width="1600" height="410" alt="CathMath — Hemodynamics Visualized"
+        class="logo-base" fetchpriority="high">
+    </picture>
   </h1>
   <div class="hero-url" id="heroUrl">cathmath.org</div>
   <div class="hero-credit" id="heroCredit">Developed by <a href="https://x.com/Sarotonin_" target="_blank" rel="noopener" class="credit-link">Dr. Saro Avedikian, MD, MPH</a></div>
