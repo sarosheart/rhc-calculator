@@ -141,9 +141,7 @@ body {
   display: block;
   width: 100%;
   height: auto;
-  opacity: 0;
-  transform: scale(0.96);
-  animation: logoReveal 1.2s cubic-bezier(0.16,1,0.3,1) 0.3s forwards;
+  animation: breathe 5s ease-in-out infinite;
   filter: drop-shadow(0 0 30px rgba(0,230,118,0.06));
 }
 
@@ -151,21 +149,8 @@ body {
   position: absolute;
   top: 0; left: 0;
   width: 100%; height: auto;
-  opacity: 0;
   pointer-events: none;
-  clip-path: polygon(0% 58%, 0% 58%, 0% 76%, 0% 76%);
-}
-
-@keyframes logoReveal {
-  0% { opacity:0; transform:scale(0.96); }
-  60% { opacity:1; transform:scale(1); }
-  100% { opacity:1; transform:scale(1); filter:drop-shadow(0 0 40px rgba(0,230,118,0.10)); }
-}
-
-.logo-base.revealed {
-  opacity: 1;
-  transform: scale(1);
-  animation: breathe 5s ease-in-out infinite;
+  clip-path: polygon(0% 58%, 100% 58%, 100% 76%, 0% 76%);
 }
 
 @keyframes breathe {
@@ -174,26 +159,20 @@ body {
 }
 
 .hero-url {
-  opacity: 0;
   font-size: 13px;
   font-weight: 600;
   letter-spacing: 0.3em;
   text-transform: uppercase;
   color: rgba(255,255,255,0.55);
   margin-top: 14px;
-  transition: opacity 0.8s ease;
 }
 
 .hero-credit {
-  opacity: 0;
   font-size: 11px;
   letter-spacing: 0.15em;
   color: rgba(255,255,255,0.3);
   margin-top: 14px;
-  transition: opacity 0.8s ease;
 }
-
-.hero-url.show, .hero-credit.show { opacity: 1; }
 
 .credit-link {
   color: inherit;
@@ -229,8 +208,6 @@ body {
   stroke-width: 2.4;
   stroke-linecap: round;
   stroke-linejoin: round;
-  stroke-dasharray: 620;
-  stroke-dashoffset: 620;
   opacity: 0.7;
 }
 
@@ -239,16 +216,13 @@ body {
   stroke: #d4b860;
   stroke-width: 0.8;
   stroke-linecap: round;
-  stroke-dasharray: 620;
-  stroke-dashoffset: 620;
   opacity: 0.35;
 }
 
 .swan-balloon {
   fill: #c8a84e;
-  opacity: 0;
+  opacity: 0.6;
   transform-origin: 500px 14px;
-  transform: scale(0);
 }
 
 .swan-mark {
@@ -257,17 +231,6 @@ body {
   stroke-linecap: butt;
 }
 
-.swan-shaft.animate,
-.swan-lumen.animate {
-  transition: stroke-dashoffset 1.6s cubic-bezier(0.22,0.61,0.36,1);
-  stroke-dashoffset: 0;
-}
-
-.swan-balloon.inflate {
-  transition: opacity 0.3s ease, transform 0.4s cubic-bezier(0.34,1.56,0.64,1);
-  opacity: 0.6;
-  transform: scale(1);
-}
 
 /* Scroll indicator */
 .scroll-hint {
@@ -275,15 +238,13 @@ body {
   bottom: 10px;
   left: 50%;
   transform: translateX(-50%);
-  opacity: 0;
-  transition: opacity 1s ease 0.5s;
+  transition: opacity 1s ease;
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 6px;
 }
 
-.scroll-hint.show { opacity: 1; }
 
 .scroll-hint span {
   font-size: 10px;
@@ -322,7 +283,6 @@ body {
 }
 
 /* Hidden during animation, shown after */
-.section-divider.anim-hidden { opacity: 0; }
 
 .section-label {
   text-align: center;
@@ -335,7 +295,6 @@ body {
   transition: opacity 0.6s ease, transform 0.6s ease;
 }
 
-.section-label.anim-hidden { opacity: 0; transform: translateY(8px); }
 
 .cards {
   display: grid;
@@ -356,7 +315,6 @@ body {
 }
 
 /* Hidden during animation, shown after */
-.tool-card.anim-hidden { opacity: 0; transform: translateY(24px); }
 
 .tool-card:hover {
   border-color: var(--border-hover);
@@ -659,11 +617,11 @@ body {
         d="M -10,14 C 40,14 60,12 120,13 S 200,16 270,14 S 350,10 400,12 S 450,16 480,12 C 488,10 493,9 496,8" />
       <path id="swanLumen" class="swan-lumen"
         d="M -10,14 C 40,14 60,12 120,13 S 200,16 270,14 S 350,10 400,12 S 450,16 480,12 C 488,10 493,9 496,8" />
-      <line x1="80" y1="12" x2="80" y2="16" class="swan-mark" stroke-dasharray="4" stroke-dashoffset="4"/>
-      <line x1="160" y1="11.5" x2="160" y2="15.5" class="swan-mark" stroke-dasharray="4" stroke-dashoffset="4"/>
-      <line x1="240" y1="13" x2="240" y2="17" class="swan-mark" stroke-dasharray="4" stroke-dashoffset="4"/>
-      <line x1="320" y1="11" x2="320" y2="15" class="swan-mark" stroke-dasharray="4" stroke-dashoffset="4"/>
-      <line x1="400" y1="10.5" x2="400" y2="14.5" class="swan-mark" stroke-dasharray="4" stroke-dashoffset="4"/>
+      <line x1="80" y1="12" x2="80" y2="16" class="swan-mark"/>
+      <line x1="160" y1="11.5" x2="160" y2="15.5" class="swan-mark"/>
+      <line x1="240" y1="13" x2="240" y2="17" class="swan-mark"/>
+      <line x1="320" y1="11" x2="320" y2="15" class="swan-mark"/>
+      <line x1="400" y1="10.5" x2="400" y2="14.5" class="swan-mark"/>
       <ellipse id="swanBalloon" class="swan-balloon" cx="500" cy="8" rx="6" ry="4.5" />
     </svg>
   </div>
@@ -946,7 +904,7 @@ body {
     <p>The tools cover invasive hemodynamics (Fick CO, PVR/SVR, Gorlin, PH classification, RHC waveforms, PV loops), electrophysiology (12-lead EKG, action potentials with antiarrhythmic effects), echocardiography (PISA, continuity, PASP, diastolic algorithm, valvular pattern atlases), coronary intervention (LAO/RAO angiographic projections, FFR / iFR / NHPRs, IVUS, OCT), coronary bifurcation stenting (provisional, DK crush, mini-crush, culotte and TAP, cut open and on fluoro), femoral access closure (ProGlide, pre-close, Angio-Seal, the figure-of-8 stitch), cerebral embolic protection during TAVR (the Sentinel, deployment to retrieval), and cardiac embryology. Each tool surfaces formulas, cut-offs, and the trial evidence that anchors them, with common pitfalls explicitly called out.</p>
     <p>Developed by <a class="credit-link" href="https://x.com/Sarotonin_" target="_blank" rel="noopener">Dr. Saro Avedikian, MD, MPH</a>. The site is intended for educational reference — not a substitute for clinical judgment, complete imaging, or invasive measurements when they are required.</p>
     <p style="margin-top:14px"><a class="credit-link" href="/worksheets/">Reference worksheets</a> &mdash; printable single-page sheets for Gorlin valve area, RHC hemodynamics, PISA quantification of MR, iatrogenic-ASD left atrial pressure, and non-holosystolic MR.</p>
-    <p>For board-style questions, check out our partners at <a class="credit-link" href="https://cardioqflow.com/" target="_blank" rel="noopener">CardioQFlow</a>.</p>
+    <p>For board-style questions, check out our friends at <a class="credit-link" href="https://cardioqflow.com/" target="_blank" rel="noopener">CardioQFlow</a>.</p>
   </div>
   <div class="footer-copyright">&copy; 2026 CathMath &mdash; Hemodynamic Education Tools</div>
 </footer>
@@ -1024,36 +982,7 @@ body {
 (function() {
   'use strict';
 
-  /* ══════════════════════════════════════
-     HERO ANIMATION — Full sequence
-     ══════════════════════════════════════ */
-  var base = document.getElementById('logoBase');
-  var ekg = document.getElementById('logoEkg');
   var balloon = document.getElementById('swanBalloon');
-  // Pullback waveform data (used by hemodynamics card animation)
-  var TOP = 58, BOT = 76;
-
-  // ── Animation cache: play once per device, refresh after 48 hours ──
-  var ANIM_KEY = 'cathmath_anim_seen';
-  var ANIM_EXPIRY_MS = 48 * 60 * 60 * 1000; // 48 hours
-  var animSeen = false;
-  try {
-    var ts = localStorage.getItem(ANIM_KEY);
-    if (ts && (Date.now() - parseInt(ts, 10)) < ANIM_EXPIRY_MS) animSeen = true;
-  } catch(e) {}
-
-  function markAnimSeen() {
-    try { localStorage.setItem(ANIM_KEY, Date.now().toString()); } catch(e) {}
-  }
-
-  // If animation will play, hide cards/divider/label until animation reveals them
-  if (!animSeen) {
-    document.querySelector('.section-divider').classList.add('anim-hidden');
-    document.getElementById('sectionLabel').classList.add('anim-hidden');
-    document.querySelectorAll('.tool-card').forEach(function(c) {
-      c.classList.add('anim-hidden');
-    });
-  }
 
   // ── Pullback waveform generators (mmHg on common 0-30 scale) ──
   function hPcwp(beat) {
@@ -1126,96 +1055,25 @@ body {
     pulse();
   }
 
-  // ══════ TIMELINE ══════
-  // 1. Logo reveal → EKG sweep
-  if (!animSeen) setTimeout(function() {
-    base.classList.add('revealed');
-    base.style.opacity = '1';
-    base.style.transform = 'scale(1)';
-    ekg.style.opacity = '1';
-
-    var dur = 1800, t0 = performance.now();
-    function sweepFrame() {
-      var p = Math.min((performance.now() - t0) / dur, 1);
-      var ep = 1 - Math.pow(1 - p, 2);
-      ekg.style.clipPath = 'polygon(0% '+TOP+'%, '+(ep*100)+'% '+TOP+'%, '+(ep*100)+'% '+BOT+'%, 0% '+BOT+'%)';
-      if (p < 1) requestAnimationFrame(sweepFrame);
-      else afterEkg();
-    }
-    requestAnimationFrame(sweepFrame);
-  }, 1500);
-
-  // 2. Text + Swan-Ganz catheter + balloon + pullback
-  function afterEkg() {
-    document.getElementById('heroUrl').classList.add('show');
-    setTimeout(function() { document.getElementById('heroCredit').classList.add('show'); }, 400);
-
-    setTimeout(function() {
-      // Thread catheter in
-      document.getElementById('swanShaft').classList.add('animate');
-      document.getElementById('swanLumen').classList.add('animate');
-      var marks = document.querySelectorAll('.swan-mark');
-      marks.forEach(function(m,i) {
-        setTimeout(function() {
-          m.style.transition = 'stroke-dashoffset 0.2s ease';
-          m.style.strokeDashoffset = '0';
-        }, 300 + i * 200);
-      });
-
-      // Balloon inflates
-      setTimeout(function() {
-        balloon.classList.add('inflate');
-        // 3. Balloon pulses (PA pulsation) then reveal cards
-        setTimeout(function() {
-          pulseBalloon(3, 750, function() {
-            setTimeout(function() {
-              document.getElementById('scrollHint').classList.add('show');
-              revealCards();
-            }, 400);
-          });
-        }, 500);
-      }, 1700);
-    }, 1200);
-  }
-
   /* ══════════════════════════════════════
-     CARD REVEAL + ANIMATION TRIGGER
+     CARD ANIMATIONS — start at once (the hero is drawn finished; no intro to wait for)
      ══════════════════════════════════════ */
-  var cardsRevealed = false;
-
-  function revealCards(instant) {
-    if (cardsRevealed) return;
-    cardsRevealed = true;
-    markAnimSeen();
-    document.querySelector('.section-divider').classList.remove('anim-hidden');
-    document.getElementById('sectionLabel').classList.remove('anim-hidden');
-
-    var cards = document.querySelectorAll('.tool-card');
-    if (instant) {
-      cards.forEach(function(c) { c.classList.remove('anim-hidden'); });
-    } else {
-      cards.forEach(function(c, i) {
-        setTimeout(function() { c.classList.remove('anim-hidden'); }, 200 + i * 150);
-      });
-    }
-
-    // Start card animations after cards are visible (2 loops on initial play, 1 on skip)
-    var loops = instant ? 1 : 2;
+  function startCardAnimations() {
     setTimeout(function() {
-      startHemoAnimation(loops);
-      startRhcAnimation(loops);
-      startPvAnimation(loops);
-      startEkgAnimation(loops);
-      startEmbryoAnimation(loops);
-      startApAnimation(loops);
-      startEchoAnimation(loops);
-      startAngioAnimation(loops);
-      startIntraAnimation(loops);
-      startPressorsAnimation(loops);
-      startClosureAnimation(loops);
-      startSentinelAnimation(loops);
-      startBifurcationAnimation(loops);
-    }, instant ? 100 : 600);
+      startHemoAnimation(1);
+      startRhcAnimation(1);
+      startPvAnimation(1);
+      startEkgAnimation(1);
+      startEmbryoAnimation(1);
+      startApAnimation(1);
+      startEchoAnimation(1);
+      startAngioAnimation(1);
+      startIntraAnimation(1);
+      startPressorsAnimation(1);
+      startClosureAnimation(1);
+      startSentinelAnimation(1);
+      startBifurcationAnimation(1);
+    }, 100);
   }
 
   // Fade scroll hint on scroll
@@ -1223,63 +1081,6 @@ body {
   window.addEventListener('scroll', function() {
     if (window.scrollY > 80) scrollHintEl.style.opacity = '0';
   }, { passive: true });
-
-  // ── CLICK TO SKIP / AUTO-SKIP — instantly show everything ──
-  var skipped = false;
-  function skipToEnd(silent) {
-    if (skipped || cardsRevealed) return;
-    skipped = true;
-
-    // Show logo immediately
-    base.classList.add('revealed');
-    base.style.opacity = '1';
-    base.style.transform = 'scale(1)';
-    base.style.animation = 'breathe 5s ease-in-out infinite';
-
-    // Show EKG fully
-    ekg.style.opacity = '1';
-    ekg.style.clipPath = 'polygon(0% '+TOP+'%, 100% '+TOP+'%, 100% '+BOT+'%, 0% '+BOT+'%)';
-
-    // Show text
-    document.getElementById('heroUrl').classList.add('show');
-    document.getElementById('heroCredit').classList.add('show');
-
-    // Show catheter fully
-    var shaft = document.getElementById('swanShaft');
-    var lumen = document.getElementById('swanLumen');
-    shaft.style.transition = 'none'; shaft.style.strokeDashoffset = '0';
-    lumen.style.transition = 'none'; lumen.style.strokeDashoffset = '0';
-    shaft.classList.add('animate');
-    lumen.classList.add('animate');
-    document.querySelectorAll('.swan-mark').forEach(function(m) {
-      m.style.transition = 'none';
-      m.style.strokeDashoffset = '0';
-    });
-
-    // Show balloon
-    balloon.style.transition = 'none';
-    balloon.style.opacity = '0.6';
-    balloon.style.transform = 'scale(1)';
-    balloon.classList.add('inflate');
-
-    // Show scroll hint
-    scrollHintEl.classList.add('show');
-
-    // Reveal cards (instant mode, no stagger) — scroll only on manual skip
-    revealCards(true);
-    if (!silent) {
-      setTimeout(function() {
-        document.getElementById('toolsSection').scrollIntoView({ behavior: 'smooth' });
-      }, 300);
-    }
-  }
-
-  document.addEventListener('click', skipToEnd);
-  document.addEventListener('keydown', function(e) {
-    if (e.key === ' ' || e.key === 'Escape') skipToEnd();
-  });
-
-
 
   /* ══════════════════════════════════════
      CARD CANVAS SETUP
@@ -2511,7 +2312,6 @@ body {
   var balloonPulsing = false;
   balloon.addEventListener('mouseenter', function() {
     if (balloonPulsing) return;
-    if (!balloon.classList.contains('inflate')) return; // only after inflation
     balloonPulsing = true;
     pulseBalloon(5, 750, function() { balloonPulsing = false; });
   });
@@ -2943,10 +2743,7 @@ body {
     addHoverReplay('cardBifurcation', startBifurcationAnimation);
   });
 
-  // Auto-skip animation if already seen on this device within 48 hours
-  if (animSeen) {
-    skipToEnd(true);
-  }
+  startCardAnimations();
 
 })();
 </script>
