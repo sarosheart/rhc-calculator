@@ -212,9 +212,13 @@ body {
 /* ═══ MAIN LAYOUT ═══ */
 .main {
   display: flex;
-  flex: 1;
+  /* grows to hold the tool (never shorter than its content) — a body locked to the screen height let the right column
+     hang over whatever follows the tool on a phone or a short window */
+  flex: 1 0 auto;
   min-height: calc(100vh - 42px); /* nav height — keeps simulator above the fold; SEO below */
 }
+/* the long sidebar scrolls inside the tool's height rather than setting it */
+@media (min-width: 801px) { .left { contain: size; } }
 
 /* ═══ LEFT PANEL ═══ */
 .left {
@@ -545,6 +549,7 @@ body.dark .preset-btn.active:not(.warn) { color: #fff; }
   /* visible so ion-current tooltips are not clipped at the top edge */
   overflow: visible;
   min-height: 300px;
+  contain: size; /* sized by the column, never by the canvas's own last drawing */
 }
 canvas { display: block; width: 100%; height: 100%; border-radius: 8px; }
 
@@ -3101,6 +3106,13 @@ window.addEventListener('resize', () => {
   resizeEcgCanvas();
   kick();
 });
+// The plot's box also changes with no window resize — the readouts under it fill in after the first sizing below,
+// an active-drug line wraps — and a buffer sized for the old box draws every label squashed. Re-size on any change.
+if (typeof ResizeObserver === 'function') {
+  const ro = new ResizeObserver(() => { resizeCanvas(); resizeEcgCanvas(); kick(); });
+  ro.observe(canvas.parentElement);
+  ro.observe(ecgCanvas);
+}
 
 // INIT
 invalidateStyles();
@@ -3151,7 +3163,8 @@ kick();
   function style() {
     var s = el('style');
     s.textContent = [
-      '.ty-card{box-sizing:border-box;max-width:760px;margin:40px auto 32px;padding:20px 22px;border:1px solid var(--border,#2a3340);border-radius:12px;background:var(--card-bg,var(--panel-bg,#131a26));color:var(--text,#d8dce4);font:15px/1.55 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;text-align:left}',
+      // flex:none — on a page whose <body> is a flex column the card neither grows nor gives way
+      '.ty-card{box-sizing:border-box;flex:none;max-width:760px;margin:40px auto 32px;padding:20px 22px;border:1px solid var(--border,#2a3340);border-radius:12px;background:var(--card-bg,var(--panel-bg,#131a26));color:var(--text,#d8dce4);font:15px/1.55 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;text-align:left}',
       '.ty-card *{box-sizing:border-box}',
       '.ty-head{display:flex;flex-wrap:wrap;align-items:baseline;justify-content:space-between;gap:4px 12px;margin:0 0 12px}',
       '.ty-title{margin:0;font-size:17px;font-weight:700;color:var(--text-hi,var(--text,#e8ecf2))}',
@@ -3234,10 +3247,17 @@ kick();
       }
 
       document.head.appendChild(style());
-      // Right after the tool itself: before its "About" section, else before the footer, else at the end.
+      // Right after the tool itself: before its "About" section, else before the footer, else at the end. Never inside
+      // the tool's own flex or grid layout, though: there the card took the tool's room (on the AP page it squashed the
+      // plot to its 300 px minimum). So climb out of every flex/grid box first and go in just after it, below the tool.
       var before = document.querySelector('.seo-section') || document.querySelector('footer.foot');
-      if (before && before.parentNode) before.parentNode.insertBefore(card, before);
-      else document.body.appendChild(card);
+      var parent = before && before.parentNode ? before.parentNode : document.body;
+      while (parent !== document.body && parent.parentNode && typeof getComputedStyle === 'function' &&
+             /flex|grid/.test(getComputedStyle(parent).display)) {
+        before = parent.nextSibling;
+        parent = parent.parentNode;
+      }
+      parent.insertBefore(card, before);
     } catch (e) { /* never break a tool */ }
   }
 
